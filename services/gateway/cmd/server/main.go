@@ -13,11 +13,13 @@ import (
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	gwHttp "github.com/arc-agentpay/agentpay/services/gateway/internal/http"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 )
 
 func main() {
 	cfg := config.Load()
-	router := gwHttp.NewRouter(cfg)
+	policyClient := policy.NewClient(cfg.PolicyEngineURL, cfg.PolicyEngineTimeout)
+	router := gwHttp.NewRouter(cfg, policyClient)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	srv := &http.Server{
@@ -56,7 +58,8 @@ func main() {
 		serverStopCtx()
 	}()
 
-	log.Printf("[AgentPay Gateway] Starting HTTP server on %s", addr)
+	log.Printf("[AgentPay Gateway] Starting HTTP server on %s (Policy Engine: %s, Timeout: %s)",
+		addr, cfg.PolicyEngineURL, cfg.PolicyEngineTimeout)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed to start: %v", err)
 	}

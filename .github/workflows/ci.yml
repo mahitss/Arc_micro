@@ -47,6 +47,18 @@ jobs:
           go-version: '1.22'
           cache-dependency-path: services/gateway/go.sum
 
+      - name: Check Formatting (gofmt)
+        run: |
+          diffs=$(gofmt -s -l .)
+          if [ -n "$diffs" ]; then
+            echo "The following files are not formatted properly:"
+            echo "$diffs"
+            exit 1
+          fi
+
+      - name: Vet Code
+        run: go vet ./...
+
       - name: Run Tests
         run: go test -v ./...
 

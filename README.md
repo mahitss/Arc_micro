@@ -21,20 +21,20 @@ AgentPay solves this by placing a deterministic risk/policy engine and an on-cha
 Every payment passes through a deterministic pipeline:
 
 ```
-AI Agent
+Client / AI Agent
    ↓
-Payment Intent
+Go Gateway (:8080)
+   ↓ (POST /v1/authorize)
+Rust Policy Engine (:8081)
+   ↓ (ALLOW / DENY)
+Go Gateway (:8080)
    ↓
-Go Gateway (API, RPC infra, event streaming)
-   ↓
-Rust Policy Engine (Deterministic policy limits, ALLOW / DENY)
-   ↓
-Solidity AgentVault (On-chain spending controls)
+Solidity AgentVault (On-chain spending controls on Arc)
    ↓
 USDC Settlement (Arc Network)
 ```
 
-For full architectural details and design invariants, see [`docs/architecture.md`](docs/architecture.md).
+For full architectural details and design invariants, see [`docs/architecture.md`](docs/architecture.md) and [`services/gateway/README.md`](services/gateway/README.md).
 
 ---
 
@@ -43,7 +43,7 @@ For full architectural details and design invariants, see [`docs/architecture.md
 | Layer | Technology | Primary Role |
 |---|---|---|
 | **Web Dashboard** | TypeScript, Next.js (App Router), Tailwind CSS | Human-in-the-loop dashboard, telemetry, wallet configuration |
-| **Gateway** | Go 1.22+ | High-throughput API gateway, RPC connection pooling, WebSocket streaming |
+| **Gateway** | Go 1.22+ | High-throughput API gateway, RPC connection pooling, policy client orchestration |
 | **Policy Engine** | Rust 2021 (Axum, Tokio, Serde) | Deterministic spending limits, recipient verification, risk rules |
 | **Smart Contracts** | Solidity 0.8.24+, Foundry (`forge`) | `AgentVault` smart contracts, on-chain execution on Arc |
 | **Shared Types** | TypeScript | Common interfaces, intent schemas, currency definitions |
@@ -59,14 +59,19 @@ agentpay/
 │   └── web/                   # Next.js web dashboard shell
 │
 ├── services/
-│   ├── gateway/               # Go API gateway & RPC infrastructure
+│   ├── gateway/               # Go API gateway & Rust policy integration
+│   │   ├── cmd/server/        # Gateway entrypoint
+│   │   ├── internal/          # Config, domain, health, HTTP handlers, middleware, policy client
+│   │   └── tests/             # Unit and integration tests
 │   └── policy-engine/         # Rust deterministic policy/risk engine
+│       ├── src/domain/        # Domain types (Money, Address, Policy, Decision)
+│       ├── src/engine/        # Pure deterministic evaluation engine
+│       └── src/http/          # Axum HTTP handlers (POST /v1/authorize)
 │
 ├── contracts/                 # Foundry project for Solidity AgentVault
-│   ├── src/
-│   ├── test/
-│   ├── script/
-│   └── foundry.toml
+│   ├── src/                   # AgentVault.sol, interfaces
+│   ├── test/                  # Unit, fuzz, and invariant tests
+│   └── script/                # Deployment scripts
 │
 ├── packages/
 │   └── shared/                # Shared TypeScript schemas & types
@@ -78,7 +83,8 @@ agentpay/
 │   └── build.sh               # Build runner across all components
 │
 ├── docs/
-│   └── architecture.md        # Comprehensive system architecture & specs
+│   ├── architecture.md        # Comprehensive system architecture & specs
+│   └── policy-engine-contract.md # Policy engine contract documentation
 │
 ├── .github/
 │   └── workflows/
@@ -105,7 +111,7 @@ Before running the project locally, ensure the following tools are installed:
 
 ---
 
-## Local Setup
+## Quickstart & Local Development
 
 1. **Clone the repository**:
    ```bash
@@ -118,42 +124,65 @@ Before running the project locally, ensure the following tools are installed:
    cp .env.example .env
    ```
 
-3. **Run setup script**:
+3. **Run all services simultaneously**:
    ```bash
-   # Using Makefile:
-   make setup
-
-   # Or directly:
-   bash scripts/setup.sh
+   bash scripts/dev.sh
+   # Or using Makefile:
+   make dev
    ```
-   The setup script verifies all required tools and installs dependencies for all initialized components.
+   This launches:
+   - **Web Dashboard**: `http://localhost:3000`
+   - **Go Gateway**: `http://localhost:8080` (Readiness: `GET /ready`, Health: `GET /health`)
+   - **Rust Policy Engine**: `http://localhost:8081` (Health: `GET /health`)
 
 ---
 
-## Development Commands
+## Example API Usage
 
-Run all local services simultaneously with clean child-process management:
+### 1. Payment Authorization Request (Go Gateway)
+
+Send a payment authorization request to the Go Gateway:
 
 ```bash
-# Using Makefile:
-make dev
-
-# Or directly:
-bash scripts/dev.sh
+curl -X POST http://localhost:8080/v1/payments/authorize \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "research-agent",
+    "recipient": "0x1111111111111111111111111111111111111111",
+    "amount": "180000",
+    "asset": "USDC",
+    "purpose": "api_usage"
+  }'
 ```
 
-This launches:
-- Next.js Web: `http://localhost:3000`
-- Go Gateway: `http://localhost:8080` (Health: `GET /health`)
-- Rust Policy Engine: `http://localhost:8081` (Health: `GET /health`)
+**Expected Response (ALLOW - HTTP 200):**
+```json
+{
+  "request_id": "req_8a3f9e21",
+  "decision": "ALLOW",
+  "reason_code": "APPROVED",
+  "reason": "Payment satisfies the configured policy."
+}
+```
 
-Press `Ctrl+C` to terminate all services cleanly.
+**Expected Response (DENY - HTTP 200):**
+```json
+{
+  "request_id": "req_8a3f9e22",
+  "decision": "DENY",
+  "reason_code": "DAILY_LIMIT_EXCEEDED",
+  "reason": "Payment would exceed the agent daily spending limit."
+}
+```
+
+> [!NOTE]
+> Authorization is currently side-effect-free policy evaluation. Blockchain settlement remains disabled for this task.
 
 ---
 
 ## Testing Commands
 
-Run automated tests across all initialized components:
+Run automated tests across all components:
 
 ```bash
 # Using Makefile:
@@ -164,10 +193,11 @@ bash scripts/test.sh
 ```
 
 Individual component tests:
-- **Web**: `cd apps/web && npm run lint`
-- **Go Gateway**: `cd services/gateway && go test -v ./...`
+- **Go Gateway Unit Tests**: `cd services/gateway && go test -v ./...`
+- **Go Gateway Integration Tests**: `cd services/gateway && go test -v ./tests/integration/...`
 - **Rust Policy Engine**: `cd services/policy-engine && cargo test`
-- **Solidity Contracts**: `cd contracts && forge test`
+- **Solidity Contracts**: `cd contracts && forge test -vvv`
+- **Web**: `cd apps/web && npm run lint`
 
 ---
 
@@ -185,20 +215,6 @@ bash scripts/build.sh
 
 ---
 
-## Environment Variables
-
-| Variable | Description | Default / Example |
-|---|---|---|
-| `ARC_RPC_URL` | Arc Blockchain RPC endpoint | *(Configured during deployment)* |
-| `ARC_CHAIN_ID` | Arc Network Chain ID | *(Configured during deployment)* |
-| `ARC_USDC_ADDRESS` | USDC ERC-20 contract address on Arc | *(Configured during deployment)* |
-| `DATABASE_URL` | PostgreSQL connection string | *(Future persistence)* |
-| `GATEWAY_PORT` | Port for Go Gateway HTTP server | `8080` |
-| `POLICY_ENGINE_URL` | Upstream URL to Rust Policy Engine | `http://localhost:8081` |
-| `POLICY_ENGINE_PORT` | Port for Rust Policy Engine server | `8081` |
-
----
-
 ## Security Invariants & Warnings
 
 > [!CAUTION]
@@ -206,16 +222,14 @@ bash scripts/build.sh
 > 1. **NEVER commit private keys, mnemonics, or `.env` files** to this repository. All secret-bearing files are explicitly ignored via `.gitignore`.
 > 2. **NO floating-point arithmetic** for currency calculations. All token amounts MUST be represented as integer units (e.g., micro-USDC `6 decimals`).
 > 3. **Deterministic evaluation**: All policy decisions are auditable, deterministic, and fail-closed (`DENY` by default on unexpected inputs).
+> 4. **Rust is authoritative**: The Go Gateway validates basic request shape and coordinates transport, but never duplicates or overrides policy rules.
 
 ---
 
 ## Project Status
 
-- **Current Task (Task 1)**: Initial production-quality monorepo foundation completed.
-  - Next.js web application shell initialized (`/` and `/dashboard`).
-  - Go Gateway initialized with `GET /health`.
-  - Rust Policy Engine initialized with `GET /health`.
-  - Foundry project structure and configuration initialized.
-  - Shared TypeScript schemas created.
-  - Shell automation scripts and CI workflows established.
-- **Arc Mainnet Deployment**: Contract implementation (`AgentVault`), live RPC connectivity, and Arc mainnet deployment will occur in dedicated subsequent tasks.
+- **Task 1: Monorepo Foundation**: Initial monorepo, web shell, gateway shell, policy engine shell, contract layout, CI. [COMPLETED]
+- **Task 2: Deterministic Policy Engine**: Rust policy engine with domain models, pure `authorize()` evaluation, demo policy, HTTP API (`POST /v1/authorize`), 29 tests. [COMPLETED]
+- **Task 3: AgentVault Smart Contract**: Solidity 0.8.24 `AgentVault.sol` on Arc with reentrancy protection, spending limits, blocklists, 38 Foundry tests. [COMPLETED]
+- **Task 4: Go Gateway + Rust Policy Engine Integration**: Go Gateway orchestration layer, typed policy client, HTTP handlers, middleware, comprehensive error handling, unit and integration tests. [COMPLETED]
+- **Task 5: Arc Mainnet Transaction Execution**: Scheduled for next phase.
