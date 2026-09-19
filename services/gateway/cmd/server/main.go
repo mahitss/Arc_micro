@@ -82,7 +82,7 @@ func main() {
 		cfg.AgentAutoExecution,
 	)
 
-	router := gwHttp.NewRouter(cfg, policyClient, execService, agentService, intentService)
+	router := gwHttp.NewRouter(cfg, policyClient, execService, agentService, intentService, repo, serviceRegistry)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	srv := &http.Server{

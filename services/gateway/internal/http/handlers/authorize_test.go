@@ -46,7 +46,7 @@ func setupTestRouter(mock *mockPolicyClient, maxBodyBytes int64) http.Handler {
 		CORSAllowedOrigins:  []string{"http://localhost:3000"},
 		MaxRequestBodyBytes: maxBodyBytes,
 	}
-	return gwHttp.NewRouter(cfg, mock, nil, nil, nil)
+	return gwHttp.NewRouter(cfg, mock, nil, nil, nil, nil, nil)
 }
 
 func validPayload(reqID string) domain.PaymentRequest {

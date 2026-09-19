@@ -29,16 +29,20 @@ type Agent struct {
 type Repository interface {
 	SaveAgent(ctx context.Context, a *Agent) error
 	GetAgent(ctx context.Context, id string) (*Agent, error)
+	ListAgents(ctx context.Context) ([]*Agent, error)
 
 	SaveService(ctx context.Context, s *registry.Service) error
 	GetService(ctx context.Context, id string) (*registry.Service, error)
+	ListServices(ctx context.Context) ([]*registry.Service, error)
 
 	SaveIntent(ctx context.Context, pi *intent.PaymentIntent) error
 	GetIntent(ctx context.Context, id string) (*intent.PaymentIntent, error)
+	ListIntents(ctx context.Context) ([]*intent.PaymentIntent, error)
 	UpdateIntentStatus(ctx context.Context, id string, status intent.IntentStatus, updatedAt time.Time) error
 
 	SaveExecution(ctx context.Context, ex *intent.PaymentExecutionRecord) error
 	GetExecution(ctx context.Context, intentID string) (*intent.PaymentExecutionRecord, error)
+	ListExecutions(ctx context.Context) ([]*intent.PaymentExecutionRecord, error)
 }
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
@@ -89,6 +93,17 @@ func (m *MemoryRepository) GetAgent(ctx context.Context, id string) (*Agent, err
 	return &copyA, nil
 }
 
+func (m *MemoryRepository) ListAgents(ctx context.Context) ([]*Agent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*Agent, 0, len(m.agents))
+	for _, a := range m.agents {
+		copyA := *a
+		res = append(res, &copyA)
+	}
+	return res, nil
+}
+
 func (m *MemoryRepository) SaveService(ctx context.Context, s *registry.Service) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -106,6 +121,17 @@ func (m *MemoryRepository) GetService(ctx context.Context, id string) (*registry
 	}
 	copyS := *s
 	return &copyS, nil
+}
+
+func (m *MemoryRepository) ListServices(ctx context.Context) ([]*registry.Service, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*registry.Service, 0, len(m.services))
+	for _, s := range m.services {
+		copyS := *s
+		res = append(res, &copyS)
+	}
+	return res, nil
 }
 
 func (m *MemoryRepository) SaveIntent(ctx context.Context, pi *intent.PaymentIntent) error {
@@ -128,6 +154,17 @@ func (m *MemoryRepository) GetIntent(ctx context.Context, id string) (*intent.Pa
 	}
 	copyPI := *pi
 	return &copyPI, nil
+}
+
+func (m *MemoryRepository) ListIntents(ctx context.Context) ([]*intent.PaymentIntent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*intent.PaymentIntent, 0, len(m.intents))
+	for _, pi := range m.intents {
+		copyPI := *pi
+		res = append(res, &copyPI)
+	}
+	return res, nil
 }
 
 func (m *MemoryRepository) UpdateIntentStatus(ctx context.Context, id string, status intent.IntentStatus, updatedAt time.Time) error {
@@ -159,6 +196,17 @@ func (m *MemoryRepository) GetExecution(ctx context.Context, intentID string) (*
 	}
 	copyEx := *ex
 	return &copyEx, nil
+}
+
+func (m *MemoryRepository) ListExecutions(ctx context.Context) ([]*intent.PaymentExecutionRecord, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*intent.PaymentExecutionRecord, 0, len(m.executions))
+	for _, ex := range m.executions {
+		copyEx := *ex
+		res = append(res, &copyEx)
+	}
+	return res, nil
 }
 
 // PostgresRepository implements Repository using a PostgreSQL connection pool.
@@ -271,6 +319,82 @@ func (p *PostgresRepository) GetExecution(ctx context.Context, intentID string) 
 		return nil, err
 	}
 	return &ex, nil
+}
+
+func (p *PostgresRepository) ListAgents(ctx context.Context) ([]*Agent, error) {
+	query := `SELECT id, name, status, created_at FROM agents ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*Agent
+	for rows.Next() {
+		var a Agent
+		if err := rows.Scan(&a.ID, &a.Name, &a.Status, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &a)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) ListServices(ctx context.Context) ([]*registry.Service, error) {
+	query := `SELECT id, name, recipient, asset, enabled, max_price, COALESCE(fixed_price, '') FROM services ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*registry.Service
+	for rows.Next() {
+		var s registry.Service
+		if err := rows.Scan(&s.ID, &s.Name, &s.Recipient, &s.Asset, &s.Enabled, &s.MaxPrice, &s.FixedPrice); err != nil {
+			return nil, err
+		}
+		res = append(res, &s)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) ListIntents(ctx context.Context) ([]*intent.PaymentIntent, error) {
+	query := `SELECT id, agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, status, expires_at, created_at, updated_at
+	          FROM payment_intents ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*intent.PaymentIntent
+	for rows.Next() {
+		var pi intent.PaymentIntent
+		var statusStr string
+		if err := rows.Scan(&pi.IntentID, &pi.AgentID, &pi.VaultAddress, &pi.ServiceID, &pi.Recipient, &pi.Amount, &pi.Asset, &pi.Purpose, &pi.Justification, &statusStr, &pi.ExpiresAt, &pi.CreatedAt, &pi.UpdatedAt); err != nil {
+			return nil, err
+		}
+		pi.Status = intent.IntentStatus(statusStr)
+		res = append(res, &pi)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) ListExecutions(ctx context.Context) ([]*intent.PaymentExecutionRecord, error) {
+	query := `SELECT intent_id, COALESCE(transaction_hash, ''), status, submitted_at, confirmed_at, COALESCE(error_code, '')
+	          FROM payment_executions ORDER BY submitted_at DESC NULLS LAST`
+	rows, err := p.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*intent.PaymentExecutionRecord
+	for rows.Next() {
+		var ex intent.PaymentExecutionRecord
+		if err := rows.Scan(&ex.IntentID, &ex.TransactionHash, &ex.Status, &ex.SubmittedAt, &ex.ConfirmedAt, &ex.ErrorCode); err != nil {
+			return nil, err
+		}
+		res = append(res, &ex)
+	}
+	return res, rows.Err()
 }
 
 // ApplyMigrations executes the initial schema migration statements.

@@ -12,7 +12,7 @@ Built for the **Arc Microgrants program**.
 
 As autonomous agents increasingly purchase resources—such as LLM compute, external API subscriptions, data indexing, and specialized tools—they require programmatic access to financial rails. However, granting autonomous agents unrestricted access to private keys and treasury balances introduces immense security and financial risk.
 
-AgentPay solves this by placing a deterministic risk/policy engine and an on-chain vault between the agent's intent to pay and actual on-chain settlement.
+AgentPay solves this by placing a deterministic risk/policy engine, an AI payment intent validation layer, and an on-chain vault between the agent's intent to pay and actual on-chain settlement.
 
 ---
 
@@ -21,14 +21,16 @@ AgentPay solves this by placing a deterministic risk/policy engine and an on-cha
 Every payment passes through a deterministic pipeline:
 
 ```
-Client / AI Agent
-   ↓ (POST /v1/payments/execute)
+AI Model (Untrusted Reasoning)
+   ↓ (POST /v1/agents/tasks)
+Structured Payment Intent (JSON)
+   ↓ (Schema Validation & Service Registry)
 Go Gateway (:8080)
-   ↓ (POST /v1/authorize)
+   ↓ (POST /v1/authorize or POST /v1/payment-intents/:id/authorize)
 Rust Policy Engine (:8081)
    ↓ (ALLOW / DENY)
 Go Gateway (:8080)
-   ↓ (If ALLOW)
+   ↓ (If ALLOW & Operator Confirmed)
 Execution Service
    ↓ (EIP-1559 Transaction)
 Solidity AgentVault (On-chain spending controls on Arc)
@@ -36,7 +38,7 @@ Solidity AgentVault (On-chain spending controls on Arc)
 Arc Mainnet (USDC Settlement)
 ```
 
-For full architectural details, see [`docs/architecture.md`](docs/architecture.md), [`docs/arc.md`](docs/arc.md), and [`services/gateway/README.md`](services/gateway/README.md).
+For full architectural details, see [`docs/architecture.md`](docs/architecture.md), [`docs/agent.md`](docs/agent.md), [`docs/frontend.md`](docs/frontend.md), [`docs/arc.md`](docs/arc.md), and [`services/gateway/README.md`](services/gateway/README.md).
 
 ---
 
@@ -44,12 +46,33 @@ For full architectural details, see [`docs/architecture.md`](docs/architecture.m
 
 | Layer | Technology | Primary Role |
 |---|---|---|
-| **Web Dashboard** | TypeScript, Next.js (App Router), Tailwind CSS | Human-in-the-loop dashboard, telemetry, wallet configuration |
-| **Gateway** | Go 1.22+, `go-ethereum` | High-throughput API gateway, policy orchestration, Arc execution service |
+| **Web Control Center** | TypeScript, Next.js (App Router), Tailwind CSS | Developer control center, agent telemetry, policy visualization, approval flow |
+| **AI Orchestration** | Go 1.22+, `AgentModel`, OpenAI JSON mode | Task analysis, prompt injection defense, structured payment intent creation |
+| **Gateway** | Go 1.22+, `go-ethereum` | High-throughput API gateway, service registry, state machine, Arc execution service |
 | **Policy Engine** | Rust 2021 (Axum, Tokio, Serde) | Deterministic spending limits, recipient verification, risk rules |
 | **Smart Contracts** | Solidity 0.8.24+, Foundry (`forge`) | `AgentVault` smart contracts, on-chain execution on Arc |
 | **Shared Types** | TypeScript | Common interfaces, intent schemas, currency definitions |
 | **Automation** | Bash (`set -euo pipefail`), Makefile | Environment setup, development orchestration, testing, builds |
+
+---
+
+## Web Control Center Routes
+
+| Route | Description |
+|---|---|
+| `/` | Landing page explaining AgentPay product positioning and architecture pipeline. |
+| `/dashboard` | Infrastructure console: agent totals, USDC controlled, spending KPI metrics, system health, and recent intents/transactions. |
+| `/agents` | Directory of registered autonomous agents and their operating statuses. |
+| `/agents/[agentId]` | Agent detail: vault address, USDC balance, spending policy visualization, and budget progress bar. |
+| `/payment-intents` | Full lifecycle view of payment intents with status filtering (`ALL`, `CREATED`, `AUTHORIZED`, `CONFIRMED`, `DENIED`, `EXPIRED`). |
+| `/payment-intents/[intentId]` | Detailed intent view with policy reasoning and explicit human confirmation approval flow. |
+| `/transactions` | Settled on-chain transactions with verified Arc explorer links. |
+| `/transactions/[txHash]` | Granular transaction execution metadata and block confirmations. |
+| `/services` | Service Registry: authorized paid services (`web-research`, `compute-cluster`, `data-feed`) and price ceilings. |
+| `/settings` | Read-only infrastructure configuration and security boundaries. |
+
+### Demo Mode
+When running locally or when backend services are offline, the Web Control Center includes a **Demo Mode** toggle (`● DEMO MODE ACTIVE`). This loads clearly labeled demo fixtures (`[DEMO]`) for visual review without fabricating on-chain data.
 
 ---
 
@@ -85,63 +108,18 @@ For full architectural details, see [`docs/architecture.md`](docs/architecture.m
    make dev
    ```
    This launches:
-   - **Web Dashboard**: `http://localhost:3000`
+   - **Web Control Center**: `http://localhost:3000`
    - **Go Gateway**: `http://localhost:8080` (Readiness: `GET /ready`, Health: `GET /health`)
    - **Rust Policy Engine**: `http://localhost:8081` (Health: `GET /health`)
 
----
-
-## Example API Usage
-
-### 1. Payment Execution Request (Go Gateway)
-
-Send a payment execution request to the Go Gateway:
-
-```bash
-curl -X POST http://localhost:8080/v1/payments/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "research-agent",
-    "vault_address": "0x2222222222222222222222222222222222222222",
-    "recipient": "0x1111111111111111111111111111111111111111",
-    "amount": "180000",
-    "purpose": "api_usage"
-  }'
-```
-
-**Expected Response (Execution Disabled / Dry Run - HTTP 200):**
-```json
-{
-  "request_id": "req_8a3f9e21",
-  "status": "EXECUTION_DISABLED",
-  "vault": "0x2222222222222222222222222222222222222222",
-  "recipient": "0x1111111111111111111111111111111111111111",
-  "amount": "180000",
-  "authorization": {
-    "request_id": "req_8a3f9e21",
-    "decision": "ALLOW",
-    "reason_code": "APPROVED",
-    "reason": "Payment satisfies the configured policy."
-  }
-}
-```
-
-**Expected Response (Policy Denied - HTTP 200, No Blockchain Transaction Sent):**
-```json
-{
-  "request_id": "req_8a3f9e22",
-  "status": "DENIED",
-  "vault": "0x2222222222222222222222222222222222222222",
-  "recipient": "0x1111111111111111111111111111111111111111",
-  "amount": "180000",
-  "authorization": {
-    "request_id": "req_8a3f9e22",
-    "decision": "DENY",
-    "reason_code": "DAILY_LIMIT_EXCEEDED",
-    "reason": "Payment would exceed the agent daily spending limit."
-  }
-}
-```
+4. **Web-Only Development**:
+   ```bash
+   cd apps/web
+   npm run dev       # Starts dev server on http://localhost:3000
+   npm run test      # Runs frontend unit test suite
+   npm run lint      # Runs Next.js ESLint
+   npm run build     # Compiles production Next.js application
+   ```
 
 ---
 
@@ -158,10 +136,10 @@ bash scripts/test.sh
 ```
 
 Individual component tests:
-- **Go Gateway Unit Tests**: `cd services/gateway && go test -v ./...`
+- **Frontend Web Suite**: `cd apps/web && npm run test`
+- **Go Gateway Unit & Integration**: `cd services/gateway && go test -v ./...`
 - **Rust Policy Engine**: `cd services/policy-engine && cargo test`
 - **Solidity Contracts**: `cd contracts && forge test -vvv`
-- **Web**: `cd apps/web && npm run lint`
 
 ---
 
@@ -174,6 +152,7 @@ Individual component tests:
 > 3. **Deterministic evaluation**: All policy decisions are auditable, deterministic, and fail-closed (`DENY` by default on unexpected inputs).
 > 4. **Live Execution Gate**: `ENABLE_LIVE_EXECUTION` defaults to `false`. Real Arc mainnet execution requires explicit opt-in and verified network constants.
 > 5. **Authorization Precedence**: Blockchain execution is NEVER initiated without prior explicit `ALLOW` from the authoritative Rust Policy Engine.
+> 6. **Zero Browser Secrets**: The web frontend NEVER stores or handles private keys. Real-world execution is guarded by server-side execution boundaries and human-in-the-loop approval.
 
 ---
 
@@ -184,4 +163,5 @@ Individual component tests:
 - **Task 3: AgentVault Smart Contract**: Solidity 0.8.24 `AgentVault.sol` on Arc with reentrancy protection, spending limits, blocklists, 38 Foundry tests. [COMPLETED]
 - **Task 4: Go Gateway + Rust Policy Engine Integration**: Go Gateway orchestration layer, typed policy client, HTTP handlers, middleware, comprehensive error handling, unit and integration tests. [COMPLETED]
 - **Task 5: Arc Mainnet USDC Execution Layer**: Blockchain client, execution service, AgentVault ABI packing, idempotency mechanism, safety gates, `POST /v1/payments/execute`, unit and integration tests. [COMPLETED]
-- **Task 6: AI Agent + Payment Intent System**: Scheduled for next phase.
+- **Task 6: AI Agent + Payment Intent System**: AI model abstraction, prompt injection defense, server-side service registry, state machine, PostgreSQL migrations, auto-execution mode, 30 tests. [COMPLETED]
+- **Task 7: AgentPay Web Control Center**: Developer-grade control center, 10 application routes, API client, reusable components, confirmation dialog, demo mode, 14 frontend tests. [COMPLETED]

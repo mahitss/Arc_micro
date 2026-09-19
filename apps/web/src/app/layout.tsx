@@ -1,9 +1,12 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import './globals.css';
+import { NetworkBadge } from '../components/NetworkBadge';
 
 export const metadata: Metadata = {
-  title: "AgentPay - Programmable USDC for Autonomous Agents",
-  description: "Deterministic, programmable USDC payment infrastructure for autonomous AI agents on the Arc blockchain.",
+  title: 'AgentPay - Programmable USDC Infrastructure for Autonomous Agents',
+  description:
+    'Developer control center for autonomous AI agents, deterministic spending policies, and on-chain Arc USDC settlement.',
 };
 
 export default function RootLayout({
@@ -14,42 +17,88 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-[#090d16] text-slate-100 antialiased selection:bg-teal-500/30 selection:text-teal-200">
-        <header className="border-b border-slate-800/80 bg-[#090d16]/80 backdrop-blur-md sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <a href="/" className="flex items-center space-x-3 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center font-bold text-slate-950 text-sm shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
-                AP
-              </div>
-              <span className="font-semibold text-lg tracking-tight text-white group-hover:text-teal-400 transition-colors">
-                AgentPay
-              </span>
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">
-                Arc Network
-              </span>
-            </a>
+        <header className="border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-6">
+              <Link href="/" className="flex items-center space-x-3 group">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center font-bold text-slate-950 text-sm shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
+                  AP
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-base tracking-tight text-white group-hover:text-teal-400 transition-colors">
+                    AgentPay
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 leading-none">
+                    Control Center
+                  </span>
+                </div>
+              </Link>
 
-            <nav className="flex items-center space-x-6">
-              <a
-                href="/"
-                className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
-              >
-                Overview
-              </a>
-              <a
-                href="/dashboard"
-                className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
-              >
-                Dashboard
-              </a>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-mono text-slate-400 hover:text-teal-400 transition-colors"
-              >
-                Docs
-              </a>
-            </nav>
+              <nav className="hidden md:flex items-center space-x-1 text-xs font-medium">
+                <Link
+                  href="/dashboard"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/agents"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Agents
+                </Link>
+                <Link
+                  href="/payment-intents"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Payment Intents
+                </Link>
+                <Link
+                  href="/transactions"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Transactions
+                </Link>
+                <Link
+                  href="/services"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Services
+                </Link>
+                <Link
+                  href="/settings"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Settings
+                </Link>
+              </nav>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <NetworkBadge isVerifiedMainnet={false} />
+            </div>
+          </div>
+
+          {/* Mobile sub-nav */}
+          <div className="md:hidden flex items-center space-x-1 px-4 py-2 border-t border-slate-800/60 overflow-x-auto text-xs font-mono">
+            <Link href="/dashboard" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Dashboard
+            </Link>
+            <Link href="/agents" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Agents
+            </Link>
+            <Link href="/payment-intents" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Intents
+            </Link>
+            <Link href="/transactions" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Transactions
+            </Link>
+            <Link href="/services" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Services
+            </Link>
+            <Link href="/settings" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Settings
+            </Link>
           </div>
         </header>
 

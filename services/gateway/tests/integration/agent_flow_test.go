@@ -81,7 +81,7 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 	}
 	agentSvc := agent.NewService(mockModel, intentSvc, reg, false)
 
-	router := gwHttp.NewRouter(cfg, pClient, nil, agentSvc, intentSvc)
+	router := gwHttp.NewRouter(cfg, pClient, nil, agentSvc, intentSvc, repo, reg)
 	server := httptest.NewServer(router)
 	defer server.Close()
 

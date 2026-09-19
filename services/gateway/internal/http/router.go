@@ -11,6 +11,8 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
 
 // NewRouter sets up and returns the HTTP mux with middleware pipeline for the Gateway.
@@ -20,6 +22,8 @@ func NewRouter(
 	execService execution.Service,
 	agentService *agent.Service,
 	intentService *intent.Service,
+	repo storage.Repository,
+	reg *registry.Registry,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -46,6 +50,16 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/payment-intents/{id}", piHandler.HandleGet)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/authorize", piHandler.HandleAuthorize)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/confirm", piHandler.HandleConfirm)
+	}
+
+	// 6. V1 Query & List APIs for Web Control Center
+	if repo != nil {
+		listHandler := handlers.NewListHandler(repo, reg)
+		mux.HandleFunc("GET /v1/agents", listHandler.HandleListAgents)
+		mux.HandleFunc("GET /v1/agents/{id}", listHandler.HandleGetAgent)
+		mux.HandleFunc("GET /v1/services", listHandler.HandleListServices)
+		mux.HandleFunc("GET /v1/payment-intents", listHandler.HandleListIntents)
+		mux.HandleFunc("GET /v1/transactions", listHandler.HandleListTransactions)
 	}
 
 	// Compose middleware chain:
