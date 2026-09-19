@@ -1,0 +1,22 @@
+{
+  "name": "@agentpay/shared",
+  "version": "0.1.0",
+  "description": "Shared TypeScript schemas, types, and constants for AgentPay",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "agentpay",
+    "arc",
+    "usdc",
+    "ai-agents"
+  ],
+  "author": "AgentPay Contributors",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

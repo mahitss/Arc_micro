@@ -1,0 +1,52 @@
+# ==============================================================================
+# AgentPay Local Service Orchestration
+# ==============================================================================
+# This docker-compose configuration provides an optional containerized environment
+# for running the backend services (Gateway and Policy Engine) locally with network
+# isolation and consistent environment variables.
+#
+# Frontend (Next.js) and Contracts (Foundry) are managed directly via native
+# tooling for optimal hot-reloading and compilation speed.
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  policy-engine:
+    build:
+      context: ./services/policy-engine
+      dockerfile: Dockerfile
+    container_name: agentpay-policy-engine
+    ports:
+      - "${POLICY_ENGINE_PORT:-8081}:8081"
+    environment:
+      - POLICY_ENGINE_PORT=8081
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: agentpay-gateway
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      - GATEWAY_PORT=8080
+      - POLICY_ENGINE_URL=http://policy-engine:8081
+      - ARC_RPC_URL=${ARC_RPC_URL:-}
+      - ARC_CHAIN_ID=${ARC_CHAIN_ID:-}
+      - ARC_USDC_ADDRESS=${ARC_USDC_ADDRESS:-}
+    depends_on:
+      policy-engine:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped

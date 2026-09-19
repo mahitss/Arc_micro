@@ -1,0 +1,113 @@
+# AgentPay Architecture
+
+## System Overview
+
+AgentPay provides programmable, deterministic USDC payment infrastructure specifically tailored for autonomous AI agents on the Arc blockchain. Autonomous agents require low-latency, programmatic payment execution for compute, tools, APIs, and micro-services without risking catastrophic wallet drain or policy violations.
+
+```
++-------------------------------------------------------------+
+|                        AI Agent                             |
+|         (Requests API / compute / tool payment)             |
++-------------------------------------------------------------+
+                              |
+                              | Payment Intent (Signed/Raw)
+                              v
++-------------------------------------------------------------+
+|                      Next.js Web                            |
+|             (Dashboard, Telemetry, Controls)                |
++-------------------------------------------------------------+
+                              |
+                              | HTTP / WebSocket
+                              v
++-------------------------------------------------------------+
+|                      Go Gateway                             |
+|   (Auth, RPC Infra, Event Streaming, Transaction Monitor)   |
++-------------------------------------------------------------+
+                              |
+                              | HTTP RPC (Internal)
+                              v
++-------------------------------------------------------------+
+|                  Rust Policy Engine                         |
+|   (Deterministic Policy, Spending Limits, Recipient Rules)  |
+|                       ALLOW / DENY                          |
++-------------------------------------------------------------+
+                              |
+                              | Approved Intent Execution
+                              v
++-------------------------------------------------------------+
+|                  Solidity AgentVault                        |
+|       (On-chain Smart Contract Vault on Arc Network)        |
++-------------------------------------------------------------+
+                              |
+                              | USDC Settlement
+                              v
++-------------------------------------------------------------+
+|                     Arc Mainnet                             |
+|          (Finality & Native USDC Asset Settlement)          |
++-------------------------------------------------------------+
+```
+
+---
+
+## Layer Responsibilities
+
+### 1. Next.js Web Dashboard (`apps/web`)
+- **Technology**: Next.js (App Router), TypeScript, Tailwind CSS.
+- **Responsibilities**:
+  - Provides a human-in-the-loop interface for human operators to monitor agent spending in real time.
+  - Configuration UI for policy limits (daily spending caps, whitelisted service providers, emergency freeze).
+  - Visualization of payment intents, pending reviews, approvals, and transaction history.
+  - Web3 wallet interaction (e.g., configuring contract parameters, initial vault funding).
+
+### 2. Go Gateway (`services/gateway`)
+- **Technology**: Go 1.22+.
+- **Responsibilities**:
+  - High-throughput API gateway receiving payment intents from AI agents.
+  - Blockchain RPC infrastructure and node connection pool management.
+  - Real-time transaction monitoring and event streaming over WebSockets/SSE.
+  - Orchestration between agent intents, policy evaluation, and contract dispatch.
+  - Resilience, rate-limiting, and telemetry ingestion.
+
+### 3. Rust Policy Engine (`services/policy-engine`)
+- **Technology**: Rust 2021, Axum, Tokio, Serde.
+- **Responsibilities**:
+  - Purely deterministic, mathematically sound risk and policy evaluation.
+  - Verification of agent spending limits (per-transaction, per-hour, per-day).
+  - Strict recipient validation (whitelists, blacklists, contract verification).
+  - Explicit `ALLOW` or `DENY` decision responses with audit trail logging.
+  - Absolute adherence to zero floating-point arithmetic.
+
+### 4. Solidity AgentVault (`contracts/`)
+- **Technology**: Solidity 0.8.24+, Foundry.
+- **Responsibilities**:
+  - Custodial or delegated vault smart contract holding agent operational funds.
+  - Enforces on-chain hard limits, timelocks, and withdrawal authorization.
+  - Executes payment transfers directly to target service providers upon receipt of verified, policy-approved intents.
+  - Emits immutable on-chain events for reconciliation.
+
+### 5. Arc Blockchain & USDC Settlement
+- **Technology**: Arc Network.
+- **Responsibilities**:
+  - Fast-finality EVM-compatible execution layer.
+  - Gas-efficient, deterministic settlement in native/canonical USDC.
+  - Note: Mainnet deployment and live contract interactions will be executed in a dedicated future task.
+
+---
+
+## Core Engineering Invariants
+
+1. **Deterministic Execution**:
+   The policy engine produces identical decisions given identical intent parameters and state. No probabilistic or heuristic approvals for funds transfer.
+
+2. **Zero Floating-Point Arithmetic**:
+   All monetary amounts are represented as integers in the smallest token denomination (e.g., 6 decimals for USDC = $1.00 is `1_000_000` micro-units).
+   - TypeScript: `BigInt` / string
+   - Go: `*big.Int` / `uint64`
+   - Rust: `u64` / `u128`
+   - Solidity: `uint256`
+
+3. **Explicit Failure & Auditable Denials**:
+   Every policy denial produces a machine-readable reason code and audit payload. Failures are never silent.
+
+4. **Principle of Least Privilege**:
+   AI agents never possess raw private keys holding total treasury balances. They submit signed intents against strictly capped allowances in the AgentVault.
