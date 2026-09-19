@@ -81,12 +81,24 @@ AgentPay provides programmable, deterministic USDC payment infrastructure specif
   - Zero side effects: the core `authorize(request, policy)` function has no network, database, filesystem, or clock dependencies.
 
 ### 4. Solidity AgentVault (`contracts/`)
-- **Technology**: Solidity 0.8.24+, Foundry.
+- **Technology**: Solidity 0.8.24+, Foundry (`forge` 1.8.3), OpenZeppelin v5.
 - **Responsibilities**:
-  - Custodial or delegated vault smart contract holding agent operational funds.
-  - Enforces on-chain hard limits, timelocks, and withdrawal authorization.
-  - Executes payment transfers directly to target service providers upon receipt of verified, policy-approved intents.
-  - Emits immutable on-chain events for reconciliation.
+  - Custodial vault smart contract holding agent operational funds in ERC-20 USDC.
+  - Serves as the immutable on-chain enforcement layer following off-chain authorization.
+  - Enforces hard on-chain spending limits (per-transaction limit, daily budget, transaction frequency).
+  - Maintains recipient allowlists and blocked recipient blacklists (with blocked taking strict precedence).
+  - Emits immutable on-chain events (`PaymentExecuted`, `PolicyUpdated`, `Withdrawal`, `VaultPaused`) for off-chain indexing.
+  - Implements emergency controls: owner-only pause/unpause circuit breaker and administrative withdrawal.
+
+#### Off-Chain Policy vs. On-Chain Enforcement
+
+| Dimension | Rust Policy Engine (Off-Chain) | Solidity AgentVault (On-Chain) |
+|---|---|---|
+| **Role** | Pre-flight policy & risk evaluation | Final fund custody & payment execution |
+| **Trust Model** | Fast, deterministic off-chain security filter | Zero-trust immutable EVM bytecode enforcement |
+| **Failure Mode** | Returns `DENY` decision with auditable `reason_code` | Reverts transaction on-chain (`revert`) |
+| **Gas Cost** | Zero gas (sub-millisecond evaluation) | Gas consumed on Arc network upon state change |
+| **State Storage** | Application memory / future PostgreSQL | On-chain contract storage slots |
 
 ### 5. Arc Blockchain & USDC Settlement
 - **Technology**: Arc Network.

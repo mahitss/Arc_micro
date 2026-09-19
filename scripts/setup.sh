@@ -5,6 +5,8 @@ set -euo pipefail
 # AgentPay Local Environment Setup Script
 # ==============================================================================
 
+export PATH="$PATH:$HOME/.foundry/bin"
+
 echo "===================================================="
 echo "          AgentPay Environment Setup                "
 echo "===================================================="

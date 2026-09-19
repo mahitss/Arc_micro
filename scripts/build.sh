@@ -5,6 +5,8 @@ set -euo pipefail
 # AgentPay Monorepo Build Script
 # ==============================================================================
 
+export PATH="$PATH:$HOME/.foundry/bin"
+
 echo "===================================================="
 echo "          AgentPay Monorepo Build                   "
 echo "===================================================="

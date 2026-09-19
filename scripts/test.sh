@@ -5,6 +5,8 @@ set -euo pipefail
 # AgentPay Automated Test Suite Runner
 # ==============================================================================
 
+export PATH="$PATH:$HOME/.foundry/bin"
+
 echo "===================================================="
 echo "          AgentPay Automated Test Suite             "
 echo "===================================================="
