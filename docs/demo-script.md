@@ -1,71 +1,69 @@
-# AgentPay Demonstration Video Script
+# AgentPay Demonstration Screencast Script
 
-> **Target Duration**: 2 minutes 30 seconds  
+> **Target Duration**: 3 to 5 minutes  
+> **Target Audience**: Arc Microgrants Evaluators  
 > **Route**: `http://localhost:3000/demo`  
-> **Format**: Screencast with voiceover  
-> **Presenter Tone**: Clear, technical, factual, zero hype.
+> **Tone**: Professional, technical, evidence-driven, zero marketing fluff.
 
 ---
 
-## Script Breakdown
-
-### 0:00 — The Problem (20s)
-- **Visual**: Title slide or high-level architecture diagram (`docs/architecture-final.md`).
+## 00:00 — Problem (30s)
+- **Visual**: Open on architecture diagram in [`docs/architecture.md`](architecture.md).
 - **Voiceover**:
-  > "Autonomous AI agents can formulate plans, call external tools, and reason about complex tasks. But the moment an agent needs to perform an economic action—like purchasing research data or renting GPU compute—it needs spending authority. Giving an AI direct access to a crypto wallet is dangerous: prompts can be hijacked, and recursive loops can drain an entire treasury in seconds."
+  > "Autonomous AI agents can formulate multi-step plans, call external tools, and reason through complex tasks. But the moment an agent needs to perform an economic action—such as paying for GPU inference, indexing data, or querying a research API—it requires spending authority. Giving an AI agent direct, unconstrained access to a cryptocurrency wallet is dangerous: prompts can be hijacked, and recursive loops can drain an entire treasury in seconds. For agents to safely engage in commerce, economic authority must be separated from intelligence."
 
 ---
 
-### 0:20 — AgentPay Dashboard (20s)
-- **Visual**: Screen recording opens on `http://localhost:3000/dashboard`.
+## 00:30 — Architecture (30s)
+- **Visual**: Highlight the 3 trust boundaries in the architecture diagram: `UNTRUSTED`, `TRUSTED APPLICATION LOGIC`, and `ON-CHAIN ENFORCEMENT`.
 - **Voiceover**:
-  > "This is AgentPay: programmable USDC payment infrastructure for autonomous AI agents on Arc. AgentPay decouples economic authority from intelligence. The AI creates a structured payment intent, a deterministic policy engine evaluates the request, and on-chain smart contracts execute settlement on Arc."
+  > "AgentPay decouples intelligence from spending authority. The AI reasoning layer is treated as untrusted. When an agent needs to pay for a service, it formulates a structured Payment Intent. An independent Rust Policy Engine evaluates spending rules in pure, deterministic integer math. Upon authorization, a Go Gateway orchestrates execution, and our Solidity contract, AgentVault, enforces hard on-chain limits and executes USDC settlement on the Arc blockchain."
 
 ---
 
-### 0:40 — Create Payment Intent (20s)
-- **Visual**: Switch to `http://localhost:3000/demo`. Click **"Run Research Agent Demo"**. Step 1 highlights.
+## 01:00 — Create Agent & Payment Intent (45s)
+- **Visual**: Switch browser to `http://localhost:3000/demo`. Click **"▶ Run Research Agent Demo (0.18 USDC)"**. Step 1 card animates and highlights.
 - **Voiceover**:
-  > "Here we trigger our Research Agent with a task: 'Retrieve external research data'. Notice that the agent does not sign a transaction. Instead, it submits a structured payment intent requesting 0.18 USDC for the registered 'web-research' service. The recipient address is resolved strictly server-side to prevent prompt injection."
+  > "Here on our interactive demo route, we trigger our Research Agent with a task: 'Retrieve external research data'. Notice what happens: the agent does not sign a transaction and does not hold a private key. Instead, the Go Gateway resolves the approved 'web-research' service from a server-side catalog, locks the recipient address to prevent prompt injection, and generates a structured Payment Intent for 0.18 USDC, or 180,000 base units."
 
 ---
 
-### 1:00 — Policy Evaluation (20s)
-- **Visual**: Step 2 & 3 animate and show `ALLOW`.
+## 01:45 — Show Policy Authorization (30s)
+- **Visual**: Step 2 and Step 3 cards animate to `ALLOW` and `APPROVED`.
 - **Voiceover**:
-  > "The Go Gateway forwards this intent to our Rust Policy Engine. The policy engine evaluates deterministic mathematical rules: daily spending limit, per-transaction maximum, and recipient allowlists. Because 0.18 USDC is well within the remaining daily budget, the policy engine returns an explicit ALLOW decision."
+  > "The intent is forwarded to our standalone Rust Policy Engine on port 8081. The engine checks four deterministic rules: per-transaction limit, remaining daily budget, frequency cap, and recipient allowlists. Because 0.18 USDC is well within the agent's 0.50 USDC per-transaction cap and 5.00 USDC daily budget, the policy engine returns an explicit ALLOW decision. The intent transitions to AUTHORIZED."
 
 ---
 
-### 1:20 — Execution & On-Chain Settlement (20s)
-- **Visual**: Step 4 & 5 highlight. Execution status shows `CONFIRMED` or `DEMO / EXECUTION DISABLED` depending on live network mode.
+## 02:15 — Execute a Valid Payment (45s)
+- **Visual**: Step 4 card highlights, showing `AgentVault.sol` execution preparation.
 - **Voiceover**:
-  > "With authorization verified, the execution service submits the transaction to the AgentVault smart contract on Arc. In live mode, the vault transfers the 6-decimal USDC base units directly to the service provider. In local demo mode, safety guards keep execution simulated."
+  > "With cryptographic authorization verified, the execution service prepares the transaction. To prevent race conditions and double-spending, the Go Gateway uses atomic Compare-And-Swap in the database to move the intent from AUTHORIZED to EXECUTING. In live mainnet mode, the transaction is signed and broadcast to AgentVault on Arc. In local review mode, our master safety gate keeps execution simulated, displaying DEMO / EXECUTION DISABLED without faking on-chain success."
 
 ---
 
-### 1:40 — Arc Settlement & Explorer (20s)
-- **Visual**: Highlight the settlement receipt box with transaction parameters (amount, recipient, vault address, network chain ID `5042`).
+## 03:00 — Show Arc Transaction (30s)
+- **Visual**: Step 5 card and the verified settlement evidence box below highlight.
 - **Voiceover**:
-  > "Arc is our settlement layer. Because Arc is a stablecoin-native Layer 1 with gas paid in USDC, both gas accounting and payment settlement occur in the same predictable currency without slippage or multi-token management."
+  > "Arc is our settlement layer. Why Arc? Because Arc is a stablecoin-native Layer 1 where gas is paid directly in USDC. Unlike other EVM networks where agents must juggle both ETH and USDC, on Arc an agent funded with USDC pays for both the service and the transaction fee from the same balance. When live, the transaction hash is verified directly on Arc Explorer."
 
 ---
 
-### 2:00 — Safety Model: Over-Limit Spending Attempt (20s)
-- **Visual**: Click **"Test Policy Denial"** button. Step 1 shows an agent requesting 6.00 USDC (exceeding the daily budget).
+## 03:30 — Demonstrate Denied Payment (45s)
+- **Visual**: Click **"🛡 Test Policy Denial (Over-Limit Attempt)"**. Step 1 triggers with 6.00 USDC. Step 2 & 3 show immediate `DENY` with reason `DAILY_LIMIT_EXCEEDED`. Step 4 & 5 display **`Blockchain Transaction: NONE`**.
 - **Voiceover**:
-  > "Now let’s test the security boundary. Suppose an agent attempts to spend 6.00 USDC—exceeding its remaining daily limit. The agent creates the intent, but when the Rust policy engine evaluates it, the result is an immediate DENY with error code DAILY_LIMIT_EXCEEDED."
+  > "Now let’s test the security model. Suppose an agent attempts to spend 6.00 USDC—exceeding its remaining daily budget. The intent is created, but the moment the Rust policy engine evaluates it, the request is denied with error code DAILY_LIMIT_EXCEEDED. Crucially, look at the execution and blockchain steps: zero transactions were broadcast to Arc. The vault was not called, zero gas was spent, and funds remained 100% protected."
 
 ---
 
-### 2:20 — Verification: Zero Transactions (10s)
-- **Visual**: Step 3 displays `PAYMENT DENIED: DAILY_LIMIT_EXCEEDED`. Step 4 & 5 explicitly display `Blockchain Transaction: NONE`.
+## 04:15 — Explain Security Model (45s)
+- **Visual**: Switch to [`docs/security.md`](security.md) or [`docs/payment-state-machine.md`](payment-state-machine.md).
 - **Voiceover**:
-  > "Crucially, look at the execution layer: zero blockchain transactions were created, signed, or broadcast. The request was blocked before touching the chain. AgentPay is not merely a payment sender; it is a deterministic firewall for autonomous spending."
+  > "This denial proves that AgentPay is not merely a payment forwarder, but a deterministic security firewall. Our security model provides defense in depth: the AI is untrusted; the Rust policy engine enforces limits off-chain; atomic CAS prevents double-spending; and AgentVault enforces hard limits on-chain in immutable bytecode. Even if the off-chain gateway were fully compromised, an attacker cannot exceed the on-chain daily limit or transfer funds to unapproved recipients."
 
 ---
 
-### 2:30 — Close (10s)
-- **Visual**: Switch back to `/dashboard` or `docs/quickstart.md`.
+## 05:00 — Conclusion (30s)
+- **Visual**: Return to `http://localhost:3000/dashboard` showing system health and metrics.
 - **Voiceover**:
-  > "AgentPay provides the programmable, auditable guardrails autonomous agents need to conduct safe commerce on Arc. The complete repository, test suites, and documentation are available on GitHub. Thank you."
+  > "AgentPay provides the programmable, auditable guardrails autonomous agents need to conduct safe commerce on Arc. The entire monorepo—Next.js frontend, Go Gateway, Rust Policy Engine, and Foundry contracts—is open source, fully tested, and ready for review on GitHub. Thank you."

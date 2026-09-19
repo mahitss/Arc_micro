@@ -4,199 +4,123 @@ Programmable USDC payment infrastructure for autonomous AI agents on Arc.
 
 ---
 
-## What it does
+## What It Does
 
-AgentPay is a programmable, policy-controlled payment infrastructure designed specifically for autonomous AI agents. It enables AI agents to formulate spending requests (such as paying for API calls, GPU compute, or data services) while placing a deterministic risk engine and on-chain smart contract guardrails between the agent's intent and actual on-chain settlement.
+AgentPay provides programmable, deterministic payment infrastructure for autonomous AI agents operating on the Arc blockchain. 
 
----
-
-## The problem
-
-Autonomous AI agents can formulate plans, reason through complex tasks, and invoke external software tools. However, granting an AI agent direct, unconstrained access to a cryptocurrency wallet introduces critical financial and operational risks:
-- **Prompt Injection & Tool Hijacking**: Adversarial user inputs or malicious third-party content can trick an LLM into sending unauthorized transactions.
-- **Runaway Spending Loops**: Recursive sub-agent execution or software bugs can deplete treasury balances in seconds.
-- **Lack of Governance**: Traditional crypto wallets provide no programmatic spending limits, daily budget caps, or service-level allowlists.
-
-For autonomous agents to conduct commerce safely, **economic authority must be separated from intelligence**.
-
----
-
-## How it works
-
-Every economic action passes through a deterministic pipeline where the AI never holds signing keys:
+When an autonomous agent needs to purchase computational resources, external APIs, or data services, it does not hold a private key or directly broadcast transactions. Instead, every transaction follows a controlled pipeline:
 
 ```
-AI Agent
-   ↓ (High-level reasoning & task evaluation)
-Payment Intent
-   ↓ (Structured JSON with service_id, amount, purpose)
-Go Gateway
-   ↓ (Schema validation & server-side recipient resolution)
-Rust Policy Engine
-   ↓ (Deterministic math: daily limits, per-tx limits, allowlists)
-AgentVault
-   ↓ (Solidity smart contract enforcing on-chain limits)
-Arc / USDC
-   ↓ (Finalized on-chain settlement with USDC gas)
+AI agent requests a payment
+  ↓
+trusted service is selected (Service Registry)
+  ↓
+deterministic policy evaluates it (Rust Policy Engine)
+  ↓
+authorized payment reaches execution layer (Go Gateway)
+  ↓
+AgentVault executes USDC payment (Solidity Smart Contract)
+  ↓
+Arc settles it (USDC native gas settlement)
+  ↓
+backend verifies the result (Event & Receipt Verification)
 ```
+
+> **Core Principle**: AI can request a payment, but AI does not receive unrestricted authority to move funds.
 
 ---
 
 ## Why Arc
 
-AgentPay specifically uses Arc as its native settlement layer for USDC-denominated agent payments:
-- **USDC-Native Gas Economics**: On Arc, gas fees are paid directly in USDC at the protocol level (18 decimals), while contract state operates via the canonical ERC-20 interface (6 decimals). This unifies gas accounting and payment settlement into a single stable currency, eliminating the dual-asset friction of managing both ETH/MATIC and stablecoins.
-- **EVM Compatibility (Chain ID `5042`)**: Arc provides standard EVM execution semantics, allowing AgentPay to deploy standard Solidity contracts (`AgentVault.sol`) and use established tooling (Foundry, `go-ethereum`).
-- **Programmable On-Chain Settlement**: Arc provides deterministic block execution and finality, suitable for high-frequency machine-to-machine micropayments.
+AgentPay specifically uses Arc as its native settlement network for five technical reasons:
 
-For detailed economic rationale, see [`docs/why-arc.md`](docs/why-arc.md).
-
----
-
-## Live Demo
-
-- **Interactive Reviewer Route**: Available at **[`/demo`](http://localhost:3000/demo)** when running the Web Control Center locally.
-- **Single-Screen Experience**: Demonstrates the full 5-step pipeline in one interface:
-  1. **Research Agent Intent**: Agent requests 0.18 USDC for the registered `web-research` service.
-  2. **Policy Evaluation**: Evaluates spending limit rules in pure Rust and returns `ALLOW`.
-  3. **Execution & Settlement**: Submits transaction to `AgentVault` (or clearly displays `DEMO / EXECUTION DISABLED` when running without live mainnet gas).
-  4. **Safety Denial Demonstration**: Demonstrates an over-limit payment attempt (e.g. 6.00 USDC exceeding daily budget), resulting in an immediate `DAILY_LIMIT_EXCEEDED` denial and **`Blockchain Transaction: NONE`**.
-
----
-
-## Contract
-
-- **Contract Name**: `AgentVault.sol`
-- **Target Network**: Arc Mainnet (Chain ID `5042`)
-- **Canonical USDC Address**: `0x3600000000000000000000000000000000000000`
-- **Deployment Script**: `contracts/script/DeployAgentVault.s.sol` (tested via Foundry, ready for broadcast with `scripts/deploy_mainnet.sh`).
-- **Verified Deployment Records**: See [`docs/deployed-resources.md`](docs/deployed-resources.md).
+1. **USDC-Denominated Payments**: Agent operations (API calls, inference, data feeds) are priced in dollar equivalents. Arc eliminates currency volatility by natively operating in USDC.
+2. **Programmable Payment Infrastructure**: Arc provides high-throughput, low-latency EVM smart contract execution tailored for automated commerce.
+3. **Agentic Economic Activity**: On standard networks, agents must manage two assets (native gas + stablecoin). On Arc, gas is paid directly in USDC at the protocol layer, allowing an agent funded with USDC to cover both service payments and network fees from a single balance.
+4. **Deterministic Settlement**: Arc provides fast transaction finality, enabling autonomous agents to execute multi-step tool calls without waiting for extended block confirmations.
+5. **On-Chain Verification**: Every payment emits an immutable `PaymentExecuted` event on Arc, providing cryptographic proof of settlement for automated accounting and reconciliation.
 
 ---
 
 ## Architecture
 
-AgentPay is divided into five distinct architectural layers:
+```mermaid
+flowchart TD
+    subgraph Untrusted_Layer["Untrusted Client & Model Layer"]
+        User["Operator"] --> UI["Next.js Control Center (/demo)"]
+        AI["AI Agent (LLM)"] -->|Payment Intent| Registry["Service Registry"]
+    end
 
-1. **Untrusted Client Layer (`apps/web`)**: Next.js 14 Web Control Center for operator monitoring, policy inspection, and interactive demonstration.
-2. **Gateway Orchestration Layer (`services/gateway`)**: Go 1.22 API gateway handling task ingestion, prompt orchestration, server-side recipient resolution from the `Service Registry`, rate limiting, and atomic Compare-And-Swap (CAS) state transitions.
-3. **Deterministic Policy Boundary (`services/policy-engine`)**: Standalone Rust service evaluating spending requests against daily budget limits, per-transaction maximums, frequency caps, and recipient allowlists in sub-millisecond response times.
-4. **Execution & Signer Boundary (`services/gateway/internal/execution`)**: Manages nonce allocation, EIP-1559 gas calculation, idempotency checks, and transaction submission to Arc.
-5. **On-Chain Settlement Layer (`contracts/AgentVault.sol`)**: Solidity smart contract on Arc holding USDC reserves, enforcing hard on-chain daily limits, and executing transfers via `usdc.safeTransfer`.
+    subgraph Trusted_Logic["Trusted Application Logic Boundary"]
+        Registry -->|Validated Intent| Gateway["Go Gateway (:8080)"]
+        Gateway -->|Authorize Request| Rust["Rust Policy Engine (:8081)"]
+        Rust -->|ALLOW / DENY| Gateway
+        Gateway -->|Atomic CAS / Sign| Executor["Execution Service"]
+    end
 
-For complete architectural details and Mermaid diagrams, see [`docs/architecture-final.md`](docs/architecture-final.md).
+    subgraph OnChain_Enforcement["On-Chain Settlement Layer (Arc Mainnet)"]
+        Executor -->|executePayment()| Vault["AgentVault.sol"]
+        Vault -->|Transfer USDC| Provider["Service Provider"]
+        Vault -->|Emit Event| Arc["Arc Blockchain (Chain ID 5042)"]
+    end
 
----
+    classDef untrusted fill:#4a154b,stroke:#e01e5a,stroke-width:1px,color:#fff;
+    classDef trusted fill:#1e3a5f,stroke:#3b82f6,stroke-width:1px,color:#fff;
+    classDef onchain fill:#1a3a2a,stroke:#10b981,stroke-width:1px,color:#fff;
 
-## Security model
-
-- **AI is Untrusted**: The LLM never holds private keys, never signs transactions, and cannot specify arbitrary recipient addresses. All recipients are resolved server-side from an approved registry.
-- **Rust Policy Controls Authorization**: Off-chain authorization is pure, deterministic, and side-effect-free. No transaction is broadcast without an explicit `ALLOW`.
-- **Solidity Enforces On-Chain Rules**: `AgentVault.sol` enforces independent daily spending limits and owner-controlled emergency `pause()` and `withdraw()` mechanisms.
-- **Double-Spend Defense**: Concurrency and replay protection are enforced via database CAS state transitions (`AUTHORIZED` $\rightarrow$ `EXECUTING`).
-
-For the full security specification and threat model, see [`docs/security.md`](docs/security.md).
+    class User,UI,AI untrusted;
+    class Registry,Gateway,Rust,Executor trusted;
+    class Vault,Provider,Arc onchain;
+```
 
 ---
 
 ## Tech Stack
 
-- **TypeScript**: Next.js 14 (App Router), React, TailwindCSS.
-- **Go**: Go 1.22, `go-ethereum`, standard library HTTP routing.
-- **Rust**: Rust 1.78, Axum, Tokio, Serde.
-- **Solidity**: Solidity 0.8.24, OpenZeppelin Contracts, Foundry (`forge`, `cast`).
-- **Bash**: Production deployment scripts (`scripts/deploy_mainnet.sh`, `scripts/dev.sh`).
-- **PostgreSQL**: Optional relational persistence for intents and transaction records (in-memory fallback for local dev).
+- **Next.js / TypeScript**: Developer Control Center and interactive reviewer demo (`/demo`).
+- **Go**: High-throughput gateway, prompt orchestration, service registry, and blockchain execution client.
+- **Rust**: Deterministic, side-effect-free policy engine evaluating spending rules in sub-millisecond latency.
+- **Solidity**: `AgentVault.sol` smart contracts enforcing on-chain daily limits, emergency pause, and fund custody.
+- **PostgreSQL**: Relational persistence for payment intents and transaction receipts (with thread-safe in-memory fallback).
+- **Arc**: Stablecoin-native Layer 1 settlement network (Chain ID `5042`).
+- **USDC**: Canonical settlement asset (`0x3600000000000000000000000000000000000000`) and native gas asset.
 
 ---
 
-## Running locally
+## Security Model
 
-### 1. Prerequisites
-- Go `1.22+`
-- Rust & Cargo `1.78+`
-- Node.js `18+` & `npm`
-- Foundry (`forge`, `cast`)
+AgentPay enforces defense-in-depth across six distinct boundaries:
 
-### 2. Quickstart
-```bash
-# Clone repository
-git clone https://github.com/mahitss/Arc_micro.git
-cd Arc_micro
-
-# Copy environment template
-cp .env.example .env
-
-# Run all services (Web on :3000, Gateway on :8080, Policy Engine on :8081)
-./scripts/dev.sh
-```
-
-For step-by-step developer onboarding, see [`docs/quickstart.md`](docs/quickstart.md).
+1. **AI is Untrusted**: The LLM never touches private keys, never signs transactions, and cannot specify arbitrary recipient addresses.
+2. **Rust Policy Engine is Deterministic**: Evaluates spending limits, daily budget caps, transaction frequency, and allowlists using pure integer arithmetic without network or clock side effects.
+3. **Service Registry Constrains Recipients**: Recipient addresses are resolved strictly server-side from an approved catalog, neutralizing prompt injection attacks.
+4. **Go Execution Layer is Controlled**: Enforces atomic Compare-And-Swap (CAS) state transitions (`AUTHORIZED` $\rightarrow$ `EXECUTING`) to eliminate race conditions and double-spending.
+5. **AgentVault Enforces On-Chain Limits**: Hard daily spending caps and owner emergency pause switches (`pause()`) are enforced directly in immutable EVM bytecode.
+6. **Secrets Stay Server-Side**: Signing keys and API secrets are loaded strictly from environment variables at runtime and never reach frontend bundles or client logs.
 
 ---
 
-## Testing
+## Demo
 
-Every layer contains comprehensive automated test suites:
-
-```bash
-# 1. Smart Contract Tests (Solidity)
-cd contracts && forge test
-# Status: 41/41 passing (unit, edge case, and fuzz tests)
-
-# 2. Policy Engine Tests (Rust)
-cd services/policy-engine && cargo test
-# Status: 29/29 passing (limits, allowlists, frequency caps)
-
-# 3. Gateway & Integration Tests (Go)
-cd services/gateway && go test -v ./...
-# Status: 100% passing (task parsing, negative paths, concurrency, recovery)
-
-# 4. Frontend Unit Tests & Linter (TypeScript)
-cd apps/web && npm test && npm run lint
-# Status: 14/14 passing, zero ESLint errors
-```
+- **Production Hosted URL**: `LIVE DEMO: NOT YET DEPLOYED`
+- **Interactive Local Demo**: Available at **[`http://localhost:3000/demo`](http://localhost:3000/demo)** when running the Web Control Center locally.
+- **Demo Features**:
+  - **Happy Path**: Research Agent creates an intent for 0.18 USDC, Rust policy evaluates and approves, execution prepared, settlement displayed.
+  - **Safety Denial**: Over-limit payment (6.00 USDC > daily budget) is denied off-chain with `DAILY_LIMIT_EXCEEDED` and explicitly proves **`Blockchain Transaction: NONE`**.
 
 ---
+
+## Quick Start
+To set up and run the complete system locally in under 5 minutes, see [`docs/quickstart.md`](docs/quickstart.md) or the concise [`docs/reviewer-quickstart.md`](docs/reviewer-quickstart.md).
 
 ## Deployment
+For verified Arc Mainnet parameters, RPC endpoints, and smart contract configuration, see [`docs/deployed-resources.md`](docs/deployed-resources.md).
 
-To deploy `AgentVault.sol` to Arc Mainnet:
-
-```bash
-# Export deployer credentials securely in shell session (never write to disk)
-export DEPLOYER_PRIVATE_KEY="<your_hex_private_key>"
-export ARC_RPC_URL="https://rpc.mainnet.arc.io"
-export ARC_CHAIN_ID="5042"
-export ARC_USDC_ADDRESS="0x3600000000000000000000000000000000000000"
-export AGENT_ID="research-agent"
-
-# Run the deployment script
-./scripts/deploy_mainnet.sh
-```
-
-For complete operations runbooks, see [`docs/deployment.md`](docs/deployment.md).
-
----
+## Security
+For the comprehensive security architecture, threat model, and failure recovery protocols, see [`docs/security.md`](docs/security.md).
 
 ## Limitations
+For complete disclosure of prototype assumptions and known architectural constraints, see [`docs/limitations.md`](docs/limitations.md).
 
-> [!WARNING]
-> **Prototype Status**: AgentPay is an experimental prototype built for the Arc Microgrants program. It is **NOT** audited and **NOT** production-ready. Do not use AgentPay to custody substantial financial capital.
-
-For full disclosure of known architectural limitations and assumptions, see [`docs/limitations.md`](docs/limitations.md).
-
----
-
-## Microgrant status
-
-| Requirement | Status | Notes |
-|---|---|---|
-| **Arc Mainnet Compatibility** | **VERIFIED** | Chain ID `5042` and USDC contract verified live via RPC. |
-| **Smart Contracts** | **VERIFIED** | 41 Foundry tests passing. Deployment script ready. |
-| **Policy Engine** | **VERIFIED** | 29 Rust tests passing. Sub-millisecond evaluation. |
-| **Gateway Orchestrator** | **VERIFIED** | Go 1.22, concurrency protected, CAS state transitions. |
-| **Control Center & Demo** | **VERIFIED** | Next.js 14 dashboard and interactive `/demo` route. |
-| **Mainnet Broadcast** | **PENDING EVALUATION** | Ready for funded broadcast with `scripts/deploy_mainnet.sh`. |
-
-For the full Arc Microgrants checklist, see [`docs/microgrant-checklist.md`](docs/microgrant-checklist.md).
+## Submission
+For the Arc Microgrants requirements matrix and verification evidence, see [`docs/submission-checklist.md`](docs/submission-checklist.md) and [`docs/submission-evidence.md`](docs/submission-evidence.md).
