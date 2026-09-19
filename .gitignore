@@ -11,6 +11,7 @@ dist/
 bin/
 target/
 cache/
+*.exe
 
 # Foundry / Solidity
 contracts/out/

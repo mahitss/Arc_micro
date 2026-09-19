@@ -427,7 +427,9 @@ contract AgentVaultTest is Test {
     function test_36_withdrawal_excessive_amount_reverts() public {
         uint256 excessAmount = INITIAL_VAULT_FUNDING + 1_000_000;
         vm.prank(owner);
-        vm.expectRevert(abi.encodeWithSelector(AgentVault.InsufficientBalance.selector, excessAmount, INITIAL_VAULT_FUNDING));
+        vm.expectRevert(
+            abi.encodeWithSelector(AgentVault.InsufficientBalance.selector, excessAmount, INITIAL_VAULT_FUNDING)
+        );
         vault.withdraw(owner, excessAmount);
     }
 

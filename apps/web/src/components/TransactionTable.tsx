@@ -83,7 +83,7 @@ export function TransactionTable({ transactions, explorerUrl }: TransactionTable
                 </td>
                 <td className="py-3 px-4 text-slate-500">{formattedTime}</td>
                 <td className="py-3 px-4 text-right">
-                  {explorerUrl && tx.transaction_hash ? (
+                  {explorerUrl && tx.transaction_hash && !tx.intent_id.includes('demo') && !tx.transaction_hash.includes('demo') ? (
                     <a
                       href={`${explorerUrl}/tx/${tx.transaction_hash}`}
                       target="_blank"
@@ -93,7 +93,7 @@ export function TransactionTable({ transactions, explorerUrl }: TransactionTable
                       Arc Explorer ↗
                     </a>
                   ) : (
-                    <span className="text-slate-600 font-sans text-[11px]">Unverified</span>
+                    <span className="text-slate-600 font-sans text-[11px]">DATA UNAVAILABLE (Demo)</span>
                   )}
                 </td>
               </tr>
