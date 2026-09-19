@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/health"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/handlers"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
@@ -11,7 +12,7 @@ import (
 )
 
 // NewRouter sets up and returns the HTTP mux with middleware pipeline for the Gateway.
-func NewRouter(cfg *config.Config, policyClient policy.Client) http.Handler {
+func NewRouter(cfg *config.Config, policyClient policy.Client, execService execution.Service) http.Handler {
 	mux := http.NewServeMux()
 
 	// 1. Health & Readiness
@@ -20,6 +21,11 @@ func NewRouter(cfg *config.Config, policyClient policy.Client) http.Handler {
 
 	// 2. V1 Authorization API
 	mux.Handle("POST /v1/payments/authorize", handlers.NewAuthorizeHandler(policyClient))
+
+	// 3. V1 Payment Execution API (Protected by Rust authorization)
+	if execService != nil {
+		mux.Handle("POST /v1/payments/execute", handlers.NewExecuteHandler(policyClient, execService))
+	}
 
 	// Compose middleware chain:
 	// Outermost -> Innermost: Recovery -> RequestID -> CORS -> Logger -> BodyLimit -> AuthPlaceholder -> Mux

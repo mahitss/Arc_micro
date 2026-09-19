@@ -6,16 +6,18 @@ AgentPay provides programmable, deterministic USDC payment infrastructure specif
 
 ```
 Client / AI Agent
-    ↓ (POST /v1/payments/authorize)
+    ↓ (POST /v1/payments/authorize or POST /v1/payments/execute)
 Go Gateway (:8080)
     ↓ (POST /v1/authorize)
 Rust Policy Engine (:8081)
     ↓ (ALLOW / DENY)
 Go Gateway (:8080)
-    ↓ (Decision response)
-Client / AI Agent
-    ↓
-Future: Solidity AgentVault on Arc Mainnet
+    ↓ (If ALLOW)
+Execution Service
+    ↓ (EIP-1559 Transaction)
+AgentVault.sol (:on-chain)
+    ↓ (usdc.safeTransfer)
+Arc Mainnet (USDC Settlement)
 ```
 
 ---
@@ -31,17 +33,18 @@ Future: Solidity AgentVault on Arc Mainnet
   - Web3 wallet interaction (e.g., configuring contract parameters, initial vault funding).
 
 ### 2. Go Gateway (`services/gateway`)
-- **Technology**: Go 1.22+.
+- **Technology**: Go 1.22+, `go-ethereum` (v1.14.8).
 - **Responsibilities**:
   - High-throughput API gateway exposing versioned REST endpoints (`/v1/...`).
-  - Request validation (syntax, required fields, Ethereum recipient format).
-  - Context and timeout management (`POLICY_ENGINE_TIMEOUT_MS`).
+  - Request validation (syntax, required fields, Ethereum recipient/vault format).
+  - Context and timeout management (`POLICY_ENGINE_TIMEOUT_MS`, `ARC_RPC_TIMEOUT_MS`, `ARC_CONFIRMATION_TIMEOUT_MS`).
   - Request ID extraction, generation, propagation, and return header (`X-Request-ID`).
   - Typed HTTP client communicating with the upstream Rust Policy Engine.
-  - Response normalization: maps Rust decisions to HTTP 200 (both `ALLOW` and `DENY`), Rust errors to 503/504.
+  - Blockchain execution service: packs `AgentVault.executePayment(...)` calldata, manages transaction signing, broadcasts to Arc, and polls receipts.
+  - Thread-safe idempotency store: prevents duplicate transaction submissions for identical `request_id`.
+  - Response normalization: maps Rust decisions and blockchain states into clean HTTP responses.
   - Middleware pipeline: Panic Recovery, Request ID, CORS, Request Body Limiting, Structured Logging, Auth Placeholder.
-  - Readiness probe (`GET /ready`) verifying Rust Policy Engine availability.
-  - Future blockchain execution boundary: separates authorization from settlement.
+  - Health & Readiness probes (`/health`, `/ready`).
 
 ### 3. Rust Policy Engine (`services/policy-engine`)
 - **Technology**: Rust 2021, Axum, Tokio, Serde.
@@ -76,82 +79,26 @@ Future: Solidity AgentVault on Arc Mainnet
 | **State Storage** | Application memory / future PostgreSQL | On-chain contract storage slots |
 
 ### 5. Arc Blockchain & USDC Settlement
-- **Technology**: Arc Network.
+- **Technology**: Arc Mainnet (Chain ID `5042`).
+- **RPC Endpoint**: `https://rpc.mainnet.arc.io`
+- **Block Explorer**: `https://explorer.arc.io`
+- **USDC Contract**: `0x3600000000000000000000000000000000000000`
 - **Responsibilities**:
-  - Fast-finality EVM-compatible execution layer.
-  - Gas-efficient, deterministic settlement in native/canonical USDC.
-  - Note: Mainnet deployment and live contract interactions will be executed in a dedicated future task.
+  - Stablecoin-native Layer 1 network with USDC as native gas currency.
+  - Dual USDC representation: native gas (18 decimals) and ERC-20 interface (6 decimals).
+  - Fast finality EVM execution layer for micro-payments.
 
 ---
 
-## Go ↔ Rust JSON Contract Specification
+## Execution Layer Safety Invariants
 
-### Internal Endpoint: `POST /v1/authorize`
-
-#### Request Payload
-```json
-{
-  "request_id": "req_123",
-  "agent_id": "research-agent",
-  "recipient": "0x1111111111111111111111111111111111111111",
-  "amount": "180000",
-  "asset": "USDC",
-  "purpose": "api_usage"
-}
-```
-
-#### Response Payload
-```json
-{
-  "request_id": "req_123",
-  "decision": "ALLOW",
-  "reason_code": "APPROVED",
-  "reason": "Payment satisfies the configured policy."
-}
-```
-
-### Deterministic Reason Codes
-
-| Reason Code | Meaning |
-|---|---|
-| `APPROVED` | Payment satisfies the configured policy. |
-| `POLICY_DISABLED` | The policy for this agent is currently disabled. |
-| `INVALID_AMOUNT` | Payment amount must be greater than zero. |
-| `AMOUNT_EXCEEDS_TRANSACTION_LIMIT` | Payment exceeds the single-transaction spending limit. |
-| `DAILY_LIMIT_EXCEEDED` | Payment would exceed the agent daily spending limit. |
-| `RECIPIENT_NOT_ALLOWED` | Recipient address is not on the allowed recipient list. |
-| `RECIPIENT_BLOCKED` | Recipient address is on the blocked recipient list. |
-| `ASSET_NOT_ALLOWED` | Asset is not supported or authorized by this policy. |
-| `DAILY_TRANSACTION_LIMIT_EXCEEDED` | Agent has reached its maximum authorized transactions for today. |
-| `INVALID_REQUEST` | Payment request is invalid or missing required parameters. |
-
----
-
-## HTTP Status Semantics
-
-- **ALLOW → HTTP 200**: Decision is `ALLOW`.
-- **DENY → HTTP 200**: Decision is `DENY`. Business policy denial is a successful evaluation, not an HTTP transport error.
-- **Malformed Request → HTTP 400**: Missing fields, non-integer amount, invalid hex address, or invalid JSON syntax.
-- **Oversized Request → HTTP 413**: Request body exceeds `MAX_REQUEST_BODY_BYTES` (default 1MB).
-- **Rust Engine Unavailable → HTTP 503**: Connection refused, 502, or 503 from Rust service.
-- **Rust Engine Timeout → HTTP 504**: Policy evaluation exceeded `POLICY_ENGINE_TIMEOUT_MS` (default 2000ms).
-- **Internal Server Failure → HTTP 500**: Panic recovered safely without leaking stack traces or secrets.
-
----
-
-## Security Invariants & Principles
-
-1. **Deterministic Execution**:
-   The policy engine produces identical decisions given identical intent parameters and state. No probabilistic or heuristic approvals.
-
-2. **Zero Floating-Point Arithmetic**:
-   All monetary amounts are represented as strings at the HTTP boundary and converted to integer units (e.g., micro-USDC with 6 decimals: 1 USDC = `1000000`).
-
-3. **Separation of Authorization and Settlement**:
-   Authorization is strictly side-effect-free. An `ALLOW` decision does NOT claim a payment occurred on the blockchain.
-
-4. **Resource Exhaustion Defense**:
-   All incoming request bodies are capped (1MB limit via `http.MaxBytesReader`). Downstream response reading is bounded via `io.LimitReader(resp.Body, 1<<20)`.
-
-5. **Safe Observability**:
-   Logs capture `request_id`, `agent_id`, `decision`, `reason_code`, and `duration_ms`. Private keys, full request bodies, and authorization headers are never logged.
+1. **Deterministic Authorization Precedence**:
+   Execution is never initiated without prior `ALLOW` from the Rust Policy Engine.
+2. **Live Execution Gate (`ENABLE_LIVE_EXECUTION`)**:
+   Production broadcast is disabled by default (`ENABLE_LIVE_EXECUTION=false`). Dry-run validation returns `EXECUTION_DISABLED` with the authorization decision.
+3. **Chain ID Verification**:
+   Before broadcast, the execution service queries `eth_chainId` from RPC and verifies it matches `5042`.
+4. **Idempotency Guarantee**:
+   Transactions are tracked by unique `request_id`. Re-submitting an already executed or confirmed request returns the recorded result without broadcasting another transaction.
+5. **Zero Private Key Exposure**:
+   `EXECUTOR_PRIVATE_KEY` is loaded only from environment variables / secrets and never exposed in logs, HTTP responses, or git.

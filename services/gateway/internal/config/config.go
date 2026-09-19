@@ -9,14 +9,19 @@ import (
 
 // Config holds configuration parameters for the Gateway service.
 type Config struct {
-	Port                string
-	PolicyEngineURL     string
-	PolicyEngineTimeout time.Duration
-	CORSAllowedOrigins  []string
-	MaxRequestBodyBytes int64
-	ArcRPCURL           string
-	ArcChainID          string
-	ArcUSDCAddress      string
+	Port                   string
+	PolicyEngineURL        string
+	PolicyEngineTimeout    time.Duration
+	CORSAllowedOrigins     []string
+	MaxRequestBodyBytes    int64
+	ArcRPCURL              string
+	ArcChainID             string
+	ArcUSDCAddress         string
+	ArcExplorerURL         string
+	ExecutorPrivateKey     string
+	EnableLiveExecution    bool
+	ArcRPCTimeout          time.Duration
+	ArcConfirmationTimeout time.Duration
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -60,14 +65,58 @@ func Load() *Config {
 		}
 	}
 
+	arcRPCURL := os.Getenv("ARC_RPC_URL")
+	if arcRPCURL == "" {
+		arcRPCURL = "https://rpc.mainnet.arc.io"
+	}
+
+	arcChainID := os.Getenv("ARC_CHAIN_ID")
+	if arcChainID == "" {
+		arcChainID = "5042"
+	}
+
+	arcUSDCAddress := os.Getenv("ARC_USDC_ADDRESS")
+	if arcUSDCAddress == "" {
+		arcUSDCAddress = "0x3600000000000000000000000000000000000000"
+	}
+
+	arcExplorerURL := os.Getenv("ARC_EXPLORER_URL")
+	if arcExplorerURL == "" {
+		arcExplorerURL = "https://explorer.arc.io"
+	}
+
+	enableLiveExecution := false
+	if rawLive := os.Getenv("ENABLE_LIVE_EXECUTION"); strings.EqualFold(rawLive, "true") || rawLive == "1" {
+		enableLiveExecution = true
+	}
+
+	rpcTimeoutMs := 5000
+	if rawRPCTimeout := os.Getenv("ARC_RPC_TIMEOUT_MS"); rawRPCTimeout != "" {
+		if parsed, err := strconv.Atoi(rawRPCTimeout); err == nil && parsed > 0 {
+			rpcTimeoutMs = parsed
+		}
+	}
+
+	confirmationTimeoutMs := 60000
+	if rawConfTimeout := os.Getenv("ARC_CONFIRMATION_TIMEOUT_MS"); rawConfTimeout != "" {
+		if parsed, err := strconv.Atoi(rawConfTimeout); err == nil && parsed > 0 {
+			confirmationTimeoutMs = parsed
+		}
+	}
+
 	return &Config{
-		Port:                port,
-		PolicyEngineURL:     policyEngineURL,
-		PolicyEngineTimeout: time.Duration(timeoutMs) * time.Millisecond,
-		CORSAllowedOrigins:  corsOrigins,
-		MaxRequestBodyBytes: maxBodyBytes,
-		ArcRPCURL:           os.Getenv("ARC_RPC_URL"),
-		ArcChainID:          os.Getenv("ARC_CHAIN_ID"),
-		ArcUSDCAddress:      os.Getenv("ARC_USDC_ADDRESS"),
+		Port:                   port,
+		PolicyEngineURL:        policyEngineURL,
+		PolicyEngineTimeout:    time.Duration(timeoutMs) * time.Millisecond,
+		CORSAllowedOrigins:     corsOrigins,
+		MaxRequestBodyBytes:    maxBodyBytes,
+		ArcRPCURL:              arcRPCURL,
+		ArcChainID:             arcChainID,
+		ArcUSDCAddress:         arcUSDCAddress,
+		ArcExplorerURL:         arcExplorerURL,
+		ExecutorPrivateKey:     os.Getenv("EXECUTOR_PRIVATE_KEY"),
+		EnableLiveExecution:    enableLiveExecution,
+		ArcRPCTimeout:          time.Duration(rpcTimeoutMs) * time.Millisecond,
+		ArcConfirmationTimeout: time.Duration(confirmationTimeoutMs) * time.Millisecond,
 	}
 }

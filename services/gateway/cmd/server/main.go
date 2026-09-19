@@ -11,7 +11,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
 	gwHttp "github.com/arc-agentpay/agentpay/services/gateway/internal/http"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 )
@@ -19,7 +21,20 @@ import (
 func main() {
 	cfg := config.Load()
 	policyClient := policy.NewClient(cfg.PolicyEngineURL, cfg.PolicyEngineTimeout)
-	router := gwHttp.NewRouter(cfg, policyClient)
+
+	var blockchainClient blockchain.Client
+	if cfg.ArcRPCURL != "" {
+		ethCl, err := blockchain.NewEthClient(cfg.ArcRPCURL)
+		if err != nil {
+			log.Printf("[AgentPay Gateway] Warning: failed to connect to Arc RPC (%s): %v. Live execution will remain disabled.", cfg.ArcRPCURL, err)
+		} else {
+			blockchainClient = ethCl
+			defer blockchainClient.Close()
+		}
+	}
+
+	execService := execution.NewExecutionService(cfg, blockchainClient, nil)
+	router := gwHttp.NewRouter(cfg, policyClient, execService)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	srv := &http.Server{
@@ -58,8 +73,8 @@ func main() {
 		serverStopCtx()
 	}()
 
-	log.Printf("[AgentPay Gateway] Starting HTTP server on %s (Policy Engine: %s, Timeout: %s)",
-		addr, cfg.PolicyEngineURL, cfg.PolicyEngineTimeout)
+	log.Printf("[AgentPay Gateway] Starting HTTP server on %s (Policy Engine: %s, Arc Chain: %s, Live Execution: %t)",
+		addr, cfg.PolicyEngineURL, cfg.ArcChainID, cfg.EnableLiveExecution)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed to start: %v", err)
 	}
