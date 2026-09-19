@@ -24,14 +24,46 @@ import (
 
 func main() {
 	cfg := config.Load()
+
+	// Enforce Mainnet Safety Gate at startup
+	if cfg.EnableLiveExecution {
+		log.Printf("[AgentPay Gateway] Live execution enabled: validating strict mainnet safety preconditions...")
+		if err := cfg.ValidateLiveExecutionRequirements(); err != nil {
+			log.Fatalf("[AgentPay Gateway] FATAL SAFETY ERROR: %v. Server failed closed to protect funds.", err)
+		}
+	} else {
+		log.Printf("[AgentPay Gateway] Live execution is disabled (ENABLE_LIVE_EXECUTION=false). Running in simulation/safe mode.")
+	}
+
 	policyClient := policy.NewClient(cfg.PolicyEngineURL, cfg.PolicyEngineTimeout)
 
 	var blockchainClient blockchain.Client
 	if cfg.ArcRPCURL != "" {
 		ethCl, err := blockchain.NewEthClient(cfg.ArcRPCURL)
 		if err != nil {
+			if cfg.EnableLiveExecution {
+				log.Fatalf("[AgentPay Gateway] FATAL: failed to connect to required Arc RPC (%s): %v. Live execution aborted.", cfg.ArcRPCURL, err)
+			}
 			log.Printf("[AgentPay Gateway] Warning: failed to connect to Arc RPC (%s): %v. Live execution will remain disabled.", cfg.ArcRPCURL, err)
 		} else {
+			// Verify connected chain ID
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			actualChainID, err := ethCl.ChainID(ctx)
+			cancel()
+			if err != nil {
+				if cfg.EnableLiveExecution {
+					log.Fatalf("[AgentPay Gateway] FATAL: failed to query Chain ID from Arc RPC (%s): %v", cfg.ArcRPCURL, err)
+				}
+				log.Printf("[AgentPay Gateway] Warning: could not query Chain ID from Arc RPC: %v", err)
+			} else if err := blockchain.ValidateChainID(cfg.ArcChainID, actualChainID); err != nil {
+				if cfg.EnableLiveExecution {
+					log.Fatalf("[AgentPay Gateway] FATAL: Chain ID mismatch: %v. Expected %s, got %s", err, cfg.ArcChainID, actualChainID.String())
+				}
+				log.Printf("[AgentPay Gateway] Warning: Chain ID mismatch: %v. Expected %s, got %s", err, cfg.ArcChainID, actualChainID.String())
+			} else {
+				log.Printf("[AgentPay Gateway] Verified Arc RPC connection: Chain ID %s (%s)", actualChainID.String(), cfg.ArcRPCURL)
+			}
+
 			blockchainClient = ethCl
 			defer blockchainClient.Close()
 		}

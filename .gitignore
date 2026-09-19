@@ -19,6 +19,7 @@ contracts/broadcast/
 
 # Environment and Secrets (CRITICAL: NEVER COMMIT PRIVATE KEYS OR LIVE ENVS)
 .env
+.env.*
 .env*.local
 *.pem
 *.key
@@ -27,6 +28,9 @@ contracts/broadcast/
 *id_ed25519*
 private_key*
 *secret*
+*mnemonic*
+*wallet*
+*keystore*
 
 # IDE & OS
 .DS_Store

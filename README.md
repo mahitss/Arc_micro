@@ -165,3 +165,16 @@ Individual component tests:
 - **Task 5: Arc Mainnet USDC Execution Layer**: Blockchain client, execution service, AgentVault ABI packing, idempotency mechanism, safety gates, `POST /v1/payments/execute`, unit and integration tests. [COMPLETED]
 - **Task 6: AI Agent + Payment Intent System**: AI model abstraction, prompt injection defense, server-side service registry, state machine, PostgreSQL migrations, auto-execution mode, 30 tests. [COMPLETED]
 - **Task 7: AgentPay Web Control Center**: Developer-grade control center, 10 application routes, API client, reusable components, confirmation dialog, demo mode, 14 frontend tests. [COMPLETED]
+- **Task 8: Arc Mainnet Deployment & End-to-End Verification**: Live JSON-RPC network verification, fail-closed startup safety gates, Foundry deployment script safeguards, 10 negative-path integration tests, operations runbook ([`docs/deployment.md`](docs/deployment.md)), and live demo script ([`docs/demo.md`](docs/demo.md)). [COMPLETED]
+
+---
+
+## Limitations & Production Disclaimer
+
+> [!WARNING]
+> **NOT PRODUCTION-READY OR AUDITED**:
+> AgentPay is an experimental prototype and developer demonstration built for the Arc Microgrants program.
+> - **Smart contracts have not undergone independent professional audits.**
+> - **Do not use AgentPay to custody or manage substantial financial capital.**
+> - **Never enable live execution (`ENABLE_LIVE_EXECUTION=true`) with production funds without conducting thorough security audits of the off-chain policy engine, Go gateway, and smart contracts.**
+> - **The AI model produces untrusted outputs; the policy engine and service registry act as hard security boundaries, but all autonomous spending limits must be set conservatively.**

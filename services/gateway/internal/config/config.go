@@ -30,6 +30,9 @@ type Config struct {
 	AIProvider             string
 	AIModel                string
 	AIAPIKey               string
+
+	// Task 8: Verified AgentVault address
+	AgentVaultAddress      string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -150,5 +153,55 @@ func Load() *Config {
 		AIProvider:             aiProvider,
 		AIModel:                os.Getenv("AI_MODEL"),
 		AIAPIKey:               os.Getenv("AI_API_KEY"),
+		AgentVaultAddress:      os.Getenv("AGENTVAULT_ADDRESS"),
 	}
 }
+
+// ValidateLiveExecutionRequirements verifies all critical mainnet safety preconditions.
+// Returns an error if any safety check fails, preventing live execution from starting.
+// Note: This method NEVER logs or echoes the private key.
+func (c *Config) ValidateLiveExecutionRequirements() error {
+	if !c.EnableLiveExecution {
+		return nil
+	}
+
+	if strings.TrimSpace(c.ArcRPCURL) == "" {
+		return &SafetyCheckError{Reason: "ARC_RPC_URL must be specified when ENABLE_LIVE_EXECUTION is true"}
+	}
+
+	if c.ArcChainID != "5042" {
+		return &SafetyCheckError{Reason: "ARC_CHAIN_ID must be '5042' for Arc Mainnet"}
+	}
+
+	trimmedUSDC := strings.TrimSpace(c.ArcUSDCAddress)
+	if len(trimmedUSDC) != 42 || !strings.HasPrefix(trimmedUSDC, "0x") {
+		return &SafetyCheckError{Reason: "ARC_USDC_ADDRESS must be a valid 42-character 0x hex address"}
+	}
+
+	trimmedKey := strings.TrimSpace(strings.TrimPrefix(c.ExecutorPrivateKey, "0x"))
+	if trimmedKey == "" {
+		return &SafetyCheckError{Reason: "EXECUTOR_PRIVATE_KEY must be provided when ENABLE_LIVE_EXECUTION is true"}
+	}
+	if len(trimmedKey) != 64 {
+		return &SafetyCheckError{Reason: "EXECUTOR_PRIVATE_KEY must be a 64-character hex string (32 bytes)"}
+	}
+
+	if c.AgentVaultAddress != "" {
+		trimmedVault := strings.TrimSpace(c.AgentVaultAddress)
+		if len(trimmedVault) != 42 || !strings.HasPrefix(trimmedVault, "0x") {
+			return &SafetyCheckError{Reason: "AGENTVAULT_ADDRESS must be a valid 42-character 0x hex address"}
+		}
+	}
+
+	return nil
+}
+
+// SafetyCheckError represents a configuration violation that prevents safe live execution.
+type SafetyCheckError struct {
+	Reason string
+}
+
+func (e *SafetyCheckError) Error() string {
+	return "mainnet safety check failed: " + e.Reason
+}
+

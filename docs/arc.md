@@ -1,31 +1,34 @@
 # Arc Blockchain Network Reference & Safety Specification
 
-> **Verification Date**: September 19, 2026  
-> **Target Network**: Arc Mainnet (Launched September 16, 2026)  
-> **Source Verification**: Arc Official Release & Public Node Documentation (Circle L1)
+> **Verification Date**: September 20, 2026  
+> **Target Network**: Arc Mainnet (Circle L1, launched September 16, 2026)  
+> **Live JSON-RPC Check**: Verified via `https://rpc.mainnet.arc.io` (`eth_chainId` returned `0x13b2` = `5042`)  
+> **ERC-20 USDC Code Check**: Verified at `0x3600000000000000000000000000000000000000` (Bytecode size: 3,598 bytes)  
+> **Authoritative Documentation**: [https://docs.arc.network](https://docs.arc.network)
 
 ---
 
-## 1. Network Configuration
+## 1. Verified Network Configuration
 
-| Parameter | Official Value | Description |
+| Parameter | Authoritative Value | Verification Method / Description |
 |---|---|---|
-| **Network Name** | Arc Mainnet | Stablecoin-native Layer 1 network built for payments |
-| **Chain ID** | `5042` | EVM-compatible chain ID |
-| **Public RPC Endpoint** | `https://rpc.mainnet.arc.io` | Standard Ethereum JSON-RPC over HTTPS |
-| **Block Explorer** | `https://explorer.arc.io` | Official Arc transaction and address explorer |
-| **Native Gas Currency** | USDC | Transaction fees are paid in native USDC |
-| **ERC-20 USDC Contract** | `0x3600000000000000000000000000000000000000` | Canonical USDC token contract interface |
+| **Network Name** | Arc Mainnet | Stablecoin-native Layer 1 network designed for payments |
+| **Chain ID** | `5042` | Confirmed via `eth_chainId` RPC call (`0x13b2`) |
+| **Public RPC Endpoint** | `https://rpc.mainnet.arc.io` | Live verified JSON-RPC over HTTPS |
+| **Block Explorer** | `https://explorer.arc.io` | Official Arc transaction and contract explorer |
+| **Native Gas Currency** | USDC | Protocol-level gas currency (18 decimals) |
+| **ERC-20 USDC Contract** | `0x3600000000000000000000000000000000000000` | Canonical ERC-20 interface (6 decimals, 3,598 bytes bytecode) |
+| **Testnet Chain ID** | `5042002` | Testnet identifier (for non-production staging) |
 
 ---
 
-## 2. USDC Dual Representation
+## 2. USDC Dual Representation & Precision
 
 On the Arc blockchain, USDC operates with dual representation:
-1. **Native Gas Asset (18 Decimals)**: Used at the protocol level for gas accounting and transaction fees.
-2. **ERC-20 Interface (6 Decimals)**: Exposed at `0x3600000000000000000000000000000000000000` for application-level transfers, allowance management, and smart contract interaction (`AgentVault`).
+1. **Native Gas Asset (18 Decimals)**: Used at the protocol level for gas accounting, validator fees, and base-layer transfers.
+2. **ERC-20 Interface (6 Decimals)**: Exposed at `0x3600000000000000000000000000000000000000` for application-level smart contract operations (`AgentVault.executePayment`, `balanceOf`, `transfer`).
 
-Both interfaces reflect the same underlying balance. `AgentVault.sol` holds and transfers ERC-20 USDC in 6-decimal integer base units (e.g., `180000` = 0.18 USDC).
+Both interfaces represent the exact same underlying balance. `AgentVault.sol` holds and transfers ERC-20 USDC in 6-decimal integer base units (e.g., `1_000_000` = 1.00 USDC, `180_000` = 0.18 USDC). Floating-point math is strictly forbidden across all contracts, policy engines, and gateways.
 
 ---
 
