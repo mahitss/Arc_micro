@@ -1,8 +1,4 @@
-use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -11,7 +7,7 @@ pub struct HealthResponse {
     pub service: String,
 }
 
-pub async fn health_handler() -> impl IntoResponse {
+pub async fn health_handler() -> (StatusCode, Json<HealthResponse>) {
     let response = HealthResponse {
         status: "ok".to_string(),
         service: "policy-engine".to_string(),
@@ -26,18 +22,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_health_response_payload() {
-        let (status, Json(payload)) = match health_handler().await.into_response() {
-            response => {
-                let status = response.status();
-                assert_eq!(status, StatusCode::OK);
-            }
-        };
-
-        let response = HealthResponse {
-            status: "ok".to_string(),
-            service: "policy-engine".to_string(),
-        };
-
+        let (status, Json(response)) = health_handler().await;
+        assert_eq!(status, StatusCode::OK);
         assert_eq!(response.status, "ok");
         assert_eq!(response.service, "policy-engine");
     }

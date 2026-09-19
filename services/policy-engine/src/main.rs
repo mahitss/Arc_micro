@@ -1,16 +1,6 @@
-mod config;
-mod health;
-
-use axum::{routing::get, Router};
+use policy_engine::{config, http};
 use std::net::SocketAddr;
-use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-pub fn app() -> Router {
-    Router::new()
-        .route("/health", get(health::health_handler))
-        .layer(TraceLayer::new_for_http())
-}
 
 #[tokio::main]
 async fn main() {
@@ -27,11 +17,13 @@ async fn main() {
 
     tracing::info!("[AgentPay Policy Engine] Listening on {}", addr);
 
+    let app = http::create_router();
+
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .expect("Failed to bind TCP listener");
 
-    axum::serve(listener, app())
+    axum::serve(listener, app)
         .await
         .expect("Policy engine server failed");
 }

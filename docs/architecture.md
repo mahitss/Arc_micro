@@ -71,11 +71,14 @@ AgentPay provides programmable, deterministic USDC payment infrastructure specif
 ### 3. Rust Policy Engine (`services/policy-engine`)
 - **Technology**: Rust 2021, Axum, Tokio, Serde.
 - **Responsibilities**:
-  - Purely deterministic, mathematically sound risk and policy evaluation.
-  - Verification of agent spending limits (per-transaction, per-hour, per-day).
-  - Strict recipient validation (whitelists, blacklists, contract verification).
-  - Explicit `ALLOW` or `DENY` decision responses with audit trail logging.
-  - Absolute adherence to zero floating-point arithmetic.
+  - Acts as the primary security and authorization boundary of AgentPay.
+  - Exposes `POST /v1/authorize` receiving payment intents from the Go Gateway.
+  - Executes purely deterministic, mathematically sound risk and policy evaluation.
+  - Strictly integer-based arithmetic (`checked_add`); floating-point types (`f32`, `f64`) are prohibited.
+  - Verification of agent spending limits (per-transaction limit, daily budget, transaction frequency).
+  - Recipient address validation and normalization (case-insensitive hex address checks against allowlists and blocklists).
+  - Explicit `ALLOW` or `DENY` decision responses with audit trail reason codes.
+  - Zero side effects: the core `authorize(request, policy)` function has no network, database, filesystem, or clock dependencies.
 
 ### 4. Solidity AgentVault (`contracts/`)
 - **Technology**: Solidity 0.8.24+, Foundry.
