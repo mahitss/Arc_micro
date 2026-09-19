@@ -10,6 +10,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/handlers"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/metrics"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
@@ -27,9 +28,10 @@ func NewRouter(
 ) http.Handler {
 	mux := http.NewServeMux()
 
-	// 1. Health & Readiness
+	// 1. Health, Readiness & Metrics
 	mux.HandleFunc("GET /health", health.Handler)
-	mux.Handle("GET /ready", handlers.NewReadyHandler(policyClient))
+	mux.Handle("GET /ready", handlers.NewReadyHandler(policyClient, nil, repo))
+	mux.HandleFunc("GET /metrics", metrics.DefaultMetrics.Handler)
 
 	// 2. V1 Authorization API
 	mux.Handle("POST /v1/payments/authorize", handlers.NewAuthorizeHandler(policyClient))
@@ -63,10 +65,13 @@ func NewRouter(
 	}
 
 	// Compose middleware chain:
-	// Outermost -> Innermost: Recovery -> RequestID -> CORS -> Logger -> BodyLimit -> AuthPlaceholder -> Mux
+	// Outermost -> Innermost: Recovery -> RequestID -> CORS -> Logger -> RateLimiter -> BodyLimit -> AuthPlaceholder -> Mux
+	rateLimiter := middleware.NewRateLimiter(60, 100)
+
 	var handler http.Handler = mux
 	handler = middleware.AuthPlaceholder(handler)
 	handler = middleware.BodyLimit(cfg.MaxRequestBodyBytes)(handler)
+	handler = rateLimiter.Middleware(handler)
 	handler = middleware.Logger(handler)
 	handler = middleware.CORS(cfg.CORSAllowedOrigins)(handler)
 	handler = middleware.RequestID(handler)

@@ -39,6 +39,7 @@ type Repository interface {
 	GetIntent(ctx context.Context, id string) (*intent.PaymentIntent, error)
 	ListIntents(ctx context.Context) ([]*intent.PaymentIntent, error)
 	UpdateIntentStatus(ctx context.Context, id string, status intent.IntentStatus, updatedAt time.Time) error
+	CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus intent.IntentStatus, newStatus intent.IntentStatus, updatedAt time.Time) (bool, error)
 
 	SaveExecution(ctx context.Context, ex *intent.PaymentExecutionRecord) error
 	GetExecution(ctx context.Context, intentID string) (*intent.PaymentExecutionRecord, error)
@@ -179,6 +180,23 @@ func (m *MemoryRepository) UpdateIntentStatus(ctx context.Context, id string, st
 	return nil
 }
 
+// CompareAndSwapIntentStatus atomically transitions intent status only if it currently equals expectedStatus.
+// Returns (true, nil) if successfully transitioned, or (false, nil) if the status did not match expectedStatus.
+func (m *MemoryRepository) CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus intent.IntentStatus, newStatus intent.IntentStatus, updatedAt time.Time) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	pi, ok := m.intents[id]
+	if !ok {
+		return false, ErrNotFound
+	}
+	if pi.Status != expectedStatus {
+		return false, nil
+	}
+	pi.Status = newStatus
+	pi.UpdatedAt = updatedAt
+	return true, nil
+}
+
 func (m *MemoryRepository) SaveExecution(ctx context.Context, ex *intent.PaymentExecutionRecord) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -297,6 +315,20 @@ func (p *PostgresRepository) UpdateIntentStatus(ctx context.Context, id string, 
 		return ErrNotFound
 	}
 	return nil
+}
+
+// CompareAndSwapIntentStatus atomically transitions intent status only if it currently equals expectedStatus in PostgreSQL.
+func (p *PostgresRepository) CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus intent.IntentStatus, newStatus intent.IntentStatus, updatedAt time.Time) (bool, error) {
+	query := `UPDATE payment_intents SET status = $1, updated_at = $2 WHERE id = $3 AND status = $4`
+	res, err := p.db.ExecContext(ctx, query, string(newStatus), updatedAt, id, string(expectedStatus))
+	if err != nil {
+		return false, err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return rows > 0, nil
 }
 
 func (p *PostgresRepository) SaveExecution(ctx context.Context, ex *intent.PaymentExecutionRecord) error {

@@ -412,6 +412,25 @@ contract AgentVaultTest is Test {
         vm.stopPrank();
     }
 
+    function test_34_withdrawal_zero_recipient_reverts() public {
+        vm.prank(owner);
+        vm.expectRevert(AgentVault.ZeroAddress.selector);
+        vault.withdraw(address(0), 1_000_000);
+    }
+
+    function test_35_withdrawal_zero_amount_reverts() public {
+        vm.prank(owner);
+        vm.expectRevert(AgentVault.InvalidAmount.selector);
+        vault.withdraw(owner, 0);
+    }
+
+    function test_36_withdrawal_excessive_amount_reverts() public {
+        uint256 excessAmount = INITIAL_VAULT_FUNDING + 1_000_000;
+        vm.prank(owner);
+        vm.expectRevert(abi.encodeWithSelector(AgentVault.InsufficientBalance.selector, excessAmount, INITIAL_VAULT_FUNDING));
+        vault.withdraw(owner, excessAmount);
+    }
+
     // -------------------------------------------------------------------------
     // Fuzz Tests
     // -------------------------------------------------------------------------

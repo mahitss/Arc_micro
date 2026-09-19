@@ -57,6 +57,21 @@ func (m *mockRepo) UpdateIntentStatus(ctx context.Context, id string, status Int
 	return nil
 }
 
+func (m *mockRepo) CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus IntentStatus, newStatus IntentStatus, updatedAt time.Time) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	pi, ok := m.intents[id]
+	if !ok {
+		return false, ErrIntentNotFound
+	}
+	if pi.Status != expectedStatus {
+		return false, nil
+	}
+	pi.Status = newStatus
+	pi.UpdatedAt = updatedAt
+	return true, nil
+}
+
 func (m *mockRepo) SaveExecution(ctx context.Context, ex *PaymentExecutionRecord) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

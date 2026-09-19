@@ -38,6 +38,7 @@ type Repository interface {
 	SaveIntent(ctx context.Context, pi *PaymentIntent) error
 	GetIntent(ctx context.Context, id string) (*PaymentIntent, error)
 	UpdateIntentStatus(ctx context.Context, id string, status IntentStatus, updatedAt time.Time) error
+	CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus IntentStatus, newStatus IntentStatus, updatedAt time.Time) (bool, error)
 	SaveExecution(ctx context.Context, ex *PaymentExecutionRecord) error
 	GetExecution(ctx context.Context, intentID string) (*PaymentExecutionRecord, error)
 }
@@ -235,14 +236,47 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 		return nil, nil, fmt.Errorf("%w (current status: %s)", ErrNotAuthorized, intent.Status)
 	}
 
-	// Transition to EXECUTING
+	// Atomic compare-and-swap transition to EXECUTING prevents race conditions/double-execution
 	now := s.clock.Now()
 	if err := ValidateTransition(intent.Status, StatusExecuting); err != nil {
 		return nil, nil, err
 	}
-	if err := s.repo.UpdateIntentStatus(ctx, intentID, StatusExecuting, now); err != nil {
+
+	swapped, err := s.repo.CompareAndSwapIntentStatus(ctx, intentID, StatusAuthorized, StatusExecuting, now)
+	if err != nil {
 		return nil, nil, err
 	}
+	if !swapped {
+		// Concurrent request already won the race. Re-fetch current state to handle idempotently.
+		recheck, err := s.repo.GetIntent(ctx, intentID)
+		if err != nil {
+			return nil, nil, err
+		}
+		if recheck.Status == StatusConfirmed {
+			ex, _ := s.repo.GetExecution(ctx, intentID)
+			txHash := ""
+			if ex != nil {
+				txHash = ex.TransactionHash
+			}
+			res := &blockchain.PaymentExecutionResult{
+				RequestID:       recheck.IntentID,
+				Status:          blockchain.StateConfirmed,
+				TransactionHash: txHash,
+				Vault:           recheck.VaultAddress,
+				Recipient:       recheck.Recipient,
+				Amount:          recheck.Amount,
+			}
+			return recheck, res, nil
+		}
+		if recheck.Status == StatusExecuting {
+			return nil, nil, ErrAlreadyExecuting
+		}
+		if recheck.Status == StatusExpired {
+			return nil, nil, ErrIntentExpired
+		}
+		return nil, nil, fmt.Errorf("%w (current status: %s)", ErrNotAuthorized, recheck.Status)
+	}
+
 	intent.Status = StatusExecuting
 	intent.UpdatedAt = now
 

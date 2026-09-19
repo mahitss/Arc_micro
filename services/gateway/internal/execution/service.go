@@ -44,8 +44,36 @@ func NewExecutionService(cfg *config.Config, client blockchain.Client, store Sto
 
 // ExecutePayment processes a payment execution request.
 func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.PaymentExecutionRequest) (*blockchain.PaymentExecutionResult, error) {
-	// 1. Idempotency check: return existing result if already processed
+	// 1. Idempotency & Recovery check: return existing result or check chain if already broadcast
 	if existing, ok := s.store.Get(req.RequestID); ok {
+		if existing.Status == blockchain.StateConfirmed || existing.Status == blockchain.StateExecutionDisabled {
+			return existing, nil
+		}
+		// If transaction was already broadcast, re-query chain receipt rather than creating a duplicate transaction
+		if existing.TransactionHash != "" && s.blockchainClient != nil {
+			log.Printf("[BLOCKCHAIN] Found existing submitted tx=%s for req_id=%s. Checking chain receipt...",
+				existing.TransactionHash, req.RequestID)
+			receipt, err := s.waitForReceipt(ctx, common.HexToHash(existing.TransactionHash))
+			if err == nil && receipt != nil {
+				if receipt.Status == types.ReceiptStatusSuccessful {
+					existing.Status = blockchain.StateConfirmed
+					existing.BlockNumber = receipt.BlockNumber.String()
+					s.store.Set(req.RequestID, existing)
+					return existing, nil
+				}
+				existing.Status = blockchain.StateFailed
+				existing.BlockNumber = receipt.BlockNumber.String()
+				existing.Error = "transaction reverted on-chain"
+				s.store.Set(req.RequestID, existing)
+				return existing, &blockchain.ReceiptVerificationError{
+					TxHash: existing.TransactionHash,
+					Status: receipt.Status,
+					Reason: "transaction execution reverted on-chain",
+				}
+			}
+			// Still unconfirmed or timed out: return existing pending state without broadcasting again
+			return existing, err
+		}
 		return existing, nil
 	}
 
@@ -181,10 +209,22 @@ func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.Pa
 		return nil, &blockchain.TransactionSubmissionError{Err: fmt.Errorf("failed to broadcast transaction: %w", err)}
 	}
 
+	// Immediately record SUBMITTED state with txHash to prevent duplicate submissions on retry
+	submittedResult := &blockchain.PaymentExecutionResult{
+		RequestID:       req.RequestID,
+		Status:          blockchain.StateSubmitted,
+		TransactionHash: txHash.Hex(),
+		Vault:           vaultAddr.Hex(),
+		Recipient:       recipientAddr.Hex(),
+		Amount:          req.Amount,
+		ExplorerURL:     blockchain.BuildExplorerTxURL(s.cfg.ArcExplorerURL, txHash.Hex()),
+	}
+	s.store.Set(req.RequestID, submittedResult)
+
 	// 10. Wait for confirmation
 	receipt, err := s.waitForReceipt(ctx, txHash)
 	if err != nil {
-		return nil, err
+		return submittedResult, err
 	}
 
 	if receipt.Status != types.ReceiptStatusSuccessful {
