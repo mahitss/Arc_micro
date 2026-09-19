@@ -1,0 +1,37 @@
+# Submission Manifest
+
+PROJECT:
+AgentPay
+
+CATEGORY:
+Programmable USDC payment infrastructure for AI agents
+
+NETWORK:
+Arc Mainnet (Chain ID 5042)
+
+REPOSITORY:
+https://github.com/mahitss/Arc_micro
+
+LIVE APP:
+NOT PROVIDED
+
+AGENTVAULT:
+NOT VERIFIED
+
+USDC:
+0x3600000000000000000000000000000000000000
+
+TRANSACTION:
+NOT VERIFIED
+
+EXPLORER:
+https://explorer.arc.io
+
+BUILDER PROFILE:
+NOT PROVIDED
+
+DEMO:
+NOT PROVIDED
+
+SUBMISSION DEADLINE:
+NOT DOCUMENTED
