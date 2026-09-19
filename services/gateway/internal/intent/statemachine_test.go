@@ -76,3 +76,19 @@ func TestStateMachine_ConfirmedCannotExecuteAgain(t *testing.T) {
 		t.Fatal("expected error: CONFIRMED must never transition to EXECUTING again")
 	}
 }
+
+// TestStateMachine_DeniedCannotExecute verifies DENIED cannot transition to EXECUTING.
+func TestStateMachine_DeniedCannotExecute(t *testing.T) {
+	err := ValidateTransition(StatusDenied, StatusExecuting)
+	if err == nil {
+		t.Fatal("expected error: DENIED must never transition to EXECUTING")
+	}
+}
+
+// TestStateMachine_FailedCannotBecomeConfirmed verifies FAILED cannot transition to CONFIRMED.
+func TestStateMachine_FailedCannotBecomeConfirmed(t *testing.T) {
+	err := ValidateTransition(StatusFailed, StatusConfirmed)
+	if err == nil {
+		t.Fatal("expected error: FAILED must never transition to CONFIRMED")
+	}
+}

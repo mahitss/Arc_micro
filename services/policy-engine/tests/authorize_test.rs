@@ -461,3 +461,43 @@ async fn test_health_endpoint() {
     assert_eq!(json_resp["status"], "ok");
     assert_eq!(json_resp["service"], "policy-engine");
 }
+
+#[test]
+fn test_21_one_base_unit_payment_allows() {
+    let policy = sample_policy();
+    let mut req = sample_request();
+    req.amount = 1; // Minimum positive integer base unit
+    let decision = authorize(&req, &policy);
+
+    assert_eq!(decision.decision, Decision::Allow);
+    assert_eq!(decision.reason_code, ReasonCode::Approved);
+}
+
+#[test]
+fn test_22_daily_limit_plus_one_denies() {
+    let mut policy = sample_policy();
+    policy.per_transaction_limit = 2_000_000;
+    policy.daily_limit = 5_000_000;
+    policy.daily_spent = 4_000_000;
+
+    let mut req = sample_request();
+    req.amount = 1_000_001; // remaining (1_000_000) + 1
+
+    let decision = authorize(&req, &policy);
+    assert_eq!(decision.decision, Decision::Deny);
+    assert_eq!(decision.reason_code, ReasonCode::DailyLimitExceeded);
+}
+
+#[test]
+fn test_23_max_u64_amount_denies_safely() {
+    let policy = sample_policy();
+    let mut req = sample_request();
+    req.amount = u64::MAX;
+
+    let decision = authorize(&req, &policy);
+    assert_eq!(decision.decision, Decision::Deny);
+    assert_eq!(
+        decision.reason_code,
+        ReasonCode::AmountExceedsTransactionLimit
+    );
+}

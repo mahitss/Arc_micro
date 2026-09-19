@@ -433,6 +433,12 @@ contract AgentVaultTest is Test {
         vault.withdraw(owner, excessAmount);
     }
 
+    function test_37_payment_one_base_unit_succeeds() public {
+        vm.prank(owner);
+        vault.executePayment(recipient1, 1, TEST_PURPOSE);
+        assertEq(usdc.balanceOf(recipient1), 1);
+    }
+
     // -------------------------------------------------------------------------
     // Fuzz Tests
     // -------------------------------------------------------------------------
