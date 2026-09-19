@@ -22,6 +22,14 @@ type Config struct {
 	EnableLiveExecution    bool
 	ArcRPCTimeout          time.Duration
 	ArcConfirmationTimeout time.Duration
+
+	// Task 6: AI Agent & Storage Configuration
+	DatabaseURL            string
+	AgentAutoExecution     bool
+	PaymentIntentTTLSeconds int
+	AIProvider             string
+	AIModel                string
+	AIAPIKey               string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -104,6 +112,23 @@ func Load() *Config {
 		}
 	}
 
+	agentAutoExecution := false
+	if rawAuto := os.Getenv("AGENT_AUTO_EXECUTION"); strings.EqualFold(rawAuto, "true") || rawAuto == "1" {
+		agentAutoExecution = true
+	}
+
+	ttlSeconds := 300
+	if rawTTL := os.Getenv("PAYMENT_INTENT_TTL_SECONDS"); rawTTL != "" {
+		if parsed, err := strconv.Atoi(rawTTL); err == nil && parsed > 0 {
+			ttlSeconds = parsed
+		}
+	}
+
+	aiProvider := os.Getenv("AI_PROVIDER")
+	if aiProvider == "" {
+		aiProvider = "mock"
+	}
+
 	return &Config{
 		Port:                   port,
 		PolicyEngineURL:        policyEngineURL,
@@ -118,5 +143,12 @@ func Load() *Config {
 		EnableLiveExecution:    enableLiveExecution,
 		ArcRPCTimeout:          time.Duration(rpcTimeoutMs) * time.Millisecond,
 		ArcConfirmationTimeout: time.Duration(confirmationTimeoutMs) * time.Millisecond,
+
+		DatabaseURL:            os.Getenv("DATABASE_URL"),
+		AgentAutoExecution:     agentAutoExecution,
+		PaymentIntentTTLSeconds: ttlSeconds,
+		AIProvider:             aiProvider,
+		AIModel:                os.Getenv("AI_MODEL"),
+		AIAPIKey:               os.Getenv("AI_API_KEY"),
 	}
 }

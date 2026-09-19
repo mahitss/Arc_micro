@@ -94,7 +94,7 @@ func TestGatewayToPolicyEngine_Integration(t *testing.T) {
 		MaxRequestBodyBytes: 1048576,
 	}
 	policyClient := policy.NewClient(cfg.PolicyEngineURL, cfg.PolicyEngineTimeout)
-	gatewayHandler := gwHttp.NewRouter(cfg, policyClient, nil)
+	gatewayHandler := gwHttp.NewRouter(cfg, policyClient, nil, nil, nil)
 	gatewayServer := httptest.NewServer(gatewayHandler)
 	defer gatewayServer.Close()
 

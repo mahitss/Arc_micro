@@ -46,7 +46,7 @@ func setupExecuteTestRouter(pMock *mockPolicyClient, eMock *mockExecutionService
 		ArcChainID:          "5042",
 		ArcExplorerURL:      "https://explorer.arc.io",
 	}
-	return gwHttp.NewRouter(cfg, pMock, eMock)
+	return gwHttp.NewRouter(cfg, pMock, eMock, nil, nil)
 }
 
 func validExecutePayload(reqID string) handlers.ExecutePaymentRequest {

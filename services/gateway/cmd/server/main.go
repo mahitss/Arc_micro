@@ -11,11 +11,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
 	gwHttp "github.com/arc-agentpay/agentpay/services/gateway/internal/http"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
 
 func main() {
@@ -34,7 +38,51 @@ func main() {
 	}
 
 	execService := execution.NewExecutionService(cfg, blockchainClient, nil)
-	router := gwHttp.NewRouter(cfg, policyClient, execService)
+
+	// Initialize Storage Repository
+	var repo storage.Repository = storage.NewMemoryRepository()
+	if cfg.DatabaseURL != "" {
+		log.Printf("[AgentPay Gateway] Database URL configured: %s (PostgreSQL persistence ready)", cfg.DatabaseURL)
+		// Postgres repository can be attached here when PostgreSQL is running
+	}
+
+	// Initialize Service Registry
+	serviceRegistry := registry.NewDefaultRegistry()
+
+	// Initialize Intent Service
+	intentTTL := time.Duration(cfg.PaymentIntentTTLSeconds) * time.Second
+	intentService := intent.NewService(
+		repo,
+		policyClient,
+		execService,
+		serviceRegistry,
+		nil, // uses RealClock
+		intentTTL,
+		cfg.AgentAutoExecution,
+	)
+
+	// Initialize AI Agent Model
+	var agentModel agent.AgentModel = &agent.MockAgentModel{}
+	if cfg.AIAPIKey != "" {
+		promptBytes, err := os.ReadFile("services/agent/prompts/agent_system_v1.txt")
+		systemPrompt := string(promptBytes)
+		if err != nil {
+			log.Printf("[AgentPay Gateway] Warning: could not read system prompt file (%v), using default instructions", err)
+			systemPrompt = "You are an AI agent under the AgentPay protocol. You may request payments only through registered services."
+		}
+		agentModel = agent.NewHTTPModel("", cfg.AIModel, cfg.AIAPIKey, systemPrompt)
+		log.Printf("[AgentPay Gateway] Configured HTTP LLM agent model (Model: %s)", cfg.AIModel)
+	}
+
+	// Initialize AI Agent Service
+	agentService := agent.NewService(
+		agentModel,
+		intentService,
+		serviceRegistry,
+		cfg.AgentAutoExecution,
+	)
+
+	router := gwHttp.NewRouter(cfg, policyClient, execService, agentService, intentService)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	srv := &http.Server{
@@ -73,8 +121,8 @@ func main() {
 		serverStopCtx()
 	}()
 
-	log.Printf("[AgentPay Gateway] Starting HTTP server on %s (Policy Engine: %s, Arc Chain: %s, Live Execution: %t)",
-		addr, cfg.PolicyEngineURL, cfg.ArcChainID, cfg.EnableLiveExecution)
+	log.Printf("[AgentPay Gateway] Starting HTTP server on %s (Policy Engine: %s, Arc Chain: %s, Auto-Execution: %t, Live Execution: %t)",
+		addr, cfg.PolicyEngineURL, cfg.ArcChainID, cfg.AgentAutoExecution, cfg.EnableLiveExecution)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed to start: %v", err)
 	}

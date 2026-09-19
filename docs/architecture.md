@@ -5,16 +5,20 @@
 AgentPay provides programmable, deterministic USDC payment infrastructure specifically tailored for autonomous AI agents on the Arc blockchain. Autonomous agents require low-latency, programmatic payment execution for compute, tools, APIs, and micro-services without risking catastrophic wallet drain or policy violations.
 
 ```
-Client / AI Agent
-    ↓ (POST /v1/payments/authorize or POST /v1/payments/execute)
+User / Operator
+    ↓
+Next.js Web Dashboard (:3000)
+    ↓
 Go Gateway (:8080)
-    ↓ (POST /v1/authorize)
+    ↓ (POST /v1/agents/tasks)
+AI Agent (Untrusted LLM reasoning layer)
+    ↓ (Structured Payment Intent)
+Go Gateway (:8080 - Schema Validation & Service Registry)
+    ↓ (POST /v1/authorize or POST /v1/payment-intents/:id/authorize)
 Rust Policy Engine (:8081)
     ↓ (ALLOW / DENY)
 Go Gateway (:8080)
-    ↓ (If ALLOW)
-Execution Service
-    ↓ (EIP-1559 Transaction)
+    ↓ (If ALLOW & confirmed: Execution Service)
 AgentVault.sol (:on-chain)
     ↓ (usdc.safeTransfer)
 Arc Mainnet (USDC Settlement)
@@ -22,9 +26,30 @@ Arc Mainnet (USDC Settlement)
 
 ---
 
+## Security Boundary & Defense in Depth
+
+The system enforces a multi-tier security boundary:
+
+1. **AI is NOT Trusted**: The AI model has no private keys, cannot sign transactions, cannot directly send funds, and cannot invent arbitrary recipient addresses. AI output is treated strictly as untrusted input.
+2. **Go Validates AI Output**: The Go Gateway enforces a strict JSON schema, limits prompt lengths, verifies monetary integers (no floats), and resolves the recipient address exclusively through the server-side **Service Registry**.
+3. **Rust Decides Policy**: The deterministic Rust Policy Engine evaluates mathematical spending caps (per-transaction, daily limits) and allowlists with zero clock or network side effects.
+4. **Solidity Enforces On-Chain Rules**: The `AgentVault` smart contract on Arc holds funds, enforces on-chain limits, checks allowlists/blocklists, and provides emergency pause functionality.
+5. **Executor Holds Signing Capability**: Only the isolated execution service in the Go Gateway holds the signing key. Private keys are never exposed to AI, frontend, Rust, logs, or git.
+
+---
+
 ## Layer Responsibilities
 
-### 1. Next.js Web Dashboard (`apps/web`)
+### 1. AI Agent Layer (`services/gateway/internal/agent`)
+- **Technology**: Go 1.22+, pluggable `AgentModel` interface, OpenAI-compatible JSON-mode LLM client.
+- **Responsibilities**:
+  - Receives high-level user tasks (`POST /v1/agents/tasks`).
+  - Evaluates whether an external paid service is required.
+  - Generates structured, versioned payment intents (`agent_system_v1.txt`).
+  - Implements prompt injection defense using `<user_task>` delimiters and schema validation.
+  - Can only create intents in `CREATED` status.
+
+### 2. Next.js Web Dashboard (`apps/web`)
 - **Technology**: Next.js (App Router), TypeScript, Tailwind CSS.
 - **Responsibilities**:
   - Human-in-the-loop interface for operators to monitor agent spending in real time.
@@ -32,21 +57,21 @@ Arc Mainnet (USDC Settlement)
   - Visualization of payment intents, pending reviews, approvals, and transaction history.
   - Web3 wallet interaction (e.g., configuring contract parameters, initial vault funding).
 
-### 2. Go Gateway (`services/gateway`)
+### 3. Go Gateway (`services/gateway`)
 - **Technology**: Go 1.22+, `go-ethereum` (v1.14.8).
 - **Responsibilities**:
   - High-throughput API gateway exposing versioned REST endpoints (`/v1/...`).
-  - Request validation (syntax, required fields, Ethereum recipient/vault format).
-  - Context and timeout management (`POLICY_ENGINE_TIMEOUT_MS`, `ARC_RPC_TIMEOUT_MS`, `ARC_CONFIRMATION_TIMEOUT_MS`).
-  - Request ID extraction, generation, propagation, and return header (`X-Request-ID`).
-  - Typed HTTP client communicating with the upstream Rust Policy Engine.
+  - Service Registry: maps service identifiers (e.g., `web-research`) to approved recipient addresses and enforces `max_price` limits.
+  - Payment Intent Service & State Machine: manages explicit transitions (`CREATED`, `AUTHORIZED`, `DENIED`, `EXECUTING`, `SUBMITTED`, `CONFIRMED`, `FAILED`, `EXPIRED`).
+  - Injected clock for deterministic expiration testing (`PAYMENT_INTENT_TTL_SECONDS`).
+  - User Approval Mode: supports manual confirmation (`POST /v1/payment-intents/:id/confirm`) or configurable auto-execution (`AGENT_AUTO_EXECUTION=true`).
+  - Database repository: PostgreSQL schema migrations and thread-safe in-memory store.
+  - Context and timeout management (`POLICY_ENGINE_TIMEOUT_MS`, `ARC_RPC_TIMEOUT_MS`).
   - Blockchain execution service: packs `AgentVault.executePayment(...)` calldata, manages transaction signing, broadcasts to Arc, and polls receipts.
-  - Thread-safe idempotency store: prevents duplicate transaction submissions for identical `request_id`.
-  - Response normalization: maps Rust decisions and blockchain states into clean HTTP responses.
   - Middleware pipeline: Panic Recovery, Request ID, CORS, Request Body Limiting, Structured Logging, Auth Placeholder.
   - Health & Readiness probes (`/health`, `/ready`).
 
-### 3. Rust Policy Engine (`services/policy-engine`)
+### 4. Rust Policy Engine (`services/policy-engine`)
 - **Technology**: Rust 2021, Axum, Tokio, Serde.
 - **Responsibilities**:
   - Authoritative security and authorization boundary of AgentPay.
@@ -58,7 +83,7 @@ Arc Mainnet (USDC Settlement)
   - Explicit `ALLOW` or `DENY` decision responses with audit trail reason codes.
   - Zero side effects: the core `authorize(request, policy)` function has no network, database, filesystem, or clock dependencies.
 
-### 4. Solidity AgentVault (`contracts/`)
+### 5. Solidity AgentVault (`contracts/`)
 - **Technology**: Solidity 0.8.24+, Foundry (`forge` 1.8.3), OpenZeppelin v5.
 - **Responsibilities**:
   - Custodial vault smart contract holding agent operational funds in ERC-20 USDC.
@@ -78,7 +103,7 @@ Arc Mainnet (USDC Settlement)
 | **Gas Cost** | Zero gas (sub-millisecond evaluation) | Gas consumed on Arc network upon state change |
 | **State Storage** | Application memory / future PostgreSQL | On-chain contract storage slots |
 
-### 5. Arc Blockchain & USDC Settlement
+### 6. Arc Blockchain & USDC Settlement
 - **Technology**: Arc Mainnet (Chain ID `5042`).
 - **RPC Endpoint**: `https://rpc.mainnet.arc.io`
 - **Block Explorer**: `https://explorer.arc.io`
@@ -99,6 +124,6 @@ Arc Mainnet (USDC Settlement)
 3. **Chain ID Verification**:
    Before broadcast, the execution service queries `eth_chainId` from RPC and verifies it matches `5042`.
 4. **Idempotency Guarantee**:
-   Transactions are tracked by unique `request_id`. Re-submitting an already executed or confirmed request returns the recorded result without broadcasting another transaction.
+   Transactions are tracked by unique `request_id` and `intent_id`. Re-submitting an already executed or confirmed request returns the recorded result without broadcasting another transaction.
 5. **Zero Private Key Exposure**:
    `EXECUTOR_PRIVATE_KEY` is loaded only from environment variables / secrets and never exposed in logs, HTTP responses, or git.

@@ -3,16 +3,24 @@ package http
 import (
 	"net/http"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/health"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/handlers"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 )
 
 // NewRouter sets up and returns the HTTP mux with middleware pipeline for the Gateway.
-func NewRouter(cfg *config.Config, policyClient policy.Client, execService execution.Service) http.Handler {
+func NewRouter(
+	cfg *config.Config,
+	policyClient policy.Client,
+	execService execution.Service,
+	agentService *agent.Service,
+	intentService *intent.Service,
+) http.Handler {
 	mux := http.NewServeMux()
 
 	// 1. Health & Readiness
@@ -25,6 +33,19 @@ func NewRouter(cfg *config.Config, policyClient policy.Client, execService execu
 	// 3. V1 Payment Execution API (Protected by Rust authorization)
 	if execService != nil {
 		mux.Handle("POST /v1/payments/execute", handlers.NewExecuteHandler(policyClient, execService))
+	}
+
+	// 4. V1 AI Agent Task API
+	if agentService != nil {
+		mux.Handle("POST /v1/agents/tasks", handlers.NewAgentTasksHandler(agentService))
+	}
+
+	// 5. V1 Payment Intent API
+	if intentService != nil {
+		piHandler := handlers.NewPaymentIntentsHandler(intentService)
+		mux.HandleFunc("GET /v1/payment-intents/{id}", piHandler.HandleGet)
+		mux.HandleFunc("POST /v1/payment-intents/{id}/authorize", piHandler.HandleAuthorize)
+		mux.HandleFunc("POST /v1/payment-intents/{id}/confirm", piHandler.HandleConfirm)
 	}
 
 	// Compose middleware chain:

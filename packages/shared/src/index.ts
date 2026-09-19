@@ -30,6 +30,7 @@ export type PolicyDecision = 'ALLOW' | 'DENY';
  */
 export type PolicyReasonCode =
   | 'POLICY_OK'
+  | 'APPROVED'
   | 'EXCEEDS_TRANSACTION_LIMIT'
   | 'EXCEEDS_DAILY_LIMIT'
   | 'RECIPIENT_NOT_WHITELISTED'
@@ -38,37 +39,93 @@ export type PolicyReasonCode =
   | 'INVALID_INTENT_SIGNATURE';
 
 /**
- * Payment Intent submitted by an autonomous AI agent.
+ * Explicit Payment Intent Lifecycle Statuses.
+ */
+export type IntentStatus =
+  | 'CREATED'
+  | 'AUTHORIZED'
+  | 'DENIED'
+  | 'EXECUTING'
+  | 'SUBMITTED'
+  | 'CONFIRMED'
+  | 'FAILED'
+  | 'EXPIRED';
+
+/**
+ * Registered Service in the Server-side Service Registry.
+ */
+export interface RegisteredService {
+  id: string;
+  name: string;
+  recipient: string;
+  asset: SupportedCurrency;
+  enabled: boolean;
+  maxPrice: string;
+  fixedPrice?: string;
+}
+
+/**
+ * Payment Intent submitted by an autonomous AI agent or user.
  */
 export interface PaymentIntent {
-  /** Unique intent UUID */
-  id: string;
-  /** Address or identifier of the AI agent requesting payment */
-  agentId: string;
-  /** Recipient address on Arc Network (0x...) */
+  intent_id: string;
+  agent_id: string;
+  vault_address?: string;
   recipient: string;
-  /**
-   * Amount in smallest token units (micro-USDC: 1 USDC = 1_000_000).
-   * Stored as string to prevent JSON serialization float precision loss.
-   */
-  amountMicroUSDC: string;
-  /** Target currency */
-  currency: SupportedCurrency;
-  /** Purpose or metadata for audit trail */
+  amount: string;
+  asset: SupportedCurrency;
   purpose: string;
-  /** Unix timestamp in milliseconds when intent was created */
-  createdAtMs: number;
+  service: string;
+  justification?: string;
+  status: IntentStatus;
+  created_at: string;
+  expires_at: string;
+  updated_at: string;
+}
+
+/**
+ * High-level task submitted to an AI agent.
+ */
+export interface AgentTaskRequest {
+  agent_id: string;
+  task: string;
+  vault_address?: string;
+}
+
+/**
+ * Response from AI agent task evaluation.
+ */
+export interface AgentTaskResponse {
+  task_id: string;
+  status: 'PAYMENT_REQUIRED' | 'NO_PAYMENT_REQUIRED';
+  payment_intent?: PaymentIntent;
+}
+
+/**
+ * Full detail response for GET /v1/payment-intents/:id.
+ */
+export interface PaymentIntentDetailResponse {
+  intent: PaymentIntent;
+  authorization_status: 'AUTHORIZED' | 'DENIED' | 'PENDING' | 'EXPIRED' | 'NONE';
+  execution_status: string;
+  transaction_hash?: string;
+  timestamps: {
+    created_at: string;
+    expires_at: string;
+    updated_at: string;
+    submitted_at?: string;
+    confirmed_at?: string;
+  };
 }
 
 /**
  * Result of policy evaluation produced by the Rust Policy Engine.
  */
 export interface PolicyEvaluationResult {
-  intentId: string;
+  request_id: string;
   decision: PolicyDecision;
-  reasonCode: PolicyReasonCode;
-  reasonMessage: string;
-  evaluatedAtMs: number;
+  reason_code: PolicyReasonCode;
+  reason: string;
 }
 
 /**
