@@ -1,17 +1,11 @@
 use crate::domain::{Address, PaymentRequest, Policy};
-use crate::engine::{authorize, get_demo_policy};
+use crate::engine::{authorize_with_context, get_demo_policy, simulate};
 use crate::http::models::{AuthorizeHttpRequest, AuthorizeHttpResponse, ErrorResponse};
 use axum::{http::StatusCode, Json};
 
-/// Handler for POST /v1/authorize
-///
-/// HTTP Semantics:
-/// - 200: Successfully evaluated authorization (both ALLOW and DENY).
-/// - 400: Malformed requests that cannot be evaluated.
-/// - 500: Genuine server failures.
-pub async fn authorize_handler(
-    Json(payload): Json<AuthorizeHttpRequest>,
-) -> Result<Json<AuthorizeHttpResponse>, (StatusCode, Json<ErrorResponse>)> {
+fn parse_authorize_request(
+    payload: AuthorizeHttpRequest,
+) -> Result<(PaymentRequest, Policy), (StatusCode, Json<ErrorResponse>)> {
     // 1. Validate request ID
     if payload.request_id.trim().is_empty() {
         return Err((
@@ -49,7 +43,6 @@ pub async fn authorize_handler(
     };
 
     // 4. Validate and parse amount string
-    // Amounts must be base-10 unsigned integer strings without decimal points or signs.
     let amount_str = payload.amount.trim();
     if amount_str.is_empty() || !amount_str.chars().all(|c| c.is_ascii_digit()) {
         return Err((
@@ -81,18 +74,28 @@ pub async fn authorize_handler(
     let policy = if payload.agent_id == "research-agent" {
         get_demo_policy()
     } else {
-        // Unknown agent defaults to a disabled policy
         Policy {
+            policy_id: None,
+            organization_id: payload.organization_id.clone(),
             agent_id: payload.agent_id.clone(),
             enabled: false,
+            global_paused: false,
+            agent_paused: false,
+            organization_paused: false,
             per_transaction_limit: 0,
             daily_limit: 0,
             daily_spent: 0,
-            allowed_recipients: None,
-            blocked_recipients: std::collections::HashSet::new(),
-            allowed_assets: std::collections::HashSet::new(),
+            approval_threshold: None,
             max_transactions_per_day: 0,
             daily_transaction_count: 0,
+            hourly_limit: None,
+            hourly_spent: None,
+            max_transactions_per_hour: None,
+            hourly_transaction_count: None,
+            allowed_assets: std::collections::HashSet::new(),
+            allowed_recipients: None,
+            blocked_recipients: std::collections::HashSet::new(),
+            allowed_services: None,
         }
     };
 
@@ -100,16 +103,34 @@ pub async fn authorize_handler(
     let domain_req = PaymentRequest {
         request_id: payload.request_id,
         agent_id: payload.agent_id,
+        organization_id: payload.organization_id,
+        service_id: payload.service_id,
         recipient,
         amount,
         asset: payload.asset,
         purpose: payload.purpose,
+        timestamp: payload.timestamp,
     };
 
-    // 7. Pure deterministic evaluation
-    let decision = authorize(&domain_req, &policy);
+    Ok((domain_req, policy))
+}
 
-    // 8. Structured logging (never log secrets or private keys)
+/// Handler for POST /v1/authorize
+///
+/// HTTP Semantics:
+/// - 200: Successfully evaluated authorization (ALLOW, DENY, or APPROVAL_REQUIRED).
+/// - 400: Malformed requests that cannot be evaluated.
+/// - 500: Genuine server failures.
+pub async fn authorize_handler(
+    Json(payload): Json<AuthorizeHttpRequest>,
+) -> Result<Json<AuthorizeHttpResponse>, (StatusCode, Json<ErrorResponse>)> {
+    let risk_context = payload.risk_context.clone();
+    let (domain_req, policy) = parse_authorize_request(payload)?;
+
+    // Pure deterministic evaluation
+    let decision = authorize_with_context(&domain_req, &policy, risk_context.as_ref());
+
+    // Structured logging (never log secrets or private keys)
     tracing::info!(
         request_id = %decision.request_id,
         agent_id = %domain_req.agent_id,
@@ -118,6 +139,30 @@ pub async fn authorize_handler(
         "Evaluated authorization decision"
     );
 
-    // 9. Return HTTP 200 with evaluated decision
+    // Return HTTP 200 with evaluated decision
     Ok(Json(decision.into()))
 }
+
+/// Handler for POST /v1/simulate
+///
+/// Simulates policy and risk evaluation without mutating state or triggering real executions.
+pub async fn simulate_handler(
+    Json(payload): Json<AuthorizeHttpRequest>,
+) -> Result<Json<AuthorizeHttpResponse>, (StatusCode, Json<ErrorResponse>)> {
+    let risk_context = payload.risk_context.clone();
+    let (domain_req, policy) = parse_authorize_request(payload)?;
+
+    // Pure deterministic simulation
+    let decision = simulate(&domain_req, &policy, risk_context.as_ref());
+
+    tracing::info!(
+        request_id = %decision.request_id,
+        agent_id = %domain_req.agent_id,
+        decision = ?decision.decision,
+        reason_code = ?decision.reason_code,
+        "Evaluated policy simulation"
+    );
+
+    Ok(Json(decision.into()))
+}
+

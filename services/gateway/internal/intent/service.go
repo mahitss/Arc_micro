@@ -147,13 +147,22 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 		return intent, nil, ErrIntentExpired
 	}
 
-	// Idempotency: if already AUTHORIZED or DENIED, return current state
+	// Idempotency: if already AUTHORIZED, APPROVAL_REQUIRED, or DENIED, return current state
 	if intent.Status == StatusAuthorized {
 		decision := domain.AuthorizationDecision{
 			RequestID:  intent.IntentID,
 			Decision:   domain.DecisionAllow,
 			ReasonCode: domain.ReasonApproved,
 			Reason:     "Payment satisfies the configured policy.",
+		}
+		return intent, &decision, nil
+	}
+	if intent.Status == StatusApprovalRequired {
+		decision := domain.AuthorizationDecision{
+			RequestID:  intent.IntentID,
+			Decision:   domain.DecisionApprovalRequired,
+			ReasonCode: domain.ReasonApprovalRequired,
+			Reason:     "Payment requires human approval before it can be executed.",
 		}
 		return intent, &decision, nil
 	}
@@ -169,12 +178,14 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 
 	// Forward to Rust Policy Engine
 	req := domain.PaymentRequest{
-		RequestID: intent.IntentID,
-		AgentID:   intent.AgentID,
-		Recipient: intent.Recipient,
-		Amount:    intent.Amount,
-		Asset:     intent.Asset,
-		Purpose:   intent.Purpose,
+		RequestID:      intent.IntentID,
+		AgentID:        intent.AgentID,
+		OrganizationID: intent.OrganizationID,
+		ServiceID:      intent.ServiceID,
+		Recipient:      intent.Recipient,
+		Amount:         intent.Amount,
+		Asset:          intent.Asset,
+		Purpose:        intent.Purpose,
 	}
 
 	decision, err := s.policyClient.Authorize(ctx, req)
@@ -186,9 +197,14 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 	var newStatus IntentStatus
 	if decision.Decision == domain.DecisionAllow {
 		newStatus = StatusAuthorized
+	} else if decision.Decision == domain.DecisionApprovalRequired {
+		newStatus = StatusApprovalRequired
 	} else {
 		newStatus = StatusDenied
 	}
+
+	intent.PolicyDecision = string(decision.Decision)
+	intent.RequiresApproval = (decision.Decision == domain.DecisionApprovalRequired)
 
 	if err := s.repo.UpdateIntentStatus(ctx, intentID, newStatus, now); err != nil {
 		return nil, nil, fmt.Errorf("failed to update intent status: %w", err)
@@ -197,6 +213,7 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 	intent.Status = newStatus
 	intent.UpdatedAt = now
 	return intent, &decision, nil
+
 }
 
 // ConfirmIntent confirms and executes an authorized, non-expired intent.

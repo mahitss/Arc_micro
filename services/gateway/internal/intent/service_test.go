@@ -263,6 +263,50 @@ func TestIntentService_DeniedIntent(t *testing.T) {
 	}
 }
 
+// Test: Intent requiring human approval.
+func TestIntentService_ApprovalRequiredIntent(t *testing.T) {
+	apprDecision := &domain.AuthorizationDecision{
+		Decision:   domain.DecisionApprovalRequired,
+		ReasonCode: domain.ReasonAboveApprovalThreshold,
+		Reason:     "Amount exceeds approval threshold",
+	}
+	svc, _, _, _ := setupIntentTestEnv(nil, apprDecision, nil, false)
+	ctx := context.Background()
+
+	intent, _ := svc.CreateIntent(ctx, CreateIntentParams{
+		AgentID:   "research-agent",
+		ServiceID: "web-research",
+		Amount:    "450000",
+		Asset:     "USDC",
+		Purpose:   "high_value_api",
+	})
+
+	authIntent, dec, err := svc.AuthorizeIntent(ctx, intent.IntentID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if authIntent.Status != StatusApprovalRequired {
+		t.Fatalf("expected APPROVAL_REQUIRED status, got: %s", authIntent.Status)
+	}
+	if dec.Decision != domain.DecisionApprovalRequired {
+		t.Fatalf("expected APPROVAL_REQUIRED decision, got: %s", dec.Decision)
+	}
+	if !authIntent.RequiresApproval {
+		t.Fatal("expected RequiresApproval to be true")
+	}
+
+	// Idempotency: re-authorizing should return current APPROVAL_REQUIRED state
+	reauthIntent, redec, err := svc.AuthorizeIntent(ctx, intent.IntentID)
+	if err != nil {
+		t.Fatalf("unexpected error on re-auth: %v", err)
+	}
+	if reauthIntent.Status != StatusApprovalRequired || redec.Decision != domain.DecisionApprovalRequired {
+		t.Fatalf("expected idempotency to preserve APPROVAL_REQUIRED, got status=%s, dec=%s", reauthIntent.Status, redec.Decision)
+	}
+}
+
+
 // Test 13: Confirmation without authorization.
 func TestIntentService_ConfirmationWithoutAuthorization(t *testing.T) {
 	svc, _, _, _ := setupIntentTestEnv(nil, nil, nil, false)

@@ -10,8 +10,14 @@ use serde::{Deserialize, Serialize};
 pub struct PaymentRequest {
     pub request_id: String,
     pub agent_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub organization_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service_id: Option<String>,
     pub recipient: Address,
     pub amount: u64,
     pub asset: String,
     pub purpose: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<i64>,
 }

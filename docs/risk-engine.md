@@ -2,10 +2,11 @@
 
 ## 1. Executive Summary
 
-AgentPay introduces a **Deterministic Risk Scoring Layer** operating in the Go Gateway prior to dispatching transactions.
+AgentPay introduces a **Deterministic Risk Scoring Layer** implemented in Rust (`services/policy-engine/src/engine/risk.rs`) and consumed by the Go Gateway prior to dispatching transactions.
 
 > **CRITICAL SECURITY INVARIANT**:
 > The Risk Engine uses strictly deterministic, rule-based heuristics. **No LLM or stochastic model is ever permitted to calculate risk scores or make financial authorization decisions.**
+
 
 ---
 
