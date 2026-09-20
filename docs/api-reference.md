@@ -1,254 +1,221 @@
-# AgentPay API Reference
+# AgentPay Public API Reference (v1)
 
-The AgentPay Gateway API exposes the public developer surface and programmatic control plane for AI agents procuring services with policy-governed payments on Arc.
+The AgentPay Public API enables autonomous AI agents and developer platforms to interact with the programmable financial control plane on Arc.
 
----
+## Base URL
+- **Local / Test**: `http://localhost:8080`
+- **Production**: `https://api.agentpay.arc`
 
-## Architecture Overview
+## Standard Request Headers
 
-```
-Developer / AI Agent
-        │
-        ▼
-AgentPay Public API (Port 8080)
-        │
-  ┌─────┴────────────────────────────┐
-  │ Go Gateway (Boundary & Auth)     │
-  │  ├── SHA-256 API Key Validation  │
-  │  ├── Tenant Isolation (Org A/B)  │
-  │  ├── Idempotency Controller      │
-  │  └── Rate Limiter                │
-  └─────┬────────────────────────────┘
-        │
-        ├── Rust Policy Engine (Port 8081) [Deterministic Policy & Risk]
-        ├── Arc Blockchain Execution Service (AgentVault USDC Settlement)
-        └── PostgreSQL / Memory Repository
-```
+| Header | Description | Required |
+| :--- | :--- | :---: |
+| `Authorization` | Bearer token format: `Bearer <api_key>` (e.g. `ap_live_...`). | Yes |
+| `Content-Type` | Must be `application/json` for requests with bodies. | When body present |
+| `Idempotency-Key` | Unique string to guarantee exactly-once payment intent creation. | Recommended for POST |
+| `X-Request-ID` | Tracing identifier; echoed back in response headers. | Optional |
 
----
-
-## Authentication & Headers
-
-| Header | Format | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `Authorization` | `Bearer ap_live_...` or `Bearer apk_live_...` | Yes | Developer platform API key secret. |
-| `X-API-Key` | `ap_live_...` | Optional | Alternative header for passing the API key. |
-| `Idempotency-Key` | String (e.g. `req_12345`) | Recommended for POST | Guarantees exactly-once execution for mutating requests. |
-| `X-Request-ID` | String (e.g. `req_...`) | Optional | Distributed trace identifier. Auto-generated if omitted. |
+## Denominations & Amounts
+All monetary values are strings representing integer base units (6 decimal places for USDC):
+- `1000000` = $1.00 USDC
+- `2500000` = $2.50 USDC
+- `500000` = $0.50 USDC
 
 ---
 
 ## 1. Payment Intents API
 
-### `POST /v1/payment-intents`
+### Create Payment Intent
+`POST /v1/payment-intents`
 
-Creates a new Payment Intent and executes automatic deterministic policy and risk evaluation.
+Creates a new payment intent. AgentPay evaluates policies, spending limits, velocity, and approval thresholds.
 
-- **Auth**: Required (`payments:create` scope)
-- **Idempotency**: Supported via `Idempotency-Key` header. Repeated requests return the identical payment intent without duplicate processing.
-
-#### Request Body
+**Request Body**:
 ```json
 {
-  "agent_id": "agent_research",
+  "agent_id": "agent_research_01",
   "service": "research-api",
-  "amount": "1200000",
+  "amount": "1500000",
   "asset": "USDC",
-  "purpose": "Autonomous research telemetry procurement",
-  "justification": "Automated data retrieval",
-  "vault_address": "0x1111111111111111111111111111111111111111"
+  "purpose": "Procure orderbook telemetry",
+  "justification": "Autonomous market analysis"
 }
 ```
 
-#### Response (201 Created)
+**Response (201 Created)**:
 ```json
 {
-  "id": "intent_9525df7cd3120591",
+  "id": "pi_01j7b9k2x3m4n5p6q7r8s9t0",
   "status": "AUTHORIZED",
-  "amount": "1200000",
+  "amount": "1500000",
   "asset": "USDC",
   "service": "research-api",
-  "recipient": "0x5555555555555555555555555555555555555555",
-  "purpose": "Autonomous research telemetry procurement",
-  "agent_id": "agent_research",
-  "organization_id": "org_default",
+  "recipient": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+  "purpose": "Procure orderbook telemetry",
+  "agent_id": "agent_research_01",
+  "organization_id": "org_arc_enterprise_01",
   "decision": {
     "result": "ALLOW",
-    "risk": "LOW",
-    "reason": "APPROVED"
+    "risk": "LOW"
   },
-  "created_at": "2026-09-20T22:08:17Z",
-  "expires_at": "2026-09-20T22:13:17Z"
+  "created_at": "2026-09-20T16:30:00Z",
+  "expires_at": "2026-09-20T17:30:00Z"
 }
 ```
 
-#### Errors
-- `400 Bad Request` (`INVALID_REQUEST`): Missing parameters, unregistered service, or amount exceeds max price.
-- `401 Unauthorized` (`UNAUTHORIZED`): Missing, invalid, or revoked API key.
-- `403 Forbidden` (`FORBIDDEN`): API key lacks `payments:create` scope.
+### Get Payment Intent
+`GET /v1/payment-intents/{id}`
+
+Returns the intent details, authorization status, execution status, and transaction hash.
+
+### List Payment Intents
+`GET /v1/payment-intents?status=AUTHORIZED`
+
+Lists payment intents scoped to the authenticated organization.
+
+### Confirm Payment Intent
+`POST /v1/payment-intents/{id}/confirm`
+
+Triggers execution and settlement of an authorized or approved payment intent on the Arc network.
 
 ---
 
-### `GET /v1/payment-intents/{id}`
+## 2. Agents API
 
-Retrieves inspection details, lifecycle timestamps, authorization status, and execution transaction hash.
+### List Agents
+`GET /v1/agents`
 
-- **Auth**: Required (`payments:read` scope)
-- **Tenant Isolation**: Strictly enforced. Accessing another organization's intent returns `404 Not Found`.
+Returns all registered agents for the organization.
 
-#### Response (200 OK)
-```json
-{
-  "intent": {
-    "intent_id": "intent_9525df7cd3120591",
-    "organization_id": "org_default",
-    "agent_id": "agent_research",
-    "vault_address": "0x1111111111111111111111111111111111111111",
-    "recipient": "0x5555555555555555555555555555555555555555",
-    "amount": "1200000",
-    "asset": "USDC",
-    "purpose": "Autonomous research telemetry procurement",
-    "service": "research-api",
-    "status": "CONFIRMED"
-  },
-  "authorization_status": "AUTHORIZED",
-  "execution_status": "CONFIRMED",
-  "transaction_hash": "0x1c3cef38833ca20bf6548a29eabf43c811952e0f1b5101ec6514a68e661e5207",
-  "timestamps": {
-    "created_at": "2026-09-20T22:08:17Z",
-    "expires_at": "2026-09-20T22:13:17Z",
-    "updated_at": "2026-09-20T22:08:18Z",
-    "confirmed_at": "2026-09-20T22:08:18Z"
-  }
-}
-```
+### Get Agent
+`GET /v1/agents/{id}`
 
----
-
-### `POST /v1/payment-intents/{id}/confirm`
-
-Confirms and executes an authorized or approved intent on the Arc blockchain via `AgentVault`.
-
-- **Auth**: Required (`payments:create` scope)
-- **Response**:
-```json
-{
-  "intent": { "intent_id": "intent_...", "status": "CONFIRMED" },
-  "execution": {
-    "request_id": "intent_...",
-    "status": "CONFIRMED",
-    "transaction_hash": "0x...",
-    "vault": "0x...",
-    "recipient": "0x...",
-    "amount": "1200000"
-  }
-}
-```
-
----
-
-## 2. API Key Management API
-
-### `POST /v1/api-keys`
-
-Generates a new cryptographically secure API key. The plaintext secret is shown **ONLY ONCE**.
-
-- **Auth**: Required
-- **Request Body**:
-```json
-{
-  "name": "Production Agent Key",
-  "scopes": ["payments:read", "payments:create", "agents:read", "services:read"]
-}
-```
-- **Response (201 Created)**:
-```json
-{
-  "id": "key_e4b1a23c89d012e4",
-  "secret": "ap_live_a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90",
-  "masked_key": "ap_live_...8f90",
-  "name": "Production Agent Key",
-  "organization_id": "org_default",
-  "scopes": ["payments:read", "payments:create", "agents:read", "services:read"],
-  "status": "ACTIVE",
-  "created_at": "2026-09-20T22:03:20Z",
-  "warning": "This secret will never be displayed again. Store it securely in your environment variables."
-}
-```
-
-### `GET /v1/api-keys`
-
-Lists active and revoked API keys for the caller's organization. Plaintext secrets and hashes are never exposed.
-
-### `DELETE /v1/api-keys/{id}`
-
-Immediately revokes an API key.
+Returns agent details, associated vault address, current balance, and spending policy configuration (per-tx limits, daily limits, remaining budget).
 
 ---
 
 ## 3. Services API
 
-### `GET /v1/services`
+### List Services
+`GET /v1/services`
 
-Lists all approved external services available for agent payment requests.
-
-- **Response**:
-```json
-{
-  "services": [
-    {
-      "id": "research-api",
-      "name": "Autonomous Research Data Provider",
-      "recipient": "0x5555555555555555555555555555555555555555",
-      "asset": "USDC",
-      "enabled": true,
-      "max_price": "20000000"
-    }
-  ]
-}
-```
+Returns the approved service registry (services approved for agent procurement, their max prices, and settlement recipients).
 
 ---
 
-## 4. Agents API
+## 4. Approvals API
 
-### `GET /v1/agents`
+### List Approvals
+`GET /v1/approvals`
 
-Lists agents for the caller's organization.
+Lists payment requests pending human approval.
 
-### `GET /v1/agents/{id}`
+### Get Approval
+`GET /v1/approvals/{id}`
 
-Retrieves an agent's configured spending policy, daily limits, and USDC balance.
+Returns approval request details.
 
----
+### Approve Payment
+`POST /v1/approvals/{id}/approve`
 
-## 5. Approvals Control Plane API
+Authorizes a pending payment intent. Requires `payments:approve` permission scope.
 
-### `GET /v1/approvals`
-
-Lists pending and resolved human financial approvals.
-
-### `POST /v1/approvals/{id}/approve`
-
-Authorizes a pending payment intent requiring human review.
-
-### `POST /v1/approvals/{id}/reject`
+### Reject Payment
+`POST /v1/approvals/{id}/reject`
 
 Rejects a pending payment intent.
 
 ---
 
-## 6. Treasury API
+## 5. Transactions API
 
-### `GET /v1/treasury/summary`
+### List Transactions
+`GET /v1/transactions`
 
-Returns real-time vault balance, reserved funds, unreserved available capital, and settlement statistics.
+Lists on-chain Arc execution records including transaction hashes, status, and mining timestamps.
 
 ---
 
-## 7. System & Emergency Controls API
+## 6. Events API
 
-- `POST /v1/agents/{id}/pause` & `/resume`: Pauses or resumes an individual agent.
-- `POST /v1/organizations/{id}/pause` & `/resume`: Pauses or resumes an entire organization.
-- `POST /v1/system/pause` & `/resume`: Global execution kill switch.
-- `GET /v1/system/status`: Returns health and pause states across all tiers.
+### List Events
+`GET /v1/events?limit=50&event_type=payment_intent.*`
+
+Queries immutable domain audit events with filtering support.
+
+### Get Event
+`GET /v1/events/{id}`
+
+Retrieves a single domain event envelope with full causal lineage.
+
+---
+
+## 7. Webhooks API
+
+### Register Webhook Endpoint
+`POST /v1/webhooks`
+
+Registers an HTTPS endpoint to receive domain events. Returns the signing secret **only once**.
+
+### List Webhook Endpoints
+`GET /v1/webhooks`
+
+Lists registered endpoints (secrets omitted).
+
+### Get Webhook Endpoint
+`GET /v1/webhooks/{id}`
+
+Returns endpoint status, failure counts, and subscription topics.
+
+### Update Webhook Endpoint
+`PATCH /v1/webhooks/{id}`
+
+Enables/disables or updates subscriptions.
+
+### Delete Webhook Endpoint
+`DELETE /v1/webhooks/{id}`
+
+Removes the endpoint.
+
+### List Deliveries
+`GET /v1/webhooks/{id}/deliveries?limit=50`
+
+Returns recent delivery attempts, HTTP status codes, latencies, and retry history.
+
+### Send Test Ping
+`POST /v1/webhooks/{id}/test`
+
+Sends a synthetic `test.ping` event to verify connectivity and signature verification.
+
+---
+
+## 8. Error Model & Status Codes
+
+AgentPay returns structured JSON errors for all 4xx and 5xx responses:
+
+```json
+{
+  "error": {
+    "code": "POLICY_DENIED",
+    "message": "Payment amount exceeds remaining daily spending limit.",
+    "request_id": "req_01j7b9...",
+    "details": {
+      "limit": "5000000",
+      "requested": "10000000"
+    }
+  }
+}
+```
+
+| HTTP Status | Error Code | Description |
+| :---: | :--- | :--- |
+| `400` | `VALIDATION_ERROR` | Malformed request body or invalid parameters. |
+| `400` | `POLICY_DENIED` | Payment violates spending limits, velocity, or unapproved recipient. |
+| `400` | `INSUFFICIENT_TREASURY` | Treasury vault lacks sufficient balance or reservation capacity. |
+| `401` | `AUTHENTICATION_ERROR` | Missing, invalid, or revoked API key. |
+| `403` | `AUTHORIZATION_ERROR` | API key lacks required scope for this operation. |
+| `404` | `NOT_FOUND` | Resource does not exist or belongs to another organization. |
+| `409` | `CONFLICT` | Concurrent update conflict or duplicate request. |
+| `429` | `RATE_LIMITED` | Organization or API key rate limit exceeded. |
+| `500` | `EXECUTION_ERROR` | Arc blockchain transaction reverted or failed. |
+| `500` | `INTERNAL_ERROR` | Server-side unexpected failure. |

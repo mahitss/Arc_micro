@@ -1,0 +1,21 @@
+{
+  "name": "@agentpay/cli",
+  "version": "0.1.0",
+  "description": "Developer CLI for AgentPay financial control plane",
+  "type": "module",
+  "bin": {
+    "agentpay": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/cli.test.js"
+  },
+  "dependencies": {
+    "@agentpay/sdk": "file:../sdk-typescript"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "license": "Apache-2.0"
+}

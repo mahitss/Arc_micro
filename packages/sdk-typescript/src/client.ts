@@ -1,12 +1,16 @@
 import {
   AgentPayError,
   ApprovalRequiredError,
-  ForbiddenError,
+  AuthenticationError,
+  AuthorizationError,
+  ConflictError,
+  ExecutionError,
+  InsufficientTreasuryError,
   NetworkError,
   NotFoundError,
   PolicyDeniedError,
-  RateLimitError,
-  UnauthorizedError,
+  RateLimitedError,
+  ValidationError,
 } from './errors.js';
 import { AgentsResource } from './resources/agents.js';
 import { ApprovalsResource } from './resources/approvals.js';
@@ -110,12 +114,14 @@ export class AgentPay {
       if (!response.ok) {
         let code = 'UNKNOWN_ERROR';
         let message = `Request failed with status ${response.status}`;
+        let details: unknown = undefined;
 
         try {
           const body = await response.json();
           if (body?.error) {
             code = body.error.code || code;
             message = body.error.message || message;
+            details = body.error.details || body.error;
           } else if (body?.message) {
             message = body.message;
           }
@@ -125,22 +131,35 @@ export class AgentPay {
 
         // Map to typed error classes
         switch (response.status) {
+          case 400:
+            if (code === 'POLICY_DENIED' || code === 'PAYMENT_POLICY_DENIED') {
+              throw new PolicyDeniedError(message, typeof details === 'string' ? details : undefined, requestId);
+            }
+            if (code === 'INSUFFICIENT_FUNDS' || code === 'INSUFFICIENT_TREASURY') {
+              throw new InsufficientTreasuryError(message, requestId);
+            }
+            throw new ValidationError(message, details, requestId);
           case 401:
-            throw new UnauthorizedError(message, requestId);
+            throw new AuthenticationError(message, requestId);
           case 403:
-            throw new ForbiddenError(message, requestId);
+            throw new AuthorizationError(message, requestId);
           case 404:
             throw new NotFoundError(message, requestId);
+          case 409:
+            throw new ConflictError(message, requestId);
           case 429:
-            throw new RateLimitError(message, requestId);
+            throw new RateLimitedError(message, requestId);
           default:
             if (code === 'POLICY_DENIED' || code === 'PAYMENT_POLICY_DENIED') {
-              throw new PolicyDeniedError(message, requestId);
+              throw new PolicyDeniedError(message, undefined, requestId);
             }
             if (code === 'APPROVAL_REQUIRED') {
               throw new ApprovalRequiredError(message, undefined, requestId);
             }
-            throw new AgentPayError(message, code, response.status, requestId);
+            if (code === 'EXECUTION_FAILED' || code === 'EXECUTION_ERROR') {
+              throw new ExecutionError(message, undefined, requestId);
+            }
+            throw new AgentPayError(message, code, response.status, requestId, details);
         }
       }
 

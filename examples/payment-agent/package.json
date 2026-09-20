@@ -1,0 +1,19 @@
+{
+  "name": "@agentpay/example-payment-agent",
+  "version": "0.1.0",
+  "description": "Reference payment agent demonstrating the AgentPay financial control plane and agent tool contract",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "webhook": "node dist/webhook-listener.js"
+  },
+  "dependencies": {
+    "@agentpay/sdk": "file:../../packages/sdk-typescript"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "license": "Apache-2.0"
+}

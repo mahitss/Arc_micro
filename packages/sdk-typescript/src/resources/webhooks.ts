@@ -9,6 +9,13 @@ import type {
   WebhookEndpoint,
 } from '../types.js';
 
+export interface VerifySignatureOptions {
+  payload: string | Buffer;
+  signature: string;
+  secret: string;
+  toleranceSeconds?: number;
+}
+
 export class WebhooksResource {
   constructor(private readonly client: AgentPay) {}
 
@@ -131,23 +138,49 @@ export class WebhooksResource {
 
   /**
    * Verify an incoming webhook signature using HMAC-SHA256 with replay attack protection.
+   * Supports either an options object or positional arguments.
    *
-   * @param payload - Raw request body (string or Buffer)
-   * @param signatureHeader - Value of the `AgentPay-Signature` or `X-AgentPay-Signature` header
-   * @param secret - The endpoint signing secret (`whsec_...`)
-   * @param toleranceSeconds - Maximum allowed age of the signature in seconds (default: 300 = 5 minutes)
+   * @example
+   * agentpay.webhooks.verifySignature({
+   *   payload: req.body,
+   *   signature: req.headers['agentpay-signature'],
+   *   secret: process.env.WEBHOOK_SECRET
+   * });
    */
+  verifySignature(options: VerifySignatureOptions): boolean;
   verifySignature(
     payload: string | Buffer,
     signatureHeader: string,
     secret: string,
+    toleranceSeconds?: number
+  ): boolean;
+  verifySignature(
+    payloadOrOptions: string | Buffer | VerifySignatureOptions,
+    signatureHeader?: string,
+    secret?: string,
     toleranceSeconds: number = 300
   ): boolean {
-    if (!signatureHeader || !secret) {
+    let payload: string | Buffer;
+    let sig: string;
+    let sec: string;
+    let tol: number = toleranceSeconds;
+
+    if (typeof payloadOrOptions === 'object' && !Buffer.isBuffer(payloadOrOptions) && 'payload' in payloadOrOptions) {
+      payload = payloadOrOptions.payload;
+      sig = payloadOrOptions.signature;
+      sec = payloadOrOptions.secret;
+      tol = payloadOrOptions.toleranceSeconds ?? 300;
+    } else {
+      payload = payloadOrOptions as string | Buffer;
+      sig = signatureHeader || '';
+      sec = secret || '';
+    }
+
+    if (!sig || !sec) {
       return false;
     }
 
-    const parts = signatureHeader.split(',');
+    const parts = sig.split(',');
     let timestamp = 0;
     let signature = '';
 
@@ -166,14 +199,14 @@ export class WebhooksResource {
 
     // Check replay tolerance
     const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - timestamp) > toleranceSeconds) {
+    if (Math.abs(now - timestamp) > tol) {
       return false;
     }
 
     // Compute expected signature: HMAC-SHA256(secret, timestamp + "." + payload)
     const payloadStr = typeof payload === 'string' ? payload : payload.toString('utf-8');
     const canonical = `${timestamp}.${payloadStr}`;
-    const expectedSig = createHmac('sha256', secret).update(canonical).digest('hex');
+    const expectedSig = createHmac('sha256', sec).update(canonical).digest('hex');
 
     try {
       const sigBuf = Buffer.from(signature, 'hex');

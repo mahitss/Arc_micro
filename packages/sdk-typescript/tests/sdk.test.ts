@@ -4,10 +4,17 @@ import { AgentPay } from '../src/client.js';
 import {
   AgentPayError,
   ApprovalRequiredError,
+  AuthenticationError,
+  AuthorizationError,
+  ConflictError,
+  ExecutionError,
+  InsufficientTreasuryError,
   NotFoundError,
   PolicyDeniedError,
+  RateLimitedError,
   RateLimitError,
   UnauthorizedError,
+  ValidationError,
 } from '../src/errors.js';
 
 test('AgentPay SDK — Initialization & Defaults', () => {
@@ -88,8 +95,8 @@ test('AgentPay SDK — Idempotency Key Header Propagation', async () => {
   assert.equal(res.status, 'AUTHORIZED');
 });
 
-test('AgentPay SDK — Typed Error Handling (Unauthorized, Not Found, Rate Limited)', async () => {
-  // 1. 401 Unauthorized
+test('AgentPay SDK — Typed Error Handling', async () => {
+  // 1. 401 Unauthorized / AuthenticationError
   const mock401: typeof fetch = async () => {
     return new Response(
       JSON.stringify({ error: { code: 'UNAUTHORIZED', message: 'Invalid API key' } }),
@@ -103,8 +110,9 @@ test('AgentPay SDK — Typed Error Handling (Unauthorized, Not Found, Rate Limit
   await assert.rejects(
     async () => client401.paymentIntents.list(),
     (err: any) => {
+      assert.ok(err instanceof AuthenticationError);
       assert.ok(err instanceof UnauthorizedError);
-      assert.equal(err.code, 'UNAUTHORIZED');
+      assert.equal(err.code, 'AUTHENTICATION_ERROR');
       assert.equal(err.statusCode, 401);
       assert.equal(err.requestId, 'req_err_401');
       return true;
@@ -146,9 +154,44 @@ test('AgentPay SDK — Typed Error Handling (Unauthorized, Not Found, Rate Limit
   await assert.rejects(
     async () => client429.paymentIntents.list(),
     (err: any) => {
+      assert.ok(err instanceof RateLimitedError);
       assert.ok(err instanceof RateLimitError);
       assert.equal(err.statusCode, 429);
       assert.equal(err.requestId, 'req_err_429');
+      return true;
+    }
+  );
+
+  // 4. 400 Validation Error
+  const mock400: typeof fetch = async () => {
+    return new Response(
+      JSON.stringify({ error: { code: 'INVALID_AMOUNT', message: 'Amount must be a positive integer string' } }),
+      { status: 400, headers: { 'Content-Type': 'application/json', 'x-request-id': 'req_err_400' } }
+    );
+  };
+  const client400 = new AgentPay({ fetch: mock400 });
+  await assert.rejects(
+    async () => client400.paymentIntents.create({ agentId: 'a', service: 's', amount: '-1', purpose: 'p' }),
+    (err: any) => {
+      assert.ok(err instanceof ValidationError);
+      assert.equal(err.statusCode, 400);
+      return true;
+    }
+  );
+
+  // 5. Insufficient Treasury Error
+  const mockTreasury: typeof fetch = async () => {
+    return new Response(
+      JSON.stringify({ error: { code: 'INSUFFICIENT_FUNDS', message: 'Treasury vault balance is insufficient' } }),
+      { status: 400, headers: { 'Content-Type': 'application/json', 'x-request-id': 'req_err_treasury' } }
+    );
+  };
+  const clientTreasury = new AgentPay({ fetch: mockTreasury });
+  await assert.rejects(
+    async () => clientTreasury.paymentIntents.create({ agentId: 'a', service: 's', amount: '1000000000', purpose: 'p' }),
+    (err: any) => {
+      assert.ok(err instanceof InsufficientTreasuryError);
+      assert.equal(err.code, 'INSUFFICIENT_TREASURY');
       return true;
     }
   );
@@ -244,8 +287,18 @@ test('AgentPay SDK — Webhooks Resource & Signature Verification', async () => 
   const validSig = createHmac('sha256', secret).update(`${now}.${payload}`).digest('hex');
   const validHeader = `t=${now},v1=${validSig}`;
 
+  // Positional arguments
   const isValid = client.webhooks.verifySignature(payload, validHeader, secret, 300);
   assert.equal(isValid, true);
+
+  // Object arguments
+  const isObjValid = client.webhooks.verifySignature({
+    payload,
+    signature: validHeader,
+    secret,
+    toleranceSeconds: 300,
+  });
+  assert.equal(isObjValid, true);
 
   // Invalid signature
   const isInvalid = client.webhooks.verifySignature(payload, `t=${now},v1=invalidsig123`, secret, 300);
@@ -302,4 +355,47 @@ test('AgentPay SDK — Events Resource Querying', async () => {
   assert.equal(events.length, 1);
   assert.equal(events[0].id, 'evt_001');
   assert.equal(events[0].payment_intent_id, 'intent_123');
+});
+
+test('AgentPay SDK — Polling Helper (waitForCompletion)', async () => {
+  let callCount = 0;
+  const mockFetch: typeof fetch = async () => {
+    callCount++;
+    const status = callCount < 3 ? 'EXECUTING' : 'CONFIRMED';
+    return new Response(
+      JSON.stringify({
+        intent: {
+          id: 'pi_poll_test',
+          status,
+          amount: '5000000',
+          asset: 'USDC',
+          service: 'test-service',
+          recipient: '0x1111111111111111111111111111111111111111',
+          agent_id: 'agent_test',
+          organization_id: 'org_default',
+          created_at: new Date().toISOString(),
+          expires_at: new Date().toISOString(),
+        },
+        authorization_status: 'AUTHORIZED',
+        execution_status: status,
+        transaction_hash: status === 'CONFIRMED' ? '0xabcdef123456' : undefined,
+        timestamps: {
+          created_at: new Date().toISOString(),
+          expires_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const result = await client.paymentIntents.waitForCompletion('pi_poll_test', {
+    timeoutMs: 5000,
+    intervalMs: 50,
+  });
+
+  assert.equal(result.intent.status, 'CONFIRMED');
+  assert.equal(result.transaction_hash, '0xabcdef123456');
+  assert.ok(callCount >= 3);
 });

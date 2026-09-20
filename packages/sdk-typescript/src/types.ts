@@ -46,6 +46,26 @@ export interface RequestOptions {
 }
 
 /**
+ * Options for polling payment completion.
+ */
+export interface WaitForCompletionOptions {
+  /**
+   * Maximum time to wait in milliseconds before timing out (default: 30,000ms).
+   */
+  timeoutMs?: number;
+
+  /**
+   * Polling interval in milliseconds between status checks (default: 1,000ms).
+   */
+  intervalMs?: number;
+
+  /**
+   * Optional custom request options passed to underlying get calls.
+   */
+  requestOptions?: RequestOptions;
+}
+
+/**
  * Policy & risk decision summary returned by AgentPay.
  */
 export interface IntentDecision {
@@ -56,6 +76,11 @@ export interface IntentDecision {
 
 /**
  * Payment Intent created or retrieved from AgentPay.
+ *
+ * NOTE ON AMOUNTS:
+ * Monetary amounts are represented as strings in base units (micro-units for USDC: 6 decimals).
+ * Example: "1000000" = 1.00 USDC, "2500000" = 2.50 USDC.
+ * NEVER use JavaScript floating-point numbers for financial amounts.
  */
 export interface PaymentIntent {
   id: string;
@@ -106,6 +131,9 @@ export interface PaymentIntentDetail {
 export interface CreatePaymentIntentParams {
   agentId: string;
   service: string;
+  /**
+   * Amount in base units as a string (e.g. "2500000" for 2.50 USDC).
+   */
   amount: string;
   asset?: string; // Default: 'USDC'
   purpose: string;
@@ -294,4 +322,42 @@ export interface ListEventsFilter {
   paymentIntentId?: string;
   agentId?: string;
   limit?: number;
+}
+
+/**
+ * Formalized Agent Tool Contract: Input for requesting payment.
+ */
+export interface RequestPaymentInput {
+  service_id: string;
+  /**
+   * Amount in base units (e.g. "2500000" for 2.50 USDC).
+   */
+  amount: string;
+  asset?: string;
+  purpose: string;
+  justification?: string;
+  idempotency_key?: string;
+}
+
+/**
+ * Actionable next step returned to the AI agent.
+ */
+export type PaymentNextAction =
+  | 'CONTINUE'
+  | 'WAIT_FOR_APPROVAL'
+  | 'WAIT_FOR_EXECUTION'
+  | 'HANDLE_DENIAL'
+  | 'HANDLE_FAILURE';
+
+/**
+ * Formalized Agent Tool Contract: Structured result returned to the AI agent.
+ */
+export interface RequestPaymentResult {
+  payment_intent_id: string;
+  status: string;
+  decision: 'ALLOW' | 'APPROVAL_REQUIRED' | 'DENY' | string;
+  risk?: string;
+  next_action: PaymentNextAction;
+  reason?: string;
+  tx_hash?: string;
 }

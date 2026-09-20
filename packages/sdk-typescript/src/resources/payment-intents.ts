@@ -1,10 +1,20 @@
 import type { AgentPay } from '../client.js';
+import { AgentPayError } from '../errors.js';
 import type {
   CreatePaymentIntentParams,
   PaymentIntent,
   PaymentIntentDetail,
   RequestOptions,
+  WaitForCompletionOptions,
 } from '../types.js';
+
+const TERMINAL_STATUSES = new Set([
+  'CONFIRMED',
+  'DENIED',
+  'FAILED',
+  'CANCELLED',
+  'EXPIRED',
+]);
 
 export class PaymentIntentsResource {
   constructor(private readonly client: AgentPay) {}
@@ -79,6 +89,44 @@ export class PaymentIntentsResource {
       `/v1/payment-intents/${encodeURIComponent(id)}/confirm`,
       { method: 'POST' },
       options
+    );
+  }
+
+  /**
+   * Safely poll a Payment Intent until it reaches a terminal status
+   * (CONFIRMED, DENIED, FAILED, CANCELLED, EXPIRED) or the timeout expires.
+   *
+   * @param id The Payment Intent ID to observe.
+   * @param options Polling configuration (timeoutMs: default 30000ms, intervalMs: default 1000ms).
+   * @returns Detailed Payment Intent information upon reaching terminal state.
+   */
+  async waitForCompletion(
+    id: string,
+    options: WaitForCompletionOptions = {}
+  ): Promise<PaymentIntentDetail> {
+    const timeoutMs = options.timeoutMs ?? 30000;
+    const intervalMs = Math.max(options.intervalMs ?? 1000, 200); // Minimum 200ms
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeoutMs) {
+      const detail = await this.get(id, options.requestOptions);
+      const status = (detail.intent?.status || '').toUpperCase();
+
+      if (TERMINAL_STATUSES.has(status)) {
+        return detail;
+      }
+
+      const elapsed = Date.now() - startTime;
+      const remaining = timeoutMs - elapsed;
+      if (remaining <= 0) break;
+
+      await new Promise((resolve) => setTimeout(resolve, Math.min(intervalMs, remaining)));
+    }
+
+    throw new AgentPayError(
+      `Payment intent ${id} did not reach a terminal state within ${timeoutMs}ms.`,
+      'POLLING_TIMEOUT',
+      408
     );
   }
 }
