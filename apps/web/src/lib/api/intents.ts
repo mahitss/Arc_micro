@@ -27,3 +27,18 @@ export async function confirmIntent(id: string): Promise<PaymentIntentDetail> {
     method: 'POST',
   });
 }
+
+export async function approveIntent(approvalId: string, approverId: string, reason?: string): Promise<{ intent: PaymentIntent; approval: any }> {
+  return await apiRequest<{ intent: PaymentIntent; approval: any }>(`/v1/approvals/${encodeURIComponent(approvalId)}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ approver_id: approverId, reason }),
+  });
+}
+
+export async function rejectIntent(approvalId: string, approverId: string, reason?: string): Promise<{ intent: PaymentIntent; approval: any }> {
+  return await apiRequest<{ intent: PaymentIntent; approval: any }>(`/v1/approvals/${encodeURIComponent(approvalId)}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ approver_id: approverId, reason }),
+  });
+}
+

@@ -45,6 +45,18 @@ func (m *mockRepo) GetIntent(ctx context.Context, id string) (*PaymentIntent, er
 	return &copyPI, nil
 }
 
+func (m *mockRepo) GetIntentByRequestID(ctx context.Context, orgID, requestID string) (*PaymentIntent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, pi := range m.intents {
+		if (orgID == "" || pi.OrganizationID == orgID) && pi.RequestID == requestID {
+			copyPI := *pi
+			return &copyPI, nil
+		}
+	}
+	return nil, ErrIntentNotFound
+}
+
 func (m *mockRepo) UpdateIntentStatus(ctx context.Context, id string, status IntentStatus, updatedAt time.Time) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

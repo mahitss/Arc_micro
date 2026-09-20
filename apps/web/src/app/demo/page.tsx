@@ -1052,7 +1052,7 @@ export default function DemoPage() {
             subtitle="Deterministic Pure Evaluation"
             isActive={activeStepIndex === 3}
             isCompleted={activeStepIndex > 3}
-            isDenied={(scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || (executionResult && executionResult.decision === 'DENY')) && activeStepIndex >= 3}
+            isDenied={Boolean((scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || executionResult?.decision === 'DENY') && activeStepIndex >= 3)}
             statusBadge="OFF-CHAIN GATEWAY"
             badgeVariant="teal"
             details={step3Details}
@@ -1063,13 +1063,13 @@ export default function DemoPage() {
             stageNum="04"
             title="Go Gateway"
             subtitle={
-              (scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || (executionResult && executionResult.decision === 'DENY'))
+              (scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || executionResult?.decision === 'DENY')
                 ? 'Execution ABORTED'
                 : 'Atomic CAS & Signing'
             }
             isActive={activeStepIndex === 4}
             isCompleted={activeStepIndex > 4}
-            isDenied={(scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || (executionResult && executionResult.decision === 'DENY')) && activeStepIndex >= 4}
+            isDenied={Boolean((scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || executionResult?.decision === 'DENY') && activeStepIndex >= 4)}
             statusBadge="BACKEND EXECUTOR"
             badgeVariant="amber"
             details={step4Details}
@@ -1080,13 +1080,13 @@ export default function DemoPage() {
             stageNum="05"
             title="Arc Settlement"
             subtitle={
-              (scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || (executionResult && executionResult.decision === 'DENY'))
+              (scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || executionResult?.decision === 'DENY')
                 ? '0 Tx / 0 Gas Incurred'
                 : 'AgentVault.sol & USDC'
             }
             isActive={activeStepIndex === 5}
             isCompleted={activeStepIndex >= 5 && !isRunning}
-            isDenied={(scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || (executionResult && executionResult.decision === 'DENY')) && activeStepIndex >= 5}
+            isDenied={Boolean((scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || executionResult?.decision === 'DENY') && activeStepIndex >= 5)}
             statusBadge="ARC MAINNET (5042)"
             badgeVariant="emerald"
             details={step5Details}
@@ -1295,7 +1295,7 @@ export default function DemoPage() {
               <div>
                 <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-1">
                   <span>POST /v1/payments/authorize (Request)</span>
-                  <CopyButton text={rawRequestPayload} label="Copy Request" />
+                  <CopyButton textToCopy={rawRequestPayload} label="Copy Request" />
                 </div>
                 <pre className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-teal-300 overflow-x-auto max-h-56">
                   {rawRequestPayload || '// No request recorded'}
@@ -1305,7 +1305,7 @@ export default function DemoPage() {
               <div>
                 <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-1">
                   <span>Rust Policy Engine Response</span>
-                  <CopyButton text={rawResponsePayload} label="Copy Response" />
+                  <CopyButton textToCopy={rawResponsePayload} label="Copy Response" />
                 </div>
                 <pre className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-cyan-300 overflow-x-auto max-h-56">
                   {rawResponsePayload || '// No response recorded'}

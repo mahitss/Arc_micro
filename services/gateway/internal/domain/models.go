@@ -89,10 +89,11 @@ type Policy struct {
 type ApprovalStatus string
 
 const (
-	ApprovalStatusPending  ApprovalStatus = "PENDING"
-	ApprovalStatusApproved ApprovalStatus = "APPROVED"
-	ApprovalStatusRejected ApprovalStatus = "REJECTED"
-	ApprovalStatusExpired  ApprovalStatus = "EXPIRED"
+	ApprovalStatusPending   ApprovalStatus = "PENDING"
+	ApprovalStatusApproved  ApprovalStatus = "APPROVED"
+	ApprovalStatusRejected  ApprovalStatus = "REJECTED"
+	ApprovalStatusExpired   ApprovalStatus = "EXPIRED"
+	ApprovalStatusCancelled ApprovalStatus = "CANCELLED"
 )
 
 // Approval represents a human-in-the-loop authorization gate.
@@ -106,32 +107,107 @@ type Approval struct {
 	ResolvedAt      *time.Time     `json:"resolved_at,omitempty"`
 	ApprovedBy      string         `json:"approved_by,omitempty"`
 	RejectionReason string         `json:"rejection_reason,omitempty"`
+	ExpiresAt       time.Time      `json:"expires_at"`
 	CreatedAt       time.Time      `json:"created_at"`
 }
 
-// --- 6. Audit Event ---
+// --- 6. Treasury Reservation ---
+
+type TreasuryReservationStatus string
+
+const (
+	TreasuryReservationStatusReserved TreasuryReservationStatus = "RESERVED"
+	TreasuryReservationStatusSettled  TreasuryReservationStatus = "SETTLED"
+	TreasuryReservationStatusReleased TreasuryReservationStatus = "RELEASED"
+)
+
+// TreasuryReservation represents an off-chain application-level lock on available vault funds.
+type TreasuryReservation struct {
+	ID             string                    `json:"id"`
+	OrganizationID string                    `json:"organization_id"`
+	VaultAddress   string                    `json:"vault_address"`
+	IntentID       string                    `json:"intent_id"`
+	Amount         string                    `json:"amount"` // micro-USDC integer string
+	Status         TreasuryReservationStatus `json:"status"`
+	CreatedAt      time.Time                 `json:"created_at"`
+	UpdatedAt      time.Time                 `json:"updated_at"`
+}
+
+// --- 7. Audit Event ---
 
 type AuditEventType string
 
 const (
-	AuditEventAgentCreated         AuditEventType = "agent.created"
-	AuditEventAgentUpdated         AuditEventType = "agent.updated"
-	AuditEventAgentPaused          AuditEventType = "agent.paused"
-	AuditEventAgentResumed         AuditEventType = "agent.resumed"
-	AuditEventServiceCreated       AuditEventType = "service.created"
-	AuditEventServiceUpdated       AuditEventType = "service.updated"
-	AuditEventServicePaused        AuditEventType = "service.paused"
-	AuditEventPolicyUpdated        AuditEventType = "policy.updated"
-	AuditEventPaymentCreated       AuditEventType = "payment.created"
-	AuditEventPaymentAuthorized    AuditEventType = "payment.authorized"
-	AuditEventPaymentDenied        AuditEventType = "payment.denied"
-	AuditEventPaymentApprovalReq   AuditEventType = "payment.approval_required"
-	AuditEventPaymentApproved      AuditEventType = "payment.approved"
-	AuditEventPaymentRejected      AuditEventType = "payment.rejected"
-	AuditEventPaymentSubmitted     AuditEventType = "payment.submitted"
-	AuditEventPaymentConfirmed     AuditEventType = "payment.confirmed"
-	AuditEventPaymentFailed        AuditEventType = "payment.failed"
+	AuditEventAgentCreated           AuditEventType = "agent.created"
+	AuditEventAgentUpdated           AuditEventType = "agent.updated"
+	AuditEventAgentPaused            AuditEventType = "agent.paused"
+	AuditEventAgentResumed           AuditEventType = "agent.resumed"
+	AuditEventOrgPaused              AuditEventType = "organization.paused"
+	AuditEventOrgResumed             AuditEventType = "organization.resumed"
+	AuditEventSystemExecutionPaused  AuditEventType = "system.execution_paused"
+	AuditEventSystemExecutionResumed AuditEventType = "system.execution_resumed"
+	AuditEventServiceCreated         AuditEventType = "service.created"
+	AuditEventServiceUpdated         AuditEventType = "service.updated"
+	AuditEventServicePaused          AuditEventType = "service.paused"
+	AuditEventPolicyUpdated          AuditEventType = "policy.updated"
+	AuditEventPaymentCreated         AuditEventType = "payment.created"
+	AuditEventPaymentAuthorized      AuditEventType = "payment.authorized"
+	AuditEventPaymentDenied          AuditEventType = "payment.denied"
+	AuditEventPaymentApprovalReq     AuditEventType = "payment.approval_required"
+	AuditEventPaymentApproved        AuditEventType = "payment.approved"
+	AuditEventPaymentRejected        AuditEventType = "payment.rejected"
+	AuditEventPaymentApprovalExpired AuditEventType = "payment.approval_expired"
+	AuditEventPaymentSubmitted       AuditEventType = "payment.submitted"
+	AuditEventPaymentConfirmed       AuditEventType = "payment.confirmed"
+	AuditEventPaymentFailed          AuditEventType = "payment.failed"
+	AuditEventTreasuryReserved       AuditEventType = "treasury.reserved"
+	AuditEventTreasuryReleased       AuditEventType = "treasury.released"
+	AuditEventTreasurySettled        AuditEventType = "treasury.settled"
+	AuditEventAgentTaskStarted       AuditEventType = "agent.task.started"
+	AuditEventAgentServiceDiscovered AuditEventType = "agent.service.discovered"
+	AuditEventAgentPaymentRequested  AuditEventType = "agent.payment.requested"
+	AuditEventAgentPaymentAuthorized AuditEventType = "agent.payment.authorized"
+	AuditEventAgentPaymentDenied     AuditEventType = "agent.payment.denied"
+	AuditEventAgentPaymentApprovalReq AuditEventType = "agent.payment.approval_required"
+	AuditEventAgentPaymentConfirmed  AuditEventType = "agent.payment.confirmed"
+	AuditEventAgentTaskCompleted     AuditEventType = "agent.task.completed"
+	AuditEventAPIKeyCreated          AuditEventType = "api_key.created"
+	AuditEventAPIKeyRevoked          AuditEventType = "api_key.revoked"
 )
+
+// --- 8. API Keys & Scopes (Day 5) ---
+
+type APIKeyStatus string
+
+const (
+	APIKeyStatusActive  APIKeyStatus = "ACTIVE"
+	APIKeyStatusRevoked APIKeyStatus = "REVOKED"
+)
+
+const (
+	ScopePaymentsRead    = "payments:read"
+	ScopePaymentsCreate  = "payments:create"
+	ScopePaymentsApprove = "payments:approve"
+	ScopeAgentsRead      = "agents:read"
+	ScopeServicesRead    = "services:read"
+	ScopeTreasuryRead    = "treasury:read"
+)
+
+// APIKey represents an authorized developer platform credential.
+// CRITICAL: Raw secrets are NEVER stored; only KeyHash is persisted.
+type APIKey struct {
+	ID             string       `json:"id"`
+	OrganizationID string       `json:"organization_id"`
+	KeyHash        string       `json:"key_hash"` // SHA-256 hex string
+	Name           string       `json:"name"`
+	MaskedKey      string       `json:"masked_key"` // e.g. "apk_live_...a1b2"
+	Scopes         []string     `json:"scopes"`
+	Status         APIKeyStatus `json:"status"`
+	LastUsedAt     *time.Time   `json:"last_used_at,omitempty"`
+	ExpiresAt      *time.Time   `json:"expires_at,omitempty"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
+}
 
 // AuditEvent represents an append-only, tamper-evident audit record.
 type AuditEvent struct {
@@ -140,7 +216,7 @@ type AuditEvent struct {
 	EventType      AuditEventType `json:"event_type"`
 	ActorType      string         `json:"actor_type"` // "AGENT", "USER", "SYSTEM"
 	ActorID        string         `json:"actor_id"`
-	ResourceType   string         `json:"resource_type"` // "PAYMENT_INTENT", "AGENT", "SERVICE", "POLICY"
+	ResourceType   string         `json:"resource_type"` // "PAYMENT_INTENT", "AGENT", "SERVICE", "POLICY", "TREASURY"
 	ResourceID     string         `json:"resource_id"`
 	RequestID      string         `json:"request_id"`
 	Timestamp      time.Time      `json:"timestamp"`

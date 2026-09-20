@@ -37,6 +37,7 @@ func (RealClock) Now() time.Time { return time.Now() }
 type Repository interface {
 	SaveIntent(ctx context.Context, pi *PaymentIntent) error
 	GetIntent(ctx context.Context, id string) (*PaymentIntent, error)
+	GetIntentByRequestID(ctx context.Context, orgID, requestID string) (*PaymentIntent, error)
 	UpdateIntentStatus(ctx context.Context, id string, status IntentStatus, updatedAt time.Time) error
 	CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus IntentStatus, newStatus IntentStatus, updatedAt time.Time) (bool, error)
 	SaveExecution(ctx context.Context, ex *PaymentExecutionRecord) error
@@ -50,13 +51,27 @@ type ExecutionService interface {
 
 // CreateIntentParams holds parameters for creating a new PaymentIntent.
 type CreateIntentParams struct {
-	AgentID       string
-	VaultAddress  string
-	ServiceID     string
-	Amount        string
-	Asset         string
-	Purpose       string
-	Justification string
+	OrganizationID string
+	AgentID        string
+	VaultAddress   string
+	ServiceID      string
+	Amount         string
+	Asset          string
+	Purpose        string
+	Justification  string
+	RequestID      string // Idempotency key
+}
+
+// Gate defines the execution gate interface for pre-execution safety checks.
+type Gate interface {
+	CheckEligibility(ctx context.Context, intentID string) (*PaymentIntent, error)
+}
+
+// TreasuryService defines treasury reservation operations.
+type TreasuryService interface {
+	ReserveFunds(ctx context.Context, orgID, vaultAddress, intentID, amount string) (*domain.TreasuryReservation, error)
+	ReleaseFunds(ctx context.Context, intentID string) error
+	SettleFunds(ctx context.Context, intentID string) error
 }
 
 // Service manages the lifecycle, authorization, and confirmation of PaymentIntents.
@@ -68,6 +83,8 @@ type Service struct {
 	clock         Clock
 	ttl           time.Duration
 	autoExecution bool
+	gate          Gate
+	treasury      TreasuryService
 }
 
 // NewService creates a new intent Service.
@@ -97,8 +114,32 @@ func NewService(
 	}
 }
 
+// SetExecutionGate sets the execution gate for pre-execution checks.
+func (s *Service) SetExecutionGate(gate Gate) {
+	s.gate = gate
+}
+
+// SetTreasuryService sets the treasury service for fund reservation and settlement.
+func (s *Service) SetTreasuryService(treasury TreasuryService) {
+	s.treasury = treasury
+}
+
 // CreateIntent validates service constraints and persists a new PaymentIntent in CREATED state.
+// If an Idempotency-Key (RequestID) is provided and an intent already exists, it returns the existing intent.
 func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (*PaymentIntent, error) {
+	orgID := params.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+
+	// 0. Idempotency check: if RequestID provided and already exists, return existing intent
+	if params.RequestID != "" {
+		existing, err := s.repo.GetIntentByRequestID(ctx, orgID, params.RequestID)
+		if err == nil && existing != nil {
+			return existing, nil
+		}
+	}
+
 	// 1. Resolve registered service and validate amount/asset bounds
 	regService, err := s.registry.ValidatePayment(params.ServiceID, params.Amount, params.Asset)
 	if err != nil {
@@ -111,19 +152,21 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 	expiresAt := now.Add(s.ttl)
 
 	intent := &PaymentIntent{
-		IntentID:      intentID,
-		AgentID:       params.AgentID,
-		VaultAddress:  params.VaultAddress,
-		Recipient:     regService.Recipient, // Server-resolved approved recipient
-		Amount:        params.Amount,
-		Asset:         params.Asset,
-		Purpose:       params.Purpose,
-		ServiceID:     params.ServiceID,
-		Justification: params.Justification,
-		Status:        StatusCreated,
-		CreatedAt:     now,
-		ExpiresAt:     expiresAt,
-		UpdatedAt:     now,
+		IntentID:       intentID,
+		OrganizationID: orgID,
+		AgentID:        params.AgentID,
+		VaultAddress:   params.VaultAddress,
+		Recipient:      regService.Recipient, // Server-resolved approved recipient
+		Amount:         params.Amount,
+		Asset:          params.Asset,
+		Purpose:        params.Purpose,
+		ServiceID:      params.ServiceID,
+		Justification:  params.Justification,
+		RequestID:      params.RequestID,
+		Status:         StatusCreated,
+		CreatedAt:      now,
+		ExpiresAt:      expiresAt,
+		UpdatedAt:      now,
 	}
 
 	if err := s.repo.SaveIntent(ctx, intent); err != nil {
@@ -218,6 +261,13 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 
 // ConfirmIntent confirms and executes an authorized, non-expired intent.
 func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentIntent, *blockchain.PaymentExecutionResult, error) {
+	// 1. Run Execution Gate eligibility check if configured
+	if s.gate != nil {
+		if _, err := s.gate.CheckEligibility(ctx, intentID); err != nil {
+			return nil, nil, err
+		}
+	}
+
 	intent, err := s.repo.GetIntent(ctx, intentID)
 	if err != nil {
 		return nil, nil, ErrIntentNotFound
@@ -226,6 +276,9 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 	// Check expiration
 	if s.clock.Now().After(intent.ExpiresAt) {
 		_ = s.repo.UpdateIntentStatus(ctx, intentID, StatusExpired, s.clock.Now())
+		if s.treasury != nil {
+			_ = s.treasury.ReleaseFunds(ctx, intentID)
+		}
 		intent.Status = StatusExpired
 		return intent, nil, ErrIntentExpired
 	}
@@ -248,8 +301,8 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 		return intent, res, nil
 	}
 
-	// Must be AUTHORIZED before execution
-	if intent.Status != StatusAuthorized {
+	// Must be AUTHORIZED or APPROVED before execution
+	if !CanExecute(intent.Status) {
 		return nil, nil, fmt.Errorf("%w (current status: %s)", ErrNotAuthorized, intent.Status)
 	}
 
@@ -259,7 +312,8 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 		return nil, nil, err
 	}
 
-	swapped, err := s.repo.CompareAndSwapIntentStatus(ctx, intentID, StatusAuthorized, StatusExecuting, now)
+	priorStatus := intent.Status
+	swapped, err := s.repo.CompareAndSwapIntentStatus(ctx, intentID, priorStatus, StatusExecuting, now)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -297,6 +351,11 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 	intent.Status = StatusExecuting
 	intent.UpdatedAt = now
 
+	// 2. Reserve treasury funds if treasury service is configured
+	if s.treasury != nil {
+		_, _ = s.treasury.ReserveFunds(ctx, intent.OrganizationID, intent.VaultAddress, intent.IntentID, intent.Amount)
+	}
+
 	// Invoke ExecutionService
 	execReq := blockchain.PaymentExecutionRequest{
 		RequestID:    intent.IntentID,
@@ -312,6 +371,9 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 
 	if err != nil {
 		_ = s.repo.UpdateIntentStatus(ctx, intentID, StatusFailed, now)
+		if s.treasury != nil {
+			_ = s.treasury.ReleaseFunds(ctx, intentID)
+		}
 		intent.Status = StatusFailed
 		intent.UpdatedAt = now
 		_ = s.repo.SaveExecution(ctx, &PaymentExecutionRecord{
@@ -325,6 +387,9 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 	// Handle execution result states
 	if execResult.Status == blockchain.StateConfirmed {
 		_ = s.repo.UpdateIntentStatus(ctx, intentID, StatusConfirmed, now)
+		if s.treasury != nil {
+			_ = s.treasury.SettleFunds(ctx, intentID)
+		}
 		intent.Status = StatusConfirmed
 		intent.UpdatedAt = now
 		_ = s.repo.SaveExecution(ctx, &PaymentExecutionRecord{
@@ -334,9 +399,9 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 			ConfirmedAt:     &now,
 		})
 	} else if execResult.Status == blockchain.StateExecutionDisabled {
-		// Live execution disabled: keep intent in AUTHORIZED state so it can be viewed or confirmed later
-		_ = s.repo.UpdateIntentStatus(ctx, intentID, StatusAuthorized, now)
-		intent.Status = StatusAuthorized
+		// Live execution disabled: keep intent in AUTHORIZED or APPROVED state
+		_ = s.repo.UpdateIntentStatus(ctx, intentID, priorStatus, now)
+		intent.Status = priorStatus
 		intent.UpdatedAt = now
 	}
 

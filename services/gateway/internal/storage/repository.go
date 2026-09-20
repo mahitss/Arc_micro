@@ -2,7 +2,9 @@ package storage
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -63,12 +65,33 @@ type Approval struct {
 	OrganizationID  string     `json:"organization_id"`
 	PaymentIntentID string     `json:"payment_intent_id"`
 	Required        bool       `json:"required"`
-	Status          string     `json:"status"` // "PENDING", "APPROVED", "REJECTED", "EXPIRED"
+	Status          string     `json:"status"` // "PENDING", "APPROVED", "REJECTED", "EXPIRED", "CANCELLED"
 	RequestedAt     time.Time  `json:"requested_at"`
 	ResolvedAt      *time.Time `json:"resolved_at,omitempty"`
 	ApprovedBy      string     `json:"approved_by,omitempty"`
 	RejectionReason string     `json:"rejection_reason,omitempty"`
+	ExpiresAt       time.Time  `json:"expires_at"`
 	CreatedAt       time.Time  `json:"created_at"`
+}
+
+// TreasuryReservation represents an off-chain application-level lock on available vault funds.
+type TreasuryReservation struct {
+	ID             string    `json:"id"`
+	OrganizationID string    `json:"organization_id"`
+	VaultAddress   string    `json:"vault_address"`
+	IntentID       string    `json:"intent_id"`
+	Amount         string    `json:"amount"` // micro-USDC integer string
+	Status         string    `json:"status"` // "RESERVED", "SETTLED", "RELEASED"
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// SystemState tracks operational runtime flags such as the global execution kill switch.
+type SystemState struct {
+	Key       string    `json:"key"`
+	Value     string    `json:"value"` // e.g. "ACTIVE", "PAUSED"
+	UpdatedBy string    `json:"updated_by"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // AuditEvent represents an append-only audit record.
@@ -83,6 +106,21 @@ type AuditEvent struct {
 	RequestID      string    `json:"request_id"`
 	Timestamp      time.Time `json:"timestamp"`
 	Metadata       string    `json:"metadata"`
+}
+
+// APIKey represents an authorized developer platform credential in storage.
+type APIKey struct {
+	ID             string     `json:"id"`
+	OrganizationID string     `json:"organization_id"`
+	KeyHash        string     `json:"key_hash"`
+	Name           string     `json:"name"`
+	MaskedKey      string     `json:"masked_key"`
+	Scopes         string     `json:"scopes"` // Comma-separated
+	Status         string     `json:"status"` // "ACTIVE", "REVOKED"
+	LastUsedAt     *time.Time `json:"last_used_at,omitempty"`
+	ExpiresAt      *time.Time `json:"expires_at,omitempty"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 // Repository defines storage operations for the AgentPay domain.
@@ -126,10 +164,28 @@ type Repository interface {
 	GetApprovalByIntent(ctx context.Context, intentID string) (*Approval, error)
 	ListApprovals(ctx context.Context, orgID string) ([]*Approval, error)
 	UpdateApprovalStatus(ctx context.Context, id string, status string, approver string, reason string, resolvedAt time.Time) error
+	CompareAndSwapApprovalStatus(ctx context.Context, id string, expectedStatus string, newStatus string, approver string, reason string, resolvedAt time.Time) (bool, error)
+
+	// Treasury Reservation operations
+	CreateReservation(ctx context.Context, res *TreasuryReservation) error
+	GetReservationByIntent(ctx context.Context, intentID string) (*TreasuryReservation, error)
+	UpdateReservationStatus(ctx context.Context, id string, status string, updatedAt time.Time) error
+	GetTotalReservedAmount(ctx context.Context, organizationID string, vaultAddress string) (uint64, error)
+
+	// SystemState operations (Global execution kill switch)
+	GetSystemState(ctx context.Context, key string) (string, error)
+	SetSystemState(ctx context.Context, key string, value string, updatedBy string, updatedAt time.Time) error
 
 	// AuditEvent operations (Append-only)
 	SaveAuditEvent(ctx context.Context, evt *AuditEvent) error
 	ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error)
+
+	// APIKey operations (Day 5)
+	SaveAPIKey(ctx context.Context, key *APIKey) error
+	GetAPIKeyByHash(ctx context.Context, hash string) (*APIKey, error)
+	ListAPIKeys(ctx context.Context, orgID string) ([]*APIKey, error)
+	RevokeAPIKey(ctx context.Context, id, orgID string, revokedAt time.Time) error
+	UpdateAPIKeyLastUsed(ctx context.Context, id string, lastUsed time.Time) error
 }
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
@@ -142,7 +198,10 @@ type MemoryRepository struct {
 	intents       map[string]*intent.PaymentIntent
 	executions    map[string]*intent.PaymentExecutionRecord
 	approvals     map[string]*Approval
+	reservations  map[string]*TreasuryReservation
+	systemStates  map[string]*SystemState
 	auditEvents   []*AuditEvent
+	apiKeys       map[string]*APIKey
 }
 
 // NewMemoryRepository creates a new in-memory repository instance seeded with defaults.
@@ -156,7 +215,34 @@ func NewMemoryRepository() *MemoryRepository {
 		intents:       make(map[string]*intent.PaymentIntent),
 		executions:    make(map[string]*intent.PaymentExecutionRecord),
 		approvals:     make(map[string]*Approval),
+		reservations:  make(map[string]*TreasuryReservation),
+		systemStates:  make(map[string]*SystemState),
 		auditEvents:   make([]*AuditEvent, 0),
+		apiKeys:       make(map[string]*APIKey),
+	}
+
+	// Seed default demo API key (apk_live_demo1234567890abcdef1234567890abcdef)
+	demoSecret := "apk_live_demo1234567890abcdef1234567890abcdef"
+	demoHashBytes := sha256.Sum256([]byte(demoSecret))
+	demoHash := hex.EncodeToString(demoHashBytes[:])
+	repo.apiKeys["key_default_demo"] = &APIKey{
+		ID:             "key_default_demo",
+		OrganizationID: "org_default",
+		KeyHash:        demoHash,
+		Name:           "Default Developer Key",
+		MaskedKey:      "apk_live_...cdef",
+		Scopes:         "payments:read,payments:create,payments:approve,agents:read,services:read,treasury:read",
+		Status:         "ACTIVE",
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+
+	// Seed global execution state as ACTIVE
+	repo.systemStates["global_execution"] = &SystemState{
+		Key:       "global_execution",
+		Value:     "ACTIVE",
+		UpdatedBy: "system",
+		UpdatedAt: now,
 	}
 
 	// Seed default organization
@@ -194,6 +280,40 @@ func NewMemoryRepository() *MemoryRepository {
 		VaultAddress:   "0x1111111111111111111111111111111111111111",
 		CreatedAt:      now,
 		UpdatedAt:      now,
+	}
+
+	// Seed default approved services
+	repo.services["web-research"] = &registry.Service{
+		ID:        "web-research",
+		Name:      "Web Research & Intelligence API",
+		Recipient: "0x1111111111111111111111111111111111111111",
+		Asset:     "USDC",
+		Enabled:   true,
+		MaxPrice:  "500000",
+	}
+	repo.services["compute-cluster"] = &registry.Service{
+		ID:        "compute-cluster",
+		Name:      "GPU Inference Compute Cluster",
+		Recipient: "0x2222222222222222222222222222222222222222",
+		Asset:     "USDC",
+		Enabled:   true,
+		MaxPrice:  "2000000",
+	}
+	repo.services["data-feed"] = &registry.Service{
+		ID:        "data-feed",
+		Name:      "Real-time Financial Data Feed",
+		Recipient: "0x3333333333333333333333333333333333333333",
+		Asset:     "USDC",
+		Enabled:   true,
+		MaxPrice:  "100000",
+	}
+	repo.services["archived-service"] = &registry.Service{
+		ID:        "archived-service",
+		Name:      "Deprecated Legacy Data Service",
+		Recipient: "0x4444444444444444444444444444444444444444",
+		Asset:     "USDC",
+		Enabled:   false,
+		MaxPrice:  "100000",
 	}
 
 	return repo
@@ -509,6 +629,100 @@ func (m *MemoryRepository) UpdateApprovalStatus(ctx context.Context, id string, 
 	return nil
 }
 
+func (m *MemoryRepository) CompareAndSwapApprovalStatus(ctx context.Context, id string, expectedStatus string, newStatus string, approver string, reason string, resolvedAt time.Time) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	app, ok := m.approvals[id]
+	if !ok {
+		return false, ErrNotFound
+	}
+	if app.Status != expectedStatus {
+		return false, nil
+	}
+	app.Status = newStatus
+	app.ApprovedBy = approver
+	app.RejectionReason = reason
+	app.ResolvedAt = &resolvedAt
+	return true, nil
+}
+
+// --- Treasury Reservation Methods ---
+
+func (m *MemoryRepository) CreateReservation(ctx context.Context, res *TreasuryReservation) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyRes := *res
+	if copyRes.OrganizationID == "" {
+		copyRes.OrganizationID = "org_default"
+	}
+	m.reservations[res.ID] = &copyRes
+	return nil
+}
+
+func (m *MemoryRepository) GetReservationByIntent(ctx context.Context, intentID string) (*TreasuryReservation, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, r := range m.reservations {
+		if r.IntentID == intentID {
+			copyRes := *r
+			return &copyRes, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
+func (m *MemoryRepository) UpdateReservationStatus(ctx context.Context, id string, status string, updatedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	res, ok := m.reservations[id]
+	if !ok {
+		return ErrNotFound
+	}
+	res.Status = status
+	res.UpdatedAt = updatedAt
+	return nil
+}
+
+func (m *MemoryRepository) GetTotalReservedAmount(ctx context.Context, organizationID string, vaultAddress string) (uint64, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var total uint64
+	for _, r := range m.reservations {
+		if (organizationID == "" || r.OrganizationID == organizationID) &&
+			(vaultAddress == "" || strings.EqualFold(r.VaultAddress, vaultAddress)) &&
+			r.Status == "RESERVED" {
+			var amt uint64
+			_, _ = fmt.Sscan(r.Amount, &amt)
+			total += amt
+		}
+	}
+	return total, nil
+}
+
+// --- SystemState Methods ---
+
+func (m *MemoryRepository) GetSystemState(ctx context.Context, key string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	st, ok := m.systemStates[key]
+	if !ok {
+		return "", ErrNotFound
+	}
+	return st.Value, nil
+}
+
+func (m *MemoryRepository) SetSystemState(ctx context.Context, key string, value string, updatedBy string, updatedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.systemStates[key] = &SystemState{
+		Key:       key,
+		Value:     value,
+		UpdatedBy: updatedBy,
+		UpdatedAt: updatedAt,
+	}
+	return nil
+}
+
 // --- AuditEvent Methods (Append-only) ---
 
 func (m *MemoryRepository) SaveAuditEvent(ctx context.Context, evt *AuditEvent) error {
@@ -533,6 +747,70 @@ func (m *MemoryRepository) ListAuditEvents(ctx context.Context, orgID string) ([
 		}
 	}
 	return res, nil
+}
+
+// --- APIKey Methods (Day 5) ---
+
+func (m *MemoryRepository) SaveAPIKey(ctx context.Context, key *APIKey) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyKey := *key
+	if copyKey.OrganizationID == "" {
+		copyKey.OrganizationID = "org_default"
+	}
+	m.apiKeys[key.ID] = &copyKey
+	return nil
+}
+
+func (m *MemoryRepository) GetAPIKeyByHash(ctx context.Context, hash string) (*APIKey, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, k := range m.apiKeys {
+		if k.KeyHash == hash {
+			copyKey := *k
+			return &copyKey, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
+func (m *MemoryRepository) ListAPIKeys(ctx context.Context, orgID string) ([]*APIKey, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*APIKey, 0)
+	for _, k := range m.apiKeys {
+		if orgID == "" || k.OrganizationID == orgID {
+			copyKey := *k
+			res = append(res, &copyKey)
+		}
+	}
+	return res, nil
+}
+
+func (m *MemoryRepository) RevokeAPIKey(ctx context.Context, id, orgID string, revokedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	k, ok := m.apiKeys[id]
+	if !ok {
+		return ErrNotFound
+	}
+	if orgID != "" && k.OrganizationID != orgID {
+		return ErrNotFound
+	}
+	k.Status = "REVOKED"
+	k.UpdatedAt = revokedAt
+	return nil
+}
+
+func (m *MemoryRepository) UpdateAPIKeyLastUsed(ctx context.Context, id string, lastUsed time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	k, ok := m.apiKeys[id]
+	if !ok {
+		return ErrNotFound
+	}
+	k.LastUsedAt = &lastUsed
+	return nil
 }
 
 // =============================================================================
@@ -871,19 +1149,23 @@ func (p *PostgresRepository) SaveApproval(ctx context.Context, app *Approval) er
 	if orgID == "" {
 		orgID = "org_default"
 	}
-	query := `INSERT INTO approvals (id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, approved_by, rejection_reason, created_at)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	          ON CONFLICT (id) DO UPDATE SET status = $5, resolved_at = $7, approved_by = $8, rejection_reason = $9`
-	_, err := p.db.ExecContext(ctx, query, app.ID, orgID, app.PaymentIntentID, app.Required, app.Status, app.RequestedAt, app.ResolvedAt, app.ApprovedBy, app.RejectionReason, app.CreatedAt)
+	expiresAt := app.ExpiresAt
+	if expiresAt.IsZero() {
+		expiresAt = time.Now().Add(1 * time.Hour)
+	}
+	query := `INSERT INTO approvals (id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, approved_by, rejection_reason, expires_at, created_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+	          ON CONFLICT (id) DO UPDATE SET status = $5, resolved_at = $7, approved_by = $8, rejection_reason = $9, expires_at = $10`
+	_, err := p.db.ExecContext(ctx, query, app.ID, orgID, app.PaymentIntentID, app.Required, app.Status, app.RequestedAt, app.ResolvedAt, app.ApprovedBy, app.RejectionReason, expiresAt, app.CreatedAt)
 	return err
 }
 
 func (p *PostgresRepository) GetApproval(ctx context.Context, id string) (*Approval, error) {
-	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), created_at
+	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), COALESCE(expires_at, created_at + interval '1 hour'), created_at
 	          FROM approvals WHERE id = $1`
 	row := p.db.QueryRowContext(ctx, query, id)
 	var app Approval
-	if err := row.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.CreatedAt); err != nil {
+	if err := row.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.ExpiresAt, &app.CreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
@@ -893,11 +1175,11 @@ func (p *PostgresRepository) GetApproval(ctx context.Context, id string) (*Appro
 }
 
 func (p *PostgresRepository) GetApprovalByIntent(ctx context.Context, intentID string) (*Approval, error) {
-	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), created_at
+	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), COALESCE(expires_at, created_at + interval '1 hour'), created_at
 	          FROM approvals WHERE payment_intent_id = $1 LIMIT 1`
 	row := p.db.QueryRowContext(ctx, query, intentID)
 	var app Approval
-	if err := row.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.CreatedAt); err != nil {
+	if err := row.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.ExpiresAt, &app.CreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
@@ -907,7 +1189,7 @@ func (p *PostgresRepository) GetApprovalByIntent(ctx context.Context, intentID s
 }
 
 func (p *PostgresRepository) ListApprovals(ctx context.Context, orgID string) ([]*Approval, error) {
-	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), created_at
+	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), COALESCE(expires_at, created_at + interval '1 hour'), created_at
 	          FROM approvals WHERE ($1 = '' OR organization_id = $1) ORDER BY requested_at DESC`
 	rows, err := p.db.QueryContext(ctx, query, orgID)
 	if err != nil {
@@ -917,7 +1199,7 @@ func (p *PostgresRepository) ListApprovals(ctx context.Context, orgID string) ([
 	var res []*Approval
 	for rows.Next() {
 		var app Approval
-		if err := rows.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.CreatedAt); err != nil {
+		if err := rows.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.ExpiresAt, &app.CreatedAt); err != nil {
 			return nil, err
 		}
 		res = append(res, &app)
@@ -939,6 +1221,113 @@ func (p *PostgresRepository) UpdateApprovalStatus(ctx context.Context, id string
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (p *PostgresRepository) CompareAndSwapApprovalStatus(ctx context.Context, id string, expectedStatus string, newStatus string, approver string, reason string, resolvedAt time.Time) (bool, error) {
+	query := `UPDATE approvals SET status = $1, approved_by = $2, rejection_reason = $3, resolved_at = $4 WHERE id = $5 AND status = $6`
+	res, err := p.db.ExecContext(ctx, query, newStatus, approver, reason, resolvedAt, id, expectedStatus)
+	if err != nil {
+		return false, err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	if rows == 0 {
+		// Check if record exists
+		checkQuery := `SELECT id FROM approvals WHERE id = $1`
+		var dummy string
+		if err := p.db.QueryRowContext(ctx, checkQuery, id).Scan(&dummy); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return false, ErrNotFound
+			}
+			return false, err
+		}
+		return false, nil
+	}
+	return true, nil
+}
+
+// --- Treasury Reservation Methods ---
+
+func (p *PostgresRepository) CreateReservation(ctx context.Context, res *TreasuryReservation) error {
+	orgID := res.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO treasury_reservations (id, organization_id, vault_address, payment_intent_id, amount, status, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	          ON CONFLICT (id) DO UPDATE SET status = $6, updated_at = $8`
+	_, err := p.db.ExecContext(ctx, query, res.ID, orgID, res.VaultAddress, res.IntentID, res.Amount, res.Status, res.CreatedAt, res.UpdatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetReservationByIntent(ctx context.Context, intentID string) (*TreasuryReservation, error) {
+	query := `SELECT id, organization_id, vault_address, payment_intent_id, amount, status, created_at, updated_at
+	          FROM treasury_reservations WHERE payment_intent_id = $1 LIMIT 1`
+	row := p.db.QueryRowContext(ctx, query, intentID)
+	var res TreasuryReservation
+	if err := row.Scan(&res.ID, &res.OrganizationID, &res.VaultAddress, &res.IntentID, &res.Amount, &res.Status, &res.CreatedAt, &res.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (p *PostgresRepository) UpdateReservationStatus(ctx context.Context, id string, status string, updatedAt time.Time) error {
+	query := `UPDATE treasury_reservations SET status = $1, updated_at = $2 WHERE id = $3`
+	res, err := p.db.ExecContext(ctx, query, status, updatedAt, id)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) GetTotalReservedAmount(ctx context.Context, organizationID string, vaultAddress string) (uint64, error) {
+	query := `SELECT COALESCE(SUM(amount::numeric), 0) FROM treasury_reservations
+	          WHERE ($1 = '' OR organization_id = $1)
+	            AND ($2 = '' OR LOWER(vault_address) = LOWER($2))
+	            AND status = 'RESERVED'`
+	row := p.db.QueryRowContext(ctx, query, organizationID, vaultAddress)
+	var sumStr string
+	if err := row.Scan(&sumStr); err != nil {
+		return 0, err
+	}
+	var total uint64
+	_, _ = fmt.Sscan(sumStr, &total)
+	return total, nil
+}
+
+// --- SystemState Methods ---
+
+func (p *PostgresRepository) GetSystemState(ctx context.Context, key string) (string, error) {
+	query := `SELECT value FROM system_state WHERE key = $1`
+	row := p.db.QueryRowContext(ctx, query, key)
+	var val string
+	if err := row.Scan(&val); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", ErrNotFound
+		}
+		return "", err
+	}
+	return val, nil
+}
+
+func (p *PostgresRepository) SetSystemState(ctx context.Context, key string, value string, updatedBy string, updatedAt time.Time) error {
+	query := `INSERT INTO system_state (key, value, updated_by, updated_at)
+	          VALUES ($1, $2, $3, $4)
+	          ON CONFLICT (key) DO UPDATE SET value = $2, updated_by = $3, updated_at = $4`
+	_, err := p.db.ExecContext(ctx, query, key, value, updatedBy, updatedAt)
+	return err
 }
 
 // --- AuditEvent Methods (Append-only) ---
@@ -971,6 +1360,74 @@ func (p *PostgresRepository) ListAuditEvents(ctx context.Context, orgID string) 
 		res = append(res, &evt)
 	}
 	return res, rows.Err()
+}
+
+// --- APIKey Methods (Day 5) ---
+
+func (p *PostgresRepository) SaveAPIKey(ctx context.Context, key *APIKey) error {
+	orgID := key.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO api_keys (id, organization_id, key_hash, name, masked_key, scopes, status, last_used_at, expires_at, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+	_, err := p.db.ExecContext(ctx, query, key.ID, orgID, key.KeyHash, key.Name, key.MaskedKey, key.Scopes, key.Status, key.LastUsedAt, key.ExpiresAt, key.CreatedAt, key.UpdatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetAPIKeyByHash(ctx context.Context, hash string) (*APIKey, error) {
+	query := `SELECT id, organization_id, key_hash, name, masked_key, scopes, status, last_used_at, expires_at, created_at, updated_at
+	          FROM api_keys WHERE key_hash = $1`
+	row := p.db.QueryRowContext(ctx, query, hash)
+	var k APIKey
+	if err := row.Scan(&k.ID, &k.OrganizationID, &k.KeyHash, &k.Name, &k.MaskedKey, &k.Scopes, &k.Status, &k.LastUsedAt, &k.ExpiresAt, &k.CreatedAt, &k.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &k, nil
+}
+
+func (p *PostgresRepository) ListAPIKeys(ctx context.Context, orgID string) ([]*APIKey, error) {
+	query := `SELECT id, organization_id, key_hash, name, masked_key, scopes, status, last_used_at, expires_at, created_at, updated_at
+	          FROM api_keys WHERE ($1 = '' OR organization_id = $1) ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*APIKey
+	for rows.Next() {
+		var k APIKey
+		if err := rows.Scan(&k.ID, &k.OrganizationID, &k.KeyHash, &k.Name, &k.MaskedKey, &k.Scopes, &k.Status, &k.LastUsedAt, &k.ExpiresAt, &k.CreatedAt, &k.UpdatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &k)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) RevokeAPIKey(ctx context.Context, id, orgID string, revokedAt time.Time) error {
+	query := `UPDATE api_keys SET status = 'REVOKED', updated_at = $1 WHERE id = $2 AND ($3 = '' OR organization_id = $3)`
+	result, err := p.db.ExecContext(ctx, query, revokedAt, id, orgID)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) UpdateAPIKeyLastUsed(ctx context.Context, id string, lastUsed time.Time) error {
+	query := `UPDATE api_keys SET last_used_at = $1 WHERE id = $2`
+	_, err := p.db.ExecContext(ctx, query, lastUsed, id)
+	return err
 }
 
 // ApplyMigrations executes the initial schema migration statements.

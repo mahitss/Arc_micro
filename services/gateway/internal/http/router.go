@@ -5,6 +5,7 @@ import (
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/health"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/handlers"
@@ -13,7 +14,9 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/metrics"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/service"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/treasury"
 )
 
 // NewRouter sets up and returns the HTTP mux with middleware pipeline for the Gateway.
@@ -43,12 +46,18 @@ func NewRouter(
 
 	// 4. V1 AI Agent Task API
 	if agentService != nil {
-		mux.Handle("POST /v1/agents/tasks", handlers.NewAgentTasksHandler(agentService))
+		if repo != nil {
+			agentService.SetRepository(repo)
+		}
+		agentHandler := handlers.NewAgentTasksHandler(agentService)
+		mux.Handle("POST /v1/agents/tasks", agentHandler)
+		mux.HandleFunc("GET /v1/agents/tasks/{id}", agentHandler.HandleGetTask)
 	}
 
 	// 5. V1 Payment Intent API
 	if intentService != nil {
 		piHandler := handlers.NewPaymentIntentsHandler(intentService)
+		mux.HandleFunc("POST /v1/payment-intents", piHandler.HandleCreate)
 		mux.HandleFunc("GET /v1/payment-intents/{id}", piHandler.HandleGet)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/authorize", piHandler.HandleAuthorize)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/confirm", piHandler.HandleConfirm)
@@ -62,14 +71,54 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/services", listHandler.HandleListServices)
 		mux.HandleFunc("GET /v1/payment-intents", listHandler.HandleListIntents)
 		mux.HandleFunc("GET /v1/transactions", listHandler.HandleListTransactions)
+
+		// 7. Day 3: Approvals Control Plane
+		ds := service.NewDomainService(repo)
+		appHandler := handlers.NewApprovalsHandler(repo, ds)
+		mux.HandleFunc("GET /v1/approvals", appHandler.HandleList)
+		mux.HandleFunc("GET /v1/approvals/{id}", appHandler.HandleGet)
+		mux.HandleFunc("POST /v1/approvals/{id}/approve", appHandler.HandleApprove)
+		mux.HandleFunc("POST /v1/approvals/{id}/reject", appHandler.HandleReject)
+
+		// 8. Day 3: Multi-Tier Emergency Controls (Agent, Org, Global Kill Switch)
+		em := emergency.NewController(repo)
+		emHandler := handlers.NewEmergencyHandler(em)
+		mux.HandleFunc("POST /v1/agents/{id}/pause", emHandler.HandlePauseAgent)
+		mux.HandleFunc("POST /v1/agents/{id}/resume", emHandler.HandleResumeAgent)
+		mux.HandleFunc("POST /v1/organizations/{id}/pause", emHandler.HandlePauseOrganization)
+		mux.HandleFunc("POST /v1/organizations/{id}/resume", emHandler.HandleResumeOrganization)
+		mux.HandleFunc("POST /v1/system/pause", emHandler.HandlePauseGlobal)
+		mux.HandleFunc("POST /v1/system/resume", emHandler.HandleResumeGlobal)
+		mux.HandleFunc("GET /v1/system/status", emHandler.HandleSystemStatus)
+
+		// 9. Day 3: Treasury Model & Reservations
+		ts := treasury.NewTreasuryService(repo, nil)
+		treasuryHandler := handlers.NewTreasuryHandler(ts)
+		mux.HandleFunc("GET /v1/treasury/summary", treasuryHandler.HandleSummary)
+
+		// 10. Day 5: Developer API Key Management
+		apiKeyHandler := handlers.NewAPIKeyHandler(repo)
+		mux.HandleFunc("POST /v1/api-keys", apiKeyHandler.HandleCreate)
+		mux.HandleFunc("GET /v1/api-keys", apiKeyHandler.HandleList)
+		mux.HandleFunc("DELETE /v1/api-keys/{id}", apiKeyHandler.HandleRevoke)
+
+		// Wire Execution Gate and Treasury into Intent Service if available
+		if intentService != nil {
+			intentService.SetExecutionGate(execution.NewExecutionGate(repo, em, nil))
+			intentService.SetTreasuryService(ts)
+		}
 	}
 
 	// Compose middleware chain:
-	// Outermost -> Innermost: Recovery -> RequestID -> CORS -> Logger -> RateLimiter -> BodyLimit -> AuthPlaceholder -> Mux
+	// Outermost -> Innermost: Recovery -> RequestID -> CORS -> Logger -> RateLimiter -> BodyLimit -> APIKeyAuth -> Mux
 	rateLimiter := middleware.NewRateLimiter(60, 100)
 
 	var handler http.Handler = mux
-	handler = middleware.AuthPlaceholder(handler)
+	if repo != nil {
+		handler = middleware.APIKeyAuth(repo)(handler)
+	} else {
+		handler = middleware.AuthPlaceholder(handler)
+	}
 	handler = middleware.BodyLimit(cfg.MaxRequestBodyBytes)(handler)
 	handler = rateLimiter.Middleware(handler)
 	handler = middleware.Logger(handler)

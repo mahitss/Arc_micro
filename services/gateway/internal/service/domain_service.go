@@ -17,13 +17,16 @@ import (
 )
 
 var (
-	ErrOrganizationMismatch = errors.New("cross-organization access denied: resource does not belong to organization")
-	ErrAgentNotActive        = errors.New("agent is not active")
-	ErrServiceNotActive      = errors.New("service is not active")
-	ErrInvalidAmount         = errors.New("invalid amount: must be positive integer base units (micro-USDC)")
-	ErrCannotApproveDenied   = errors.New("cannot approve: intent was denied by policy engine")
-	ErrIntentNotPendingAppr  = errors.New("intent does not require approval or is not in pending approval state")
-	ErrIntentExpired         = errors.New("intent has expired")
+	ErrOrganizationMismatch        = errors.New("cross-organization access denied: resource does not belong to organization")
+	ErrAgentNotActive              = errors.New("agent is not active")
+	ErrServiceNotActive            = errors.New("service is not active")
+	ErrInvalidAmount               = errors.New("invalid amount: must be positive integer base units (micro-USDC)")
+	ErrCannotApproveDenied         = errors.New("cannot approve: intent was denied by policy engine")
+	ErrIntentNotPendingAppr        = errors.New("intent does not require approval or is not in pending approval state")
+	ErrIntentExpired               = errors.New("intent has expired")
+	ErrAgentSelfApprovalProhibited = errors.New("agent cannot approve its own payment")
+	ErrApprovalConflict            = errors.New("concurrent approval conflict: state already modified")
+	ErrApprovalExpired             = errors.New("approval has expired")
 )
 
 // CreateIntentParams encapsulates all parameters for creating a payment intent.
@@ -544,21 +547,58 @@ func (s *DefaultDomainService) RecordApproval(ctx context.Context, orgID, intent
 		return nil, nil, ErrOrganizationMismatch
 	}
 
-	// CRITICAL INVARIANT: Cannot approve a DENIED policy outcome
+	// 1. Prohibit Agent Self-Approval (AI cannot approve its own payment)
+	if strings.EqualFold(approverID, pi.AgentID) {
+		return nil, nil, ErrAgentSelfApprovalProhibited
+	}
+
+	// 2. CRITICAL INVARIANT: Cannot approve a DENIED policy outcome
 	if pi.PolicyDecision == string(domain.DecisionDeny) || pi.Status == intent.StatusDenied {
 		return nil, nil, ErrCannotApproveDenied
 	}
 
-	// Must be in APPROVAL_REQUIRED state
+	// 3. Must be in APPROVAL_REQUIRED state
 	if pi.Status != intent.StatusApprovalRequired {
 		return nil, nil, ErrIntentNotPendingAppr
 	}
 
-	// Expiration check
+	// 4. Intent Expiration Check
 	now := time.Now()
 	if now.After(pi.ExpiresAt) {
 		_ = s.repo.UpdateIntentStatus(ctx, intentID, intent.StatusExpired, now)
+		_ = s.RecordAuditEvent(ctx, &domain.AuditEvent{
+			ID:             generateID("evt_"),
+			OrganizationID: pi.OrganizationID,
+			EventType:      domain.AuditEventPaymentApprovalExpired,
+			ActorType:      "SYSTEM",
+			ActorID:        "domain_service",
+			ResourceType:   "PAYMENT_INTENT",
+			ResourceID:     pi.IntentID,
+			RequestID:      pi.RequestID,
+			Timestamp:      now,
+			Metadata:       `{"reason":"intent_expired_during_approval"}`,
+		})
 		return nil, nil, ErrIntentExpired
+	}
+
+	// 5. Check Approval Record Expiration
+	appRec, _ := s.repo.GetApprovalByIntent(ctx, intentID)
+	if appRec != nil && !appRec.ExpiresAt.IsZero() && now.After(appRec.ExpiresAt) {
+		_ = s.repo.UpdateApprovalStatus(ctx, appRec.ID, string(domain.ApprovalStatusExpired), "", "Approval TTL elapsed", now)
+		_ = s.repo.UpdateIntentStatus(ctx, intentID, intent.StatusExpired, now)
+		_ = s.RecordAuditEvent(ctx, &domain.AuditEvent{
+			ID:             generateID("evt_"),
+			OrganizationID: pi.OrganizationID,
+			EventType:      domain.AuditEventPaymentApprovalExpired,
+			ActorType:      "SYSTEM",
+			ActorID:        "domain_service",
+			ResourceType:   "PAYMENT_INTENT",
+			ResourceID:     pi.IntentID,
+			RequestID:      pi.RequestID,
+			Timestamp:      now,
+			Metadata:       `{"reason":"approval_ttl_expired"}`,
+		})
+		return nil, nil, ErrApprovalExpired
 	}
 
 	var newStatus intent.IntentStatus
@@ -575,32 +615,48 @@ func (s *DefaultDomainService) RecordApproval(ctx context.Context, orgID, intent
 		auditType = domain.AuditEventPaymentRejected
 	}
 
-	// Update intent status
-	if err := s.repo.UpdateIntentStatus(ctx, pi.IntentID, newStatus, now); err != nil {
+	// 6. Atomic CAS Update on Intent Status to prevent concurrent approval races
+	swapped, err := s.repo.CompareAndSwapIntentStatus(ctx, pi.IntentID, intent.StatusApprovalRequired, newStatus, now)
+	if err != nil {
 		return nil, nil, err
+	}
+	if !swapped {
+		return nil, nil, ErrApprovalConflict
 	}
 	pi.Status = newStatus
 	pi.UpdatedAt = now
 
-	// Update or create Approval record
-	appRec, _ := s.repo.GetApprovalByIntent(ctx, intentID)
-	if appRec == nil {
+	// 7. Atomic CAS Update or Save on Approval Record
+	if appRec != nil {
+		swappedApp, err := s.repo.CompareAndSwapApprovalStatus(ctx, appRec.ID, string(domain.ApprovalStatusPending), string(appStatus), approverID, reason, now)
+		if err != nil {
+			return nil, nil, err
+		}
+		if !swappedApp {
+			return nil, nil, ErrApprovalConflict
+		}
+		appRec.Status = string(appStatus)
+		appRec.ApprovedBy = approverID
+		appRec.RejectionReason = reason
+		appRec.ResolvedAt = &now
+	} else {
 		appRec = &storage.Approval{
 			ID:              generateID("appr_"),
 			OrganizationID:  pi.OrganizationID,
 			PaymentIntentID: pi.IntentID,
 			Required:        true,
+			Status:          string(appStatus),
 			RequestedAt:     now,
+			ResolvedAt:      &now,
+			ApprovedBy:      approverID,
+			RejectionReason: reason,
+			ExpiresAt:       now.Add(1 * time.Hour),
 			CreatedAt:       now,
 		}
+		_ = s.repo.SaveApproval(ctx, appRec)
 	}
-	appRec.Status = string(appStatus)
-	appRec.ApprovedBy = approverID
-	appRec.RejectionReason = reason
-	appRec.ResolvedAt = &now
-	_ = s.repo.SaveApproval(ctx, appRec)
 
-	// Record Audit Event
+	// 8. Record Audit Event
 	_ = s.RecordAuditEvent(ctx, &domain.AuditEvent{
 		ID:             generateID("evt_"),
 		OrganizationID: pi.OrganizationID,
@@ -624,6 +680,7 @@ func (s *DefaultDomainService) RecordApproval(ctx context.Context, orgID, intent
 		ResolvedAt:      appRec.ResolvedAt,
 		ApprovedBy:      appRec.ApprovedBy,
 		RejectionReason: appRec.RejectionReason,
+		ExpiresAt:       appRec.ExpiresAt,
 		CreatedAt:       appRec.CreatedAt,
 	}
 

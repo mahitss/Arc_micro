@@ -101,6 +101,54 @@ export default function PaymentIntentDetailPage() {
     }
   };
 
+  const handleApprovalAction = async (approve: boolean) => {
+    if (!intentDetail) return;
+    setIsConfirming(true);
+    setActionMessage(null);
+
+    if (isDemoMode) {
+      setTimeout(() => {
+        setIntentDetail({
+          ...intentDetail,
+          intent: {
+            ...intentDetail.intent,
+            status: approve ? 'APPROVED' : 'REJECTED',
+          },
+        });
+        setIsConfirming(false);
+        setActionMessage(approve ? 'Payment intent approved in demo mode.' : 'Payment intent rejected in demo mode.');
+      }, 600);
+      return;
+    }
+
+    try {
+      const org = intentDetail.intent.organization_id || 'org_default';
+      const resp = await fetch(`/v1/approvals?organization_id=${encodeURIComponent(org)}`);
+      const data = await resp.json();
+      const match = data.approvals?.find((a: any) => a.payment_intent_id === intentDetail.intent.intent_id);
+      if (!match) {
+        throw new Error('No pending approval record found for this intent');
+      }
+      const endpoint = approve ? `/v1/approvals/${match.id}/approve` : `/v1/approvals/${match.id}/reject`;
+      const actionResp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approver_id: 'usr_compliance_manager', reason: approve ? 'Approved via Web Control Center' : 'Rejected via Web Control Center' }),
+      });
+      if (!actionResp.ok) {
+        const errJson = await actionResp.json();
+        throw new Error(errJson.error?.message || 'Approval action failed');
+      }
+      setActionMessage(approve ? 'Payment intent approved successfully.' : 'Payment intent rejected.');
+      await loadIntent(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Approval action failed';
+      setActionMessage(`Error: ${msg}`);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   if (loading) {
     return <div className="h-96 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse" />;
   }
@@ -123,8 +171,11 @@ export default function PaymentIntentDetailPage() {
   const amountFormatted = isNaN(amountNum) ? intent.amount : `$${amountNum.toFixed(2)}`;
 
   const isExpired = intent.status === 'EXPIRED';
-  const isAuthorized = intent.status === 'AUTHORIZED';
+  const isAuthorized = intent.status === 'AUTHORIZED' || intent.status === 'APPROVED';
+  const isApprovalRequired = intent.status === 'APPROVAL_REQUIRED';
+  const isApproved = intent.status === 'APPROVED';
   const isDenied = intent.status === 'DENIED';
+  const isRejected = intent.status === 'REJECTED';
 
   return (
     <div className="space-y-8">
@@ -188,8 +239,62 @@ export default function PaymentIntentDetailPage() {
           </div>
         </div>
 
+        {/* Human Approval Required Box */}
+        {isApprovalRequired && (
+          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="font-semibold text-amber-300 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                Human Approval Required
+              </div>
+              <div className="text-slate-300 mt-1">
+                This payment exceeded automatic threshold or risk limits and requires human review. Hard policy limits will still be enforced.
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                disabled={isConfirming}
+                onClick={() => handleApprovalAction(true)}
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-colors"
+              >
+                Approve Intent
+              </button>
+              <button
+                type="button"
+                disabled={isConfirming}
+                onClick={() => handleApprovalAction(false)}
+                className="px-3.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-semibold text-xs transition-colors"
+              >
+                Reject Intent
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Approval Granted Box */}
+        {isApproved && (
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="font-semibold text-emerald-300">
+                Human Approval Granted — Ready for Execution
+              </div>
+              <div className="text-slate-400 mt-0.5">
+                Authorized by compliance approver. Click confirm to broadcast payment transaction to Arc.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsDialogOpen(true)}
+              className="px-3.5 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold text-xs whitespace-nowrap self-start sm:self-auto"
+            >
+              Confirm Payment
+            </button>
+          </div>
+        )}
+
         {/* Approval Prompt Box if Authorized */}
-        {isAuthorized && (
+        {!isApproved && isAuthorized && (
           <div className="p-4 rounded-xl bg-teal-500/5 border border-teal-500/20 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="font-semibold text-teal-300">
@@ -206,6 +311,16 @@ export default function PaymentIntentDetailPage() {
             >
               Confirm Payment
             </button>
+          </div>
+        )}
+
+        {/* Rejected Box if Rejected */}
+        {isRejected && (
+          <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20 text-xs">
+            <div className="font-semibold text-rose-300">Payment Intent Rejected</div>
+            <div className="text-slate-400 mt-0.5">
+              A human approver rejected this payment request. It cannot be executed.
+            </div>
           </div>
         )}
 

@@ -67,6 +67,15 @@ func NewDefaultRegistry() *Registry {
 	})
 
 	r.Register(&Service{
+		ID:        "research-api",
+		Name:      "Autonomous Research Data Provider",
+		Recipient: "0x5555555555555555555555555555555555555555",
+		Asset:     "USDC",
+		Enabled:   true,
+		MaxPrice:  "20000000", // 20.00 USDC
+	})
+
+	r.Register(&Service{
 		ID:        "archived-service",
 		Name:      "Deprecated Legacy Data Service",
 		Recipient: "0x4444444444444444444444444444444444444444",

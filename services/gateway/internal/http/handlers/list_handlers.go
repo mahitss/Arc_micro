@@ -13,14 +13,15 @@ import (
 
 // AgentDetail represents an agent with its configured policy and status.
 type AgentDetail struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	Status       string                 `json:"status"`
-	VaultAddress string                 `json:"vault_address"`
-	Network      string                 `json:"network"`
-	USDCBalance  string                 `json:"usdc_balance"`
-	Policy       map[string]interface{} `json:"policy"`
-	CreatedAt    string                 `json:"created_at"`
+	ID             string                 `json:"id"`
+	OrganizationID string                 `json:"organization_id,omitempty"`
+	Name           string                 `json:"name"`
+	Status         string                 `json:"status"`
+	VaultAddress   string                 `json:"vault_address"`
+	Network        string                 `json:"network"`
+	USDCBalance    string                 `json:"usdc_balance"`
+	Policy         map[string]interface{} `json:"policy"`
+	CreatedAt      string                 `json:"created_at"`
 }
 
 // ListHandler handles querying collections of agents, services, intents, and transactions.
@@ -40,25 +41,36 @@ func NewListHandler(repo storage.Repository, reg *registry.Registry) *ListHandle
 	}
 }
 
-// HandleListAgents processes GET /v1/agents.
+// HandleListAgents processes GET /v1/agents with organization isolation.
 func (h *ListHandler) HandleListAgents(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	orgID := middleware.GetOrgID(r.Context())
+
 	agents, err := h.repo.ListAgents(r.Context())
 	if err != nil {
-		ctxReqID := middleware.GetRequestID(r.Context())
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
 		return
+	}
+
+	// Filter by organization if authenticated with a specific org
+	filtered := make([]*storage.Agent, 0)
+	for _, a := range agents {
+		if a.OrganizationID == "" || orgID == "" || a.OrganizationID == orgID {
+			filtered = append(filtered, a)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"agents": agents,
+		"agents": filtered,
 	})
 }
 
-// HandleGetAgent processes GET /v1/agents/{id}.
+// HandleGetAgent processes GET /v1/agents/{id} with organization isolation.
 func (h *ListHandler) HandleGetAgent(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
+	orgID := middleware.GetOrgID(r.Context())
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_AGENT_ID", "agent id is required", ctxReqID)
@@ -71,14 +83,21 @@ func (h *ListHandler) HandleGetAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Tenant isolation: do not leak another org's agent
+	if agent.OrganizationID != "" && orgID != "" && agent.OrganizationID != orgID {
+		writeError(w, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", ctxReqID)
+		return
+	}
+
 	// Policy visualization details matching Rust policy engine configuration
 	detail := AgentDetail{
-		ID:           agent.ID,
-		Name:         agent.Name,
-		Status:       agent.Status,
-		VaultAddress: "0x1111111111111111111111111111111111111111",
-		Network:      "Arc Network (Chain ID 5042)",
-		USDCBalance:  "12.48", // 12.48 USDC
+		ID:             agent.ID,
+		OrganizationID: agent.OrganizationID,
+		Name:           agent.Name,
+		Status:         agent.Status,
+		VaultAddress:   "0x1111111111111111111111111111111111111111",
+		Network:        "Arc Network (Chain ID 5042)",
+		USDCBalance:    "12.48", // 12.48 USDC
 		Policy: map[string]interface{}{
 			"enabled":                  true,
 			"per_transaction_limit":    "500000",   // $0.50 USDC
@@ -113,46 +132,63 @@ func (h *ListHandler) HandleListServices(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-// HandleListIntents processes GET /v1/payment-intents.
+// HandleListIntents processes GET /v1/payment-intents with organization isolation.
 func (h *ListHandler) HandleListIntents(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	orgID := middleware.GetOrgID(r.Context())
+
 	intents, err := h.repo.ListIntents(r.Context())
 	if err != nil {
-		ctxReqID := middleware.GetRequestID(r.Context())
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
 		return
 	}
 
-	// Filter by status if provided in query string ?status=
 	statusFilter := strings.TrimSpace(r.URL.Query().Get("status"))
-	if statusFilter != "" {
-		filtered := make([]*intent.PaymentIntent, 0)
-		for _, pi := range intents {
-			if strings.EqualFold(string(pi.Status), statusFilter) {
-				filtered = append(filtered, pi)
-			}
+	filtered := make([]*intent.PaymentIntent, 0)
+	for _, pi := range intents {
+		// Organization isolation
+		if pi.OrganizationID != "" && orgID != "" && pi.OrganizationID != orgID {
+			continue
 		}
-		intents = filtered
+		if statusFilter != "" && !strings.EqualFold(string(pi.Status), statusFilter) {
+			continue
+		}
+		filtered = append(filtered, pi)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"payment_intents": intents,
+		"payment_intents": filtered,
 	})
 }
 
-// HandleListTransactions processes GET /v1/transactions.
+// HandleListTransactions processes GET /v1/transactions with organization isolation.
 func (h *ListHandler) HandleListTransactions(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	orgID := middleware.GetOrgID(r.Context())
+
 	executions, err := h.repo.ListExecutions(r.Context())
 	if err != nil {
-		ctxReqID := middleware.GetRequestID(r.Context())
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
 		return
+	}
+
+	// Filter transactions belonging to intents in this org
+	filtered := make([]*intent.PaymentExecutionRecord, 0)
+	for _, ex := range executions {
+		pi, err := h.repo.GetIntent(r.Context(), ex.IntentID)
+		if err == nil && pi != nil {
+			if pi.OrganizationID != "" && orgID != "" && pi.OrganizationID != orgID {
+				continue
+			}
+		}
+		filtered = append(filtered, ex)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"transactions": executions,
+		"transactions": filtered,
 	})
 }

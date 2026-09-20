@@ -42,6 +42,12 @@ export default function RootLayout({
                   Live Demo
                 </Link>
                 <Link
+                  href="/demo/agent"
+                  className="px-3 py-1.5 rounded-lg text-indigo-300 font-semibold bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
+                >
+                  Autonomous Agent
+                </Link>
+                <Link
                   href="/dashboard"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >
@@ -89,6 +95,9 @@ export default function RootLayout({
           <div className="md:hidden flex items-center space-x-1 px-4 py-2 border-t border-slate-800/60 overflow-x-auto text-xs font-mono">
             <Link href="/demo" className="px-2.5 py-1 rounded text-teal-300 font-semibold bg-teal-500/10 whitespace-nowrap">
               Demo
+            </Link>
+            <Link href="/demo/agent" className="px-2.5 py-1 rounded text-indigo-300 font-semibold bg-indigo-500/10 whitespace-nowrap">
+              Agent
             </Link>
             <Link href="/dashboard" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
               Dashboard

@@ -11,6 +11,7 @@ import (
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
 
 var (
@@ -39,6 +40,8 @@ type Service struct {
 	model         AgentModel
 	intentService *intent.Service
 	registry      *registry.Registry
+	repo          storage.Repository
+	runner        *ResearchAgent
 	autoExecution bool
 }
 
@@ -52,12 +55,42 @@ func NewService(
 	if reg == nil {
 		reg = registry.NewDefaultRegistry()
 	}
+	runner := NewResearchAgent("research-agent", "org_default", "", model, intentService, reg, nil, nil, nil)
 	return &Service{
 		model:         model,
 		intentService: intentService,
 		registry:      reg,
+		runner:        runner,
 		autoExecution: autoExecution,
 	}
+}
+
+// SetRepository configures the repository and updates the ResearchAgent runner.
+func (s *Service) SetRepository(repo storage.Repository) {
+	s.repo = repo
+	s.runner = NewResearchAgent("research-agent", "org_default", "", s.model, s.intentService, s.registry, repo, nil, nil)
+}
+
+// GetRunner returns the underlying ResearchAgent runner.
+func (s *Service) GetRunner() *ResearchAgent {
+	return s.runner
+}
+
+// RunAutonomousTask runs the multi-step autonomous research agent workflow.
+func (s *Service) RunAutonomousTask(ctx context.Context, task AgentTask, opts RunOptions) (*AgentTaskExecutionResult, error) {
+	if s.runner == nil {
+		s.runner = NewResearchAgent(task.AgentID, "org_default", task.VaultAddress, s.model, s.intentService, s.registry, s.repo, nil, nil)
+	}
+	opts.AutoConfirm = s.autoExecution
+	return s.runner.RunTask(ctx, task, opts)
+}
+
+// GetTask retrieves an autonomous agent task by ID.
+func (s *Service) GetTask(taskID string) (*AgentTaskExecutionResult, error) {
+	if s.runner == nil {
+		return nil, storage.ErrNotFound
+	}
+	return s.runner.GetTask(taskID)
 }
 
 // ProcessTask receives a high-level user task, evaluates it with the AI model, and produces a payment intent if required.

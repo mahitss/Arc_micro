@@ -6,7 +6,11 @@
 export type IntentStatus =
   | 'CREATED'
   | 'AUTHORIZED'
+  | 'APPROVAL_REQUIRED'
+  | 'APPROVED'
   | 'DENIED'
+  | 'REJECTED'
+  | 'CANCELLED'
   | 'EXECUTING'
   | 'SUBMITTED'
   | 'CONFIRMED'
@@ -55,6 +59,7 @@ export interface RegisteredService {
 
 export interface PaymentIntent {
   intent_id: string;
+  organization_id?: string;
   agent_id: string;
   vault_address?: string;
   recipient: string;
@@ -67,6 +72,46 @@ export interface PaymentIntent {
   created_at: string;
   expires_at: string;
   updated_at: string;
+}
+
+export type AgentState =
+  | 'IDLE'
+  | 'THINKING'
+  | 'DISCOVERING_SERVICES'
+  | 'NEEDS_SERVICE'
+  | 'PAYMENT_REQUESTED'
+  | 'WAITING_FOR_PAYMENT'
+  | 'WAITING_FOR_APPROVAL'
+  | 'EXECUTING'
+  | 'CONTINUING'
+  | 'COMPLETED'
+  | 'FAILED';
+
+export interface AgentStepRecord {
+  step_index: number;
+  state: AgentState;
+  tool_name?: string;
+  description: string;
+  input?: string;
+  output?: string;
+  timestamp: string;
+  duration_ms: number;
+}
+
+export interface AgentTaskExecutionResult {
+  task_id: string;
+  agent_id: string;
+  state: AgentState;
+  task: string;
+  steps: AgentStepRecord[];
+  payment_intent_id?: string;
+  payment_intent?: PaymentIntent;
+  service_used?: string;
+  external_data?: string;
+  final_report?: string;
+  error?: string;
+  started_at: string;
+  completed_at?: string;
 }
 
 export interface PaymentIntentDetail {
@@ -105,3 +150,33 @@ export interface SystemHealth {
   is_mainnet_verified: boolean;
   auto_execution_enabled: boolean;
 }
+
+export interface Approval {
+  id: string;
+  organization_id: string;
+  payment_intent_id: string;
+  required: boolean;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'CANCELLED';
+  requested_at: string;
+  resolved_at?: string;
+  approved_by?: string;
+  rejection_reason?: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface TreasurySummary {
+  organization_id: string;
+  vault_address: string;
+  on_chain_balance: string;
+  reserved_amount: string;
+  available_amount: string;
+  asset: string;
+  decimals: number;
+}
+
+export interface SystemStatus {
+  global_execution: 'ACTIVE' | 'PAUSED';
+  execution_paused: boolean;
+}
+

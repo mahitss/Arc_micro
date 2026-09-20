@@ -47,6 +47,48 @@ export default function SettingsPage() {
         ))}
       </div>
 
+      {/* Developer API Credentials */}
+      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Developer Platform API Keys</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Credentials for authenticating external autonomous AI agents via the <code className="text-teal-400">@agentpay/sdk</code>.
+            </p>
+          </div>
+          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Tenant Isolated
+          </span>
+        </div>
+
+        <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-3 font-mono text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 font-sans">Public Key ID:</span>
+            <span className="text-slate-200">key_default_demo</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 font-sans">Masked Key:</span>
+            <span className="text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+              apk_live_...cdef
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 font-sans">Authorized Scopes:</span>
+            <span className="text-teal-400 font-sans text-[11px]">
+              payments:read, payments:create, agents:read, services:read, treasury:read
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 font-sans">Storage Model:</span>
+            <span className="text-slate-400 font-sans text-[11px]">SHA-256 Hashed (Secret cannot be retrieved)</span>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-slate-500 italic">
+          Tip: Generate new scoped keys via <code className="text-slate-400">POST /v1/api-keys</code> or refer to the <code className="text-slate-400">docs/developer-quickstart.md</code> guide.
+        </p>
+      </div>
+
       {/* Security Architecture Notice */}
       <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-3">
         <h2 className="text-sm font-semibold text-white">Multi-Tier Security Architecture</h2>

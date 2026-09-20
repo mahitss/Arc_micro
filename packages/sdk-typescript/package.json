@@ -1,0 +1,26 @@
+{
+  "name": "@agentpay/sdk",
+  "version": "0.1.0",
+  "description": "Official TypeScript SDK for AgentPay — Autonomous Financial Control Plane for AI Agents on Arc",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test dist/tests/sdk.test.js"
+  },
+  "keywords": [
+    "agentpay",
+    "arc",
+    "usdc",
+    "ai-agents",
+    "sdk",
+    "fintech"
+  ],
+  "author": "AgentPay Contributors",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

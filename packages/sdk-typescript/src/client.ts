@@ -1,0 +1,155 @@
+import {
+  AgentPayError,
+  ApprovalRequiredError,
+  ForbiddenError,
+  NetworkError,
+  NotFoundError,
+  PolicyDeniedError,
+  RateLimitError,
+  UnauthorizedError,
+} from './errors.js';
+import { AgentsResource } from './resources/agents.js';
+import { ApprovalsResource } from './resources/approvals.js';
+import { PaymentIntentsResource } from './resources/payment-intents.js';
+import { ServicesResource } from './resources/services.js';
+import { TransactionsResource } from './resources/transactions.js';
+import type { ClientOptions, RequestOptions } from './types.js';
+
+declare const process: { env?: Record<string, string | undefined> } | undefined;
+
+const DEFAULT_BASE_URL = 'http://localhost:8080';
+const DEFAULT_TIMEOUT_MS = 10000;
+
+/**
+ * AgentPay — Programmable Financial Control Plane for AI Agents.
+ *
+ * Provides typed methods to interact with the AgentPay API, enabling AI agents
+ * to procure external services and trigger on-chain USDC payments governed by
+ * deterministic spending policies and human approvals.
+ *
+ * NOTE: The SDK never signs transactions, holds private keys, or directly
+ * accesses the on-chain AgentVault.
+ */
+export class AgentPay {
+  public readonly apiKey?: string;
+  public readonly baseUrl: string;
+  public readonly timeoutMs: number;
+  private readonly customFetch?: typeof fetch;
+
+  public readonly agents: AgentsResource;
+  public readonly services: ServicesResource;
+  public readonly paymentIntents: PaymentIntentsResource;
+  public readonly approvals: ApprovalsResource;
+  public readonly transactions: TransactionsResource;
+
+  constructor(options: ClientOptions = {}) {
+    this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
+    this.baseUrl = (
+      options.baseUrl ||
+      (typeof process !== 'undefined' ? process.env?.AGENTPAY_BASE_URL : undefined) ||
+      DEFAULT_BASE_URL
+    ).replace(/\/+$/, '');
+    this.timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
+    this.customFetch = options.fetch;
+
+    this.agents = new AgentsResource(this);
+    this.services = new ServicesResource(this);
+    this.paymentIntents = new PaymentIntentsResource(this);
+    this.approvals = new ApprovalsResource(this);
+    this.transactions = new TransactionsResource(this);
+  }
+
+  /**
+   * Internal request dispatcher with centralized error handling, request ID propagation,
+   * and idempotency support.
+   */
+  public async request<T>(
+    path: string,
+    init: RequestInit = {},
+    options: RequestOptions = {}
+  ): Promise<T> {
+    const fetchImpl = this.customFetch || globalThis.fetch;
+    if (!fetchImpl) {
+      throw new NetworkError('No fetch implementation available in the current environment.');
+    }
+
+    const url = `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+    const timeout = options.timeoutMs || this.timeoutMs;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(options.headers || {}),
+    };
+
+    if (this.apiKey) {
+      headers['Authorization'] = `Bearer ${this.apiKey}`;
+    }
+
+    if (options.idempotencyKey) {
+      headers['Idempotency-Key'] = options.idempotencyKey;
+    }
+
+    try {
+      const response = await fetchImpl(url, {
+        ...init,
+        headers,
+        signal: controller.signal,
+      });
+
+      const requestId = response.headers.get('x-request-id') || undefined;
+
+      if (!response.ok) {
+        let code = 'UNKNOWN_ERROR';
+        let message = `Request failed with status ${response.status}`;
+
+        try {
+          const body = await response.json();
+          if (body?.error) {
+            code = body.error.code || code;
+            message = body.error.message || message;
+          } else if (body?.message) {
+            message = body.message;
+          }
+        } catch {
+          // Non-JSON response body
+        }
+
+        // Map to typed error classes
+        switch (response.status) {
+          case 401:
+            throw new UnauthorizedError(message, requestId);
+          case 403:
+            throw new ForbiddenError(message, requestId);
+          case 404:
+            throw new NotFoundError(message, requestId);
+          case 429:
+            throw new RateLimitError(message, requestId);
+          default:
+            if (code === 'POLICY_DENIED' || code === 'PAYMENT_POLICY_DENIED') {
+              throw new PolicyDeniedError(message, requestId);
+            }
+            if (code === 'APPROVAL_REQUIRED') {
+              throw new ApprovalRequiredError(message, undefined, requestId);
+            }
+            throw new AgentPayError(message, code, response.status, requestId);
+        }
+      }
+
+      return (await response.json()) as T;
+    } catch (err: unknown) {
+      if (err instanceof AgentPayError) {
+        throw err;
+      }
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        throw new NetworkError(`Request timed out after ${timeout}ms`, 'TIMEOUT');
+      }
+      const msg = err instanceof Error ? err.message : 'Network request failed';
+      throw new NetworkError(msg);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+}
