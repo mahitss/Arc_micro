@@ -2,6 +2,7 @@
 import { AgentPay } from '@agentpay/sdk';
 import { getConfig, maskApiKey, setConfigKey } from './config.js';
 import {
+  printAgentBudget,
   printAgentDetail,
   printAgentsList,
   printApprovalsList,
@@ -9,7 +10,9 @@ import {
   printJson,
   printPaymentIntent,
   printPaymentIntentsList,
+  printQuote,
   printServicesList,
+  printSimulationResult,
   printTransactionsList,
   printWebhooksList,
 } from './output.js';
@@ -49,8 +52,23 @@ Commands:
 
   agents list                      List registered agents
   agents get <id>                  Get details of an agent
+  agents budget <id>               Get read-only financial budget and limits
 
   services list                    List approved service providers
+    --category <cat>               Filter by category (RESEARCH, DATA, COMPUTE, etc.)
+    --trust <status>               Filter by trust status (TRUSTED, VERIFIED, etc.)
+    --enabled <true|false>         Filter by enabled state
+  services quote <id>              Request a time-bound price quote from a service
+    --amount <units>               Requested amount in base units (optional)
+    --asset <asset>                Asset (default: USDC)
+
+  simulate                         Execute a financial dry-run simulation
+    --agent <id>                   Agent requesting payment (required)
+    --service <id>                 Approved service identifier (required)
+    --amount <units>               Amount in base units, e.g. 2500000 (required)
+    --asset <asset>                Currency asset (default: USDC)
+    --purpose <purpose>            Payment purpose (optional)
+    --quote <quote_id>             Service quote ID (optional)
 
   payments create                  Create a new payment intent
     --agent <id>                   Agent requesting payment (required)
@@ -152,16 +170,76 @@ async function main(): Promise<void> {
         else printAgentDetail(agent);
         return;
       }
+      if (action === 'budget') {
+        if (!targetId) {
+          console.error('Error: "agents budget" requires an agent <id>');
+          process.exit(1);
+        }
+        const budget = await client.agents.getBudget(targetId);
+        if (isJson) printJson(budget);
+        else printAgentBudget(budget);
+        return;
+      }
     }
 
     // 3. Services
     if (resource === 'services') {
       if (action === 'list') {
-        const services = await client.services.list();
+        const category = flags['category'] as string | undefined;
+        const trustStatus = flags['trust'] as string | undefined;
+        const enabled = flags['enabled'] !== undefined ? flags['enabled'] === 'true' || flags['enabled'] === true : undefined;
+
+        const services = await client.services.list({
+          category,
+          trustStatus,
+          enabled,
+        });
         if (isJson) printJson(services);
         else printServicesList(services);
         return;
       }
+
+      if (action === 'quote') {
+        if (!targetId) {
+          console.error('Error: "services quote" requires a service <id>');
+          process.exit(1);
+        }
+        const amount = flags['amount'] as string | undefined;
+        const asset = flags['asset'] as string | undefined;
+        const quote = await client.services.getQuote(targetId, { amount, asset });
+        if (isJson) printJson(quote);
+        else printQuote(quote);
+        return;
+      }
+    }
+
+    // 3.5 Simulate
+    if (resource === 'simulate') {
+      const agentId = flags['agent'] as string;
+      const service = flags['service'] as string;
+      const amount = flags['amount'] as string;
+      const asset = (flags['asset'] as string) || 'USDC';
+      const purpose = flags['purpose'] as string | undefined;
+      const quoteId = flags['quote'] as string | undefined;
+
+      if (!agentId || !service || !amount) {
+        console.error('Error: "simulate" requires --agent, --service, and --amount.');
+        console.error('Example: agentpay simulate --agent agent_1 --service research-api --amount 2500000');
+        process.exit(1);
+      }
+
+      const res = await client.simulations.create({
+        agent_id: agentId,
+        service_id: service,
+        amount: String(amount),
+        asset,
+        purpose,
+        quote_id: quoteId,
+      });
+
+      if (isJson) printJson(res);
+      else printSimulationResult(res);
+      return;
     }
 
     // 4. Payments

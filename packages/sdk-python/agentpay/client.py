@@ -96,13 +96,67 @@ class AgentsResource:
     def get(self, agent_id: str) -> Dict[str, Any]:
         return self._client._request("GET", f"/v1/agents/{agent_id}")
 
+    def get_budget(self, agent_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/agent-budgets/{agent_id}")
+
 class ServicesResource:
     def __init__(self, client: "AgentPay"):
         self._client = client
 
-    def list(self) -> List[Dict[str, Any]]:
-        res = self._client._request("GET", "/v1/services")
+    def list(
+        self,
+        category: Optional[str] = None,
+        asset: Optional[str] = None,
+        trust_status: Optional[str] = None,
+        enabled: Optional[bool] = None,
+    ) -> List[Dict[str, Any]]:
+        params = {}
+        if category is not None:
+            params["category"] = category
+        if asset is not None:
+            params["asset"] = asset
+        if trust_status is not None:
+            params["trust_status"] = trust_status
+        if enabled is not None:
+            params["enabled"] = str(enabled).lower()
+        res = self._client._request("GET", "/v1/services", params=params or None)
         return res.get("services", [])
+
+    def get_quote(
+        self,
+        service_id: str,
+        amount: Optional[str] = None,
+        asset: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        payload = {}
+        if amount is not None:
+            payload["amount"] = str(amount)
+        if asset is not None:
+            payload["asset"] = asset
+        return self._client._request("POST", f"/v1/services/{service_id}/quote", json=payload)
+
+class SimulationsResource:
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def create(
+        self,
+        agent_id: str,
+        service_id: str,
+        amount: str,
+        asset: str = "USDC",
+        purpose: Optional[str] = None,
+        quote_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "agent_id": agent_id,
+            "service_id": service_id,
+            "amount": str(amount),
+            "asset": asset,
+            "purpose": purpose,
+            "quote_id": quote_id,
+        }
+        return self._client._request("POST", "/v1/simulations", json=payload)
 
 class ApprovalsResource:
     def __init__(self, client: "AgentPay"):
@@ -217,6 +271,7 @@ class AgentPay:
         self.transactions = TransactionsResource(self)
         self.events = EventsResource(self)
         self.webhooks = WebhooksResource(self)
+        self.simulations = SimulationsResource(self)
 
     def _request(
         self,

@@ -399,3 +399,133 @@ test('AgentPay SDK — Polling Helper (waitForCompletion)', async () => {
   assert.equal(result.transaction_hash, '0xabcdef123456');
   assert.ok(callCount >= 3);
 });
+
+test('AgentPay SDK — Services Filter and Quote (Day 8)', async () => {
+  let capturedListUrl = '';
+  let capturedQuoteUrl = '';
+  let capturedQuoteBody = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    const url = input.toString();
+    if (url.includes('/quote')) {
+      capturedQuoteUrl = url;
+      capturedQuoteBody = (init?.body as string) || '';
+      return new Response(
+        JSON.stringify({
+          quote_id: 'quote_123',
+          service_id: 'research-api',
+          amount: '2500000',
+          asset: 'USDC',
+          expires_at: new Date(Date.now() + 900000).toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    capturedListUrl = url;
+    return new Response(
+      JSON.stringify({
+        services: [
+          {
+            id: 'research-api',
+            name: 'Deep Research Service',
+            category: 'RESEARCH',
+            trust_status: 'TRUSTED',
+            pricing_model: 'FIXED',
+            fixed_price: '2500000',
+            recipient: '0x3333333333333333333333333333333333333333',
+            asset: 'USDC',
+            enabled: true,
+            max_price: '5000000',
+          },
+        ],
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  // 1. Filtered list
+  const services = await client.services.list({
+    category: 'RESEARCH',
+    trustStatus: 'TRUSTED',
+    enabled: true,
+  });
+  assert.equal(
+    capturedListUrl,
+    'http://localhost:8080/v1/services?category=RESEARCH&trust_status=TRUSTED&enabled=true'
+  );
+  assert.equal(services.length, 1);
+  assert.equal(services[0].id, 'research-api');
+  assert.equal(services[0].category, 'RESEARCH');
+
+  // 2. Get Quote
+  const quote = await client.services.getQuote('research-api', { amount: '2500000' });
+  assert.equal(capturedQuoteUrl, 'http://localhost:8080/v1/services/research-api/quote');
+  assert.equal(JSON.parse(capturedQuoteBody).amount, '2500000');
+  assert.equal(quote.quote_id, 'quote_123');
+  assert.equal(quote.amount, '2500000');
+});
+
+test('AgentPay SDK — Agent Budget Retrieval (Day 8)', async () => {
+  let capturedUrl = '';
+  const mockFetch: typeof fetch = async (input) => {
+    capturedUrl = input.toString();
+    return new Response(
+      JSON.stringify({
+        agent_id: 'agent_researcher',
+        daily_limit: '100000000',
+        daily_spent: '25000000',
+        remaining_daily_limit: '75000000',
+        payment_limit: '50000000',
+        available_budget: '50000000',
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const budget = await client.agents.getBudget('agent_researcher');
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/agent-budgets/agent_researcher');
+  assert.equal(budget.agent_id, 'agent_researcher');
+  assert.equal(budget.remaining_daily_limit, '75000000');
+  assert.equal(budget.available_budget, '50000000');
+});
+
+test('AgentPay SDK — Financial Simulation (Day 8)', async () => {
+  let capturedUrl = '';
+  let capturedBody = '';
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedBody = (init?.body as string) || '';
+    return new Response(
+      JSON.stringify({
+        simulation_id: 'sim_test_001',
+        predicted_outcome: 'WOULD_EXECUTE',
+        policy_decision: 'ALLOW',
+        risk_level: 'LOW',
+        approval_required: false,
+        treasury_sufficient: true,
+        evaluated_at: new Date().toISOString(),
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const sim = await client.simulations.create({
+    agent_id: 'agent_007',
+    service_id: 'research-api',
+    amount: '2000000',
+    asset: 'USDC',
+    purpose: 'Market report dry-run',
+  });
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/simulations');
+  assert.equal(JSON.parse(capturedBody).agent_id, 'agent_007');
+  assert.equal(sim.simulation_id, 'sim_test_001');
+  assert.equal(sim.predicted_outcome, 'WOULD_EXECUTE');
+  assert.equal(sim.approval_required, false);
+});

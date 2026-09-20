@@ -30,6 +30,12 @@ func (m *mockIntegrationPolicyClient) Authorize(ctx context.Context, req domain.
 	}, nil
 }
 
+func (m *mockIntegrationPolicyClient) Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	dec, err := m.Authorize(ctx, req)
+	dec.Simulation = true
+	return dec, err
+}
+
 func (m *mockIntegrationPolicyClient) CheckHealth(ctx context.Context) error {
 	return nil
 }

@@ -188,6 +188,71 @@ export interface RegisteredService {
   enabled: boolean;
   max_price: string;
   fixed_price?: string;
+  category?: 'RESEARCH' | 'DATA' | 'COMPUTE' | 'ORACLE' | 'AI_MODELS' | string;
+  description?: string;
+  pricing_model?: 'FIXED' | 'VARIABLE' | 'QUOTE_REQUIRED' | string;
+  trust_status?: 'TRUSTED' | 'VERIFIED' | 'UNVERIFIED' | 'DISABLED' | string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Filter options for querying the Service Marketplace.
+ */
+export interface ServiceFilter {
+  category?: string;
+  asset?: string;
+  trustStatus?: string;
+  enabled?: boolean;
+}
+
+/**
+ * Time-bound service price quote.
+ */
+export interface ServiceQuote {
+  quote_id: string;
+  service_id: string;
+  amount: string;
+  asset: string;
+  expires_at: string;
+}
+
+/**
+ * Read-only agent financial context and budget limits.
+ */
+export interface AgentBudget {
+  agent_id: string;
+  daily_limit: string;
+  daily_spent: string;
+  remaining_daily_limit: string;
+  payment_limit: string;
+  available_budget: string;
+}
+
+/**
+ * Input parameters for executing a dry-run financial simulation.
+ */
+export interface SimulationRequest {
+  agent_id: string;
+  service_id: string;
+  amount: string;
+  asset?: string;
+  purpose?: string;
+  quote_id?: string;
+}
+
+/**
+ * Predicted financial outcome of a dry-run simulation.
+ */
+export interface SimulationResponse {
+  simulation_id: string;
+  predicted_outcome: 'WOULD_EXECUTE' | 'APPROVAL_REQUIRED' | 'WOULD_DENY' | 'INSUFFICIENT_TREASURY' | string;
+  policy_decision: string;
+  risk_level: string;
+  approval_required: boolean;
+  treasury_sufficient: boolean;
+  reason?: string;
+  evaluated_at: string;
 }
 
 /**

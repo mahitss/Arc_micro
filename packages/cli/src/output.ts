@@ -1,11 +1,14 @@
 import type {
   Agent,
+  AgentBudget,
   AgentDetail,
   Approval,
   DomainEvent,
   PaymentIntent,
   PaymentIntentDetail,
   RegisteredService,
+  ServiceQuote,
+  SimulationResponse,
   TransactionRecord,
   WebhookEndpoint,
 } from '@agentpay/sdk';
@@ -112,16 +115,56 @@ export function printServicesList(services: RegisteredService[]): void {
     console.log('No registered services found.');
     return;
   }
-  console.log('ID                   NAME                      MAX PRICE     ASSET  ENABLED');
-  console.log('─────────────────────────────────────────────────────────────────────────────');
+  console.log('ID                   NAME                      CATEGORY    PRICE         TRUST      STATUS');
+  console.log('─────────────────────────────────────────────────────────────────────────────────────────────');
   for (const s of services) {
     const id = s.id.padEnd(20);
     const name = s.name.padEnd(25);
-    const maxPrice = formatUsdc(s.max_price).padEnd(13);
-    const asset = s.asset.padEnd(6);
-    const enabled = s.enabled ? 'Yes' : 'No';
-    console.log(`${id} ${name} ${maxPrice} ${asset} ${enabled}`);
+    const category = (s.category || 'GENERAL').padEnd(11);
+    const price = formatUsdc(s.fixed_price || s.max_price).padEnd(13);
+    const trust = (s.trust_status || 'VERIFIED').padEnd(10);
+    const enabled = s.enabled ? 'ACTIVE' : 'DISABLED';
+    console.log(`${id} ${name} ${category} ${price} ${trust} ${enabled}`);
   }
+}
+
+export function printQuote(quote: ServiceQuote): void {
+  console.log('Service Quote');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Quote ID:     ${quote.quote_id}`);
+  console.log(`Service:      ${quote.service_id}`);
+  console.log(`Amount:       ${formatUsdc(quote.amount)} (${quote.amount} base units)`);
+  console.log(`Asset:        ${quote.asset}`);
+  console.log(`Expires At:   ${quote.expires_at}`);
+  console.log('──────────────────────────────────────────────────');
+}
+
+export function printAgentBudget(budget: AgentBudget): void {
+  console.log('Agent Budget & Spending Limits');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Agent ID:           ${budget.agent_id}`);
+  console.log(`Available Budget:   ${formatUsdc(budget.available_budget)} (${budget.available_budget} base units)`);
+  console.log(`Remaining Daily:    ${formatUsdc(budget.remaining_daily_limit)} (${budget.remaining_daily_limit} base units)`);
+  console.log(`Daily Limit:        ${formatUsdc(budget.daily_limit)} (${budget.daily_limit} base units)`);
+  console.log(`Daily Spent:        ${formatUsdc(budget.daily_spent)} (${budget.daily_spent} base units)`);
+  console.log(`Per-Payment Limit:  ${formatUsdc(budget.payment_limit)} (${budget.payment_limit} base units)`);
+  console.log('──────────────────────────────────────────────────');
+}
+
+export function printSimulationResult(sim: SimulationResponse): void {
+  console.log('Financial Dry-Run Simulation Result');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Simulation ID:      ${sim.simulation_id}`);
+  console.log(`Predicted Outcome:  ${sim.predicted_outcome}`);
+  console.log(`Policy Decision:    ${sim.policy_decision}`);
+  console.log(`Risk Level:         ${sim.risk_level}`);
+  console.log(`Approval Required:  ${sim.approval_required ? 'YES' : 'NO'}`);
+  console.log(`Treasury Feasible:  ${sim.treasury_sufficient ? 'YES' : 'NO'}`);
+  if (sim.reason) {
+    console.log(`Reason / Details:   ${sim.reason}`);
+  }
+  console.log(`Evaluated At:       ${sim.evaluated_at}`);
+  console.log('──────────────────────────────────────────────────');
 }
 
 export function printApprovalsList(approvals: Approval[]): void {

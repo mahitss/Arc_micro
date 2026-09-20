@@ -17,6 +17,7 @@ import { ApprovalsResource } from './resources/approvals.js';
 import { EventsResource } from './resources/events.js';
 import { PaymentIntentsResource } from './resources/payment-intents.js';
 import { ServicesResource } from './resources/services.js';
+import { SimulationsResource } from './resources/simulations.js';
 import { TransactionsResource } from './resources/transactions.js';
 import { WebhooksResource } from './resources/webhooks.js';
 import type { ClientOptions, RequestOptions } from './types.js';
@@ -49,6 +50,7 @@ export class AgentPay {
   public readonly transactions: TransactionsResource;
   public readonly webhooks: WebhooksResource;
   public readonly events: EventsResource;
+  public readonly simulations: SimulationsResource;
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
@@ -67,6 +69,7 @@ export class AgentPay {
     this.transactions = new TransactionsResource(this);
     this.webhooks = new WebhooksResource(this);
     this.events = new EventsResource(this);
+    this.simulations = new SimulationsResource(this);
   }
 
   /**

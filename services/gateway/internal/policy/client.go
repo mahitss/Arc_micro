@@ -29,6 +29,7 @@ var (
 // Client defines the interface for interacting with the Rust Policy Engine.
 type Client interface {
 	Authorize(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error)
+	Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error)
 	CheckHealth(ctx context.Context) error
 }
 
@@ -54,6 +55,15 @@ func NewClient(baseURL string, timeout time.Duration) *HTTPClient {
 
 // Authorize sends a payment authorization request to the Rust Policy Engine.
 func (c *HTTPClient) Authorize(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	return c.postRequest(ctx, "/v1/authorize", req)
+}
+
+// Simulate sends a policy simulation request to the Rust Policy Engine without mutating state.
+func (c *HTTPClient) Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	return c.postRequest(ctx, "/v1/simulate", req)
+}
+
+func (c *HTTPClient) postRequest(ctx context.Context, path string, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
 	var decision domain.AuthorizationDecision
 
 	// Apply configured timeout if caller context doesn't already have a shorter deadline
@@ -65,7 +75,7 @@ func (c *HTTPClient) Authorize(ctx context.Context, req domain.PaymentRequest) (
 		return decision, fmt.Errorf("failed to encode request: %w", err)
 	}
 
-	targetURL := fmt.Sprintf("%s/v1/authorize", c.baseURL)
+	targetURL := fmt.Sprintf("%s%s", c.baseURL, path)
 	httpReq, err := http.NewRequestWithContext(ctxWithTimeout, http.MethodPost, targetURL, bytes.NewReader(payloadBytes))
 	if err != nil {
 		return decision, fmt.Errorf("failed to create http request: %w", err)

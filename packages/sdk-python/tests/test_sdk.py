@@ -112,5 +112,61 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         with self.assertRaises(PolicyDeniedError):
             client.payment_intents.create(agent_id="a", service="s", amount="99999999", purpose="Over limit")
 
+    @patch("requests.request")
+    def test_services_and_quotes(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "quote_id": "quote_py_1",
+            "service_id": "research-api",
+            "amount": "2500000",
+            "asset": "USDC",
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        quote = client.services.get_quote("research-api", amount="2500000")
+        self.assertEqual(quote["quote_id"], "quote_py_1")
+        self.assertEqual(quote["amount"], "2500000")
+        _, kwargs = mock_req.call_args
+        self.assertEqual(kwargs["json"]["amount"], "2500000")
+
+    @patch("requests.request")
+    def test_agent_budget(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "agent_id": "agent_researcher",
+            "remaining_daily_limit": "75000000",
+            "available_budget": "50000000",
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        budget = client.agents.get_budget("agent_researcher")
+        self.assertEqual(budget["agent_id"], "agent_researcher")
+        self.assertEqual(budget["remaining_daily_limit"], "75000000")
+
+    @patch("requests.request")
+    def test_simulation(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "simulation_id": "sim_py_1",
+            "predicted_outcome": "WOULD_EXECUTE",
+            "policy_decision": "ALLOW",
+            "risk_level": "LOW",
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        sim = client.simulations.create(
+            agent_id="agent_researcher",
+            service_id="research-api",
+            amount="2000000",
+        )
+        self.assertEqual(sim["simulation_id"], "sim_py_1")
+        self.assertEqual(sim["predicted_outcome"], "WOULD_EXECUTE")
+
 if __name__ == "__main__":
     unittest.main()

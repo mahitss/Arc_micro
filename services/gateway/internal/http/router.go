@@ -69,9 +69,18 @@ func NewRouter(
 		listHandler := handlers.NewListHandler(repo, reg)
 		mux.HandleFunc("GET /v1/agents", listHandler.HandleListAgents)
 		mux.HandleFunc("GET /v1/agents/{id}", listHandler.HandleGetAgent)
+		mux.HandleFunc("GET /v1/agent-budgets/{id}", listHandler.HandleGetAgentBudget)
 		mux.HandleFunc("GET /v1/services", listHandler.HandleListServices)
 		mux.HandleFunc("GET /v1/payment-intents", listHandler.HandleListIntents)
 		mux.HandleFunc("GET /v1/transactions", listHandler.HandleListTransactions)
+
+		// Day 8: Quotes & Simulation Handlers
+		quoteHandler := handlers.NewQuoteHandler(reg)
+		mux.HandleFunc("POST /v1/services/{id}/quote", quoteHandler.HandleCreateQuote)
+
+		ts := treasury.NewTreasuryService(repo, nil)
+		simHandler := handlers.NewSimulationHandler(policyClient, reg, ts)
+		mux.HandleFunc("POST /v1/simulations", simHandler.HandleSimulate)
 
 		// 7. Day 3: Approvals Control Plane
 		ds := service.NewDomainService(repo)
@@ -93,7 +102,6 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/system/status", emHandler.HandleSystemStatus)
 
 		// 9. Day 3: Treasury Model & Reservations
-		ts := treasury.NewTreasuryService(repo, nil)
 		treasuryHandler := handlers.NewTreasuryHandler(ts)
 		mux.HandleFunc("GET /v1/treasury/summary", treasuryHandler.HandleSummary)
 

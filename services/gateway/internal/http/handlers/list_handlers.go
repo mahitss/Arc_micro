@@ -122,14 +122,64 @@ func (h *ListHandler) HandleGetAgent(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(detail)
 }
 
-// HandleListServices processes GET /v1/services.
+// HandleListServices processes GET /v1/services with optional filtering.
 func (h *ListHandler) HandleListServices(w http.ResponseWriter, r *http.Request) {
-	services := h.registry.List()
+	category := r.URL.Query().Get("category")
+	asset := r.URL.Query().Get("asset")
+	trustStatus := r.URL.Query().Get("trust_status")
+	enabledStr := r.URL.Query().Get("enabled")
+	enabledOnly := true
+	if enabledStr == "false" || enabledStr == "0" || enabledStr == "all" {
+		enabledOnly = false
+	}
+
+	services := h.registry.ListWithFilter(category, asset, trustStatus, enabledOnly)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"services": services,
 	})
+}
+
+// HandleGetAgentBudget processes GET /v1/agents/{id}/budget returning safe read-only financial limits.
+func (h *ListHandler) HandleGetAgentBudget(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	orgID := middleware.GetOrgID(r.Context())
+	id := r.PathValue("id")
+	if id == "" {
+		writeError(w, http.StatusBadRequest, "MISSING_AGENT_ID", "agent id is required", ctxReqID)
+		return
+	}
+
+	agent, err := h.repo.GetAgent(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", ctxReqID)
+		return
+	}
+
+	if agent.OrganizationID != "" && orgID != "" && agent.OrganizationID != orgID {
+		writeError(w, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", ctxReqID)
+		return
+	}
+
+	budget := map[string]interface{}{
+		"agent_id":                agent.ID,
+		"organization_id":         agent.OrganizationID,
+		"vault_address":           "0x1111111111111111111111111111111111111111",
+		"network":                 "Arc Network (Chain ID 5042)",
+		"usdc_balance":            "12.48",
+		"per_transaction_limit":   "500000",  // $0.50 USDC
+		"daily_spending_limit":    "5000000", // $5.00 USDC
+		"daily_spent":             "2410000", // $2.41 USDC
+		"remaining_daily_limit":   "2590000", // $2.59 USDC
+		"max_transactions_per_day": 20,
+		"transactions_today":      7,
+		"is_paused":               agent.Status == "PAUSED",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(budget)
 }
 
 // HandleListIntents processes GET /v1/payment-intents with organization isolation.

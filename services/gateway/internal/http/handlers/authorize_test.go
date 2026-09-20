@@ -31,6 +31,15 @@ func (m *mockPolicyClient) Authorize(ctx context.Context, req domain.PaymentRequ
 	return domain.AuthorizationDecision{}, nil
 }
 
+func (m *mockPolicyClient) Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	if m.authorizeFn != nil {
+		dec, err := m.authorizeFn(ctx, req)
+		dec.Simulation = true
+		return dec, err
+	}
+	return domain.AuthorizationDecision{Simulation: true}, nil
+}
+
 func (m *mockPolicyClient) CheckHealth(ctx context.Context) error {
 	if m.checkHealthFn != nil {
 		return m.checkHealthFn(ctx)

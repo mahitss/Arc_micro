@@ -51,6 +51,34 @@ func (c *trackingPolicyClient) Authorize(ctx context.Context, req domain.Payment
 	}, nil
 }
 
+func (c *trackingPolicyClient) Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var amt uint64
+	for _, ch := range req.Amount {
+		amt = amt*10 + uint64(ch-'0')
+	}
+
+	if c.dailySpent+amt <= c.dailyLimit {
+		return domain.AuthorizationDecision{
+			RequestID:  req.RequestID,
+			Decision:   domain.DecisionAllow,
+			ReasonCode: domain.ReasonApproved,
+			Reason:     "Within remaining daily budget",
+			Simulation: true,
+		}, nil
+	}
+
+	return domain.AuthorizationDecision{
+		RequestID:  req.RequestID,
+		Decision:   domain.DecisionDeny,
+		ReasonCode: domain.ReasonDailyLimitExceeded,
+		Reason:     "Daily spending limit exceeded",
+		Simulation: true,
+	}, nil
+}
+
 func (c *trackingPolicyClient) CheckHealth(ctx context.Context) error {
 	return nil
 }

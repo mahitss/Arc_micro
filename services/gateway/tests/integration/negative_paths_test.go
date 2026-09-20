@@ -37,6 +37,21 @@ func (m *testPolicyClient) Authorize(ctx context.Context, req domain.PaymentRequ
 	}, nil
 }
 
+func (m *testPolicyClient) Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	if m.decisionFunc != nil {
+		dec, err := m.decisionFunc(req)
+		dec.Simulation = true
+		return dec, err
+	}
+	return domain.AuthorizationDecision{
+		RequestID:  req.RequestID,
+		Decision:   domain.DecisionAllow,
+		ReasonCode: domain.ReasonApproved,
+		Reason:     "allowed",
+		Simulation: true,
+	}, nil
+}
+
 func (m *testPolicyClient) CheckHealth(ctx context.Context) error {
 	return nil
 }

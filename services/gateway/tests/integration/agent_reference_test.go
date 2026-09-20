@@ -338,6 +338,12 @@ func (m *mockIntegrationPolicyApprovalClient) Authorize(ctx context.Context, req
 	}, nil
 }
 
+func (m *mockIntegrationPolicyApprovalClient) Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	dec, err := m.Authorize(ctx, req)
+	dec.Simulation = true
+	return dec, err
+}
+
 func (m *mockIntegrationPolicyApprovalClient) CheckHealth(ctx context.Context) error {
 	return nil
 }
@@ -351,6 +357,12 @@ func (m *mockIntegrationPolicyDenyClient) Authorize(ctx context.Context, req dom
 		ReasonCode: domain.ReasonDailyLimitExceeded,
 		Reason:     "Hard policy daily limit exceeded",
 	}, nil
+}
+
+func (m *mockIntegrationPolicyDenyClient) Simulate(ctx context.Context, req domain.PaymentRequest) (domain.AuthorizationDecision, error) {
+	dec, err := m.Authorize(ctx, req)
+	dec.Simulation = true
+	return dec, err
 }
 
 func (m *mockIntegrationPolicyDenyClient) CheckHealth(ctx context.Context) error {

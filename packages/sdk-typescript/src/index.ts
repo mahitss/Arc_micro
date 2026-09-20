@@ -22,10 +22,12 @@ export { ApprovalsResource } from './resources/approvals.js';
 export { EventsResource } from './resources/events.js';
 export { PaymentIntentsResource } from './resources/payment-intents.js';
 export { ServicesResource } from './resources/services.js';
+export { SimulationsResource } from './resources/simulations.js';
 export { TransactionsResource } from './resources/transactions.js';
 export { VerifySignatureOptions, WebhooksResource } from './resources/webhooks.js';
 export type {
   Agent,
+  AgentBudget,
   AgentDetail,
   Approval,
   ClientOptions,
@@ -42,6 +44,10 @@ export type {
   RequestOptions,
   RequestPaymentInput,
   RequestPaymentResult,
+  ServiceFilter,
+  ServiceQuote,
+  SimulationRequest,
+  SimulationResponse,
   TransactionRecord,
   UpdateWebhookEndpointParams,
   WaitForCompletionOptions,
