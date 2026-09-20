@@ -196,3 +196,110 @@ test('AgentPay SDK — Zero Private Key Invariant', () => {
   assert.equal((client as any).wallet, undefined);
   assert.equal((client as any).signTransaction, undefined);
 });
+
+test('AgentPay SDK — Webhooks Resource & Signature Verification', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+    return new Response(
+      JSON.stringify({
+        id: 'we_test_123',
+        organization_id: 'org_default',
+        url: 'https://webhook.site/test',
+        description: 'Test Webhook',
+        subscribed_events: ['payment_intent.*'],
+        enabled: true,
+        secret: 'whsec_test_secret_1234567890abcdef1234567890abcdef',
+        created_at: new Date().toISOString(),
+        warning: 'Store this secret securely.',
+      }),
+      { status: 201, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_live_test', fetch: mockFetch });
+
+  // 1. Create webhook
+  const created = await client.webhooks.create({
+    url: 'https://webhook.site/test',
+    description: 'Test Webhook',
+    subscribedEvents: ['payment_intent.*'],
+  });
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/webhooks');
+  assert.equal(capturedMethod, 'POST');
+  assert.equal(created.id, 'we_test_123');
+  assert.equal(created.secret, 'whsec_test_secret_1234567890abcdef1234567890abcdef');
+
+  // 2. Test HMAC signature verification
+  const secret = 'whsec_test_secret_1234567890abcdef1234567890abcdef';
+  const payload = JSON.stringify({ id: 'evt_123', type: 'payment_intent.created' });
+  const now = Math.floor(Date.now() / 1000);
+
+  // Generate valid signature using createHmac
+  const { createHmac } = await import('node:crypto');
+  const validSig = createHmac('sha256', secret).update(`${now}.${payload}`).digest('hex');
+  const validHeader = `t=${now},v1=${validSig}`;
+
+  const isValid = client.webhooks.verifySignature(payload, validHeader, secret, 300);
+  assert.equal(isValid, true);
+
+  // Invalid signature
+  const isInvalid = client.webhooks.verifySignature(payload, `t=${now},v1=invalidsig123`, secret, 300);
+  assert.equal(isInvalid, false);
+
+  // Stale timestamp (replay attack)
+  const staleTimestamp = now - 600; // 10 minutes ago
+  const staleSig = createHmac('sha256', secret).update(`${staleTimestamp}.${payload}`).digest('hex');
+  const staleHeader = `t=${staleTimestamp},v1=${staleSig}`;
+  const isStaleValid = client.webhooks.verifySignature(payload, staleHeader, secret, 300);
+  assert.equal(isStaleValid, false);
+});
+
+test('AgentPay SDK — Events Resource Querying', async () => {
+  let capturedUrl = '';
+
+  const mockFetch: typeof fetch = async (input) => {
+    capturedUrl = input.toString();
+    return new Response(
+      JSON.stringify({
+        events: [
+          {
+            id: 'evt_001',
+            type: 'payment_intent.authorized',
+            version: 1,
+            occurred_at: new Date().toISOString(),
+            organization_id: 'org_default',
+            actor_type: 'SYSTEM',
+            actor_id: 'policy-engine',
+            payment_intent_id: 'intent_123',
+            request_id: 'req_001',
+            correlation_id: 'corr_001',
+            data: { intent_id: 'intent_123', status: 'AUTHORIZED' },
+          },
+        ],
+        total: 1,
+        limit: 10,
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_live_test', fetch: mockFetch });
+  const events = await client.events.list({
+    paymentIntentId: 'intent_123',
+    eventType: 'payment_intent.authorized',
+    limit: 10,
+  });
+
+  assert.equal(
+    capturedUrl,
+    'http://localhost:8080/v1/events?event_type=payment_intent.authorized&payment_intent_id=intent_123&limit=10'
+  );
+  assert.equal(events.length, 1);
+  assert.equal(events[0].id, 'evt_001');
+  assert.equal(events[0].payment_intent_id, 'intent_123');
+});

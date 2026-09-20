@@ -33,6 +33,9 @@ type Config struct {
 
 	// Task 8: Verified AgentVault address
 	AgentVaultAddress      string
+
+	// Day 6: Webhook security configuration
+	AllowLocalhostWebhooks bool
 }
 
 // Load reads configuration from environment variables with sensible defaults.

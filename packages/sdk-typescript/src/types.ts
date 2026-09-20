@@ -191,3 +191,107 @@ export interface TransactionRecord {
   confirmed_at?: string;
   error_code?: string;
 }
+
+/**
+ * Webhook Endpoint registration.
+ */
+export interface WebhookEndpoint {
+  id: string;
+  organization_id: string;
+  url: string;
+  description: string;
+  subscribed_events: string[];
+  enabled: boolean;
+  failure_count: number;
+  last_delivery_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Parameters for creating a Webhook Endpoint.
+ */
+export interface CreateWebhookEndpointParams {
+  url: string;
+  description?: string;
+  subscribedEvents?: string[];
+}
+
+/**
+ * Response for creating a Webhook Endpoint containing the one-time secret.
+ */
+export interface CreateWebhookEndpointResponse {
+  id: string;
+  organization_id: string;
+  url: string;
+  description: string;
+  subscribed_events: string[];
+  enabled: boolean;
+  secret: string; // Shown ONLY ONCE
+  created_at: string;
+  warning: string;
+}
+
+/**
+ * Parameters for updating a Webhook Endpoint.
+ */
+export interface UpdateWebhookEndpointParams {
+  url?: string;
+  description?: string;
+  subscribedEvents?: string[];
+  enabled?: boolean;
+}
+
+/**
+ * Webhook delivery tracking attempt.
+ */
+export interface WebhookDelivery {
+  id: string;
+  organization_id: string;
+  endpoint_id: string;
+  event_id: string;
+  event_type: string;
+  status: 'PENDING' | 'DELIVERING' | 'DELIVERED' | 'RETRYING' | 'FAILED' | string;
+  http_status?: number;
+  request_payload: string;
+  response_body?: string;
+  error_message?: string;
+  attempt_count: number;
+  max_attempts: number;
+  next_retry_at?: string;
+  latency_ms?: number;
+  delivered_at?: string;
+  created_at: string;
+}
+
+/**
+ * Canonical Domain Event envelope.
+ */
+export interface DomainEvent<T = Record<string, unknown>> {
+  id: string;
+  type: string;
+  version: number;
+  occurred_at: string;
+  organization_id: string;
+  actor_type: string;
+  actor_id: string;
+  agent_id?: string;
+  payment_intent_id?: string;
+  execution_id?: string;
+  approval_id?: string;
+  transaction_id?: string;
+  request_id: string;
+  correlation_id: string;
+  causation_id?: string;
+  data: T;
+}
+
+/**
+ * Query filter for listing events.
+ */
+export interface ListEventsFilter {
+  eventType?: string;
+  paymentIntentId?: string;
+  agentId?: string;
+  limit?: number;
+}

@@ -5,14 +5,17 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/webhook"
 )
 
 var (
@@ -96,16 +99,23 @@ type SystemState struct {
 
 // AuditEvent represents an append-only audit record.
 type AuditEvent struct {
-	ID             string    `json:"id"`
-	OrganizationID string    `json:"organization_id"`
-	EventType      string    `json:"event_type"`
-	ActorType      string    `json:"actor_type"`
-	ActorID        string    `json:"actor_id"`
-	ResourceType   string    `json:"resource_type"`
-	ResourceID     string    `json:"resource_id"`
-	RequestID      string    `json:"request_id"`
-	Timestamp      time.Time `json:"timestamp"`
-	Metadata       string    `json:"metadata"`
+	ID              string    `json:"id"`
+	OrganizationID  string    `json:"organization_id"`
+	EventType       string    `json:"event_type"`
+	ActorType       string    `json:"actor_type"`
+	ActorID         string    `json:"actor_id"`
+	ResourceType    string    `json:"resource_type"`
+	ResourceID      string    `json:"resource_id"`
+	RequestID       string    `json:"request_id"`
+	CorrelationID   string    `json:"correlation_id,omitempty"`
+	CausationID     string    `json:"causation_id,omitempty"`
+	AgentID         string    `json:"agent_id,omitempty"`
+	PaymentIntentID string    `json:"payment_intent_id,omitempty"`
+	ExecutionID     string    `json:"execution_id,omitempty"`
+	ApprovalID      string    `json:"approval_id,omitempty"`
+	Version         int       `json:"version,omitempty"`
+	Timestamp       time.Time `json:"timestamp"`
+	Metadata        string    `json:"metadata"`
 }
 
 // APIKey represents an authorized developer platform credential in storage.
@@ -177,8 +187,11 @@ type Repository interface {
 	SetSystemState(ctx context.Context, key string, value string, updatedBy string, updatedAt time.Time) error
 
 	// AuditEvent operations (Append-only)
+	// AuditEvent operations (Append-only)
 	SaveAuditEvent(ctx context.Context, evt *AuditEvent) error
+	GetAuditEvent(ctx context.Context, id, orgID string) (*AuditEvent, error)
 	ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error)
+	ListAuditEventsWithFilter(ctx context.Context, orgID, eventType, paymentIntentID, agentID string, limit int) ([]*AuditEvent, error)
 
 	// APIKey operations (Day 5)
 	SaveAPIKey(ctx context.Context, key *APIKey) error
@@ -186,6 +199,26 @@ type Repository interface {
 	ListAPIKeys(ctx context.Context, orgID string) ([]*APIKey, error)
 	RevokeAPIKey(ctx context.Context, id, orgID string, revokedAt time.Time) error
 	UpdateAPIKeyLastUsed(ctx context.Context, id string, lastUsed time.Time) error
+
+	// Webhook Endpoint operations (Day 6)
+	SaveWebhookEndpoint(ctx context.Context, ep *webhook.WebhookEndpoint) error
+	GetWebhookEndpoint(ctx context.Context, id, orgID string) (*webhook.WebhookEndpoint, error)
+	ListWebhookEndpoints(ctx context.Context, orgID string) ([]*webhook.WebhookEndpoint, error)
+	UpdateWebhookEndpoint(ctx context.Context, ep *webhook.WebhookEndpoint) error
+	DeleteWebhookEndpoint(ctx context.Context, id, orgID string) error
+	UpdateWebhookEndpointStatus(ctx context.Context, id, orgID string, failureCount int, lastDelivery time.Time) error
+
+	// Webhook Delivery operations (Day 6)
+	SaveWebhookDelivery(ctx context.Context, delivery *webhook.WebhookDelivery) error
+	GetWebhookDelivery(ctx context.Context, id, orgID string) (*webhook.WebhookDelivery, error)
+	ListWebhookDeliveries(ctx context.Context, endpointID, orgID string, limit int) ([]*webhook.WebhookDelivery, error)
+	UpdateWebhookDelivery(ctx context.Context, delivery *webhook.WebhookDelivery) error
+
+	// Outbox & Event operations (Day 6)
+	SaveOutboxEvent(ctx context.Context, outbox *webhook.OutboxEvent) error
+	GetPendingOutboxEvents(ctx context.Context, limit int) ([]*webhook.OutboxEvent, error)
+	MarkOutboxEventProcessed(ctx context.Context, id string, processedAt time.Time) error
+	SaveDomainEvent(ctx context.Context, event *domain.DomainEvent) error
 }
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
@@ -199,26 +232,32 @@ type MemoryRepository struct {
 	executions    map[string]*intent.PaymentExecutionRecord
 	approvals     map[string]*Approval
 	reservations  map[string]*TreasuryReservation
-	systemStates  map[string]*SystemState
-	auditEvents   []*AuditEvent
-	apiKeys       map[string]*APIKey
+	systemStates      map[string]*SystemState
+	auditEvents       []*AuditEvent
+	apiKeys           map[string]*APIKey
+	webhookEndpoints  map[string]*webhook.WebhookEndpoint
+	webhookDeliveries map[string]*webhook.WebhookDelivery
+	outboxEvents      map[string]*webhook.OutboxEvent
 }
 
 // NewMemoryRepository creates a new in-memory repository instance seeded with defaults.
 func NewMemoryRepository() *MemoryRepository {
 	now := time.Now()
 	repo := &MemoryRepository{
-		organizations: make(map[string]*Organization),
-		agents:        make(map[string]*Agent),
-		services:      make(map[string]*registry.Service),
-		policies:      make(map[string]*Policy),
-		intents:       make(map[string]*intent.PaymentIntent),
-		executions:    make(map[string]*intent.PaymentExecutionRecord),
-		approvals:     make(map[string]*Approval),
-		reservations:  make(map[string]*TreasuryReservation),
-		systemStates:  make(map[string]*SystemState),
-		auditEvents:   make([]*AuditEvent, 0),
-		apiKeys:       make(map[string]*APIKey),
+		organizations:     make(map[string]*Organization),
+		agents:            make(map[string]*Agent),
+		services:          make(map[string]*registry.Service),
+		policies:          make(map[string]*Policy),
+		intents:           make(map[string]*intent.PaymentIntent),
+		executions:        make(map[string]*intent.PaymentExecutionRecord),
+		approvals:         make(map[string]*Approval),
+		reservations:      make(map[string]*TreasuryReservation),
+		systemStates:      make(map[string]*SystemState),
+		auditEvents:       make([]*AuditEvent, 0),
+		apiKeys:           make(map[string]*APIKey),
+		webhookEndpoints:  make(map[string]*webhook.WebhookEndpoint),
+		webhookDeliveries: make(map[string]*webhook.WebhookDelivery),
+		outboxEvents:      make(map[string]*webhook.OutboxEvent),
 	}
 
 	// Seed default demo API key (apk_live_demo1234567890abcdef1234567890abcdef)
@@ -736,17 +775,282 @@ func (m *MemoryRepository) SaveAuditEvent(ctx context.Context, evt *AuditEvent) 
 	return nil
 }
 
-func (m *MemoryRepository) ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error) {
+func (m *MemoryRepository) GetAuditEvent(ctx context.Context, id, orgID string) (*AuditEvent, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	res := make([]*AuditEvent, 0, len(m.auditEvents))
 	for _, evt := range m.auditEvents {
-		if orgID == "" || evt.OrganizationID == orgID {
+		if evt.ID == id && (orgID == "" || evt.OrganizationID == orgID) {
 			copyEvt := *evt
-			res = append(res, &copyEvt)
+			return &copyEvt, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
+func (m *MemoryRepository) ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error) {
+	return m.ListAuditEventsWithFilter(ctx, orgID, "", "", "", 500)
+}
+
+func (m *MemoryRepository) ListAuditEventsWithFilter(ctx context.Context, orgID, eventType, paymentIntentID, agentID string, limit int) ([]*AuditEvent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if limit <= 0 || limit > 500 {
+		limit = 500
+	}
+	res := make([]*AuditEvent, 0)
+	// Iterate backwards for newest first
+	for i := len(m.auditEvents) - 1; i >= 0; i-- {
+		evt := m.auditEvents[i]
+		if orgID != "" && evt.OrganizationID != orgID {
+			continue
+		}
+		if eventType != "" && evt.EventType != eventType {
+			continue
+		}
+		if paymentIntentID != "" && evt.PaymentIntentID != paymentIntentID {
+			continue
+		}
+		if agentID != "" && evt.AgentID != agentID {
+			continue
+		}
+		copyEvt := *evt
+		res = append(res, &copyEvt)
+		if len(res) >= limit {
+			break
 		}
 	}
 	return res, nil
+}
+
+// --- Webhook Endpoint Methods (Day 6) ---
+
+func (m *MemoryRepository) SaveWebhookEndpoint(ctx context.Context, ep *webhook.WebhookEndpoint) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyEP := *ep
+	if copyEP.OrganizationID == "" {
+		copyEP.OrganizationID = "org_default"
+	}
+	m.webhookEndpoints[ep.ID] = &copyEP
+	return nil
+}
+
+func (m *MemoryRepository) GetWebhookEndpoint(ctx context.Context, id, orgID string) (*webhook.WebhookEndpoint, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	ep, ok := m.webhookEndpoints[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	if orgID != "" && ep.OrganizationID != orgID {
+		return nil, ErrNotFound
+	}
+	copyEP := *ep
+	return &copyEP, nil
+}
+
+func (m *MemoryRepository) ListWebhookEndpoints(ctx context.Context, orgID string) ([]*webhook.WebhookEndpoint, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*webhook.WebhookEndpoint, 0)
+	for _, ep := range m.webhookEndpoints {
+		if orgID == "" || ep.OrganizationID == orgID {
+			copyEP := *ep
+			res = append(res, &copyEP)
+		}
+	}
+	return res, nil
+}
+
+func (m *MemoryRepository) UpdateWebhookEndpoint(ctx context.Context, ep *webhook.WebhookEndpoint) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	existing, ok := m.webhookEndpoints[ep.ID]
+	if !ok {
+		return ErrNotFound
+	}
+	if ep.OrganizationID != "" && existing.OrganizationID != ep.OrganizationID {
+		return ErrNotFound
+	}
+	copyEP := *ep
+	m.webhookEndpoints[ep.ID] = &copyEP
+	return nil
+}
+
+func (m *MemoryRepository) DeleteWebhookEndpoint(ctx context.Context, id, orgID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	ep, ok := m.webhookEndpoints[id]
+	if !ok {
+		return ErrNotFound
+	}
+	if orgID != "" && ep.OrganizationID != orgID {
+		return ErrNotFound
+	}
+	delete(m.webhookEndpoints, id)
+	return nil
+}
+
+func (m *MemoryRepository) UpdateWebhookEndpointStatus(ctx context.Context, id, orgID string, failureCount int, lastDelivery time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	ep, ok := m.webhookEndpoints[id]
+	if !ok {
+		return ErrNotFound
+	}
+	if orgID != "" && ep.OrganizationID != orgID {
+		return ErrNotFound
+	}
+	ep.FailureCount = failureCount
+	ep.LastDeliveryAt = &lastDelivery
+	ep.UpdatedAt = time.Now()
+	return nil
+}
+
+// --- Webhook Delivery Methods (Day 6) ---
+
+func (m *MemoryRepository) SaveWebhookDelivery(ctx context.Context, delivery *webhook.WebhookDelivery) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyDel := *delivery
+	if copyDel.OrganizationID == "" {
+		copyDel.OrganizationID = "org_default"
+	}
+	m.webhookDeliveries[delivery.ID] = &copyDel
+	return nil
+}
+
+func (m *MemoryRepository) GetWebhookDelivery(ctx context.Context, id, orgID string) (*webhook.WebhookDelivery, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	del, ok := m.webhookDeliveries[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	if orgID != "" && del.OrganizationID != orgID {
+		return nil, ErrNotFound
+	}
+	copyDel := *del
+	return &copyDel, nil
+}
+
+func (m *MemoryRepository) ListWebhookDeliveries(ctx context.Context, endpointID, orgID string, limit int) ([]*webhook.WebhookDelivery, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	res := make([]*webhook.WebhookDelivery, 0)
+	for _, del := range m.webhookDeliveries {
+		if orgID != "" && del.OrganizationID != orgID {
+			continue
+		}
+		if endpointID != "" && del.EndpointID != endpointID {
+			continue
+		}
+		copyDel := *del
+		res = append(res, &copyDel)
+		if len(res) >= limit {
+			break
+		}
+	}
+	return res, nil
+}
+
+func (m *MemoryRepository) UpdateWebhookDelivery(ctx context.Context, delivery *webhook.WebhookDelivery) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	_, ok := m.webhookDeliveries[delivery.ID]
+	if !ok {
+		return ErrNotFound
+	}
+	copyDel := *delivery
+	m.webhookDeliveries[delivery.ID] = &copyDel
+	return nil
+}
+
+// --- Outbox Methods (Day 6) ---
+
+func (m *MemoryRepository) SaveOutboxEvent(ctx context.Context, outbox *webhook.OutboxEvent) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyOut := *outbox
+	if copyOut.OrganizationID == "" {
+		copyOut.OrganizationID = "org_default"
+	}
+	m.outboxEvents[outbox.ID] = &copyOut
+	return nil
+}
+
+func (m *MemoryRepository) GetPendingOutboxEvents(ctx context.Context, limit int) ([]*webhook.OutboxEvent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	res := make([]*webhook.OutboxEvent, 0)
+	for _, ev := range m.outboxEvents {
+		if ev.Status == "PENDING" {
+			copyEv := *ev
+			res = append(res, &copyEv)
+			if len(res) >= limit {
+				break
+			}
+		}
+	}
+	return res, nil
+}
+
+func (m *MemoryRepository) MarkOutboxEventProcessed(ctx context.Context, id string, processedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	ev, ok := m.outboxEvents[id]
+	if !ok {
+		return ErrNotFound
+	}
+	ev.Status = "PROCESSED"
+	ev.ProcessedAt = &processedAt
+	return nil
+}
+
+func (m *MemoryRepository) SaveDomainEvent(ctx context.Context, event *domain.DomainEvent) error {
+	payloadBytes, _ := json.Marshal(event.Data)
+	now := event.OccurredAt
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	auditEvt := &AuditEvent{
+		ID:              event.ID,
+		OrganizationID:  event.OrganizationID,
+		EventType:       string(event.Type),
+		ActorType:       event.ActorType,
+		ActorID:         event.ActorID,
+		ResourceType:    "DOMAIN_EVENT",
+		ResourceID:      event.ID,
+		RequestID:       event.RequestID,
+		CorrelationID:   event.CorrelationID,
+		CausationID:     event.CausationID,
+		AgentID:         event.AgentID,
+		PaymentIntentID: event.PaymentIntentID,
+		ExecutionID:     event.ExecutionID,
+		ApprovalID:      event.ApprovalID,
+		Version:         event.Version,
+		Timestamp:       now,
+		Metadata:        string(payloadBytes),
+	}
+	_ = m.SaveAuditEvent(ctx, auditEvt)
+
+	outboxPayload, _ := json.Marshal(event)
+	outboxEvt := &webhook.OutboxEvent{
+		ID:             webhook.GenerateOutboxID(),
+		EventID:        event.ID,
+		OrganizationID: event.OrganizationID,
+		EventType:      string(event.Type),
+		Payload:        string(outboxPayload),
+		Status:         webhook.OutboxStatusPending,
+		CreatedAt:      now,
+	}
+	return m.SaveOutboxEvent(ctx, outboxEvt)
 }
 
 // --- APIKey Methods (Day 5) ---
@@ -1337,16 +1641,46 @@ func (p *PostgresRepository) SaveAuditEvent(ctx context.Context, evt *AuditEvent
 	if orgID == "" {
 		orgID = "org_default"
 	}
-	query := `INSERT INTO audit_events (id, organization_id, event_type, actor_type, actor_id, resource_type, resource_id, request_id, timestamp, metadata)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
-	_, err := p.db.ExecContext(ctx, query, evt.ID, orgID, evt.EventType, evt.ActorType, evt.ActorID, evt.ResourceType, evt.ResourceID, evt.RequestID, evt.Timestamp, evt.Metadata)
+	version := evt.Version
+	if version <= 0 {
+		version = 1
+	}
+	query := `INSERT INTO audit_events (id, organization_id, event_type, actor_type, actor_id, resource_type, resource_id, request_id, timestamp, metadata, correlation_id, causation_id, payment_intent_id, agent_id, version)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
+	_, err := p.db.ExecContext(ctx, query, evt.ID, orgID, evt.EventType, evt.ActorType, evt.ActorID, evt.ResourceType, evt.ResourceID, evt.RequestID, evt.Timestamp, evt.Metadata, evt.CorrelationID, evt.CausationID, evt.PaymentIntentID, evt.AgentID, version)
 	return err
 }
 
+func (p *PostgresRepository) GetAuditEvent(ctx context.Context, id, orgID string) (*AuditEvent, error) {
+	query := `SELECT id, organization_id, event_type, actor_type, actor_id, resource_type, resource_id, request_id, timestamp, metadata, COALESCE(correlation_id, ''), COALESCE(causation_id, ''), COALESCE(payment_intent_id, ''), COALESCE(agent_id, ''), COALESCE(version, 1)
+	          FROM audit_events WHERE id = $1 AND ($2 = '' OR organization_id = $2)`
+	row := p.db.QueryRowContext(ctx, query, id, orgID)
+	var evt AuditEvent
+	if err := row.Scan(&evt.ID, &evt.OrganizationID, &evt.EventType, &evt.ActorType, &evt.ActorID, &evt.ResourceType, &evt.ResourceID, &evt.RequestID, &evt.Timestamp, &evt.Metadata, &evt.CorrelationID, &evt.CausationID, &evt.PaymentIntentID, &evt.AgentID, &evt.Version); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &evt, nil
+}
+
 func (p *PostgresRepository) ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error) {
-	query := `SELECT id, organization_id, event_type, actor_type, actor_id, resource_type, resource_id, request_id, timestamp, metadata
-	          FROM audit_events WHERE ($1 = '' OR organization_id = $1) ORDER BY timestamp DESC LIMIT 500`
-	rows, err := p.db.QueryContext(ctx, query, orgID)
+	return p.ListAuditEventsWithFilter(ctx, orgID, "", "", "", 500)
+}
+
+func (p *PostgresRepository) ListAuditEventsWithFilter(ctx context.Context, orgID, eventType, paymentIntentID, agentID string, limit int) ([]*AuditEvent, error) {
+	if limit <= 0 || limit > 500 {
+		limit = 500
+	}
+	query := `SELECT id, organization_id, event_type, actor_type, actor_id, resource_type, resource_id, request_id, timestamp, metadata, COALESCE(correlation_id, ''), COALESCE(causation_id, ''), COALESCE(payment_intent_id, ''), COALESCE(agent_id, ''), COALESCE(version, 1)
+	          FROM audit_events 
+	          WHERE ($1 = '' OR organization_id = $1)
+	            AND ($2 = '' OR event_type = $2)
+	            AND ($3 = '' OR payment_intent_id = $3)
+	            AND ($4 = '' OR agent_id = $4)
+	          ORDER BY timestamp DESC LIMIT $5`
+	rows, err := p.db.QueryContext(ctx, query, orgID, eventType, paymentIntentID, agentID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -1354,7 +1688,7 @@ func (p *PostgresRepository) ListAuditEvents(ctx context.Context, orgID string) 
 	var res []*AuditEvent
 	for rows.Next() {
 		var evt AuditEvent
-		if err := rows.Scan(&evt.ID, &evt.OrganizationID, &evt.EventType, &evt.ActorType, &evt.ActorID, &evt.ResourceType, &evt.ResourceID, &evt.RequestID, &evt.Timestamp, &evt.Metadata); err != nil {
+		if err := rows.Scan(&evt.ID, &evt.OrganizationID, &evt.EventType, &evt.ActorType, &evt.ActorID, &evt.ResourceType, &evt.ResourceID, &evt.RequestID, &evt.Timestamp, &evt.Metadata, &evt.CorrelationID, &evt.CausationID, &evt.PaymentIntentID, &evt.AgentID, &evt.Version); err != nil {
 			return nil, err
 		}
 		res = append(res, &evt)
@@ -1428,6 +1762,235 @@ func (p *PostgresRepository) UpdateAPIKeyLastUsed(ctx context.Context, id string
 	query := `UPDATE api_keys SET last_used_at = $1 WHERE id = $2`
 	_, err := p.db.ExecContext(ctx, query, lastUsed, id)
 	return err
+}
+
+// --- Webhook Endpoint Methods (Day 6) ---
+
+func (p *PostgresRepository) SaveWebhookEndpoint(ctx context.Context, ep *webhook.WebhookEndpoint) error {
+	orgID := ep.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO webhook_endpoints (id, organization_id, url, description, secret_hash, enabled, subscribed_events, failure_count, last_delivery_at, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+	_, err := p.db.ExecContext(ctx, query, ep.ID, orgID, ep.URL, ep.Description, ep.SecretHash, ep.Enabled, ep.SubscribedEvents, ep.FailureCount, ep.LastDeliveryAt, ep.CreatedAt, ep.UpdatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetWebhookEndpoint(ctx context.Context, id, orgID string) (*webhook.WebhookEndpoint, error) {
+	query := `SELECT id, organization_id, url, description, secret_hash, enabled, subscribed_events, failure_count, last_delivery_at, created_at, updated_at
+	          FROM webhook_endpoints WHERE id = $1 AND ($2 = '' OR organization_id = $2)`
+	row := p.db.QueryRowContext(ctx, query, id, orgID)
+	var ep webhook.WebhookEndpoint
+	if err := row.Scan(&ep.ID, &ep.OrganizationID, &ep.URL, &ep.Description, &ep.SecretHash, &ep.Enabled, &ep.SubscribedEvents, &ep.FailureCount, &ep.LastDeliveryAt, &ep.CreatedAt, &ep.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &ep, nil
+}
+
+func (p *PostgresRepository) ListWebhookEndpoints(ctx context.Context, orgID string) ([]*webhook.WebhookEndpoint, error) {
+	query := `SELECT id, organization_id, url, description, secret_hash, enabled, subscribed_events, failure_count, last_delivery_at, created_at, updated_at
+	          FROM webhook_endpoints WHERE ($1 = '' OR organization_id = $1) ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*webhook.WebhookEndpoint
+	for rows.Next() {
+		var ep webhook.WebhookEndpoint
+		if err := rows.Scan(&ep.ID, &ep.OrganizationID, &ep.URL, &ep.Description, &ep.SecretHash, &ep.Enabled, &ep.SubscribedEvents, &ep.FailureCount, &ep.LastDeliveryAt, &ep.CreatedAt, &ep.UpdatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &ep)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) UpdateWebhookEndpoint(ctx context.Context, ep *webhook.WebhookEndpoint) error {
+	query := `UPDATE webhook_endpoints 
+	          SET url = $1, description = $2, enabled = $3, subscribed_events = $4, updated_at = $5 
+	          WHERE id = $6 AND ($7 = '' OR organization_id = $7)`
+	result, err := p.db.ExecContext(ctx, query, ep.URL, ep.Description, ep.Enabled, ep.SubscribedEvents, ep.UpdatedAt, ep.ID, ep.OrganizationID)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) DeleteWebhookEndpoint(ctx context.Context, id, orgID string) error {
+	query := `DELETE FROM webhook_endpoints WHERE id = $1 AND ($2 = '' OR organization_id = $2)`
+	result, err := p.db.ExecContext(ctx, query, id, orgID)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) UpdateWebhookEndpointStatus(ctx context.Context, id, orgID string, failureCount int, lastDelivery time.Time) error {
+	query := `UPDATE webhook_endpoints SET failure_count = $1, last_delivery_at = $2, updated_at = $3 WHERE id = $4 AND ($5 = '' OR organization_id = $5)`
+	_, err := p.db.ExecContext(ctx, query, failureCount, lastDelivery, time.Now(), id, orgID)
+	return err
+}
+
+// --- Webhook Delivery Methods (Day 6) ---
+
+func (p *PostgresRepository) SaveWebhookDelivery(ctx context.Context, delivery *webhook.WebhookDelivery) error {
+	orgID := delivery.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO webhook_deliveries (id, endpoint_id, event_id, organization_id, event_type, status, http_status, request_payload, response_body, error_message, attempt_count, max_attempts, next_retry_at, latency_ms, delivered_at, created_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`
+	_, err := p.db.ExecContext(ctx, query, delivery.ID, delivery.EndpointID, delivery.EventID, orgID, delivery.EventType, delivery.Status, delivery.HTTPStatus, delivery.RequestPayload, delivery.ResponseBody, delivery.ErrorMessage, delivery.AttemptCount, delivery.MaxAttempts, delivery.NextRetryAt, delivery.LatencyMs, delivery.DeliveredAt, delivery.CreatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetWebhookDelivery(ctx context.Context, id, orgID string) (*webhook.WebhookDelivery, error) {
+	query := `SELECT id, endpoint_id, event_id, organization_id, event_type, status, http_status, request_payload, response_body, error_message, attempt_count, max_attempts, next_retry_at, latency_ms, delivered_at, created_at
+	          FROM webhook_deliveries WHERE id = $1 AND ($2 = '' OR organization_id = $2)`
+	row := p.db.QueryRowContext(ctx, query, id, orgID)
+	var del webhook.WebhookDelivery
+	if err := row.Scan(&del.ID, &del.EndpointID, &del.EventID, &del.OrganizationID, &del.EventType, &del.Status, &del.HTTPStatus, &del.RequestPayload, &del.ResponseBody, &del.ErrorMessage, &del.AttemptCount, &del.MaxAttempts, &del.NextRetryAt, &del.LatencyMs, &del.DeliveredAt, &del.CreatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &del, nil
+}
+
+func (p *PostgresRepository) ListWebhookDeliveries(ctx context.Context, endpointID, orgID string, limit int) ([]*webhook.WebhookDelivery, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	query := `SELECT id, endpoint_id, event_id, organization_id, event_type, status, http_status, request_payload, response_body, error_message, attempt_count, max_attempts, next_retry_at, latency_ms, delivered_at, created_at
+	          FROM webhook_deliveries 
+	          WHERE ($1 = '' OR organization_id = $1)
+	            AND ($2 = '' OR endpoint_id = $2)
+	          ORDER BY created_at DESC LIMIT $3`
+	rows, err := p.db.QueryContext(ctx, query, orgID, endpointID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*webhook.WebhookDelivery
+	for rows.Next() {
+		var del webhook.WebhookDelivery
+		if err := rows.Scan(&del.ID, &del.EndpointID, &del.EventID, &del.OrganizationID, &del.EventType, &del.Status, &del.HTTPStatus, &del.RequestPayload, &del.ResponseBody, &del.ErrorMessage, &del.AttemptCount, &del.MaxAttempts, &del.NextRetryAt, &del.LatencyMs, &del.DeliveredAt, &del.CreatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &del)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) UpdateWebhookDelivery(ctx context.Context, delivery *webhook.WebhookDelivery) error {
+	query := `UPDATE webhook_deliveries 
+	          SET status = $1, http_status = $2, response_body = $3, error_message = $4, attempt_count = $5, next_retry_at = $6, latency_ms = $7, delivered_at = $8
+	          WHERE id = $9`
+	_, err := p.db.ExecContext(ctx, query, delivery.Status, delivery.HTTPStatus, delivery.ResponseBody, delivery.ErrorMessage, delivery.AttemptCount, delivery.NextRetryAt, delivery.LatencyMs, delivery.DeliveredAt, delivery.ID)
+	return err
+}
+
+// --- Outbox Methods (Day 6) ---
+
+func (p *PostgresRepository) SaveOutboxEvent(ctx context.Context, outbox *webhook.OutboxEvent) error {
+	orgID := outbox.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO outbox_events (id, event_id, organization_id, event_type, payload, status, retry_count, next_retry_at, created_at, processed_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+	_, err := p.db.ExecContext(ctx, query, outbox.ID, outbox.EventID, orgID, outbox.EventType, outbox.Payload, outbox.Status, outbox.RetryCount, outbox.NextRetryAt, outbox.CreatedAt, outbox.ProcessedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetPendingOutboxEvents(ctx context.Context, limit int) ([]*webhook.OutboxEvent, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	query := `SELECT id, event_id, organization_id, event_type, payload, status, retry_count, next_retry_at, created_at, processed_at
+	          FROM outbox_events 
+	          WHERE status = 'PENDING' AND (next_retry_at IS NULL OR next_retry_at <= NOW())
+	          ORDER BY created_at ASC LIMIT $1`
+	rows, err := p.db.QueryContext(ctx, query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*webhook.OutboxEvent
+	for rows.Next() {
+		var ev webhook.OutboxEvent
+		if err := rows.Scan(&ev.ID, &ev.EventID, &ev.OrganizationID, &ev.EventType, &ev.Payload, &ev.Status, &ev.RetryCount, &ev.NextRetryAt, &ev.CreatedAt, &ev.ProcessedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &ev)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) MarkOutboxEventProcessed(ctx context.Context, id string, processedAt time.Time) error {
+	query := `UPDATE outbox_events SET status = 'PROCESSED', processed_at = $1 WHERE id = $2`
+	_, err := p.db.ExecContext(ctx, query, processedAt, id)
+	return err
+}
+
+func (p *PostgresRepository) SaveDomainEvent(ctx context.Context, event *domain.DomainEvent) error {
+	payloadBytes, _ := json.Marshal(event.Data)
+	now := event.OccurredAt
+	if now.IsZero() {
+		now = time.Now().UTC()
+	}
+	auditEvt := &AuditEvent{
+		ID:              event.ID,
+		OrganizationID:  event.OrganizationID,
+		EventType:       string(event.Type),
+		ActorType:       event.ActorType,
+		ActorID:         event.ActorID,
+		ResourceType:    "DOMAIN_EVENT",
+		ResourceID:      event.ID,
+		RequestID:       event.RequestID,
+		CorrelationID:   event.CorrelationID,
+		CausationID:     event.CausationID,
+		AgentID:         event.AgentID,
+		PaymentIntentID: event.PaymentIntentID,
+		ExecutionID:     event.ExecutionID,
+		ApprovalID:      event.ApprovalID,
+		Version:         event.Version,
+		Timestamp:       now,
+		Metadata:        string(payloadBytes),
+	}
+	_ = p.SaveAuditEvent(ctx, auditEvt)
+
+	outboxPayload, _ := json.Marshal(event)
+	outboxEvt := &webhook.OutboxEvent{
+		ID:             webhook.GenerateOutboxID(),
+		EventID:        event.ID,
+		OrganizationID: event.OrganizationID,
+		EventType:      string(event.Type),
+		Payload:        string(outboxPayload),
+		Status:         webhook.OutboxStatusPending,
+		CreatedAt:      now,
+	}
+	return p.SaveOutboxEvent(ctx, outboxEvt)
 }
 
 // ApplyMigrations executes the initial schema migration statements.

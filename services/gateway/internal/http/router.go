@@ -17,6 +17,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/service"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/treasury"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/webhook"
 )
 
 // NewRouter sets up and returns the HTTP mux with middleware pipeline for the Gateway.
@@ -102,10 +103,29 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/api-keys", apiKeyHandler.HandleList)
 		mux.HandleFunc("DELETE /v1/api-keys/{id}", apiKeyHandler.HandleRevoke)
 
-		// Wire Execution Gate and Treasury into Intent Service if available
+		// 11. Day 6: Webhook & Event Infrastructure
+		allowLocalhost := cfg != nil && cfg.AllowLocalhostWebhooks
+		validator := webhook.NewSSRFValidator(allowLocalhost)
+		dispatcher := webhook.NewDispatcher(repo, validator, nil)
+
+		webhookHandler := handlers.NewWebhookHandler(repo, dispatcher, validator)
+		mux.HandleFunc("POST /v1/webhooks", webhookHandler.HandleCreate)
+		mux.HandleFunc("GET /v1/webhooks", webhookHandler.HandleList)
+		mux.HandleFunc("GET /v1/webhooks/{id}", webhookHandler.HandleGet)
+		mux.HandleFunc("PATCH /v1/webhooks/{id}", webhookHandler.HandleUpdate)
+		mux.HandleFunc("DELETE /v1/webhooks/{id}", webhookHandler.HandleDelete)
+		mux.HandleFunc("GET /v1/webhooks/{id}/deliveries", webhookHandler.HandleListDeliveries)
+		mux.HandleFunc("POST /v1/webhooks/{id}/test", webhookHandler.HandleTest)
+
+		eventHandler := handlers.NewEventHandler(repo)
+		mux.HandleFunc("GET /v1/events", eventHandler.HandleList)
+		mux.HandleFunc("GET /v1/events/{id}", eventHandler.HandleGet)
+
+		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {
 			intentService.SetExecutionGate(execution.NewExecutionGate(repo, em, nil))
 			intentService.SetTreasuryService(ts)
+			intentService.SetEventDispatcher(dispatcher)
 		}
 	}
 

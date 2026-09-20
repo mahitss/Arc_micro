@@ -74,6 +74,11 @@ type TreasuryService interface {
 	SettleFunds(ctx context.Context, intentID string) error
 }
 
+// EventDispatcher defines an interface to publish domain events.
+type EventDispatcher interface {
+	DispatchEvent(ctx context.Context, event *domain.DomainEvent) error
+}
+
 // Service manages the lifecycle, authorization, and confirmation of PaymentIntents.
 type Service struct {
 	repo          Repository
@@ -85,6 +90,7 @@ type Service struct {
 	autoExecution bool
 	gate          Gate
 	treasury      TreasuryService
+	dispatcher    EventDispatcher
 }
 
 // NewService creates a new intent Service.
@@ -122,6 +128,11 @@ func (s *Service) SetExecutionGate(gate Gate) {
 // SetTreasuryService sets the treasury service for fund reservation and settlement.
 func (s *Service) SetTreasuryService(treasury TreasuryService) {
 	s.treasury = treasury
+}
+
+// SetEventDispatcher sets the domain event dispatcher for lifecycle events.
+func (s *Service) SetEventDispatcher(dispatcher EventDispatcher) {
+	s.dispatcher = dispatcher
 }
 
 // CreateIntent validates service constraints and persists a new PaymentIntent in CREATED state.
@@ -171,6 +182,34 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 
 	if err := s.repo.SaveIntent(ctx, intent); err != nil {
 		return nil, fmt.Errorf("failed to save payment intent: %w", err)
+	}
+
+	if s.dispatcher != nil {
+		correlationID := intent.RequestID
+		if correlationID == "" {
+			correlationID = intent.IntentID
+		}
+		evt := domain.NewDomainEvent(
+			domain.EventPaymentIntentCreated,
+			intent.OrganizationID,
+			"AGENT",
+			intent.AgentID,
+			intent.RequestID,
+			correlationID,
+			map[string]interface{}{
+				"intent_id":  intent.IntentID,
+				"agent_id":   intent.AgentID,
+				"service_id": intent.ServiceID,
+				"recipient":  intent.Recipient,
+				"amount":     intent.Amount,
+				"asset":      intent.Asset,
+				"status":     string(intent.Status),
+				"purpose":    intent.Purpose,
+			},
+		)
+		evt.PaymentIntentID = intent.IntentID
+		evt.AgentID = intent.AgentID
+		s.dispatcher.DispatchEvent(ctx, evt)
 	}
 
 	return intent, nil
@@ -255,6 +294,41 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 
 	intent.Status = newStatus
 	intent.UpdatedAt = now
+
+	if s.dispatcher != nil {
+		correlationID := intent.RequestID
+		if correlationID == "" {
+			correlationID = intent.IntentID
+		}
+		var evtType domain.EventType
+		switch newStatus {
+		case StatusAuthorized:
+			evtType = domain.EventPaymentIntentAuthorized
+		case StatusApprovalRequired:
+			evtType = domain.EventPaymentIntentApprovalRequired
+		default:
+			evtType = domain.EventPaymentIntentDenied
+		}
+		evt := domain.NewDomainEvent(
+			evtType,
+			intent.OrganizationID,
+			"SYSTEM",
+			"policy-engine",
+			intent.RequestID,
+			correlationID,
+			map[string]interface{}{
+				"intent_id":   intent.IntentID,
+				"agent_id":    intent.AgentID,
+				"decision":    string(decision.Decision),
+				"reason_code": string(decision.ReasonCode),
+				"status":      string(newStatus),
+			},
+		)
+		evt.PaymentIntentID = intent.IntentID
+		evt.AgentID = intent.AgentID
+		s.dispatcher.DispatchEvent(ctx, evt)
+	}
+
 	return intent, &decision, nil
 
 }
@@ -381,6 +455,30 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 			Status:    string(StatusFailed),
 			ErrorCode: err.Error(),
 		})
+
+		if s.dispatcher != nil {
+			correlationID := intent.RequestID
+			if correlationID == "" {
+				correlationID = intent.IntentID
+			}
+			evt := domain.NewDomainEvent(
+				domain.EventPaymentIntentFailed,
+				intent.OrganizationID,
+				"SYSTEM",
+				"execution-engine",
+				intent.RequestID,
+				correlationID,
+				map[string]interface{}{
+					"intent_id": intent.IntentID,
+					"error":     err.Error(),
+					"status":    string(StatusFailed),
+				},
+			)
+			evt.PaymentIntentID = intent.IntentID
+			evt.AgentID = intent.AgentID
+			s.dispatcher.DispatchEvent(ctx, evt)
+		}
+
 		return intent, nil, fmt.Errorf("%w: %v", ErrExecutionFailed, err)
 	}
 
@@ -398,6 +496,32 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 			Status:          string(StatusConfirmed),
 			ConfirmedAt:     &now,
 		})
+
+		if s.dispatcher != nil {
+			correlationID := intent.RequestID
+			if correlationID == "" {
+				correlationID = intent.IntentID
+			}
+			evt := domain.NewDomainEvent(
+				domain.EventPaymentIntentConfirmed,
+				intent.OrganizationID,
+				"SYSTEM",
+				"arc-settlement",
+				intent.RequestID,
+				correlationID,
+				map[string]interface{}{
+					"intent_id":         intent.IntentID,
+					"transaction_hash":  execResult.TransactionHash,
+					"status":            string(StatusConfirmed),
+					"amount":            intent.Amount,
+					"recipient":         intent.Recipient,
+				},
+			)
+			evt.PaymentIntentID = intent.IntentID
+			evt.AgentID = intent.AgentID
+			evt.TransactionID = execResult.TransactionHash
+			s.dispatcher.DispatchEvent(ctx, evt)
+		}
 	} else if execResult.Status == blockchain.StateExecutionDisabled {
 		// Live execution disabled: keep intent in AUTHORIZED or APPROVED state
 		_ = s.repo.UpdateIntentStatus(ctx, intentID, priorStatus, now)

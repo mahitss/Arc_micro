@@ -10,9 +10,11 @@ import {
 } from './errors.js';
 import { AgentsResource } from './resources/agents.js';
 import { ApprovalsResource } from './resources/approvals.js';
+import { EventsResource } from './resources/events.js';
 import { PaymentIntentsResource } from './resources/payment-intents.js';
 import { ServicesResource } from './resources/services.js';
 import { TransactionsResource } from './resources/transactions.js';
+import { WebhooksResource } from './resources/webhooks.js';
 import type { ClientOptions, RequestOptions } from './types.js';
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
@@ -41,6 +43,8 @@ export class AgentPay {
   public readonly paymentIntents: PaymentIntentsResource;
   public readonly approvals: ApprovalsResource;
   public readonly transactions: TransactionsResource;
+  public readonly webhooks: WebhooksResource;
+  public readonly events: EventsResource;
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
@@ -57,6 +61,8 @@ export class AgentPay {
     this.paymentIntents = new PaymentIntentsResource(this);
     this.approvals = new ApprovalsResource(this);
     this.transactions = new TransactionsResource(this);
+    this.webhooks = new WebhooksResource(this);
+    this.events = new EventsResource(this);
   }
 
   /**

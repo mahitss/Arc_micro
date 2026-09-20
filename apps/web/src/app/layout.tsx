@@ -78,6 +78,18 @@ export default function RootLayout({
                   Services
                 </Link>
                 <Link
+                  href="/developers/webhooks"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Webhooks
+                </Link>
+                <Link
+                  href="/developers/events"
+                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                >
+                  Events
+                </Link>
+                <Link
                   href="/settings"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >
