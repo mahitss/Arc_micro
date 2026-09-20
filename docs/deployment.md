@@ -1,155 +1,190 @@
-# AgentPay Production Deployment & Operations Runbook
+# AgentPay Deployment & Production Operations Guide
 
-This document details the production deployment, configuration, verification, and emergency procedures for **AgentPay** on the Arc blockchain network.
+This guide provides reproducible, step-by-step instructions for deploying and operating the complete AgentPay stack: Gateway, Rust Policy Engine, Next.js Web Control Center, AgentVault smart contracts, and PostgreSQL database.
 
 ---
 
 ## 1. Prerequisites
 
-Before deploying AgentPay to production or staging:
-- **Go 1.22+**: For compiling `services/gateway`.
-- **Rust 1.78+ / Cargo**: For compiling `services/policy-engine`.
-- **Foundry (`forge`)**: For smart contract verification and deployment (`contracts/`).
-- **Node.js 18+ / npm**: For building and serving `apps/web`.
-- **PostgreSQL 15+**: (Optional for production persistence; gateway defaults to in-memory repository if `DATABASE_URL` is omitted).
-- **Arc Mainnet Access**: Verified RPC endpoint at `https://rpc.mainnet.arc.io` (Chain ID `5042`).
+- **Go:** 1.22+
+- **Rust:** 1.75+ (Cargo)
+- **Node.js:** 18.18+ (npm)
+- **Foundry:** `forge`, `cast`
+- **PostgreSQL:** 14+ (or Docker)
+- **Docker & Docker Compose:** Optional for containerized deployment
 
 ---
 
-## 2. Environment Variables Specification
+## 2. Local Development Setup (Quick Start)
 
-### Go Gateway (`services/gateway`)
-
-| Variable | Required | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `ENABLE_LIVE_EXECUTION` | **Yes** | `false` | Master safety gate. If `false`, transactions are simulated and fail safe. |
-| `ARC_RPC_URL` | **Yes** | `https://rpc.mainnet.arc.io` | Verified Arc JSON-RPC over HTTPS. |
-| `ARC_CHAIN_ID` | **Yes** | `5042` | Expected EVM Chain ID. Gateway rejects any mismatch. |
-| `ARC_USDC_ADDRESS` | **Yes** | `0x3600000000000000000000000000000000000000` | Canonical Arc USDC ERC-20 contract address. |
-| `ARC_EXPLORER_URL` | No | `https://explorer.arc.io` | Base URL for block explorer transaction links. |
-| `EXECUTOR_PRIVATE_KEY` | If Live | None | 64-character hex private key for transaction signing. **Never commit or log.** |
-| `AGENTVAULT_ADDRESS` | If Live | None | Deployed `AgentVault.sol` contract address on Arc. |
-| `POLICY_ENGINE_URL` | **Yes** | `http://localhost:8081` | Authoritative Rust Policy Engine HTTP URL. |
-| `AGENT_AUTO_EXECUTION` | No | `false` | If `false`, authorized intents await operator confirmation dialog. |
-| `PORT` | No | `8080` | Gateway HTTP listen port. |
-| `CORS_ALLOWED_ORIGINS` | No | `http://localhost:3000` | Allowed frontend origins. |
-| `AI_API_KEY` | No | None | LLM API key (mock model used if omitted). |
-
-### Web Control Center (`apps/web`)
-
-| Variable | Required | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `NEXT_PUBLIC_GATEWAY_URL` | **Yes** | `http://localhost:8080` | Public URL for Go Gateway API. |
-| `NEXT_PUBLIC_ARC_CHAIN_ID` | No | `5042` | Expected Arc chain ID for runtime badge validation. |
-| `NEXT_PUBLIC_ARC_EXPLORER_URL`| No | `https://explorer.arc.io` | Explorer base URL for transaction links. |
-
-> [!CAUTION]
-> **Zero Browser Secrets**: `EXECUTOR_PRIVATE_KEY`, `AI_API_KEY`, database credentials, and signing secrets MUST NEVER be prefixed with `NEXT_PUBLIC_` or exposed to the frontend.
-
----
-
-## 3. Smart Contract Deployment (`contracts/`)
-
-To deploy `AgentVault.sol` to Arc Mainnet:
-
+### Clone & Configure Environment
 ```bash
-# 1. Export deployment credentials securely into current shell session (DO NOT write to disk)
-export DEPLOYER_PRIVATE_KEY="<your_hex_private_key>"
-export ARC_RPC_URL="https://rpc.mainnet.arc.io"
-export ARC_CHAIN_ID="5042"
-export ARC_USDC_ADDRESS="0x3600000000000000000000000000000000000000"
-export AGENT_ID="research-agent"
-
-# 2. Run the secure deployment script
-./scripts/deploy_mainnet.sh
+git clone https://github.com/mahitss/Arc_micro.git
+cd Arc_micro
+cp .env.example .env
 ```
 
-### Post-Deployment On-Chain Verification
-Run view calls against the deployed contract:
+### Start Services via Docker Compose
 ```bash
-# Check owner
-cast call <AGENTVAULT_ADDRESS> "owner()(address)" --rpc-url https://rpc.mainnet.arc.io
-
-# Check configured USDC address
-cast call <AGENTVAULT_ADDRESS> "usdc()(address)" --rpc-url https://rpc.mainnet.arc.io
-
-# Check paused state
-cast call <AGENTVAULT_ADDRESS> "paused()(bool)" --rpc-url https://rpc.mainnet.arc.io
-
-# Check daily limit policy
-cast call <AGENTVAULT_ADDRESS> "getPolicy()(bool,uint256,uint256,uint256,uint256,uint256,uint256)" --rpc-url https://rpc.mainnet.arc.io
+docker-compose up --build -d
 ```
+This boots:
+- PostgreSQL on port `5432`
+- Rust Policy Engine on port `8081`
+- Go Gateway API on port `8080`
+- Web Control Center on port `3000`
 
 ---
 
-## 4. Backend Deployment (`services/`)
+## 3. Manual Component Deployment
 
-### Rust Policy Engine
+### A. Database Setup
+```bash
+# Connect to PostgreSQL and create database
+createdb agentpay
+
+# Apply database migrations
+cd services/gateway
+migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/agentpay?sslmode=disable" up
+```
+
+### B. Rust Policy Engine
 ```bash
 cd services/policy-engine
 cargo build --release
-./target/release/policy_engine
-# Listening on http://0.0.0.0:8081
+PORT=8081 ./target/release/policy_engine
+```
+Verify health:
+```bash
+curl http://localhost:8081/health
+# {"status":"ok","version":"0.1.0"}
 ```
 
-### Go Gateway
+### C. Backend Gateway
 ```bash
 cd services/gateway
-go build -o bin/gateway cmd/server/main.go
-./bin/gateway
-# Listening on http://0.0.0.0:8080
+go build -o gateway ./cmd/server
+./gateway
+```
+Verify readiness:
+```bash
+curl http://localhost:8080/ready
+# {"status":"ready","service":"gateway","dependencies":{"policy_engine":"ok","storage":"ok"}}
 ```
 
----
-
-## 5. Frontend Deployment (`apps/web`)
-
+### D. Frontend Web Control Center
 ```bash
 cd apps/web
 npm install
 npm run build
-npm run start -p 3000
-# Accessible at http://localhost:3000
+npm run start
+```
+Control center will be accessible at `http://localhost:3000`.
+
+---
+
+## 4. Smart Contract Deployment (AgentVault on Arc)
+
+### Mainnet Safety Rules:
+- Never deploy without `--confirm` or `CONFIRM_MAINNET_DEPLOY="DEPLOY-ARC-MAINNET"`.
+- Verify the deployer wallet has sufficient Arc gas balance before broadcasting.
+
+### Deployment Command
+```bash
+cd scripts
+export DEPLOYER_PRIVATE_KEY="<YOUR_64_CHAR_HEX_PRIVATE_KEY>"
+export ARC_RPC_URL="https://rpc.mainnet.arc.io"
+export ARC_CHAIN_ID="5042"
+export ARC_USDC_ADDRESS="0x3600000000000000000000000000000000000000"
+
+./deploy_mainnet.sh --confirm
 ```
 
----
-
-## 6. Startup Safety Checks & Fail-Closed Behavior
-
-The Go Gateway implements fail-closed validation on startup:
-1. **Live Execution Gate**: If `ENABLE_LIVE_EXECUTION=true`:
-   - Validates `ARC_RPC_URL` is responsive.
-   - Validates `eth_chainId` matches `5042`.
-   - Validates `ARC_USDC_ADDRESS` has deployed bytecode.
-   - Validates `EXECUTOR_PRIVATE_KEY` exists, is 64 hex characters, and corresponds to a valid ECDSA key.
-   - If any condition is unsatisfied, the gateway logs a `FATAL SAFETY ERROR` and terminates immediately.
-2. **Safe Default**: If `ENABLE_LIVE_EXECUTION=false`, the gateway logs that it is operating in safe simulation mode and prevents any on-chain broadcasts.
+### Post-Deployment Verification
+1. Inspect deployment output for the deployed `AgentVault` address.
+2. Query contract bytecode via Arc RPC:
+   ```bash
+   curl -X POST -H "Content-Type: application/json" \
+     --data '{"jsonrpc":"2.0","method":"eth_getCode","params":["<AGENTVAULT_ADDRESS>", "latest"],"id":1}' \
+     https://rpc.mainnet.arc.io
+   ```
+3. Verify on Arc Explorer: `https://explorer.arc.io/address/<AGENTVAULT_ADDRESS>`.
 
 ---
 
-## 7. Emergency Rollback & Disable Procedure
+## 5. Production Configuration Hardening
 
-If anomalous spending or unauthorized activity is detected:
+Before enabling live payment execution:
+1. Ensure `EXECUTOR_PRIVATE_KEY` is set in the Gateway environment.
+2. Set `ENABLE_LIVE_EXECUTION=true`.
+3. Set `CORS_ALLOWED_ORIGINS` to your production frontend domain (e.g. `https://agentpay.io`).
+4. Ensure `MAX_REQUEST_BODY_BYTES=1048576` (1MB) to prevent buffer exhaustion.
+5. Set `ARC_CONFIRMATION_TIMEOUT_MS=60000` (60 seconds) to accommodate network latency.
 
-### Step 1: Emergency On-Chain Pause (Instant)
-The vault owner can pause `AgentVault` immediately, blocking all payments:
+---
+
+## 6. Health & Readiness Monitoring
+
+AgentPay distinguishes process liveness from operational readiness:
+
+### Liveness Probe
+```bash
+GET /health
+```
+- Returns 200 OK if the Gateway HTTP server is accepting connections.
+
+### Readiness Probe
+```bash
+GET /ready
+```
+- Checks that critical dependencies are operational:
+  - `policy_engine`: Checks Rust engine HTTP `/health`.
+  - `arc_rpc`: Checks Arc node `eth_chainId` (5042).
+  - `storage`: Checks PostgreSQL connection pool.
+- Returns 503 Service Unavailable with degraded status if any dependency fails.
+
+---
+
+## 7. Emergency Controls & Kill Switches
+
+### Agent Pause
+Freezes a specific agent immediately:
+```bash
+curl -X POST https://api.agentpay.io/v1/agents/{agent_id}/pause \
+  -H "Authorization: Bearer $ORG_ADMIN_KEY"
+```
+
+### Organization Pause
+Halts all agents and payments across the entire organization:
+```bash
+curl -X POST https://api.agentpay.io/v1/organizations/{org_id}/pause \
+  -H "Authorization: Bearer $ORG_ADMIN_KEY"
+```
+
+### Global System Kill Switch
+Immediately shuts down payment execution across the entire Gateway:
+```bash
+curl -X POST https://api.agentpay.io/v1/system/pause \
+  -H "Authorization: Bearer $SYSTEM_ADMIN_KEY"
+```
+
+### Smart Contract Level Pause
+Directly pauses the `AgentVault` contract on Arc:
 ```bash
 cast send <AGENTVAULT_ADDRESS> "pause()" \
   --rpc-url https://rpc.mainnet.arc.io \
-  --private-key <OWNER_PRIVATE_KEY>
+  --private-key $OWNER_PRIVATE_KEY
 ```
 
-### Step 2: Disable Gateway Live Execution (Instant)
-Set `ENABLE_LIVE_EXECUTION=false` in the gateway environment and restart the service:
-```bash
-kill -TERM $(pgrep gateway)
-ENABLE_LIVE_EXECUTION=false ./bin/gateway
-```
+---
 
-### Step 3: Withdraw Remaining Funds
-The vault owner can withdraw all remaining USDC from `AgentVault` back to treasury:
-```bash
-cast send <AGENTVAULT_ADDRESS> "withdraw(uint256)" <AMOUNT_BASE_UNITS> \
-  --rpc-url https://rpc.mainnet.arc.io \
-  --private-key <OWNER_PRIVATE_KEY>
-```
+## 8. Rollback Strategy
+
+1. **Database Rollback:**
+   ```bash
+   migrate -path migrations -database "$DATABASE_URL" down 1
+   ```
+2. **Binary Rollback:**
+   Deploy previous immutable Docker image tag or release binary.
+3. **Smart Contract Rollback:**
+   `AgentVault` contracts are non-upgradeable by design for money-safety invariants. If an unrecoverable contract vulnerability is discovered, invoke `pause()` and withdraw remaining USDC to the owner treasury using `emergencyWithdraw()`.

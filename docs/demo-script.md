@@ -1,65 +1,122 @@
-# AgentPay Demonstration Screencast Script
+# AgentPay: Video Demonstration Script
 
-> **Target Duration**: 3 to 5 minutes  
-> **Target Audience**: Arc Microgrants Evaluators  
-> **Route**: `http://localhost:3000/demo`  
-> **Format**: Screencast with voiceover (evidence-driven, zero hype)
+**Target Duration:** ~4.5 minutes  
+**Format:** Screen recording with voiceover walkthrough  
+**Audience:** Technical evaluators, hackathon judges, developers
 
 ---
 
-## 11-Step Demonstration Flow
+### [0:00 — 0:20] The Problem: Why Agents Cannot Touch Private Keys
+*(Visual: Terminal running an autonomous agent attempting to pay an API, contrasting a leaked private key alert with an unauthorized drain simulation)*
 
-### 1. Open Live Application (00:00 — 00:20)
-- **Visual**: Browser opens to `http://localhost:3000` (or `/demo`).
-- **Voiceover**:
-  > "Welcome to AgentPay. This is the developer control center for programmable USDC payments for autonomous AI agents on Arc."
+**Voiceover:**
+"Autonomous AI agents are beginning to write software, orchestrate tools, and automate workflows. But the moment an agent needs to pay for an external service, data feed, or GPU compute, we face a fundamental problem: **AI agents can reason, but they cannot safely control money.**
 
-### 2. Show AgentPay Purpose (00:20 — 00:45)
-- **Visual**: Highlight the pipeline banner on `/demo`: *AI Intent $\rightarrow$ Policy $\rightarrow$ Decision $\rightarrow$ AgentVault $\rightarrow$ Arc Settlement*.
-- **Voiceover**:
-  > "Autonomous agents can reason and call tools, but autonomous economic actions require controlled spending authority. Giving an LLM direct wallet access introduces severe risks of prompt injection and runaway spending loops. AgentPay solves this by separating intelligence from economic authority."
+If you hand an LLM a private key, a single hallucination, software loop, or prompt injection can instantly drain your wallet."
 
-### 3. Show Configured Agent & Service (00:45 — 01:15)
-- **Visual**: Show the Research Agent configuration card and the registered service `web-research` (Web Research & Intelligence API).
-- **Voiceover**:
-  > "Here we have a configured Research Agent with a daily spending cap of 5.00 USDC and a per-transaction cap of 0.50 USDC. The agent can only request payments to registered services in our server-side registry."
+---
 
-### 4. Create Payment Intent (01:15 — 01:45)
-- **Visual**: Click **"▶ Run Research Agent Demo (0.18 USDC)"**. Step 1 card highlights.
-- **Voiceover**:
-  > "We trigger the agent with the task: 'Retrieve external research data.' Notice that the agent does not sign a transaction or hold private keys. Instead, the Go Gateway maps the request to the approved service and creates a structured Payment Intent for 0.18 USDC (180,000 base units)."
+### [0:20 — 0:40] Introducing AgentPay
+*(Visual: AgentPay Web Control Center homepage showing the active agent overview, spending limits, and the Arc settlement status badge)*
 
-### 5. Show Deterministic Authorization (01:45 — 02:15)
-- **Visual**: Step 2 and Step 3 cards animate to `ALLOW` and `APPROVED`.
-- **Voiceover**:
-  > "The intent is forwarded to our standalone Rust Policy Engine on port 8081. The engine checks daily limits, per-transaction caps, and allowlists in checked integer math. Because 0.18 USDC is within budget, it returns an immediate ALLOW decision."
+**Voiceover:**
+"This is AgentPay: the programmable financial control plane for autonomous AI agents.
 
-### 6. Execute Valid Payment (02:15 — 02:45)
-- **Visual**: Step 4 card shows execution preparation.
-- **Voiceover**:
-  > "With authorization verified, the execution service prepares the transaction. To prevent race conditions and double-spending, the Go Gateway uses atomic Compare-And-Swap in the database to transition the intent from AUTHORIZED to EXECUTING. In live mainnet mode, this is submitted to AgentVault on Arc. In local review mode, our master safety gate keeps execution simulated, displaying DEMO / EXECUTION DISABLED without faking on-chain success."
+AgentPay decouples agent reasoning from financial settlement. Instead of giving the agent a wallet, the agent requests payment intents. AgentPay evaluates every request against deterministic policies and risk models, and only then commands settlement in native USDC on Arc."
 
-### 7. Show Verified Arc Transaction (02:45 — 03:15)
-- **Visual**: Step 5 card displays settlement status.
-- **Voiceover**:
-  > "Arc is our settlement layer. Because Arc is a stablecoin-native Layer 1 with gas paid in USDC, both gas fees and payment settlement occur in the same predictable currency. When live on mainnet, the transaction hash is verified directly on Arc Explorer."
+---
 
-### 8. Create an Intentionally Invalid Payment (03:15 — 03:45)
-- **Visual**: Click **"🛡 Test Policy Denial (Over-Limit Attempt)"**. Step 1 triggers with 6.00 USDC.
-- **Voiceover**:
-  > "Now let's test the security boundary. Suppose an agent attempts to spend 6.00 USDC—exceeding its remaining daily budget. The agent creates the intent, and the request is forwarded to policy evaluation."
+### [0:40 — 1:00] The 3-Tier Architecture
+*(Visual: Diagram on screen showing: AI Requests -> AgentPay Controls -> Arc Settles)*
 
-### 9. Show Rust DENY (03:45 — 04:15)
-- **Visual**: Step 2 and Step 3 highlight `DENY` with reason `DAILY_LIMIT_EXCEEDED`.
-- **Voiceover**:
-  > "The Rust Policy Engine evaluates the spending limit and immediately returns DENY with reason code DAILY_LIMIT_EXCEEDED. The intent transitions to the terminal status DENIED."
+**Voiceover:**
+"The architecture is simple and strictly enforced:
+First: The AI requests a service.
+Second: AgentPay's high-speed Rust policy engine evaluates the transaction off-chain in under a millisecond.
+Third: If allowed, AgentPay commands the `AgentVault` smart contract to settle the payment in USDC on Arc."
 
-### 10. Show That No Blockchain Transaction Occurs (04:15 — 04:45)
-- **Visual**: Step 4 & 5 cards and the evidence box explicitly show **`Blockchain Transaction: NONE`**, **`Gas Incurred: 0 USDC`**, **`Vault State: UNTOUCHED`**.
-- **Voiceover**:
-  > "Crucially, look at the execution and settlement layers: zero transactions were broadcast to Arc. The vault was not called, zero gas was spent, and funds remained 100% protected. AgentPay is a deterministic firewall that halts unauthorized spending off-chain."
+---
 
-### 11. Explain the Security Boundary (04:45 — 05:15)
-- **Visual**: Show the architecture trust boundaries in [`docs/architecture.md`](architecture.md).
-- **Voiceover**:
-  > "This proves our defense in depth: the AI is untrusted; the Rust policy engine enforces limits off-chain; atomic CAS prevents double-spending; and AgentVault enforces hard limits on-chain in immutable bytecode. AgentPay provides the programmable, auditable guardrails autonomous agents need to conduct safe commerce on Arc. Thank you."
+### [1:00 — 1:30] Autonomous Research Agent Flow
+*(Visual: Switching to `/demo` or `/demo/agent` in the Control Center. Clicking 'Trigger Autonomous Task')*
+
+**Voiceover:**
+"Let's see this in action. We task our autonomous agent: *'Prepare a real-time research report on AI compute pricing.'*
+
+The agent analyzes the prompt and realizes it needs real-time market data from an external provider. It queries the AgentPay Service Registry and discovers the verified Web Research & Intelligence API, which provides a time-bound quote of $0.18 USDC."
+
+---
+
+### [1:30 — 2:00] Payment Intent & Deterministic Policy Check
+*(Visual: The payment intent card expands, displaying the structured payload: Intent ID, Amount 180,000 micro-USDC, Recipient 0x2222...2222, and Policy Evaluation)*
+
+**Voiceover:**
+"Notice what just happened: The agent generated a structured Payment Intent. It didn't provide a destination wallet—AgentPay resolved the recipient server-side from the registry, completely neutralizing prompt injection.
+
+Next, AgentPay's Rust policy engine evaluated the intent. The amount is under the $0.50 transaction limit, within the $5.00 daily budget, and the recipient is verified. The decision: **ALLOW** with **LOW RISK**."
+
+---
+
+### [2:00 — 2:30] Human-in-the-Loop Approvals
+*(Visual: Demonstrating a high-value task requiring approval, showing the Pending Approval notification and human one-click approval)*
+
+**Voiceover:**
+"What if the agent needed heavy GPU fine-tuning costing $25.00?
+AgentPay automatically flags the transaction as `APPROVAL_REQUIRED`. The agent cannot approve its own request. An operator receives an alert, inspects the justification in the dashboard, and approves it with a single click.
+
+Crucially: A hard policy denial—like an unallowlisted address or exceeding daily spending ceilings—can **never** be overridden by human approval."
+
+---
+
+### [2:30 — 3:00] On-Chain Arc Settlement
+*(Visual: Execution timeline advancing to 'CONFIRMED'. The transaction hash is displayed with a clickable link to Arc Explorer)*
+
+**Voiceover:**
+"Once authorized, the Gateway reserves treasury liquidity and commands the `AgentVault` smart contract on Arc. 
+
+The transaction is submitted, mined, and confirmed. Here is the verified transaction on the Arc Explorer. Native USDC moves directly from the vault to the service provider, emitting an immutable `PaymentExecuted` event."
+
+---
+
+### [3:00 — 3:30] Comprehensive Audit Trail & Webhooks
+*(Visual: Navigating to `/developers/events` and `/developers/webhooks` showing the audit log and HMAC-signed webhook delivery)*
+
+**Voiceover:**
+"The moment settlement confirms, AgentPay records an immutable audit trail with correlation IDs. A cryptographically signed HMAC-SHA256 webhook notifies the external service and the agent runtime. 
+
+The agent receives its verified data payload and successfully completes its research report."
+
+---
+
+### [3:30 — 4:00] Developer SDK & Integration
+*(Visual: Code editor showing 10 lines of TypeScript / Python SDK code)*
+
+**Voiceover:**
+"Integrating AgentPay into existing agent frameworks like LangChain, AutoGen, or CrewAI requires only a few lines of code:
+
+```typescript
+import { AgentPay } from '@agentpay/sdk';
+
+const agentpay = new AgentPay({ apiKey: process.env.AGENTPAY_API_KEY });
+const intent = await agentpay.paymentIntents.create({
+  service: 'web-research',
+  amount: '180000',
+  asset: 'USDC',
+  purpose: 'market_research'
+});
+```
+The developer never manages private keys inside agent code."
+
+---
+
+### [4:00 — 4:30] Summary & Final Close
+*(Visual: System Overview screen displaying zero failures, active policy limits, and the Arc settlement status)*
+
+**Voiceover:**
+"To summarize:
+- The AI agent never receives a private key.
+- Recipient addresses are immutably resolved server-side.
+- Policies are enforced deterministically in Rust and on-chain in Solidity.
+- Settlements execute transparently in native USDC on Arc.
+
+AgentPay gives autonomous AI agents controlled, verifiable economic agency. Thank you."

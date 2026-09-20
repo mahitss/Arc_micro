@@ -1,96 +1,101 @@
-# AgentPay Reviewer Quickstart Guide
+# Reviewer Quickstart: 5-Minute Evaluation Guide
 
-> **Reading Time**: ~3 minutes  
-> **Audience**: Arc Microgrants Reviewers & Technical Evaluators  
-> **Repository**: [https://github.com/mahitss/Arc_micro](https://github.com/mahitss/Arc_micro)
+Welcome, reviewer! This guide enables you to verify and test AgentPay in under 5 minutes.
 
 ---
 
-### 30-Second Overview
-AgentPay is programmable USDC payment infrastructure for autonomous AI agents on Arc. It solves the critical safety problem of autonomous agent commerce: **AI models can reason and invoke tools, but giving an LLM direct wallet access risks prompt injection, runaway spending loops, and wallet depletion.** 
-
-AgentPay separates intelligence from economic authority: the AI formulates a structured **Payment Intent**, a deterministic **Rust Policy Engine** evaluates spending limits, and an on-chain smart contract (**`AgentVault.sol`**) enforces limits and settles USDC directly on the Arc blockchain.
-
----
-
-### 60-Second Architecture
-Every economic action passes through a deterministic pipeline:
-1. **AI Reasoning**: AI ingests a user task and outputs a structured payment intent (JSON) requesting funds for a registered service.
-2. **Server-Side Registry**: The Go Gateway resolves the recipient address strictly from an approved catalog, eliminating prompt injection.
-3. **Deterministic Policy**: The standalone Rust Policy Engine evaluates per-transaction limits, daily budgets, and allowlists in sub-millisecond time.
-4. **Execution Gateway**: If approved (`ALLOW`), the Go Gateway acquires execution authority via atomic Compare-And-Swap (CAS) to prevent double-spending.
-5. **On-Chain Settlement**: `AgentVault.sol` on Arc transfers 6-decimal USDC base units to the recipient and emits a `PaymentExecuted` event.
-
----
-
-### 60-Second Security Model
-- **AI is Untrusted**: The LLM has zero access to private keys, signing RPCs, or arbitrary recipient addresses.
-- **Pure Rust Authorization**: Policy evaluation is pure, side-effect-free integer arithmetic (`u64`). No floating-point math is used anywhere.
-- **On-Chain Enforcement**: `AgentVault.sol` enforces independent on-chain daily limits and owner emergency pause (`pause()`) switches.
-- **Fail-Closed Execution**: `ENABLE_LIVE_EXECUTION` defaults to `false`. Any RPC disconnect, chain ID mismatch, or policy violation immediately halts execution.
-
----
-
-### How to Verify the Arc Deployment
-You can independently verify the Arc network parameters via standard JSON-RPC queries using `curl` or Foundry `cast`:
+## 1. Quick Local Setup (Docker)
 
 ```bash
-# 1. Verify Chain ID (Returns 0x13b2 = 5042)
-curl -s -X POST https://rpc.mainnet.arc.io \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
-
-# 2. Verify Canonical USDC ERC-20 Bytecode (3,598 bytes)
-cast code 0x3600000000000000000000000000000000000000 --rpc-url https://rpc.mainnet.arc.io
-
-# 3. Verify Block Explorer Accessibility
-curl -sI https://explorer.arc.io | grep "HTTP/"
-```
-
-For full contract verification commands, see [`docs/verify-arc-deployment.md`](verify-arc-deployment.md).
-
----
-
-### How to Run Locally
-
-```bash
-# 1. Clone and enter repository
 git clone https://github.com/mahitss/Arc_micro.git
 cd Arc_micro
-
-# 2. Initialize environment
 cp .env.example .env
+docker-compose up -d
+```
+All four services are now running:
+- **Web Control Center:** `http://localhost:3000`
+- **Go API Gateway:** `http://localhost:8080`
+- **Rust Policy Engine:** `http://localhost:8081`
+- **PostgreSQL Database:** `localhost:5432`
 
-# 3. Start all services simultaneously (Linux / macOS / Git Bash)
-./scripts/dev.sh
+---
+
+## 2. Verify Health & Readiness
+
+```bash
+# Check Gateway Liveness & Dependency Readiness
+curl http://localhost:8080/ready
+# Expected: {"status":"ready","service":"gateway","dependencies":{"policy_engine":"ok","storage":"ok"}}
 ```
 
-- **Web Control Center**: Open **[http://localhost:3000](http://localhost:3000)**
-- **Interactive Reviewer Demo**: Open **[http://localhost:3000/demo](http://localhost:3000/demo)**
+---
+
+## 3. Run the Automated Test Suites
+
+Verify all test suites passing with zero errors:
+
+```bash
+# 1. Gateway Unit & Security Invariants (Go)
+cd services/gateway
+go test -count=1 ./...
+
+# 2. Deterministic Policy Engine (Rust)
+cd ../policy-engine
+cargo test
+
+# 3. Smart Contract & Fuzz Tests (Solidity / Foundry)
+cd ../../contracts
+forge test
+
+# 4. TypeScript SDK
+cd ../packages/sdk-typescript
+npm test
+
+# 5. Python SDK
+cd ../sdk-python
+python -m unittest tests/test_sdk.py
+```
 
 ---
 
-### How to Reproduce the Denial Flow
-1. Open **[http://localhost:3000/demo](http://localhost:3000/demo)**.
-2. Click **"🛡 Test Policy Denial (Over-Limit Attempt)"**.
-3. **Observe**:
-   - Step 1: Agent creates intent for 6.00 USDC (exceeding daily budget).
-   - Step 2: Rust policy evaluates rules and returns `DENY`.
-   - Step 3: Displays `PAYMENT DENIED: DAILY_LIMIT_EXCEEDED`.
-   - Step 4 & 5: Displays **`Blockchain Transaction: NONE`**.
-   - Zero gas incurred; zero transactions broadcast to Arc.
+## 4. Test the Autonomous Agent Hero Demo
+
+1. Open **`http://localhost:3000/demo`** in your browser.
+2. Select **Autonomous Research Agent**.
+3. Click **"Run Autonomous Task"**.
+4. Observe the real-time execution lifecycle:
+   - **Service Discovery:** Resolves `Web Research & Intelligence API` ($0.18 USDC quote).
+   - **Payment Intent:** Structured payload generated; recipient resolved server-side.
+   - **Policy Engine:** Evaluated in sub-millisecond by Rust engine (`ALLOW`, `RISK_LOW`).
+   - **Settlement:** Simulates Arc AgentVault payment confirmation.
+   - **Audit Trail:** Inspect the created event in `http://localhost:3000/developers/events`.
 
 ---
 
-### How to Verify a Real Transaction
-- In the prototype phase, automated test suites run with `ENABLE_LIVE_EXECUTION=false` to preserve gas safety.
-- When live transactions are executed post-deployment, the transaction hash is displayed in `/transactions` and links directly to Arc Explorer (`https://explorer.arc.io/tx/<txHash>`).
-- If no transaction has been broadcast yet, the UI displays `DATA UNAVAILABLE` rather than fabricating fake hashes.
+## 5. Test Key Security & Invariant Defenses
+
+Try attempting an unauthorized action:
+
+### Test A: Agent Self-Approval (Must Fail)
+```bash
+# An agent trying to approve its own payment intent fails closed with 403
+curl -X POST http://localhost:8080/v1/approvals/app_self/approve \
+  -H "Content-Type: application/json" \
+  -d '{"approver_id":"research-agent"}'
+# Response: 403 Forbidden ("SELF_APPROVAL_PROHIBITED")
+```
+
+### Test B: Cross-Tenant IDOR (Must Fail)
+```bash
+# Org A attempting to access Org B payment intent
+curl -X GET http://localhost:8080/v1/payment-intents/intent_orgB_01 \
+  -H "X-Organization-ID: org_A"
+# Response: 404 Not Found (zero resource enumeration)
+```
 
 ---
 
-### Known Limitations
-- **Unaudited Prototype**: Built for the Arc Microgrants evaluation; has not undergone a third-party security audit.
-- **Single-Token Scope**: Specifically tailored for USDC (`6 decimals`).
-- **Centralized Executor**: Uses a gateway signer role (production should explore Safe / MPC / session keys).
-- For complete disclosures, see [`docs/limitations.md`](limitations.md).
+## 6. Inspect Arc Mainnet Architecture Evidence
+
+- Review the formal Arc settlement parameters in [`docs/arc-integration.md`](file:///c:/Users/pc/OneDrive/Desktop/Arc%20micro/docs/arc-integration.md).
+- Review verified test evidence and deployment readiness in [`docs/arc-mainnet-evidence.md`](file:///c:/Users/pc/OneDrive/Desktop/Arc%20micro/docs/arc-mainnet-evidence.md).
