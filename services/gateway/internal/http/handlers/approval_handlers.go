@@ -32,6 +32,10 @@ func NewApprovalsHandler(repo storage.Repository, ds service.DomainService) *App
 func (h *ApprovalsHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
 	orgID := r.URL.Query().Get("organization_id")
+	authOrgID := middleware.GetOrgID(r.Context())
+	if authOrgID != "" {
+		orgID = authOrgID
+	}
 
 	apps, err := h.repo.ListApprovals(r.Context(), orgID)
 	if err != nil {
@@ -50,6 +54,7 @@ func (h *ApprovalsHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 // HandleGet handles GET /v1/approvals/{id}
 func (h *ApprovalsHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
+	authOrgID := middleware.GetOrgID(r.Context())
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "approval id is required", ctxReqID)
@@ -63,6 +68,12 @@ func (h *ApprovalsHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
+		return
+	}
+
+	// Tenant isolation: prevent IDOR across organizations
+	if app.OrganizationID != "" && authOrgID != "" && app.OrganizationID != authOrgID {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "approval not found", ctxReqID)
 		return
 	}
 
@@ -83,6 +94,7 @@ func (h *ApprovalsHandler) HandleReject(w http.ResponseWriter, r *http.Request) 
 
 func (h *ApprovalsHandler) resolveApproval(w http.ResponseWriter, r *http.Request, approve bool) {
 	ctxReqID := middleware.GetRequestID(r.Context())
+	authOrgID := middleware.GetOrgID(r.Context())
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "approval id is required", ctxReqID)
@@ -96,6 +108,12 @@ func (h *ApprovalsHandler) resolveApproval(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
+		return
+	}
+
+	// Tenant isolation: prevent cross-organization approval manipulation
+	if app.OrganizationID != "" && authOrgID != "" && app.OrganizationID != authOrgID {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "approval not found", ctxReqID)
 		return
 	}
 

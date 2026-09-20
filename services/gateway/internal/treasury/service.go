@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
@@ -51,6 +52,7 @@ type Service interface {
 type DefaultTreasuryService struct {
 	repo            storage.Repository
 	balanceProvider BalanceProvider
+	mu              sync.Mutex
 }
 
 // NewTreasuryService creates a new DefaultTreasuryService.
@@ -71,6 +73,9 @@ func (s *DefaultTreasuryService) ReserveFunds(ctx context.Context, orgID, vaultA
 	if orgID == "" {
 		orgID = "org_default"
 	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	// 1. If an active reservation already exists for this intent, return it idempotently
 	existing, err := s.repo.GetReservationByIntent(ctx, intentID)

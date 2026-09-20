@@ -21,6 +21,7 @@ import (
 // Service defines the interface for blockchain payment execution.
 type Service interface {
 	ExecutePayment(ctx context.Context, req blockchain.PaymentExecutionRequest) (*blockchain.PaymentExecutionResult, error)
+	ReconcileTransaction(ctx context.Context, requestID string) (*blockchain.PaymentExecutionResult, error)
 }
 
 // ExecutionService implements the Service interface for executing payments against AgentVault.
@@ -42,6 +43,11 @@ func NewExecutionService(cfg *config.Config, client blockchain.Client, store Sto
 	}
 }
 
+// BlockchainClient returns the underlying blockchain client.
+func (s *ExecutionService) BlockchainClient() blockchain.Client {
+	return s.blockchainClient
+}
+
 // ExecutePayment processes a payment execution request.
 func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.PaymentExecutionRequest) (*blockchain.PaymentExecutionResult, error) {
 	// 1. Idempotency & Recovery check: return existing result or check chain if already broadcast
@@ -49,30 +55,11 @@ func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.Pa
 		if existing.Status == blockchain.StateConfirmed || existing.Status == blockchain.StateExecutionDisabled {
 			return existing, nil
 		}
-		// If transaction was already broadcast, re-query chain receipt rather than creating a duplicate transaction
+		// If transaction was already broadcast or is ambiguous, re-query chain receipt rather than creating a duplicate transaction
 		if existing.TransactionHash != "" && s.blockchainClient != nil {
-			log.Printf("[BLOCKCHAIN] Found existing submitted tx=%s for req_id=%s. Checking chain receipt...",
+			log.Printf("[BLOCKCHAIN] Found existing submitted/ambiguous tx=%s for req_id=%s. Checking chain receipt...",
 				existing.TransactionHash, req.RequestID)
-			receipt, err := s.waitForReceipt(ctx, common.HexToHash(existing.TransactionHash))
-			if err == nil && receipt != nil {
-				if receipt.Status == types.ReceiptStatusSuccessful {
-					existing.Status = blockchain.StateConfirmed
-					existing.BlockNumber = receipt.BlockNumber.String()
-					s.store.Set(req.RequestID, existing)
-					return existing, nil
-				}
-				existing.Status = blockchain.StateFailed
-				existing.BlockNumber = receipt.BlockNumber.String()
-				existing.Error = "transaction reverted on-chain"
-				s.store.Set(req.RequestID, existing)
-				return existing, &blockchain.ReceiptVerificationError{
-					TxHash: existing.TransactionHash,
-					Status: receipt.Status,
-					Reason: "transaction execution reverted on-chain",
-				}
-			}
-			// Still unconfirmed or timed out: return existing pending state without broadcasting again
-			return existing, err
+			return s.ReconcileTransaction(ctx, req.RequestID)
 		}
 		return existing, nil
 	}
@@ -224,7 +211,22 @@ func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.Pa
 	// 10. Wait for confirmation
 	receipt, err := s.waitForReceipt(ctx, txHash)
 	if err != nil {
-		return submittedResult, err
+		// If confirmation times out or encounters network error, the transaction WAS broadcast to Arc,
+		// but receipt status cannot be verified within the deadline.
+		// Transition to StateAmbiguous so the transaction is never prematurely failed or double-broadcast.
+		ambiguousResult := &blockchain.PaymentExecutionResult{
+			RequestID:       req.RequestID,
+			Status:          blockchain.StateAmbiguous,
+			TransactionHash: txHash.Hex(),
+			Vault:           vaultAddr.Hex(),
+			Recipient:       recipientAddr.Hex(),
+			Amount:          req.Amount,
+			ExplorerURL:     blockchain.BuildExplorerTxURL(s.cfg.ArcExplorerURL, txHash.Hex()),
+			Error:           err.Error(),
+		}
+		s.store.Set(req.RequestID, ambiguousResult)
+		log.Printf("[BLOCKCHAIN] Transaction %s in AMBIGUOUS state due to confirmation timeout: %v", txHash.Hex(), err)
+		return ambiguousResult, err
 	}
 
 	if receipt.Status != types.ReceiptStatusSuccessful {
@@ -264,6 +266,56 @@ func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.Pa
 		txHash.Hex(), receipt.BlockNumber.String(), req.RequestID)
 
 	return result, nil
+}
+
+// ReconcileTransaction queries the blockchain for an in-flight or ambiguous transaction,
+// verifies the mined receipt, and reconciles the state to CONFIRMED or FAILED.
+func (s *ExecutionService) ReconcileTransaction(ctx context.Context, requestID string) (*blockchain.PaymentExecutionResult, error) {
+	existing, ok := s.store.Get(requestID)
+	if !ok {
+		return nil, fmt.Errorf("execution record not found for request_id %s", requestID)
+	}
+
+	if existing.Status == blockchain.StateConfirmed || existing.Status == blockchain.StateExecutionDisabled {
+		return existing, nil
+	}
+
+	if existing.TransactionHash == "" {
+		return existing, fmt.Errorf("cannot reconcile: no transaction hash recorded for request_id %s", requestID)
+	}
+
+	if s.blockchainClient == nil {
+		return existing, fmt.Errorf("cannot reconcile: blockchain client is not initialized")
+	}
+
+	txHash := common.HexToHash(existing.TransactionHash)
+	receipt, err := s.blockchainClient.TransactionReceipt(ctx, txHash)
+	if err != nil || receipt == nil {
+		// Still unconfirmed or receipt not yet indexed by node: preserve AMBIGUOUS status
+		return existing, fmt.Errorf("receipt not yet available for tx %s: %w", existing.TransactionHash, err)
+	}
+
+	if receipt.Status == types.ReceiptStatusSuccessful {
+		existing.Status = blockchain.StateConfirmed
+		existing.BlockNumber = receipt.BlockNumber.String()
+		existing.Error = ""
+		s.store.Set(requestID, existing)
+		log.Printf("[BLOCKCHAIN] Reconciled tx=%s to CONFIRMED at block=%s req_id=%s",
+			existing.TransactionHash, existing.BlockNumber, requestID)
+		return existing, nil
+	}
+
+	existing.Status = blockchain.StateFailed
+	existing.BlockNumber = receipt.BlockNumber.String()
+	existing.Error = "transaction reverted on-chain"
+	s.store.Set(requestID, existing)
+	log.Printf("[BLOCKCHAIN] Reconciled tx=%s to FAILED (reverted) at block=%s req_id=%s",
+		existing.TransactionHash, existing.BlockNumber, requestID)
+	return existing, &blockchain.ReceiptVerificationError{
+		TxHash: existing.TransactionHash,
+		Status: receipt.Status,
+		Reason: "transaction execution reverted on-chain",
+	}
 }
 
 // waitForReceipt polls for transaction confirmation until receipt is found or deadline expires.

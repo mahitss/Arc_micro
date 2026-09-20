@@ -151,6 +151,16 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 		}
 	}
 
+	// 0b. Verify agent is ACTIVE if agent provider is available
+	if ap, ok := s.repo.(interface {
+		GetAgentStatus(ctx context.Context, id string) (string, error)
+	}); ok {
+		status, err := ap.GetAgentStatus(ctx, params.AgentID)
+		if err == nil && status != "" && status != "ACTIVE" {
+			return nil, fmt.Errorf("agent %s is %s: payment intent creation blocked", params.AgentID, status)
+		}
+	}
+
 	// 1. Resolve registered service and validate amount/asset bounds
 	regService, err := s.registry.ValidatePayment(params.ServiceID, params.Amount, params.Asset)
 	if err != nil {

@@ -36,6 +36,13 @@ func (m *mockExecutionService) ExecutePayment(ctx context.Context, req blockchai
 	}, nil
 }
 
+func (m *mockExecutionService) ReconcileTransaction(ctx context.Context, requestID string) (*blockchain.PaymentExecutionResult, error) {
+	return &blockchain.PaymentExecutionResult{
+		RequestID: requestID,
+		Status:    blockchain.StateConfirmed,
+	}, nil
+}
+
 func setupExecuteTestRouter(pMock *mockPolicyClient, eMock *mockExecutionService) http.Handler {
 	cfg := &config.Config{
 		Port:                "8080",

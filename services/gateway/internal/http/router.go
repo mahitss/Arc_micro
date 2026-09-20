@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
@@ -34,7 +35,11 @@ func NewRouter(
 
 	// 1. Health, Readiness & Metrics
 	mux.HandleFunc("GET /health", health.Handler)
-	mux.Handle("GET /ready", handlers.NewReadyHandler(policyClient, nil, repo))
+	var bc blockchain.Client
+	if bcp, ok := execService.(interface{ BlockchainClient() blockchain.Client }); ok {
+		bc = bcp.BlockchainClient()
+	}
+	mux.Handle("GET /ready", handlers.NewReadyHandler(policyClient, bc, repo))
 	mux.HandleFunc("GET /metrics", metrics.DefaultMetrics.Handler)
 
 	// 2. V1 Authorization API

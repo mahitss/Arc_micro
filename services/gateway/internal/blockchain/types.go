@@ -8,6 +8,7 @@ const (
 	StateSubmitted         ExecutionState = "SUBMITTED"
 	StateConfirmed         ExecutionState = "CONFIRMED"
 	StateFailed            ExecutionState = "FAILED"
+	StateAmbiguous         ExecutionState = "AMBIGUOUS"
 	StateExecutionDisabled ExecutionState = "EXECUTION_DISABLED"
 )
 

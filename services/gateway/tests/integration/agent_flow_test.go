@@ -56,6 +56,14 @@ func (m *mockIntegrationExecutionService) ExecutePayment(ctx context.Context, re
 	}, nil
 }
 
+func (m *mockIntegrationExecutionService) ReconcileTransaction(ctx context.Context, requestID string) (*blockchain.PaymentExecutionResult, error) {
+	return &blockchain.PaymentExecutionResult{
+		RequestID:       requestID,
+		Status:          blockchain.StateConfirmed,
+		TransactionHash: "0x7777777777777777777777777777777777777777777777777777777777777777",
+	}, nil
+}
+
 // TestIntegration_AgentTaskToExecutionBoundary tests the complete pipeline (Test Case 30).
 // Pipeline: Agent task -> Payment Intent -> Rust Authorization -> Execution Boundary.
 func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {

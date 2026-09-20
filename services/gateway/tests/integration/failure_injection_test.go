@@ -95,9 +95,9 @@ func TestFailureInjection_ConfirmationTimeout(t *testing.T) {
 		t.Fatal("expected confirmation timeout error, got nil")
 	}
 
-	// Verify that the tx hash was recorded in SUBMITTED state to prevent duplicate submission on retry
-	if res == nil || res.Status != blockchain.StateSubmitted {
-		t.Errorf("expected SUBMITTED status on timeout, got %+v", res)
+	// Verify that the tx hash was recorded in AMBIGUOUS or SUBMITTED state to prevent duplicate submission on retry
+	if res == nil || (res.Status != blockchain.StateAmbiguous && res.Status != blockchain.StateSubmitted) {
+		t.Errorf("expected AMBIGUOUS or SUBMITTED status on timeout, got %+v", res)
 	}
 	if res.TransactionHash == "" {
 		t.Error("expected transaction hash to be captured on submission timeout")

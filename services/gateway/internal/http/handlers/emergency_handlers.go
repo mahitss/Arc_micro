@@ -28,8 +28,9 @@ func (h *EmergencyHandler) HandlePauseAgent(w http.ResponseWriter, r *http.Reque
 	ctxReqID := middleware.GetRequestID(r.Context())
 	agentID := r.PathValue("id")
 	actorID := h.extractActor(r)
+	authOrgID := middleware.GetOrgID(r.Context())
 
-	if err := h.controller.PauseAgent(r.Context(), "", agentID, actorID); err != nil {
+	if err := h.controller.PauseAgent(r.Context(), authOrgID, agentID, actorID); err != nil {
 		writeError(w, http.StatusBadRequest, "PAUSE_FAILED", err.Error(), ctxReqID)
 		return
 	}
@@ -48,8 +49,9 @@ func (h *EmergencyHandler) HandleResumeAgent(w http.ResponseWriter, r *http.Requ
 	ctxReqID := middleware.GetRequestID(r.Context())
 	agentID := r.PathValue("id")
 	actorID := h.extractActor(r)
+	authOrgID := middleware.GetOrgID(r.Context())
 
-	if err := h.controller.ResumeAgent(r.Context(), "", agentID, actorID); err != nil {
+	if err := h.controller.ResumeAgent(r.Context(), authOrgID, agentID, actorID); err != nil {
 		writeError(w, http.StatusBadRequest, "RESUME_FAILED", err.Error(), ctxReqID)
 		return
 	}
@@ -68,6 +70,12 @@ func (h *EmergencyHandler) HandlePauseOrganization(w http.ResponseWriter, r *htt
 	ctxReqID := middleware.GetRequestID(r.Context())
 	orgID := r.PathValue("id")
 	actorID := h.extractActor(r)
+	authOrgID := middleware.GetOrgID(r.Context())
+
+	if authOrgID != "" && authOrgID != orgID {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "cross-organization access denied", ctxReqID)
+		return
+	}
 
 	if err := h.controller.PauseOrganization(r.Context(), orgID, actorID); err != nil {
 		writeError(w, http.StatusBadRequest, "PAUSE_FAILED", err.Error(), ctxReqID)
@@ -88,6 +96,12 @@ func (h *EmergencyHandler) HandleResumeOrganization(w http.ResponseWriter, r *ht
 	ctxReqID := middleware.GetRequestID(r.Context())
 	orgID := r.PathValue("id")
 	actorID := h.extractActor(r)
+	authOrgID := middleware.GetOrgID(r.Context())
+
+	if authOrgID != "" && authOrgID != orgID {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "cross-organization access denied", ctxReqID)
+		return
+	}
 
 	if err := h.controller.ResumeOrganization(r.Context(), orgID, actorID); err != nil {
 		writeError(w, http.StatusBadRequest, "RESUME_FAILED", err.Error(), ctxReqID)

@@ -143,6 +143,7 @@ type Repository interface {
 	// Agent operations
 	SaveAgent(ctx context.Context, a *Agent) error
 	GetAgent(ctx context.Context, id string) (*Agent, error)
+	GetAgentStatus(ctx context.Context, id string) (string, error)
 	ListAgents(ctx context.Context) ([]*Agent, error)
 
 	// Service operations
@@ -412,6 +413,16 @@ func (m *MemoryRepository) GetAgent(ctx context.Context, id string) (*Agent, err
 	}
 	copyA := *a
 	return &copyA, nil
+}
+
+func (m *MemoryRepository) GetAgentStatus(ctx context.Context, id string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	a, ok := m.agents[id]
+	if !ok {
+		return "", ErrNotFound
+	}
+	return a.Status, nil
 }
 
 func (m *MemoryRepository) ListAgents(ctx context.Context) ([]*Agent, error) {
@@ -1198,6 +1209,14 @@ func (p *PostgresRepository) GetAgent(ctx context.Context, id string) (*Agent, e
 		return nil, err
 	}
 	return &a, nil
+}
+
+func (p *PostgresRepository) GetAgentStatus(ctx context.Context, id string) (string, error) {
+	a, err := p.GetAgent(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	return a.Status, nil
 }
 
 func (p *PostgresRepository) ListAgents(ctx context.Context) ([]*Agent, error) {
