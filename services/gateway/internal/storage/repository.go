@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,68 +18,228 @@ var (
 	ErrAlreadyExists = errors.New("record already exists")
 )
 
-// Agent represents an autonomous agent entity.
-type Agent struct {
+// Organization represents a tenant boundary.
+type Organization struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// Repository defines storage operations for agents, services, intents, and executions.
+// Agent represents an autonomous virtual economic actor.
+type Agent struct {
+	ID             string    `json:"id"`
+	OrganizationID string    `json:"organization_id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	Status         string    `json:"status"`
+	PolicyID       string    `json:"policy_id,omitempty"`
+	VaultAddress   string    `json:"vault_address,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// Policy defines spending rules persisted for an agent/org.
+type Policy struct {
+	ID                    string    `json:"id"`
+	OrganizationID        string    `json:"organization_id"`
+	AgentID               string    `json:"agent_id"`
+	Enabled               bool      `json:"enabled"`
+	PerTransactionLimit   string    `json:"per_transaction_limit"`
+	DailyLimit            string    `json:"daily_limit"`
+	MaxTransactionsPerDay int       `json:"max_transactions_per_day"`
+	ApprovalThreshold     string    `json:"approval_threshold"`
+	AllowedAssets         string    `json:"allowed_assets"`
+	AllowedRecipients     string    `json:"allowed_recipients,omitempty"`
+	BlockedRecipients     string    `json:"blocked_recipients,omitempty"`
+	CreatedAt             time.Time `json:"created_at"`
+	UpdatedAt             time.Time `json:"updated_at"`
+}
+
+// Approval represents a human authorization record.
+type Approval struct {
+	ID              string     `json:"id"`
+	OrganizationID  string     `json:"organization_id"`
+	PaymentIntentID string     `json:"payment_intent_id"`
+	Required        bool       `json:"required"`
+	Status          string     `json:"status"` // "PENDING", "APPROVED", "REJECTED", "EXPIRED"
+	RequestedAt     time.Time  `json:"requested_at"`
+	ResolvedAt      *time.Time `json:"resolved_at,omitempty"`
+	ApprovedBy      string     `json:"approved_by,omitempty"`
+	RejectionReason string     `json:"rejection_reason,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+}
+
+// AuditEvent represents an append-only audit record.
+type AuditEvent struct {
+	ID             string    `json:"id"`
+	OrganizationID string    `json:"organization_id"`
+	EventType      string    `json:"event_type"`
+	ActorType      string    `json:"actor_type"`
+	ActorID        string    `json:"actor_id"`
+	ResourceType   string    `json:"resource_type"`
+	ResourceID     string    `json:"resource_id"`
+	RequestID      string    `json:"request_id"`
+	Timestamp      time.Time `json:"timestamp"`
+	Metadata       string    `json:"metadata"`
+}
+
+// Repository defines storage operations for the AgentPay domain.
 type Repository interface {
+	// Organization operations
+	SaveOrganization(ctx context.Context, o *Organization) error
+	GetOrganization(ctx context.Context, id string) (*Organization, error)
+	ListOrganizations(ctx context.Context) ([]*Organization, error)
+
+	// Agent operations
 	SaveAgent(ctx context.Context, a *Agent) error
 	GetAgent(ctx context.Context, id string) (*Agent, error)
 	ListAgents(ctx context.Context) ([]*Agent, error)
 
+	// Service operations
 	SaveService(ctx context.Context, s *registry.Service) error
 	GetService(ctx context.Context, id string) (*registry.Service, error)
 	ListServices(ctx context.Context) ([]*registry.Service, error)
 
+	// Policy operations
+	SavePolicy(ctx context.Context, p *Policy) error
+	GetPolicy(ctx context.Context, id string) (*Policy, error)
+	GetPolicyByAgent(ctx context.Context, orgID, agentID string) (*Policy, error)
+
+	// PaymentIntent operations
 	SaveIntent(ctx context.Context, pi *intent.PaymentIntent) error
 	GetIntent(ctx context.Context, id string) (*intent.PaymentIntent, error)
+	GetIntentByRequestID(ctx context.Context, orgID, requestID string) (*intent.PaymentIntent, error)
 	ListIntents(ctx context.Context) ([]*intent.PaymentIntent, error)
 	UpdateIntentStatus(ctx context.Context, id string, status intent.IntentStatus, updatedAt time.Time) error
 	CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus intent.IntentStatus, newStatus intent.IntentStatus, updatedAt time.Time) (bool, error)
 
+	// PaymentExecution operations
 	SaveExecution(ctx context.Context, ex *intent.PaymentExecutionRecord) error
 	GetExecution(ctx context.Context, intentID string) (*intent.PaymentExecutionRecord, error)
 	ListExecutions(ctx context.Context) ([]*intent.PaymentExecutionRecord, error)
+
+	// Approval operations
+	SaveApproval(ctx context.Context, app *Approval) error
+	GetApproval(ctx context.Context, id string) (*Approval, error)
+	GetApprovalByIntent(ctx context.Context, intentID string) (*Approval, error)
+	ListApprovals(ctx context.Context, orgID string) ([]*Approval, error)
+	UpdateApprovalStatus(ctx context.Context, id string, status string, approver string, reason string, resolvedAt time.Time) error
+
+	// AuditEvent operations (Append-only)
+	SaveAuditEvent(ctx context.Context, evt *AuditEvent) error
+	ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error)
 }
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
 type MemoryRepository struct {
-	mu         sync.RWMutex
-	agents     map[string]*Agent
-	services   map[string]*registry.Service
-	intents    map[string]*intent.PaymentIntent
-	executions map[string]*intent.PaymentExecutionRecord
+	mu            sync.RWMutex
+	organizations map[string]*Organization
+	agents        map[string]*Agent
+	services      map[string]*registry.Service
+	policies      map[string]*Policy
+	intents       map[string]*intent.PaymentIntent
+	executions    map[string]*intent.PaymentExecutionRecord
+	approvals     map[string]*Approval
+	auditEvents   []*AuditEvent
 }
 
-// NewMemoryRepository creates a new in-memory repository instance.
+// NewMemoryRepository creates a new in-memory repository instance seeded with defaults.
 func NewMemoryRepository() *MemoryRepository {
+	now := time.Now()
 	repo := &MemoryRepository{
-		agents:     make(map[string]*Agent),
-		services:   make(map[string]*registry.Service),
-		intents:    make(map[string]*intent.PaymentIntent),
-		executions: make(map[string]*intent.PaymentExecutionRecord),
+		organizations: make(map[string]*Organization),
+		agents:        make(map[string]*Agent),
+		services:      make(map[string]*registry.Service),
+		policies:      make(map[string]*Policy),
+		intents:       make(map[string]*intent.PaymentIntent),
+		executions:    make(map[string]*intent.PaymentExecutionRecord),
+		approvals:     make(map[string]*Approval),
+		auditEvents:   make([]*AuditEvent, 0),
+	}
+
+	// Seed default organization
+	repo.organizations["org_default"] = &Organization{
+		ID:        "org_default",
+		Name:      "Default Organization",
+		Status:    "ACTIVE",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	// Seed default policy for research-agent
+	repo.policies["pol_research_default"] = &Policy{
+		ID:                    "pol_research_default",
+		OrganizationID:        "org_default",
+		AgentID:               "research-agent",
+		Enabled:               true,
+		PerTransactionLimit:   "500000",  // 0.50 USDC
+		DailyLimit:            "5000000", // 5.00 USDC
+		MaxTransactionsPerDay: 20,
+		ApprovalThreshold:     "1000000", // 1.00 USDC
+		AllowedAssets:         "USDC",
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	}
 
 	// Seed default research-agent
 	repo.agents["research-agent"] = &Agent{
-		ID:        "research-agent",
-		Name:      "Arc Research Agent",
-		Status:    "ACTIVE",
-		CreatedAt: time.Now(),
+		ID:             "research-agent",
+		OrganizationID: "org_default",
+		Name:           "Arc Research Agent",
+		Description:    "Autonomous intelligence and data retrieval agent",
+		Status:         "ACTIVE",
+		PolicyID:       "pol_research_default",
+		VaultAddress:   "0x1111111111111111111111111111111111111111",
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}
 
 	return repo
 }
 
+// --- Organization Methods ---
+
+func (m *MemoryRepository) SaveOrganization(ctx context.Context, o *Organization) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyO := *o
+	m.organizations[o.ID] = &copyO
+	return nil
+}
+
+func (m *MemoryRepository) GetOrganization(ctx context.Context, id string) (*Organization, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	o, ok := m.organizations[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyO := *o
+	return &copyO, nil
+}
+
+func (m *MemoryRepository) ListOrganizations(ctx context.Context) ([]*Organization, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*Organization, 0, len(m.organizations))
+	for _, o := range m.organizations {
+		copyO := *o
+		res = append(res, &copyO)
+	}
+	return res, nil
+}
+
+// --- Agent Methods ---
+
 func (m *MemoryRepository) SaveAgent(ctx context.Context, a *Agent) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	copyA := *a
+	if copyA.OrganizationID == "" {
+		copyA.OrganizationID = "org_default"
+	}
 	m.agents[a.ID] = &copyA
 	return nil
 }
@@ -104,6 +265,8 @@ func (m *MemoryRepository) ListAgents(ctx context.Context) ([]*Agent, error) {
 	}
 	return res, nil
 }
+
+// --- Service Methods ---
 
 func (m *MemoryRepository) SaveService(ctx context.Context, s *registry.Service) error {
 	m.mu.Lock()
@@ -135,6 +298,44 @@ func (m *MemoryRepository) ListServices(ctx context.Context) ([]*registry.Servic
 	return res, nil
 }
 
+// --- Policy Methods ---
+
+func (m *MemoryRepository) SavePolicy(ctx context.Context, p *Policy) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyP := *p
+	if copyP.OrganizationID == "" {
+		copyP.OrganizationID = "org_default"
+	}
+	m.policies[p.ID] = &copyP
+	return nil
+}
+
+func (m *MemoryRepository) GetPolicy(ctx context.Context, id string) (*Policy, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	p, ok := m.policies[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyP := *p
+	return &copyP, nil
+}
+
+func (m *MemoryRepository) GetPolicyByAgent(ctx context.Context, orgID, agentID string) (*Policy, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, p := range m.policies {
+		if (orgID == "" || p.OrganizationID == orgID) && p.AgentID == agentID {
+			copyP := *p
+			return &copyP, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
+// --- PaymentIntent Methods ---
+
 func (m *MemoryRepository) SaveIntent(ctx context.Context, pi *intent.PaymentIntent) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -142,6 +343,9 @@ func (m *MemoryRepository) SaveIntent(ctx context.Context, pi *intent.PaymentInt
 		return ErrAlreadyExists
 	}
 	copyPI := *pi
+	if copyPI.OrganizationID == "" {
+		copyPI.OrganizationID = "org_default"
+	}
 	m.intents[pi.IntentID] = &copyPI
 	return nil
 }
@@ -155,6 +359,21 @@ func (m *MemoryRepository) GetIntent(ctx context.Context, id string) (*intent.Pa
 	}
 	copyPI := *pi
 	return &copyPI, nil
+}
+
+func (m *MemoryRepository) GetIntentByRequestID(ctx context.Context, orgID, requestID string) (*intent.PaymentIntent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if requestID == "" {
+		return nil, ErrNotFound
+	}
+	for _, pi := range m.intents {
+		if (orgID == "" || pi.OrganizationID == orgID) && pi.RequestID == requestID {
+			copyPI := *pi
+			return &copyPI, nil
+		}
+	}
+	return nil, ErrNotFound
 }
 
 func (m *MemoryRepository) ListIntents(ctx context.Context) ([]*intent.PaymentIntent, error) {
@@ -180,8 +399,6 @@ func (m *MemoryRepository) UpdateIntentStatus(ctx context.Context, id string, st
 	return nil
 }
 
-// CompareAndSwapIntentStatus atomically transitions intent status only if it currently equals expectedStatus.
-// Returns (true, nil) if successfully transitioned, or (false, nil) if the status did not match expectedStatus.
 func (m *MemoryRepository) CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus intent.IntentStatus, newStatus intent.IntentStatus, updatedAt time.Time) (bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -196,6 +413,8 @@ func (m *MemoryRepository) CompareAndSwapIntentStatus(ctx context.Context, id st
 	pi.UpdatedAt = updatedAt
 	return true, nil
 }
+
+// --- PaymentExecution Methods ---
 
 func (m *MemoryRepository) SaveExecution(ctx context.Context, ex *intent.PaymentExecutionRecord) error {
 	m.mu.Lock()
@@ -227,6 +446,99 @@ func (m *MemoryRepository) ListExecutions(ctx context.Context) ([]*intent.Paymen
 	return res, nil
 }
 
+// --- Approval Methods ---
+
+func (m *MemoryRepository) SaveApproval(ctx context.Context, app *Approval) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyApp := *app
+	if copyApp.OrganizationID == "" {
+		copyApp.OrganizationID = "org_default"
+	}
+	m.approvals[app.ID] = &copyApp
+	return nil
+}
+
+func (m *MemoryRepository) GetApproval(ctx context.Context, id string) (*Approval, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	app, ok := m.approvals[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyApp := *app
+	return &copyApp, nil
+}
+
+func (m *MemoryRepository) GetApprovalByIntent(ctx context.Context, intentID string) (*Approval, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, app := range m.approvals {
+		if app.PaymentIntentID == intentID {
+			copyApp := *app
+			return &copyApp, nil
+		}
+	}
+	return nil, ErrNotFound
+}
+
+func (m *MemoryRepository) ListApprovals(ctx context.Context, orgID string) ([]*Approval, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*Approval, 0, len(m.approvals))
+	for _, app := range m.approvals {
+		if orgID == "" || app.OrganizationID == orgID {
+			copyApp := *app
+			res = append(res, &copyApp)
+		}
+	}
+	return res, nil
+}
+
+func (m *MemoryRepository) UpdateApprovalStatus(ctx context.Context, id string, status string, approver string, reason string, resolvedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	app, ok := m.approvals[id]
+	if !ok {
+		return ErrNotFound
+	}
+	app.Status = status
+	app.ApprovedBy = approver
+	app.RejectionReason = reason
+	app.ResolvedAt = &resolvedAt
+	return nil
+}
+
+// --- AuditEvent Methods (Append-only) ---
+
+func (m *MemoryRepository) SaveAuditEvent(ctx context.Context, evt *AuditEvent) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyEvt := *evt
+	if copyEvt.OrganizationID == "" {
+		copyEvt.OrganizationID = "org_default"
+	}
+	m.auditEvents = append(m.auditEvents, &copyEvt)
+	return nil
+}
+
+func (m *MemoryRepository) ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*AuditEvent, 0, len(m.auditEvents))
+	for _, evt := range m.auditEvents {
+		if orgID == "" || evt.OrganizationID == orgID {
+			copyEvt := *evt
+			res = append(res, &copyEvt)
+		}
+	}
+	return res, nil
+}
+
+// =============================================================================
+// PostgreSQL Implementation
+// =============================================================================
+
 // PostgresRepository implements Repository using a PostgreSQL connection pool.
 type PostgresRepository struct {
 	db *sql.DB
@@ -237,18 +549,67 @@ func NewPostgresRepository(db *sql.DB) *PostgresRepository {
 	return &PostgresRepository{db: db}
 }
 
+// --- Organization Methods ---
+
+func (p *PostgresRepository) SaveOrganization(ctx context.Context, o *Organization) error {
+	query := `INSERT INTO organizations (id, name, status, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5)
+	          ON CONFLICT (id) DO UPDATE SET name = $2, status = $3, updated_at = $5`
+	_, err := p.db.ExecContext(ctx, query, o.ID, o.Name, o.Status, o.CreatedAt, o.UpdatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetOrganization(ctx context.Context, id string) (*Organization, error) {
+	query := `SELECT id, name, status, created_at, updated_at FROM organizations WHERE id = $1`
+	row := p.db.QueryRowContext(ctx, query, id)
+	var o Organization
+	if err := row.Scan(&o.ID, &o.Name, &o.Status, &o.CreatedAt, &o.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &o, nil
+}
+
+func (p *PostgresRepository) ListOrganizations(ctx context.Context) ([]*Organization, error) {
+	query := `SELECT id, name, status, created_at, updated_at FROM organizations ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*Organization
+	for rows.Next() {
+		var o Organization
+		if err := rows.Scan(&o.ID, &o.Name, &o.Status, &o.CreatedAt, &o.UpdatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &o)
+	}
+	return res, rows.Err()
+}
+
+// --- Agent Methods ---
+
 func (p *PostgresRepository) SaveAgent(ctx context.Context, a *Agent) error {
-	query := `INSERT INTO agents (id, name, status, created_at) VALUES ($1, $2, $3, $4)
-	          ON CONFLICT (id) DO UPDATE SET name = $2, status = $3`
-	_, err := p.db.ExecContext(ctx, query, a.ID, a.Name, a.Status, a.CreatedAt)
+	orgID := a.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO agents (id, organization_id, name, description, status, policy_id, vault_address, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	          ON CONFLICT (id) DO UPDATE SET name = $3, description = $4, status = $5, policy_id = $6, vault_address = $7, updated_at = $9`
+	_, err := p.db.ExecContext(ctx, query, a.ID, orgID, a.Name, a.Description, a.Status, a.PolicyID, a.VaultAddress, a.CreatedAt, a.UpdatedAt)
 	return err
 }
 
 func (p *PostgresRepository) GetAgent(ctx context.Context, id string) (*Agent, error) {
-	query := `SELECT id, name, status, created_at FROM agents WHERE id = $1`
+	query := `SELECT id, COALESCE(organization_id, 'org_default'), name, COALESCE(description, ''), status, COALESCE(policy_id, ''), COALESCE(vault_address, ''), created_at, COALESCE(updated_at, created_at)
+	          FROM agents WHERE id = $1`
 	row := p.db.QueryRowContext(ctx, query, id)
 	var a Agent
-	if err := row.Scan(&a.ID, &a.Name, &a.Status, &a.CreatedAt); err != nil {
+	if err := row.Scan(&a.ID, &a.OrganizationID, &a.Name, &a.Description, &a.Status, &a.PolicyID, &a.VaultAddress, &a.CreatedAt, &a.UpdatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
@@ -256,6 +617,27 @@ func (p *PostgresRepository) GetAgent(ctx context.Context, id string) (*Agent, e
 	}
 	return &a, nil
 }
+
+func (p *PostgresRepository) ListAgents(ctx context.Context) ([]*Agent, error) {
+	query := `SELECT id, COALESCE(organization_id, 'org_default'), name, COALESCE(description, ''), status, COALESCE(policy_id, ''), COALESCE(vault_address, ''), created_at, COALESCE(updated_at, created_at)
+	          FROM agents ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*Agent
+	for rows.Next() {
+		var a Agent
+		if err := rows.Scan(&a.ID, &a.OrganizationID, &a.Name, &a.Description, &a.Status, &a.PolicyID, &a.VaultAddress, &a.CreatedAt, &a.UpdatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &a)
+	}
+	return res, rows.Err()
+}
+
+// --- Service Methods ---
 
 func (p *PostgresRepository) SaveService(ctx context.Context, s *registry.Service) error {
 	query := `INSERT INTO services (id, name, recipient, asset, enabled, max_price, fixed_price, created_at)
@@ -278,20 +660,108 @@ func (p *PostgresRepository) GetService(ctx context.Context, id string) (*regist
 	return &s, nil
 }
 
+func (p *PostgresRepository) ListServices(ctx context.Context) ([]*registry.Service, error) {
+	query := `SELECT id, name, recipient, asset, enabled, max_price, COALESCE(fixed_price, '') FROM services ORDER BY created_at DESC`
+	rows, err := p.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*registry.Service
+	for rows.Next() {
+		var s registry.Service
+		if err := rows.Scan(&s.ID, &s.Name, &s.Recipient, &s.Asset, &s.Enabled, &s.MaxPrice, &s.FixedPrice); err != nil {
+			return nil, err
+		}
+		res = append(res, &s)
+	}
+	return res, rows.Err()
+}
+
+// --- Policy Methods ---
+
+func (p *PostgresRepository) SavePolicy(ctx context.Context, pol *Policy) error {
+	orgID := pol.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO policies (id, organization_id, agent_id, enabled, per_transaction_limit, daily_limit, max_transactions_per_day, approval_threshold, allowed_assets, allowed_recipients, blocked_recipients, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	          ON CONFLICT (id) DO UPDATE SET enabled = $4, per_transaction_limit = $5, daily_limit = $6, max_transactions_per_day = $7, approval_threshold = $8, allowed_assets = $9, allowed_recipients = $10, blocked_recipients = $11, updated_at = $13`
+	_, err := p.db.ExecContext(ctx, query, pol.ID, orgID, pol.AgentID, pol.Enabled, pol.PerTransactionLimit, pol.DailyLimit, pol.MaxTransactionsPerDay, pol.ApprovalThreshold, pol.AllowedAssets, pol.AllowedRecipients, pol.BlockedRecipients, pol.CreatedAt, pol.UpdatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetPolicy(ctx context.Context, id string) (*Policy, error) {
+	query := `SELECT id, organization_id, agent_id, enabled, per_transaction_limit, daily_limit, max_transactions_per_day, approval_threshold, allowed_assets, COALESCE(allowed_recipients, ''), COALESCE(blocked_recipients, ''), created_at, updated_at
+	          FROM policies WHERE id = $1`
+	row := p.db.QueryRowContext(ctx, query, id)
+	var pol Policy
+	if err := row.Scan(&pol.ID, &pol.OrganizationID, &pol.AgentID, &pol.Enabled, &pol.PerTransactionLimit, &pol.DailyLimit, &pol.MaxTransactionsPerDay, &pol.ApprovalThreshold, &pol.AllowedAssets, &pol.AllowedRecipients, &pol.BlockedRecipients, &pol.CreatedAt, &pol.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &pol, nil
+}
+
+func (p *PostgresRepository) GetPolicyByAgent(ctx context.Context, orgID, agentID string) (*Policy, error) {
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `SELECT id, organization_id, agent_id, enabled, per_transaction_limit, daily_limit, max_transactions_per_day, approval_threshold, allowed_assets, COALESCE(allowed_recipients, ''), COALESCE(blocked_recipients, ''), created_at, updated_at
+	          FROM policies WHERE organization_id = $1 AND agent_id = $2 LIMIT 1`
+	row := p.db.QueryRowContext(ctx, query, orgID, agentID)
+	var pol Policy
+	if err := row.Scan(&pol.ID, &pol.OrganizationID, &pol.AgentID, &pol.Enabled, &pol.PerTransactionLimit, &pol.DailyLimit, &pol.MaxTransactionsPerDay, &pol.ApprovalThreshold, &pol.AllowedAssets, &pol.AllowedRecipients, &pol.BlockedRecipients, &pol.CreatedAt, &pol.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &pol, nil
+}
+
+// --- PaymentIntent Methods ---
+
 func (p *PostgresRepository) SaveIntent(ctx context.Context, pi *intent.PaymentIntent) error {
-	query := `INSERT INTO payment_intents (id, agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, status, expires_at, created_at, updated_at)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
-	_, err := p.db.ExecContext(ctx, query, pi.IntentID, pi.AgentID, pi.VaultAddress, pi.ServiceID, pi.Recipient, pi.Amount, pi.Asset, pi.Purpose, pi.Justification, string(pi.Status), pi.ExpiresAt, pi.CreatedAt, pi.UpdatedAt)
+	orgID := pi.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO payment_intents (id, organization_id, agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, request_id, status, policy_decision, policy_reason, requires_approval, expires_at, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`
+	_, err := p.db.ExecContext(ctx, query, pi.IntentID, orgID, pi.AgentID, pi.VaultAddress, pi.ServiceID, pi.Recipient, pi.Amount, pi.Asset, pi.Purpose, pi.Justification, pi.RequestID, string(pi.Status), pi.PolicyDecision, pi.PolicyReason, pi.RequiresApproval, pi.ExpiresAt, pi.CreatedAt, pi.UpdatedAt)
 	return err
 }
 
 func (p *PostgresRepository) GetIntent(ctx context.Context, id string) (*intent.PaymentIntent, error) {
-	query := `SELECT id, agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, status, expires_at, created_at, updated_at
+	query := `SELECT id, COALESCE(organization_id, 'org_default'), agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, COALESCE(request_id, ''), status, COALESCE(policy_decision, ''), COALESCE(policy_reason, ''), COALESCE(requires_approval, FALSE), expires_at, created_at, updated_at
 	          FROM payment_intents WHERE id = $1`
 	row := p.db.QueryRowContext(ctx, query, id)
 	var pi intent.PaymentIntent
 	var statusStr string
-	if err := row.Scan(&pi.IntentID, &pi.AgentID, &pi.VaultAddress, &pi.ServiceID, &pi.Recipient, &pi.Amount, &pi.Asset, &pi.Purpose, &pi.Justification, &statusStr, &pi.ExpiresAt, &pi.CreatedAt, &pi.UpdatedAt); err != nil {
+	if err := row.Scan(&pi.IntentID, &pi.OrganizationID, &pi.AgentID, &pi.VaultAddress, &pi.ServiceID, &pi.Recipient, &pi.Amount, &pi.Asset, &pi.Purpose, &pi.Justification, &pi.RequestID, &statusStr, &pi.PolicyDecision, &pi.PolicyReason, &pi.RequiresApproval, &pi.ExpiresAt, &pi.CreatedAt, &pi.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	pi.Status = intent.IntentStatus(statusStr)
+	return &pi, nil
+}
+
+func (p *PostgresRepository) GetIntentByRequestID(ctx context.Context, orgID, requestID string) (*intent.PaymentIntent, error) {
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `SELECT id, COALESCE(organization_id, 'org_default'), agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, COALESCE(request_id, ''), status, COALESCE(policy_decision, ''), COALESCE(policy_reason, ''), COALESCE(requires_approval, FALSE), expires_at, created_at, updated_at
+	          FROM payment_intents WHERE organization_id = $1 AND request_id = $2 LIMIT 1`
+	row := p.db.QueryRowContext(ctx, query, orgID, requestID)
+	var pi intent.PaymentIntent
+	var statusStr string
+	if err := row.Scan(&pi.IntentID, &pi.OrganizationID, &pi.AgentID, &pi.VaultAddress, &pi.ServiceID, &pi.Recipient, &pi.Amount, &pi.Asset, &pi.Purpose, &pi.Justification, &pi.RequestID, &statusStr, &pi.PolicyDecision, &pi.PolicyReason, &pi.RequiresApproval, &pi.ExpiresAt, &pi.CreatedAt, &pi.UpdatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
@@ -317,7 +787,6 @@ func (p *PostgresRepository) UpdateIntentStatus(ctx context.Context, id string, 
 	return nil
 }
 
-// CompareAndSwapIntentStatus atomically transitions intent status only if it currently equals expectedStatus in PostgreSQL.
 func (p *PostgresRepository) CompareAndSwapIntentStatus(ctx context.Context, id string, expectedStatus intent.IntentStatus, newStatus intent.IntentStatus, updatedAt time.Time) (bool, error) {
 	query := `UPDATE payment_intents SET status = $1, updated_at = $2 WHERE id = $3 AND status = $4`
 	res, err := p.db.ExecContext(ctx, query, string(newStatus), updatedAt, id, string(expectedStatus))
@@ -330,6 +799,8 @@ func (p *PostgresRepository) CompareAndSwapIntentStatus(ctx context.Context, id 
 	}
 	return rows > 0, nil
 }
+
+// --- PaymentExecution Methods ---
 
 func (p *PostgresRepository) SaveExecution(ctx context.Context, ex *intent.PaymentExecutionRecord) error {
 	query := `INSERT INTO payment_executions (intent_id, transaction_hash, status, submitted_at, confirmed_at, error_code)
@@ -353,44 +824,8 @@ func (p *PostgresRepository) GetExecution(ctx context.Context, intentID string) 
 	return &ex, nil
 }
 
-func (p *PostgresRepository) ListAgents(ctx context.Context) ([]*Agent, error) {
-	query := `SELECT id, name, status, created_at FROM agents ORDER BY created_at DESC`
-	rows, err := p.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var res []*Agent
-	for rows.Next() {
-		var a Agent
-		if err := rows.Scan(&a.ID, &a.Name, &a.Status, &a.CreatedAt); err != nil {
-			return nil, err
-		}
-		res = append(res, &a)
-	}
-	return res, rows.Err()
-}
-
-func (p *PostgresRepository) ListServices(ctx context.Context) ([]*registry.Service, error) {
-	query := `SELECT id, name, recipient, asset, enabled, max_price, COALESCE(fixed_price, '') FROM services ORDER BY created_at DESC`
-	rows, err := p.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var res []*registry.Service
-	for rows.Next() {
-		var s registry.Service
-		if err := rows.Scan(&s.ID, &s.Name, &s.Recipient, &s.Asset, &s.Enabled, &s.MaxPrice, &s.FixedPrice); err != nil {
-			return nil, err
-		}
-		res = append(res, &s)
-	}
-	return res, rows.Err()
-}
-
 func (p *PostgresRepository) ListIntents(ctx context.Context) ([]*intent.PaymentIntent, error) {
-	query := `SELECT id, agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, status, expires_at, created_at, updated_at
+	query := `SELECT id, COALESCE(organization_id, 'org_default'), agent_id, vault_address, service_id, recipient, amount, asset, purpose, justification, COALESCE(request_id, ''), status, COALESCE(policy_decision, ''), COALESCE(policy_reason, ''), COALESCE(requires_approval, FALSE), expires_at, created_at, updated_at
 	          FROM payment_intents ORDER BY created_at DESC`
 	rows, err := p.db.QueryContext(ctx, query)
 	if err != nil {
@@ -401,7 +836,7 @@ func (p *PostgresRepository) ListIntents(ctx context.Context) ([]*intent.Payment
 	for rows.Next() {
 		var pi intent.PaymentIntent
 		var statusStr string
-		if err := rows.Scan(&pi.IntentID, &pi.AgentID, &pi.VaultAddress, &pi.ServiceID, &pi.Recipient, &pi.Amount, &pi.Asset, &pi.Purpose, &pi.Justification, &statusStr, &pi.ExpiresAt, &pi.CreatedAt, &pi.UpdatedAt); err != nil {
+		if err := rows.Scan(&pi.IntentID, &pi.OrganizationID, &pi.AgentID, &pi.VaultAddress, &pi.ServiceID, &pi.Recipient, &pi.Amount, &pi.Asset, &pi.Purpose, &pi.Justification, &pi.RequestID, &statusStr, &pi.PolicyDecision, &pi.PolicyReason, &pi.RequiresApproval, &pi.ExpiresAt, &pi.CreatedAt, &pi.UpdatedAt); err != nil {
 			return nil, err
 		}
 		pi.Status = intent.IntentStatus(statusStr)
@@ -429,6 +864,115 @@ func (p *PostgresRepository) ListExecutions(ctx context.Context) ([]*intent.Paym
 	return res, rows.Err()
 }
 
+// --- Approval Methods ---
+
+func (p *PostgresRepository) SaveApproval(ctx context.Context, app *Approval) error {
+	orgID := app.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO approvals (id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, approved_by, rejection_reason, created_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	          ON CONFLICT (id) DO UPDATE SET status = $5, resolved_at = $7, approved_by = $8, rejection_reason = $9`
+	_, err := p.db.ExecContext(ctx, query, app.ID, orgID, app.PaymentIntentID, app.Required, app.Status, app.RequestedAt, app.ResolvedAt, app.ApprovedBy, app.RejectionReason, app.CreatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetApproval(ctx context.Context, id string) (*Approval, error) {
+	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), created_at
+	          FROM approvals WHERE id = $1`
+	row := p.db.QueryRowContext(ctx, query, id)
+	var app Approval
+	if err := row.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.CreatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &app, nil
+}
+
+func (p *PostgresRepository) GetApprovalByIntent(ctx context.Context, intentID string) (*Approval, error) {
+	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), created_at
+	          FROM approvals WHERE payment_intent_id = $1 LIMIT 1`
+	row := p.db.QueryRowContext(ctx, query, intentID)
+	var app Approval
+	if err := row.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.CreatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &app, nil
+}
+
+func (p *PostgresRepository) ListApprovals(ctx context.Context, orgID string) ([]*Approval, error) {
+	query := `SELECT id, organization_id, payment_intent_id, required, status, requested_at, resolved_at, COALESCE(approved_by, ''), COALESCE(rejection_reason, ''), created_at
+	          FROM approvals WHERE ($1 = '' OR organization_id = $1) ORDER BY requested_at DESC`
+	rows, err := p.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*Approval
+	for rows.Next() {
+		var app Approval
+		if err := rows.Scan(&app.ID, &app.OrganizationID, &app.PaymentIntentID, &app.Required, &app.Status, &app.RequestedAt, &app.ResolvedAt, &app.ApprovedBy, &app.RejectionReason, &app.CreatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, &app)
+	}
+	return res, rows.Err()
+}
+
+func (p *PostgresRepository) UpdateApprovalStatus(ctx context.Context, id string, status string, approver string, reason string, resolvedAt time.Time) error {
+	query := `UPDATE approvals SET status = $1, approved_by = $2, rejection_reason = $3, resolved_at = $4 WHERE id = $5`
+	res, err := p.db.ExecContext(ctx, query, status, approver, reason, resolvedAt, id)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// --- AuditEvent Methods (Append-only) ---
+
+func (p *PostgresRepository) SaveAuditEvent(ctx context.Context, evt *AuditEvent) error {
+	orgID := evt.OrganizationID
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	query := `INSERT INTO audit_events (id, organization_id, event_type, actor_type, actor_id, resource_type, resource_id, request_id, timestamp, metadata)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+	_, err := p.db.ExecContext(ctx, query, evt.ID, orgID, evt.EventType, evt.ActorType, evt.ActorID, evt.ResourceType, evt.ResourceID, evt.RequestID, evt.Timestamp, evt.Metadata)
+	return err
+}
+
+func (p *PostgresRepository) ListAuditEvents(ctx context.Context, orgID string) ([]*AuditEvent, error) {
+	query := `SELECT id, organization_id, event_type, actor_type, actor_id, resource_type, resource_id, request_id, timestamp, metadata
+	          FROM audit_events WHERE ($1 = '' OR organization_id = $1) ORDER BY timestamp DESC LIMIT 500`
+	rows, err := p.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var res []*AuditEvent
+	for rows.Next() {
+		var evt AuditEvent
+		if err := rows.Scan(&evt.ID, &evt.OrganizationID, &evt.EventType, &evt.ActorType, &evt.ActorID, &evt.ResourceType, &evt.ResourceID, &evt.RequestID, &evt.Timestamp, &evt.Metadata); err != nil {
+			return nil, err
+		}
+		res = append(res, &evt)
+	}
+	return res, rows.Err()
+}
+
 // ApplyMigrations executes the initial schema migration statements.
 func ApplyMigrations(ctx context.Context, db *sql.DB, migrationSQL string) error {
 	tx, err := db.BeginTx(ctx, nil)
@@ -437,8 +981,15 @@ func ApplyMigrations(ctx context.Context, db *sql.DB, migrationSQL string) error
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.ExecContext(ctx, migrationSQL); err != nil {
-		return fmt.Errorf("migration execution failed: %w", err)
+	// Execute statements separated by semicolons or as a single block
+	for _, stmt := range strings.Split(migrationSQL, ";") {
+		cleanStmt := strings.TrimSpace(stmt)
+		if cleanStmt == "" {
+			continue
+		}
+		if _, err := tx.ExecContext(ctx, cleanStmt); err != nil {
+			return fmt.Errorf("migration execution failed on statement (%s): %w", cleanStmt, err)
+		}
 	}
 
 	return tx.Commit()

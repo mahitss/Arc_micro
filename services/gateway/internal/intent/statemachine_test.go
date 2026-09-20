@@ -11,10 +11,20 @@ func TestStateMachine_ValidTransitions(t *testing.T) {
 		to   IntentStatus
 	}{
 		{StatusCreated, StatusAuthorized},
+		{StatusCreated, StatusApprovalRequired},
 		{StatusCreated, StatusDenied},
 		{StatusCreated, StatusExpired},
+		{StatusCreated, StatusCancelled},
+		{StatusApprovalRequired, StatusApproved},
+		{StatusApprovalRequired, StatusRejected},
+		{StatusApprovalRequired, StatusExpired},
+		{StatusApprovalRequired, StatusCancelled},
+		{StatusApproved, StatusExecuting},
+		{StatusApproved, StatusExpired},
+		{StatusApproved, StatusCancelled},
 		{StatusAuthorized, StatusExecuting},
 		{StatusAuthorized, StatusExpired},
+		{StatusAuthorized, StatusCancelled},
 		{StatusExecuting, StatusSubmitted},
 		{StatusExecuting, StatusFailed},
 		{StatusSubmitted, StatusConfirmed},
@@ -39,9 +49,12 @@ func TestStateMachine_InvalidTransitionsRejected(t *testing.T) {
 		{StatusCreated, StatusConfirmed},
 		{StatusCreated, StatusExecuting},
 		{StatusCreated, StatusSubmitted},
+		{StatusApprovalRequired, StatusExecuting}, // Cannot execute before approval
+		{StatusApprovalRequired, StatusConfirmed}, // Cannot skip execution
 		{StatusAuthorized, StatusCreated},
 		{StatusExecuting, StatusCreated},
 		{StatusFailed, StatusExecuting},
+		{StatusDenied, StatusApproved}, // Cannot approve denied
 	}
 
 	for _, tt := range invalidTransitions {
@@ -90,5 +103,24 @@ func TestStateMachine_FailedCannotBecomeConfirmed(t *testing.T) {
 	err := ValidateTransition(StatusFailed, StatusConfirmed)
 	if err == nil {
 		t.Fatal("expected error: FAILED must never transition to CONFIRMED")
+	}
+}
+
+// TestStateMachine_CanExecute verifies executable states.
+func TestStateMachine_CanExecute(t *testing.T) {
+	if !CanExecute(StatusAuthorized) {
+		t.Fatal("expected StatusAuthorized to be executable")
+	}
+	if !CanExecute(StatusApproved) {
+		t.Fatal("expected StatusApproved to be executable")
+	}
+	if CanExecute(StatusApprovalRequired) {
+		t.Fatal("StatusApprovalRequired must NOT be executable")
+	}
+	if CanExecute(StatusDenied) {
+		t.Fatal("StatusDenied must NOT be executable")
+	}
+	if CanExecute(StatusCreated) {
+		t.Fatal("StatusCreated must NOT be executable")
 	}
 }

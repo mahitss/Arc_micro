@@ -18,12 +18,26 @@ func (e ErrInvalidTransition) Error() string {
 var validTransitions = map[IntentStatus][]IntentStatus{
 	StatusCreated: {
 		StatusAuthorized,
+		StatusApprovalRequired,
 		StatusDenied,
 		StatusExpired,
+		StatusCancelled,
+	},
+	StatusApprovalRequired: {
+		StatusApproved,
+		StatusRejected,
+		StatusExpired,
+		StatusCancelled,
+	},
+	StatusApproved: {
+		StatusExecuting,
+		StatusExpired,
+		StatusCancelled,
 	},
 	StatusAuthorized: {
 		StatusExecuting,
 		StatusExpired,
+		StatusCancelled,
 	},
 	StatusExecuting: {
 		StatusSubmitted,
@@ -38,6 +52,8 @@ var validTransitions = map[IntentStatus][]IntentStatus{
 	StatusConfirmed: {},
 	StatusFailed:    {},
 	StatusExpired:   {},
+	StatusRejected:  {},
+	StatusCancelled: {},
 }
 
 // ValidateTransition verifies whether transitioning from 'from' to 'to' is permitted.
@@ -56,7 +72,7 @@ func ValidateTransition(from, to IntentStatus) error {
 	return ErrInvalidTransition{From: from, To: to}
 }
 
-// CanExecute returns true if the intent is in an executable state (AUTHORIZED).
+// CanExecute returns true if the intent is in an executable state (AUTHORIZED or APPROVED).
 func CanExecute(status IntentStatus) bool {
-	return status == StatusAuthorized
+	return status == StatusAuthorized || status == StatusApproved
 }
