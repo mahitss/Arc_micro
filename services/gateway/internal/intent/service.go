@@ -472,6 +472,30 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 	intent.Status = StatusExecuting
 	intent.UpdatedAt = now
 
+	if s.dispatcher != nil {
+		correlationID := intent.RequestID
+		if correlationID == "" {
+			correlationID = intent.IntentID
+		}
+		execEvt := domain.NewDomainEvent(
+			domain.EventPaymentIntentExecuting,
+			intent.OrganizationID,
+			"SYSTEM",
+			"execution-gate",
+			intent.RequestID,
+			correlationID,
+			map[string]interface{}{
+				"intent_id": intent.IntentID,
+				"status":    string(StatusExecuting),
+				"amount":    intent.Amount,
+				"recipient": intent.Recipient,
+			},
+		)
+		execEvt.PaymentIntentID = intent.IntentID
+		execEvt.AgentID = intent.AgentID
+		s.dispatcher.DispatchEvent(ctx, execEvt)
+	}
+
 	// 2. Reserve treasury funds if treasury service is configured
 	if s.treasury != nil {
 		_, _ = s.treasury.ReserveFunds(ctx, intent.OrganizationID, intent.VaultAddress, intent.IntentID, intent.Amount)
@@ -562,6 +586,44 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 					"status":            string(StatusConfirmed),
 					"amount":            intent.Amount,
 					"recipient":         intent.Recipient,
+				},
+			)
+			evt.PaymentIntentID = intent.IntentID
+			evt.AgentID = intent.AgentID
+			evt.TransactionID = execResult.TransactionHash
+			s.dispatcher.DispatchEvent(ctx, evt)
+		}
+	} else if execResult.Status == blockchain.StateAmbiguous {
+		// Receipt unavailable / uncertain: keep in StatusSubmitted or StatusExecuting, record Ambiguous state
+		_ = s.repo.UpdateIntentStatus(ctx, intentID, StatusSubmitted, now)
+		intent.Status = StatusSubmitted
+		intent.UpdatedAt = now
+		_ = s.repo.SaveExecution(ctx, &PaymentExecutionRecord{
+			IntentID:        intentID,
+			TransactionHash: execResult.TransactionHash,
+			Status:          string(blockchain.StateAmbiguous),
+			ErrorCode:       "transaction receipt uncertain; awaiting reconciliation",
+		})
+
+		if s.dispatcher != nil {
+			correlationID := intent.RequestID
+			if correlationID == "" {
+				correlationID = intent.IntentID
+			}
+			evt := domain.NewDomainEvent(
+				domain.EventPaymentIntentAmbiguous,
+				intent.OrganizationID,
+				"SYSTEM",
+				"arc-executor",
+				intent.RequestID,
+				correlationID,
+				map[string]interface{}{
+					"intent_id":         intent.IntentID,
+					"transaction_hash":  execResult.TransactionHash,
+					"status":            string(blockchain.StateAmbiguous),
+					"amount":            intent.Amount,
+					"recipient":         intent.Recipient,
+					"reason":            "broadcast attempted but receipt confirmation timed out; flagged for reconciliation",
 				},
 			)
 			evt.PaymentIntentID = intent.IntentID

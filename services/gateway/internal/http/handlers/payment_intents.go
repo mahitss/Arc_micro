@@ -12,6 +12,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/trace"
 )
 
 // PaymentIntentDetailResponse represents the full inspection response for GET /v1/payment-intents/{id}.
@@ -79,9 +80,10 @@ type IntentDecisionPayload struct {
 	Reason string `json:"reason,omitempty"`
 }
 
-// PaymentIntentsHandler handles creation, retrieval, authorization, and confirmation of payment intents.
+// PaymentIntentsHandler handles creation, retrieval, authorization, confirmation, and trace inspection of payment intents.
 type PaymentIntentsHandler struct {
 	intentService *intent.Service
+	traceService  trace.Service
 }
 
 // NewPaymentIntentsHandler creates a new PaymentIntentsHandler.
@@ -89,6 +91,11 @@ func NewPaymentIntentsHandler(intentService *intent.Service) *PaymentIntentsHand
 	return &PaymentIntentsHandler{
 		intentService: intentService,
 	}
+}
+
+// SetTraceService sets the trace reconstruction service for financial flight recorder retrieval.
+func (h *PaymentIntentsHandler) SetTraceService(ts trace.Service) {
+	h.traceService = ts
 }
 
 // HandleCreate processes POST /v1/payment-intents with idempotency and server-side recipient resolution.
@@ -256,6 +263,36 @@ func (h *PaymentIntentsHandler) HandleGet(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// HandleGetTrace processes GET /v1/payment-intents/{id}/trace with tenant isolation.
+func (h *PaymentIntentsHandler) HandleGetTrace(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	orgID := middleware.GetOrgID(r.Context())
+	intentID := r.PathValue("id")
+	if intentID == "" {
+		writeError(w, http.StatusBadRequest, "MISSING_INTENT_ID", "intent id is required", ctxReqID)
+		return
+	}
+
+	if h.traceService == nil {
+		writeError(w, http.StatusNotImplemented, "TRACE_SERVICE_UNAVAILABLE", "trace service is not configured", ctxReqID)
+		return
+	}
+
+	trc, err := h.traceService.GetPaymentTrace(r.Context(), orgID, intentID)
+	if err != nil {
+		if errors.Is(err, trace.ErrTraceNotFound) {
+			writeError(w, http.StatusNotFound, "NOT_FOUND", "Payment trace not found", ctxReqID)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(trc)
 }
 
 // HandleAuthorize processes POST /v1/payment-intents/{id}/authorize with tenant isolation.

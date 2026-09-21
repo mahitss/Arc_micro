@@ -4,7 +4,7 @@
  */
 
 import { apiRequest } from './client';
-import { PaymentIntent, PaymentIntentDetail } from './types';
+import { PaymentIntent, PaymentIntentDetail, PaymentTrace } from './types';
 
 export async function fetchIntents(statusFilter?: string): Promise<PaymentIntent[]> {
   const query = statusFilter && statusFilter !== 'ALL' ? `?status=${encodeURIComponent(statusFilter)}` : '';
@@ -41,4 +41,9 @@ export async function rejectIntent(approvalId: string, approverId: string, reaso
     body: JSON.stringify({ approver_id: approverId, reason }),
   });
 }
+
+export async function fetchIntentTrace(id: string): Promise<PaymentTrace> {
+  return await apiRequest<PaymentTrace>(`/v1/payment-intents/${encodeURIComponent(id)}/trace`);
+}
+
 

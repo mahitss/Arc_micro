@@ -223,3 +223,96 @@ export interface SystemStatus {
   execution_paused: boolean;
 }
 
+export interface TraceStep {
+  step_number: number;
+  step_id: string;
+  trace_id: string;
+  type: string;
+  status: 'COMPLETED' | 'FAILED' | 'PENDING' | 'SKIPPED' | string;
+  timestamp: string;
+  actor: string;
+  correlation_id: string;
+  metadata?: Record<string, any>;
+  reason_codes?: string[];
+}
+
+export interface PaymentSummary {
+  intent_id: string;
+  organization_id: string;
+  agent_id: string;
+  service_id: string;
+  recipient: string;
+  amount: string;
+  asset: string;
+  purpose: string;
+  justification?: string;
+  request_id?: string;
+}
+
+export interface PolicyEvidence {
+  policy_id?: string;
+  policy_version?: string;
+  decision: string;
+  reason_code: string;
+  reason: string;
+  risk_level?: string;
+  risk_score?: number;
+  remaining_daily_limit?: number;
+  evaluated_at: string;
+}
+
+export interface ApprovalEvidence {
+  approval_id: string;
+  required: boolean;
+  status: string;
+  requested_at: string;
+  resolved_at?: string;
+  approved_by?: string;
+  rejection_reason?: string;
+}
+
+export interface TreasuryEvidence {
+  reservation_id?: string;
+  vault_address: string;
+  amount: string;
+  asset: string;
+  status: string;
+  reserved_at: string;
+  settled_at?: string;
+  released_at?: string;
+  release_reason?: string;
+}
+
+export interface BlockchainEvidence {
+  chain_id: string;
+  network: string;
+  transaction_hash?: string;
+  block_number?: string;
+  from?: string;
+  to?: string;
+  submitted_at?: string;
+  confirmed_at?: string;
+  status: string;
+  explorer_url?: string;
+  error_message?: string;
+}
+
+export interface PaymentTrace {
+  trace_id: string;
+  organization_id: string;
+  agent_id: string;
+  payment_intent_id: string;
+  payment_execution_id?: string;
+  status: string;
+  execution_mode: 'LIVE' | 'SIMULATION';
+  created_at: string;
+  updated_at: string;
+  steps: TraceStep[];
+  payment_summary: PaymentSummary;
+  policy_evidence?: PolicyEvidence;
+  approval_evidence?: ApprovalEvidence;
+  treasury_evidence?: TreasuryEvidence;
+  blockchain_evidence?: BlockchainEvidence;
+}
+
+

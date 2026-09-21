@@ -17,6 +17,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/service"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/trace"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/treasury"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/webhook"
 )
@@ -63,8 +64,19 @@ func NewRouter(
 	// 5. V1 Payment Intent API
 	if intentService != nil {
 		piHandler := handlers.NewPaymentIntentsHandler(intentService)
+		if repo != nil {
+			var explorerURL string
+			var chainID string
+			if cfg != nil {
+				explorerURL = cfg.ArcExplorerURL
+				chainID = cfg.ArcChainID
+			}
+			traceService := trace.NewService(repo, chainID, explorerURL)
+			piHandler.SetTraceService(traceService)
+		}
 		mux.HandleFunc("POST /v1/payment-intents", piHandler.HandleCreate)
 		mux.HandleFunc("GET /v1/payment-intents/{id}", piHandler.HandleGet)
+		mux.HandleFunc("GET /v1/payment-intents/{id}/trace", piHandler.HandleGetTrace)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/authorize", piHandler.HandleAuthorize)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/confirm", piHandler.HandleConfirm)
 	}

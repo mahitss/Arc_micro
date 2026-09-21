@@ -8,8 +8,9 @@ import { AddressDisplay } from '../../../components/AddressDisplay';
 import { CopyButton } from '../../../components/CopyButton';
 import { ConfirmationDialog } from '../../../components/ConfirmationDialog';
 import { ErrorState } from '../../../components/ErrorState';
-import { fetchIntent, confirmIntent } from '../../../lib/api/intents';
-import { PaymentIntentDetail } from '../../../lib/api/types';
+import { FinancialFlightRecorder } from '../../../components/FinancialFlightRecorder';
+import { fetchIntent, confirmIntent, fetchIntentTrace } from '../../../lib/api/intents';
+import { PaymentIntentDetail, PaymentTrace } from '../../../lib/api/types';
 import { DEMO_INTENTS } from '../../../lib/api/demo_fixtures';
 
 export default function PaymentIntentDetailPage() {
@@ -17,6 +18,9 @@ export default function PaymentIntentDetailPage() {
   const intentId = (params?.intentId as string) || '';
 
   const [intentDetail, setIntentDetail] = useState<PaymentIntentDetail | null>(null);
+  const [trace, setTrace] = useState<PaymentTrace | null>(null);
+  const [traceLoading, setTraceLoading] = useState(false);
+  const [traceError, setTraceError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -28,6 +32,7 @@ export default function PaymentIntentDetailPage() {
   const loadIntent = async (useDemo: boolean) => {
     setLoading(true);
     setError(null);
+    setTraceError(null);
 
     if (useDemo) {
       const match = DEMO_INTENTS.find((i) => i.intent_id === intentId) || DEMO_INTENTS[0];
@@ -43,6 +48,152 @@ export default function PaymentIntentDetailPage() {
           confirmed_at: match.status === 'CONFIRMED' ? match.updated_at : undefined,
         },
       });
+
+      // Construct high-fidelity mock demo trace
+      const demoTrace: PaymentTrace = {
+        trace_id: `trc_${match.intent_id}`,
+        organization_id: match.organization_id || 'org_default',
+        agent_id: match.agent_id,
+        payment_intent_id: match.intent_id,
+        status: match.status,
+        execution_mode: 'SIMULATION',
+        created_at: match.created_at,
+        updated_at: match.updated_at,
+        steps: [
+          {
+            step_number: 1,
+            step_id: 'step_req_01',
+            trace_id: `trc_${match.intent_id}`,
+            type: 'PAYMENT_REQUESTED',
+            status: 'COMPLETED',
+            timestamp: match.created_at,
+            actor: `AGENT:${match.agent_id}`,
+            correlation_id: match.intent_id,
+            metadata: { service: match.service, amount: match.amount, asset: match.asset },
+          },
+          {
+            step_number: 2,
+            step_id: 'step_ident_02',
+            trace_id: `trc_${match.intent_id}`,
+            type: 'IDENTITY_VERIFIED',
+            status: 'COMPLETED',
+            timestamp: match.created_at,
+            actor: 'SYSTEM',
+            correlation_id: match.intent_id,
+            metadata: { agent_status: 'ACTIVE', key_valid: true },
+          },
+          {
+            step_number: 3,
+            step_id: 'step_srv_03',
+            trace_id: `trc_${match.intent_id}`,
+            type: 'SERVICE_RESOLVED',
+            status: 'COMPLETED',
+            timestamp: match.created_at,
+            actor: 'SYSTEM',
+            correlation_id: match.intent_id,
+            metadata: { service_id: match.service, recipient: match.recipient },
+          },
+          {
+            step_number: 4,
+            step_id: 'step_pol_04',
+            trace_id: `trc_${match.intent_id}`,
+            type: 'POLICY_EVALUATED',
+            status: match.status === 'DENIED' ? 'FAILED' : 'COMPLETED',
+            timestamp: match.updated_at,
+            actor: 'SYSTEM:RUST_ENGINE',
+            correlation_id: match.intent_id,
+            metadata: { engine: 'rust-policy-v1', decision: match.status === 'DENIED' ? 'DENY' : 'ALLOW' },
+            reason_codes: match.status === 'DENIED' ? ['DAILY_LIMIT_EXCEEDED'] : [],
+          },
+          ...(match.status === 'CONFIRMED'
+            ? [
+                {
+                  step_number: 5,
+                  step_id: 'step_tres_05',
+                  trace_id: `trc_${match.intent_id}`,
+                  type: 'TREASURY_RESERVED',
+                  status: 'COMPLETED',
+                  timestamp: match.updated_at,
+                  actor: 'SYSTEM:TREASURY',
+                  correlation_id: match.intent_id,
+                  metadata: { reservation_status: 'RESERVED', amount: match.amount },
+                },
+                {
+                  step_number: 6,
+                  step_id: 'step_exec_06',
+                  trace_id: `trc_${match.intent_id}`,
+                  type: 'EXECUTION_STARTED',
+                  status: 'COMPLETED',
+                  timestamp: match.updated_at,
+                  actor: 'SYSTEM:EXECUTOR',
+                  correlation_id: match.intent_id,
+                },
+                {
+                  step_number: 7,
+                  step_id: 'step_tx_07',
+                  trace_id: `trc_${match.intent_id}`,
+                  type: 'TRANSACTION_CONFIRMED',
+                  status: 'COMPLETED',
+                  timestamp: match.updated_at,
+                  actor: 'SYSTEM:BLOCKCHAIN',
+                  correlation_id: match.intent_id,
+                  metadata: { mode: 'SIMULATION' },
+                },
+                {
+                  step_number: 8,
+                  step_id: 'step_comp_08',
+                  trace_id: `trc_${match.intent_id}`,
+                  type: 'PAYMENT_COMPLETED',
+                  status: 'COMPLETED',
+                  timestamp: match.updated_at,
+                  actor: 'SYSTEM',
+                  correlation_id: match.intent_id,
+                },
+              ]
+            : []),
+        ],
+        payment_summary: {
+          intent_id: match.intent_id,
+          organization_id: match.organization_id || 'org_default',
+          agent_id: match.agent_id,
+          service_id: match.service,
+          recipient: match.recipient,
+          amount: match.amount,
+          asset: match.asset,
+          purpose: match.purpose,
+          justification: match.justification,
+        },
+        policy_evidence: {
+          decision: match.status === 'DENIED' ? 'DENY' : match.status === 'APPROVAL_REQUIRED' ? 'APPROVAL_REQUIRED' : 'ALLOW',
+          reason_code: match.status === 'DENIED' ? 'DAILY_LIMIT_EXCEEDED' : 'POLICY_AUTHORIZED',
+          reason: match.status === 'DENIED' ? 'Exceeds daily spending allocation' : 'All deterministic policy rules verified',
+          risk_score: 14,
+          remaining_daily_limit: 2590000,
+          evaluated_at: match.updated_at,
+        },
+        treasury_evidence:
+          match.status === 'CONFIRMED'
+            ? {
+                reservation_id: `res_${match.intent_id}`,
+                vault_address: match.vault_address || '0x1111111111111111111111111111111111111111',
+                amount: match.amount,
+                asset: match.asset,
+                status: 'SETTLED',
+                reserved_at: match.created_at,
+                settled_at: match.updated_at,
+              }
+            : undefined,
+        blockchain_evidence:
+          match.status === 'CONFIRMED'
+            ? {
+                chain_id: '5042',
+                network: 'arc-simulation',
+                transaction_hash: '0x9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b',
+                status: 'CONFIRMED',
+              }
+            : undefined,
+      };
+      setTrace(demoTrace);
       setLoading(false);
       return;
     }
@@ -55,6 +206,17 @@ export default function PaymentIntentDetailPage() {
       setError(msg);
     } finally {
       setLoading(false);
+    }
+
+    // Load canonical flight recorder trace asynchronously
+    try {
+      setTraceLoading(true);
+      const traceData = await fetchIntentTrace(intentId);
+      setTrace(traceData);
+    } catch (err: unknown) {
+      setTraceError(err instanceof Error ? err.message : 'Trace unavailable');
+    } finally {
+      setTraceLoading(false);
     }
   };
 
@@ -424,6 +586,9 @@ export default function PaymentIntentDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Financial Flight Recorder Trace Section */}
+      <FinancialFlightRecorder trace={trace} loading={traceLoading} error={traceError} />
 
       {/* Confirmation Modal */}
       <ConfirmationDialog

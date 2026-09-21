@@ -128,16 +128,17 @@ func (s *DefaultTreasuryService) ReserveFunds(ctx context.Context, orgID, vaultA
 
 	// 4. Emit Audit Event
 	_ = s.repo.SaveAuditEvent(ctx, &storage.AuditEvent{
-		ID:             generateID("evt_"),
-		OrganizationID: orgID,
-		EventType:      string(domain.AuditEventTreasuryReserved),
-		ActorType:      "SYSTEM",
-		ActorID:        "treasury_service",
-		ResourceType:   "TREASURY",
-		ResourceID:     resID,
-		RequestID:      intentID,
-		Timestamp:      now,
-		Metadata:       fmt.Sprintf(`{"intent_id":"%s","amount":"%s","vault":"%s"}`, intentID, amount, vaultAddress),
+		ID:              generateID("evt_"),
+		OrganizationID:  orgID,
+		EventType:       string(domain.AuditEventTreasuryReserved),
+		ActorType:       "SYSTEM",
+		ActorID:         "treasury_service",
+		ResourceType:    "TREASURY",
+		ResourceID:      resID,
+		RequestID:       intentID,
+		PaymentIntentID: intentID,
+		Timestamp:       now,
+		Metadata:        fmt.Sprintf(`{"intent_id":"%s","amount":"%s","vault":"%s"}`, intentID, amount, vaultAddress),
 	})
 
 	return toDomainReservation(res), nil
@@ -165,16 +166,17 @@ func (s *DefaultTreasuryService) ReleaseFunds(ctx context.Context, intentID stri
 
 	// Emit Audit Event
 	_ = s.repo.SaveAuditEvent(ctx, &storage.AuditEvent{
-		ID:             generateID("evt_"),
-		OrganizationID: res.OrganizationID,
-		EventType:      string(domain.AuditEventTreasuryReleased),
-		ActorType:      "SYSTEM",
-		ActorID:        "treasury_service",
-		ResourceType:   "TREASURY",
-		ResourceID:     res.ID,
-		RequestID:      intentID,
-		Timestamp:      now,
-		Metadata:       fmt.Sprintf(`{"intent_id":"%s","released_amount":"%s"}`, intentID, res.Amount),
+		ID:              generateID("evt_"),
+		OrganizationID:  res.OrganizationID,
+		EventType:       string(domain.AuditEventTreasuryReleased),
+		ActorType:       "SYSTEM",
+		ActorID:         "treasury_service",
+		ResourceType:    "TREASURY",
+		ResourceID:      res.ID,
+		RequestID:       intentID,
+		PaymentIntentID: intentID,
+		Timestamp:       now,
+		Metadata:        fmt.Sprintf(`{"intent_id":"%s","released_amount":"%s"}`, intentID, res.Amount),
 	})
 
 	return nil
@@ -201,16 +203,17 @@ func (s *DefaultTreasuryService) SettleFunds(ctx context.Context, intentID strin
 
 	// Emit Audit Event
 	_ = s.repo.SaveAuditEvent(ctx, &storage.AuditEvent{
-		ID:             generateID("evt_"),
-		OrganizationID: res.OrganizationID,
-		EventType:      string(domain.AuditEventTreasurySettled),
-		ActorType:      "SYSTEM",
-		ActorID:        "treasury_service",
-		ResourceType:   "TREASURY",
-		ResourceID:     res.ID,
-		RequestID:      intentID,
-		Timestamp:      now,
-		Metadata:       fmt.Sprintf(`{"intent_id":"%s","settled_amount":"%s"}`, intentID, res.Amount),
+		ID:              generateID("evt_"),
+		OrganizationID:  res.OrganizationID,
+		EventType:       string(domain.AuditEventTreasurySettled),
+		ActorType:       "SYSTEM",
+		ActorID:         "treasury_service",
+		ResourceType:    "TREASURY",
+		ResourceID:      res.ID,
+		RequestID:       intentID,
+		PaymentIntentID: intentID,
+		Timestamp:       now,
+		Metadata:        fmt.Sprintf(`{"intent_id":"%s","settled_amount":"%s"}`, intentID, res.Amount),
 	})
 
 	return nil
