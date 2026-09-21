@@ -20,14 +20,15 @@ var (
 	ErrQuoteExpired    = errors.New("quote has expired")
 	ErrQuoteNotFound   = errors.New("quote not found")
 	ErrQuoteMismatch   = errors.New("quote parameters do not match payment request")
+	ErrQuoteRequired   = errors.New("quote_id is required for this service")
 )
 
 // Trust status constants
 const (
-	TrustStatusTrusted   = "TRUSTED"
-	TrustStatusVerified  = "VERIFIED"
+	TrustStatusTrusted    = "TRUSTED"
+	TrustStatusVerified   = "VERIFIED"
 	TrustStatusUnverified = "UNVERIFIED"
-	TrustStatusDisabled  = "DISABLED"
+	TrustStatusDisabled   = "DISABLED"
 )
 
 // Category constants
@@ -48,30 +49,34 @@ const (
 
 // Service represents a registered external service provider in the AgentPay economy.
 type Service struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	Category     string `json:"category"`
-	Recipient    string `json:"recipient"`      // Authoritative server-side settlement address
-	Asset        string `json:"asset"`          // Default "USDC"
-	Enabled      bool   `json:"enabled"`
-	MaxPrice     string `json:"max_price"`      // Maximum allowable price in base units
-	FixedPrice   string `json:"fixed_price,omitempty"`
-	PricingModel string `json:"pricing_model"`  // FIXED, VARIABLE, QUOTE_REQUIRED
-	TrustStatus  string `json:"trust_status"`   // TRUSTED, VERIFIED, UNVERIFIED, DISABLED
-	CreatedAt    string `json:"created_at"`
-	UpdatedAt    string `json:"updated_at"`
+	ID                    string   `json:"id"`
+	Name                  string   `json:"name"`
+	Description           string   `json:"description"`
+	Category              string   `json:"category"`
+	Capabilities          []string `json:"capabilities,omitempty"`
+	Recipient             string   `json:"recipient"`      // Authoritative server-side settlement address
+	Asset                 string   `json:"asset"`          // Default "USDC"
+	Enabled               bool     `json:"enabled"`
+	MaxPrice              string   `json:"max_price"`      // Maximum allowable price in base units
+	FixedPrice            string   `json:"fixed_price,omitempty"`
+	PricingModel          string   `json:"pricing_model"`  // FIXED, VARIABLE, QUOTE_REQUIRED
+	TrustStatus           string   `json:"trust_status"`   // TRUSTED, VERIFIED, UNVERIFIED, DISABLED
+	HistoricalReliability string   `json:"historical_reliability,omitempty"`
+	CreatedAt             string   `json:"created_at"`
+	UpdatedAt             string   `json:"updated_at"`
 }
 
 // Quote represents a time-bound, cryptographically identified pricing commitment.
 type Quote struct {
-	ID        string    `json:"quote_id"`
-	ServiceID string    `json:"service_id"`
-	Recipient string    `json:"recipient"`
-	Amount    string    `json:"amount"`
-	Asset     string    `json:"asset"`
-	ExpiresAt time.Time `json:"expires_at"`
-	CreatedAt time.Time `json:"created_at"`
+	ID                string    `json:"quote_id"`
+	ServiceID         string    `json:"service_id"`
+	Recipient         string    `json:"recipient"`
+	Amount            string    `json:"amount"`
+	Asset             string    `json:"asset"`
+	Purpose           string    `json:"purpose,omitempty"`
+	EstimatedDelivery string    `json:"estimated_delivery,omitempty"`
+	ExpiresAt         time.Time `json:"expires_at"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 // Registry manages the set of approved external services and quotes.
@@ -92,116 +97,129 @@ func NewDefaultRegistry() *Registry {
 
 	// 1. Web Research & Intelligence API
 	r.Register(&Service{
-		ID:           "web-research",
-		Name:         "Web Research & Intelligence API",
-		Description:  "Real-time web search, document scraping, and intelligence synthesis.",
-		Category:     CategoryResearch,
-		Recipient:    "0x1111111111111111111111111111111111111111",
-		Asset:        "USDC",
-		Enabled:      true,
-		MaxPrice:     "500000", // 0.50 USDC
-		PricingModel: PricingModelVariable,
-		TrustStatus:  TrustStatusTrusted,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                    "web-research",
+		Name:                  "Web Research & Intelligence API",
+		Description:           "Real-time web search, document scraping, and intelligence synthesis.",
+		Category:              CategoryResearch,
+		Capabilities:          []string{"web_search", "scraping", "summarization"},
+		Recipient:             "0x1111111111111111111111111111111111111111",
+		Asset:                 "USDC",
+		Enabled:               true,
+		MaxPrice:              "500000", // 0.50 USDC
+		PricingModel:          PricingModelVariable,
+		TrustStatus:           TrustStatusTrusted,
+		HistoricalReliability: "99.8%",
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	})
 
 	// 2. GPU Inference Compute Cluster
 	r.Register(&Service{
-		ID:           "compute-cluster",
-		Name:         "GPU Inference Compute Cluster",
-		Description:  "On-demand H100 compute for embeddings, fine-tuning, and heavy inference.",
-		Category:     CategoryCompute,
-		Recipient:    "0x2222222222222222222222222222222222222222",
-		Asset:        "USDC",
-		Enabled:      true,
-		MaxPrice:     "2000000", // 2.00 USDC
-		PricingModel: PricingModelVariable,
-		TrustStatus:  TrustStatusTrusted,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                    "compute-cluster",
+		Name:                  "GPU Inference Compute Cluster",
+		Description:           "On-demand H100 compute for embeddings, fine-tuning, and heavy inference.",
+		Category:              CategoryCompute,
+		Capabilities:          []string{"gpu_inference", "embeddings", "model_fine_tuning"},
+		Recipient:             "0x2222222222222222222222222222222222222222",
+		Asset:                 "USDC",
+		Enabled:               true,
+		MaxPrice:              "2000000", // 2.00 USDC
+		PricingModel:          PricingModelVariable,
+		TrustStatus:           TrustStatusTrusted,
+		HistoricalReliability: "99.95%",
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	})
 
 	// 3. Real-time Financial Data Feed
 	r.Register(&Service{
-		ID:           "data-feed",
-		Name:         "Real-time Financial Data Feed",
-		Description:  "Streaming liquidity, orderbook depth, and volatility telemetry on Arc.",
-		Category:     CategoryData,
-		Recipient:    "0x3333333333333333333333333333333333333333",
-		Asset:        "USDC",
-		Enabled:      true,
-		MaxPrice:     "100000", // 0.10 USDC
-		FixedPrice:   "100000",
-		PricingModel: PricingModelFixed,
-		TrustStatus:  TrustStatusVerified,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                    "data-feed",
+		Name:                  "Real-time Financial Data Feed",
+		Description:           "Streaming liquidity, orderbook depth, and volatility telemetry on Arc.",
+		Category:              CategoryData,
+		Capabilities:          []string{"data_feed", "orderbook_telemetry", "liquidity_feed", "volatility_metrics"},
+		Recipient:             "0x3333333333333333333333333333333333333333",
+		Asset:                 "USDC",
+		Enabled:               true,
+		MaxPrice:              "100000", // 0.10 USDC
+		FixedPrice:            "100000",
+		PricingModel:          PricingModelFixed,
+		TrustStatus:           TrustStatusVerified,
+		HistoricalReliability: "99.99%",
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	})
 
 	// 4. Autonomous Research Data Provider (Higher value, requires quotes/approval)
 	r.Register(&Service{
-		ID:           "research-api",
-		Name:         "Autonomous Research Data Provider",
-		Description:  "Institutional-grade market analysis and on-chain intelligence dossiers.",
-		Category:     CategoryResearch,
-		Recipient:    "0x5555555555555555555555555555555555555555",
-		Asset:        "USDC",
-		Enabled:      true,
-		MaxPrice:     "25000000", // 25.00 USDC
-		PricingModel: PricingModelVariable,
-		TrustStatus:  TrustStatusTrusted,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                    "research-api",
+		Name:                  "Autonomous Research Data Provider",
+		Description:           "Institutional-grade market analysis and on-chain intelligence dossiers.",
+		Category:              CategoryResearch,
+		Capabilities:          []string{"institutional_research", "on_chain_dossier", "deep_analytics"},
+		Recipient:             "0x5555555555555555555555555555555555555555",
+		Asset:                 "USDC",
+		Enabled:               true,
+		MaxPrice:              "25000000", // 25.00 USDC
+		PricingModel:          PricingModelVariable,
+		TrustStatus:           TrustStatusTrusted,
+		HistoricalReliability: "99.5%",
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	})
 
 	// 5. Arc Decentralized Oracle Network
 	r.Register(&Service{
-		ID:           "oracle-network",
-		Name:         "Arc Decentralized Oracle Network",
-		Description:  "Cryptographically signed price feeds and cross-chain state proofs.",
-		Category:     CategoryOracle,
-		Recipient:    "0x6666666666666666666666666666666666666666",
-		Asset:        "USDC",
-		Enabled:      true,
-		MaxPrice:     "300000", // 0.30 USDC
-		FixedPrice:   "300000",
-		PricingModel: PricingModelFixed,
-		TrustStatus:  TrustStatusTrusted,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                    "oracle-network",
+		Name:                  "Arc Decentralized Oracle Network",
+		Description:           "Cryptographically signed price feeds and cross-chain state proofs.",
+		Category:              CategoryOracle,
+		Capabilities:          []string{"state_proofs", "price_feeds", "cross_chain_verification"},
+		Recipient:             "0x6666666666666666666666666666666666666666",
+		Asset:                 "USDC",
+		Enabled:               true,
+		MaxPrice:              "300000", // 0.30 USDC
+		FixedPrice:            "300000",
+		PricingModel:          PricingModelFixed,
+		TrustStatus:           TrustStatusTrusted,
+		HistoricalReliability: "99.99%",
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	})
 
 	// 6. Unverified Community Provider (Unverified trust status)
 	r.Register(&Service{
-		ID:           "community-indexer",
-		Name:         "Community Block Indexer",
-		Description:  "Third-party experimental block indexer service.",
-		Category:     CategoryData,
-		Recipient:    "0x7777777777777777777777777777777777777777",
-		Asset:        "USDC",
-		Enabled:      true,
-		MaxPrice:     "1500000",
-		PricingModel: PricingModelVariable,
-		TrustStatus:  TrustStatusUnverified,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                    "community-indexer",
+		Name:                  "Community Block Indexer",
+		Description:           "Third-party experimental block indexer service.",
+		Category:              CategoryData,
+		Capabilities:          []string{"block_indexing", "raw_logs"},
+		Recipient:             "0x7777777777777777777777777777777777777777",
+		Asset:                 "USDC",
+		Enabled:               true,
+		MaxPrice:              "1500000",
+		PricingModel:          PricingModelVariable,
+		TrustStatus:           TrustStatusUnverified,
+		HistoricalReliability: "97.5%",
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	})
 
 	// 7. Deprecated / Disabled Legacy Service
 	r.Register(&Service{
-		ID:           "archived-service",
-		Name:         "Deprecated Legacy Data Service",
-		Description:  "Decommissioned data feed service.",
-		Category:     CategoryData,
-		Recipient:    "0x4444444444444444444444444444444444444444",
-		Asset:        "USDC",
-		Enabled:      false, // Explicitly disabled
-		MaxPrice:     "100000",
-		PricingModel: PricingModelFixed,
-		TrustStatus:  TrustStatusDisabled,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:                    "archived-service",
+		Name:                  "Deprecated Legacy Data Service",
+		Description:           "Decommissioned data feed service.",
+		Category:              CategoryData,
+		Capabilities:          []string{"legacy_feed"},
+		Recipient:             "0x4444444444444444444444444444444444444444",
+		Asset:                 "USDC",
+		Enabled:               false, // Explicitly disabled
+		MaxPrice:              "100000",
+		PricingModel:          PricingModelFixed,
+		TrustStatus:           TrustStatusDisabled,
+		HistoricalReliability: "0.0%",
+		CreatedAt:             now,
 	})
 
 	return r
@@ -297,8 +315,35 @@ func (r *Registry) ListWithFilter(category, asset, trustStatus string, enabledOn
 	return list
 }
 
+// ListByCapability returns enabled services providing a specific capability.
+func (r *Registry) ListByCapability(capability string) []*Service {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	capLower := strings.ToLower(strings.TrimSpace(capability))
+	var list []*Service
+	for _, s := range r.services {
+		if !s.Enabled || s.TrustStatus == TrustStatusDisabled {
+			continue
+		}
+		for _, c := range s.Capabilities {
+			if strings.EqualFold(c, capLower) {
+				copyService := *s
+				list = append(list, &copyService)
+				break
+			}
+		}
+	}
+	return list
+}
+
 // CreateQuote creates a 15-minute time-bound quote for a service.
 func (r *Registry) CreateQuote(serviceID, requestedAmount, asset string) (*Quote, error) {
+	return r.CreateQuoteWithTerms(serviceID, requestedAmount, asset, "", "immediate", 15*time.Minute)
+}
+
+// CreateQuoteWithTerms creates a time-bound quote with explicit purpose, delivery timeframe, and TTL.
+func (r *Registry) CreateQuoteWithTerms(serviceID, requestedAmount, asset, purpose, estimatedDelivery string, ttl time.Duration) (*Quote, error) {
 	s, err := r.Resolve(serviceID)
 	if err != nil {
 		return nil, err
@@ -330,6 +375,13 @@ func (r *Registry) CreateQuote(serviceID, requestedAmount, asset string) (*Quote
 		}
 	}
 
+	if ttl == 0 {
+		ttl = 15 * time.Minute
+	}
+	if estimatedDelivery == "" {
+		estimatedDelivery = "immediate"
+	}
+
 	// Generate random quote ID: qt_<16 hex bytes>
 	randBytes := make([]byte, 16)
 	_, _ = rand.Read(randBytes)
@@ -337,13 +389,15 @@ func (r *Registry) CreateQuote(serviceID, requestedAmount, asset string) (*Quote
 
 	now := time.Now().UTC()
 	quote := &Quote{
-		ID:        quoteID,
-		ServiceID: s.ID,
-		Recipient: s.Recipient,
-		Amount:    finalAmount,
-		Asset:     s.Asset,
-		CreatedAt: now,
-		ExpiresAt: now.Add(15 * time.Minute),
+		ID:                quoteID,
+		ServiceID:         s.ID,
+		Recipient:         s.Recipient,
+		Amount:            finalAmount,
+		Asset:             s.Asset,
+		Purpose:           purpose,
+		EstimatedDelivery: estimatedDelivery,
+		CreatedAt:         now,
+		ExpiresAt:         now.Add(ttl),
 	}
 
 	r.mu.Lock()

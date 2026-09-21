@@ -44,10 +44,12 @@ type AgentTaskExecutionResult struct {
 	Steps           []AgentStepRecord    `json:"steps"`
 	PaymentIntentID string               `json:"payment_intent_id,omitempty"`
 	PaymentIntent   *intent.PaymentIntent `json:"payment_intent,omitempty"`
-	ServiceUsed     string               `json:"service_used,omitempty"`
-	ExternalData    string               `json:"external_data,omitempty"`
-	FinalReport     string               `json:"final_report,omitempty"`
-	Error           string               `json:"error,omitempty"`
-	StartedAt       time.Time            `json:"started_at"`
-	CompletedAt     *time.Time           `json:"completed_at,omitempty"`
+	ServiceUsed     string                `json:"service_used,omitempty"`
+	ExternalData    string                `json:"external_data,omitempty"`
+	FinalReport     string                `json:"final_report,omitempty"`
+	BudgetRemaining string                `json:"budget_remaining,omitempty"`
+	Decisions       []EconomicDecisionLog `json:"decisions,omitempty"`
+	Error           string                `json:"error,omitempty"`
+	StartedAt       time.Time             `json:"started_at"`
+	CompletedAt     *time.Time            `json:"completed_at,omitempty"`
 }

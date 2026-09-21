@@ -33,6 +33,7 @@ type PaymentIntent struct {
 	Asset            string       `json:"asset"`     // "USDC"
 	Purpose          string       `json:"purpose"`
 	ServiceID        string       `json:"service"`
+	QuoteID          string       `json:"quote_id,omitempty"`
 	Justification    string       `json:"justification"`
 	RequestID        string       `json:"request_id,omitempty"` // Idempotency key
 	Status           IntentStatus `json:"status"`

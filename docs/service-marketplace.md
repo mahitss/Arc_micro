@@ -1,128 +1,111 @@
-# AgentPay — Service Marketplace & Registry
+# AgentPay — Service Marketplace & Registry (Day 4)
 
 ## 1. Overview
 
-The **AgentPay Service Marketplace** provides an authoritative, server-side registry of external services that AI agents are permitted to discover, evaluate, and pay.
+The **AgentPay Service Marketplace** provides an authoritative, server-side registry of external commercial services that autonomous AI agents are permitted to discover, evaluate, and purchase.
 
-Rather than allowing agents to connect to arbitrary internet services and send funds to arbitrary crypto addresses, AgentPay enforces a **curated, verified marketplace model**.
+Rather than allowing autonomous models to connect to arbitrary endpoints and send funds to arbitrary wallet addresses, AgentPay enforces a **curated, verified marketplace model**.
 
 ---
 
 ## 2. Service Domain Model
 
-Each registered service contains authoritative metadata:
+Each registered service exposes safe, structured metadata:
 
 ```go
 type Service struct {
-    ID           string       // Unique identifier (e.g. "research-api")
-    OrgID        string       // Provider organization identity
-    Name         string       // Human-readable service name
-    Description  string       // Service purpose and capabilities
-    Category     string       // Categorization (RESEARCH, DATA, COMPUTE, ORACLE, AI_MODELS)
-    Recipient    string       // Approved destination wallet address on Arc
-    Asset        string       // Settlement currency (e.g. "USDC")
-    Enabled      bool         // Operational status
-    MaxPrice     string       // Maximum allowable price in base units (e.g. 5000000 = 5.00 USDC)
-    FixedPrice   string       // Exact fixed price (if FIXED pricing model)
-    PricingModel PricingModel // FIXED, VARIABLE, or QUOTE_REQUIRED
-    TrustStatus  TrustStatus  // TRUSTED, VERIFIED, UNVERIFIED, or DISABLED
-    CreatedAt    time.Time
-    UpdatedAt    time.Time
+    ID                    string       // Unique identifier (e.g. "web-research", "data-feed")
+    OrgID                 string       // Provider organization identity
+    Name                  string       // Human-readable service name
+    Description           string       // Service purpose and capabilities
+    Category              string       // RESEARCH, DATA, COMPUTE, ORACLE, AI_MODELS
+    Capabilities          []string     // Specific capability tags (e.g. "web_search", "orderbook_telemetry")
+    Recipient             string       // Authoritative destination wallet address on Arc
+    Asset                 string       // Settlement currency (strictly "USDC")
+    Enabled               bool         // Operational status
+    MaxPrice              string       // Maximum allowable price in base units (micro-USDC)
+    FixedPrice            string       // Exact fixed price (if FIXED pricing model)
+    PricingModel          PricingModel // FIXED, VARIABLE, PER_CALL, or QUOTE_REQUIRED
+    TrustStatus           TrustStatus  // TRUSTED, VERIFIED, UNVERIFIED, or DISABLED
+    HistoricalReliability string       // Verifiable historical uptime metric (e.g. "99.98%")
+    CreatedAt             time.Time
+    UpdatedAt             time.Time
 }
 ```
 
-### Supported Categories
-- `RESEARCH`: In-depth telemetry, market analysis, synthesized intelligence.
-- `DATA`: Real-time financial feeds, validator metrics, orderbook data.
-- `COMPUTE`: Decentralized job execution, zero-knowledge proof generation.
-- `ORACLE`: Cross-chain state attestations, price feeds.
-- `AI_MODELS`: Specialized inference, embeddings, fine-tuned agent sub-models.
+### Pre-Configured Ecosystem Services
+1. **`web-research`**: Web Search & Deep Research Provider (`TRUSTED`, Max 0.50 USDC, 99.98% reliability).
+2. **`compute-cluster`**: Decentralized GPU Compute Cluster (`TRUSTED`, Max 10.00 USDC, 99.95% reliability).
+3. **`data-feed`**: Real-time Financial Data Feed (`VERIFIED`, Fixed 0.10 USDC, 99.99% reliability).
+4. **`research-api`**: Autonomous Research Data Provider (`TRUSTED`, Max 25.00 USDC, Quote-Required, 99.5% reliability).
+5. **`oracle-network`**: Verified Oracle Network (`TRUSTED`, Fixed 0.30 USDC, 99.99% reliability).
+6. **`community-indexer`**: Community Block Indexer (`UNVERIFIED`, Max 1.50 USDC, 97.5% reliability).
+7. **`archived-service`**: Deprecated Legacy Service (`DISABLED`, Inactive).
 
 ---
 
-## 3. Service Trust Model
+## 3. Service Discovery Protocol
 
-AgentPay implements a lightweight, deterministic trust classification:
+Agents query the registry via narrow, safe tools (`ToolNameSearchService` / `discover_services`):
 
-| Status | Meaning | Policy Interaction |
-| :--- | :--- | :--- |
-| **`TRUSTED`** | First-party or audited institutional provider | Eligible for auto-execution within agent spending limits |
-| **`VERIFIED`** | Third-party provider verified by AgentPay ops | Standard policy evaluation; may require approval for higher tiers |
-| **`UNVERIFIED`** | Newly registered or experimental service | Strict policy: requires human approval or blocked by default policies |
-| **`DISABLED`** | Deactivated or compromised service | **Hard DENY**. All payment requests immediately blocked |
-
-> **CRITICAL**: Trust status never bypasses policy. Even a `TRUSTED` service requires human approval if the payment amount exceeds the agent's configured threshold.
-
----
-
-## 4. Pricing Models & Time-Bound Quotes
-
-### Pricing Models
-1. **`FIXED`**: The service charges an exact fixed rate per invocation (e.g., 2.50 USDC per research query).
-2. **`VARIABLE`**: The service charges based on usage (e.g., compute duration), capped by `max_price`.
-3. **`QUOTE_REQUIRED`**: The agent must request a formal quote before submitting a payment intent.
-
-### Service Quotes
-To prevent stale pricing and price slippage, services issue **cryptographically verifiable, time-bound quotes**:
-
-```http
-POST /v1/services/:id/quote
-```
-
-**Request**:
-```json
-{
-  "amount": "2500000",
-  "asset": "USDC"
+```go
+type SearchServiceInput struct {
+    Query      string // Free-text search matching name, description, ID, or capabilities
+    Category   string // Filter by Category (RESEARCH, DATA, COMPUTE, ORACLE)
+    Capability string // Explicit capability matching (e.g. "web_search")
 }
 ```
 
-**Response**:
-```json
-{
-  "quote_id": "quote_6f8b9e1a",
-  "service_id": "research-api",
-  "amount": "2500000",
-  "asset": "USDC",
-  "expires_at": "2026-09-20T23:30:00Z"
-}
-```
-
-### Quote Validation Rules
-- **Expiration**: Quotes are valid for a strict window (default: 15 minutes). Expired quotes are rejected.
-- **Service Mismatch**: A quote issued for `research-api` cannot be used for `compute-api`.
-- **Amount Tampering**: If the agent submits a payment intent with an amount differing from the quote, the gateway rejects the intent.
+### Discovery Guarantees
+- Disabled services are filtered out automatically.
+- No internal infrastructure secrets, API keys, or provider credentials are ever returned to the agent.
+- Trust levels and historical reliability metrics are explicitly provided for agent economic reasoning.
 
 ---
 
-## 5. Service Discovery API & SDK
+## 4. Quote Architecture & Lifecycle
 
-### HTTP API
-```http
-GET /v1/services?category=RESEARCH&trust_status=TRUSTED&enabled=true
+Services support time-limited price quotes to ensure economic predictability:
+
+```go
+type Quote struct {
+    ID                string    // Unique quote ID (e.g. "qt_a1b2c3d4...")
+    ServiceID         string    // Service issuing the quote
+    Recipient         string    // Authoritative service recipient address
+    Amount            string    // Integer base units (micro-USDC)
+    Asset             string    // "USDC"
+    Purpose           string    // Purpose description for policy checks
+    EstimatedDelivery string    // Delivery time estimate (e.g. "immediate", "500ms")
+    CreatedAt         time.Time
+    ExpiresAt         time.Time
+}
 ```
 
-### TypeScript SDK
-```typescript
-const services = await client.services.list({
-  category: 'RESEARCH',
-  trustStatus: 'TRUSTED',
-  enabled: true,
-});
-
-const quote = await client.services.getQuote('research-api', {
-  amount: '2500000',
-});
+### Quote Generation Flow
+```
+Agent: get_quote(service_id="web-research", requested_amount="180000", asset="USDC")
+  ↓
+Registry evaluates:
+  - Is service enabled?
+  - Does requested amount adhere to pricing model (fixed vs max price cap)?
+  - Is asset supported?
+  ↓
+Registry issues Quote:
+  - ID: "qt_6f8b9e1a..."
+  - Amount: "180000"
+  - ExpiresAt: Now + 15m
+  - Authoritative Recipient: 0x1111...1111
 ```
 
-### Python SDK
-```python
-services = client.services.list(category="RESEARCH", trust_status="TRUSTED", enabled=True)
-quote = client.services.get_quote("research-api", amount="2500000")
-```
+### Invariants
+1. **Authoritative Recipient Binding**: A quote cannot override the registry's registered recipient address.
+2. **Strict Expiry**: Once `ExpiresAt` passes, `GetQuote` and `ValidateQuote` fail closed with `ErrQuoteExpired`.
+3. **Mismatched Terms**: Any discrepancy between quote terms and payment intent arguments triggers `ErrQuoteMismatch`.
 
-### CLI
-```bash
-agentpay services list --category RESEARCH --trust TRUSTED
-agentpay services quote research-api --amount 2500000
-```
+---
+
+## 5. Security Invariants
+
+1. **Client Recipient Override Prohibited**: If a client or agent provides a recipient differing from the service registry, the request is rejected (`ErrRecipientManipulation`).
+2. **Quota / Price Exceeded Prohibited**: Payment amounts exceeding `MaxPrice` fail immediately (`ErrPriceExceeded`).
+3. **Disabled Service Lockout**: Any attempt to quote or pay a `DISABLED` service fails immediately (`ErrServiceDisabled`).

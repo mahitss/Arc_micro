@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
@@ -55,6 +56,7 @@ type CreateIntentParams struct {
 	AgentID        string
 	VaultAddress   string
 	ServiceID      string
+	QuoteID        string // Optional bound quote ID
 	Amount         string
 	Asset          string
 	Purpose        string
@@ -161,10 +163,22 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 		}
 	}
 
-	// 1. Resolve registered service and validate amount/asset bounds
+	// 1. If QuoteID is provided, validate quote terms, authenticity, and expiry first
+	if strings.TrimSpace(params.QuoteID) != "" {
+		if _, err := s.registry.ValidateQuote(params.QuoteID, params.ServiceID, params.Amount, params.Asset); err != nil {
+			return nil, err
+		}
+	}
+
+	// 1b. Resolve registered service and validate amount/asset bounds
 	regService, err := s.registry.ValidatePayment(params.ServiceID, params.Amount, params.Asset)
 	if err != nil {
 		return nil, err
+	}
+
+	// 1c. Require quote if service pricing model mandates it
+	if regService.PricingModel == registry.PricingModelQuoteRequired && strings.TrimSpace(params.QuoteID) == "" {
+		return nil, registry.ErrQuoteRequired
 	}
 
 	// 2. Generate secure intent ID
@@ -182,6 +196,7 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 		Asset:          params.Asset,
 		Purpose:        params.Purpose,
 		ServiceID:      params.ServiceID,
+		QuoteID:        params.QuoteID,
 		Justification:  params.Justification,
 		RequestID:      params.RequestID,
 		Status:         StatusCreated,
