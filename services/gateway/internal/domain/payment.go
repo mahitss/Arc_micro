@@ -39,6 +39,11 @@ const (
 	ReasonRiskLow                ReasonCode = "RISK_LOW"
 	ReasonRiskMedium             ReasonCode = "RISK_MEDIUM"
 	ReasonRiskHigh               ReasonCode = "RISK_HIGH"
+	ReasonServiceBlocked         ReasonCode = "SERVICE_BLOCKED"
+	ReasonAssetBlocked           ReasonCode = "ASSET_BLOCKED"
+	ReasonBudgetUtilizationHigh  ReasonCode = "BUDGET_UTILIZATION_HIGH"
+	ReasonDuplicateRequest       ReasonCode = "DUPLICATE_REQUEST"
+	ReasonTreasuryLimitExceeded  ReasonCode = "TREASURY_LIMIT_EXCEEDED"
 	ReasonInvalidRequest         ReasonCode = "INVALID_REQUEST"
 )
 
@@ -88,6 +93,7 @@ type AuthorizationDecision struct {
 	ReasonCode          ReasonCode  `json:"reason_code"`
 	Reason              string      `json:"reason"`
 	PolicyID            string      `json:"policy_id,omitempty"`
+	PolicyVersion       string      `json:"policy_version,omitempty"`
 	EvaluatedAt         *int64      `json:"evaluated_at,omitempty"`
 	RiskLevel           *RiskLevel  `json:"risk_level,omitempty"`
 	RiskScore           *uint32     `json:"risk_score,omitempty"`

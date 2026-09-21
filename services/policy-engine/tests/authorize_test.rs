@@ -52,6 +52,9 @@ fn sample_policy() -> Policy {
         blocked_recipients,
         allowed_assets,
         allowed_services: None,
+        blocked_services: HashSet::new(),
+        blocked_assets: HashSet::new(),
+        policy_version: Some("v1.0.0".to_string()),
     }
 }
 
@@ -799,5 +802,155 @@ fn test_40_explainability_checks_contain_all_rules() {
     assert!(rule_names.contains(&"risk_budget_utilization"));
     assert!(rule_names.contains(&"approval_threshold"));
 }
+
+#[test]
+fn test_41_blocked_service_denies() {
+    let mut policy = sample_policy();
+    policy.blocked_services.insert("banned-service".to_string());
+
+    let mut req = sample_request();
+    req.service_id = Some("banned-service".to_string());
+
+    let decision = authorize(&req, &policy);
+    assert_eq!(decision.decision, Decision::Deny);
+    assert_eq!(decision.reason_code, ReasonCode::ServiceBlocked);
+}
+
+#[test]
+fn test_42_blocked_asset_denies() {
+    let mut policy = sample_policy();
+    policy.blocked_assets.insert("USDT".to_string());
+
+    let mut req = sample_request();
+    req.asset = "USDT".to_string();
+
+    let decision = authorize(&req, &policy);
+    assert_eq!(decision.decision, Decision::Deny);
+    assert_eq!(decision.reason_code, ReasonCode::AssetBlocked);
+}
+
+#[test]
+fn test_43_service_novelty_risk() {
+    let policy = sample_policy();
+    let mut req = sample_request();
+    req.service_id = Some("novel-service".to_string());
+
+    let mut ctx_novel = RiskContext::default();
+    ctx_novel.service_prior_tx_count = 0; // Brand new service
+
+    let mut ctx_established = RiskContext::default();
+    ctx_established.service_prior_tx_count = 15; // Familiar service
+
+    let eval_novel = evaluate_risk(&req, &policy, &ctx_novel);
+    let eval_est = evaluate_risk(&req, &policy, &ctx_established);
+
+    assert!(eval_novel.score > eval_est.score);
+    assert!(eval_novel.checks.iter().any(|c| c.rule == "risk_service_novelty" && c.message.contains("+10 pts")));
+    assert!(eval_est.checks.iter().any(|c| c.rule == "risk_service_novelty" && c.message.contains("+0 pts")));
+}
+
+#[test]
+fn test_44_policy_version_propagated() {
+    let mut policy = sample_policy();
+    policy.policy_version = Some("pol_ver_2026_09_22".to_string());
+
+    let req = sample_request();
+    let decision = authorize(&req, &policy);
+
+    assert_eq!(decision.policy_version, Some("pol_ver_2026_09_22".to_string()));
+}
+
+#[test]
+fn test_45_determinism_1000_iterations() {
+    let policy = sample_policy();
+    let req = sample_request();
+    let ctx = RiskContext::default();
+
+    let baseline = authorize_with_context(&req, &policy, Some(&ctx));
+
+    for _ in 0..1000 {
+        let run = authorize_with_context(&req, &policy, Some(&ctx));
+        assert_eq!(run.decision, baseline.decision);
+        assert_eq!(run.reason_code, baseline.reason_code);
+        assert_eq!(run.risk_score, baseline.risk_score);
+        assert_eq!(run.risk_level, baseline.risk_level);
+        assert_eq!(run.policy_version, baseline.policy_version);
+        assert_eq!(run.checks.len(), baseline.checks.len());
+        for (a, b) in run.checks.iter().zip(baseline.checks.iter()) {
+            assert_eq!(a.rule, b.rule);
+            assert_eq!(a.passed, b.passed);
+            assert_eq!(a.message, b.message);
+        }
+    }
+}
+
+#[test]
+fn test_46_invariant_hard_deny_inviolable() {
+    // 1. Recipient blocked: must DENY even if amount is tiny and threshold is huge
+    let mut policy = sample_policy();
+    let blocked_addr = Address::parse("0xdead000000000000000000000000000000000000").unwrap();
+    policy.blocked_recipients.insert(blocked_addr.clone());
+    policy.approval_threshold = Some(1_000_000_000);
+
+    let mut req = sample_request();
+    req.recipient = blocked_addr;
+    req.amount = 1; // 1 base unit
+
+    let decision = authorize(&req, &policy);
+    assert_eq!(decision.decision, Decision::Deny);
+    assert_eq!(decision.reason_code, ReasonCode::RecipientBlocked);
+    // Crucial invariant: never ApprovalRequired or Allow
+    assert_ne!(decision.decision, Decision::ApprovalRequired);
+    assert_ne!(decision.decision, Decision::Allow);
+
+    // 2. Limit exceeded: must DENY even if risk is zero
+    let mut req2 = sample_request();
+    req2.amount = policy.per_transaction_limit + 1;
+    let decision2 = authorize(&req2, &policy);
+    assert_eq!(decision2.decision, Decision::Deny);
+    assert_eq!(decision2.reason_code, ReasonCode::AmountExceedsTransactionLimit);
+    assert_ne!(decision2.decision, Decision::ApprovalRequired);
+}
+
+#[test]
+fn test_47_invariant_u64_max_overflow_safety() {
+    let policy = sample_policy();
+    let mut req = sample_request();
+    req.amount = u64::MAX;
+
+    // Must safely evaluate without panic and cleanly DENY
+    let decision = authorize(&req, &policy);
+    assert_eq!(decision.decision, Decision::Deny);
+    assert_eq!(decision.reason_code, ReasonCode::AmountExceedsTransactionLimit);
+
+    // Also test daily_spent overflow safety
+    let mut policy_overflow = sample_policy();
+    policy_overflow.daily_spent = u64::MAX - 10;
+    let mut req_overflow = sample_request();
+    req_overflow.amount = 50; // would wrap u64 if unchecked
+
+    let decision_overflow = authorize(&req_overflow, &policy_overflow);
+    assert_eq!(decision_overflow.decision, Decision::Deny);
+    assert_eq!(decision_overflow.reason_code, ReasonCode::DailyLimitExceeded);
+}
+
+#[test]
+fn test_48_composition_unions_blocked_assets_and_services() {
+    let mut org_policy = sample_policy();
+    org_policy.blocked_assets.insert("BTC".to_string());
+    org_policy.blocked_services.insert("service-alpha".to_string());
+
+    let mut agent_policy = sample_policy();
+    agent_policy.blocked_assets.insert("ETH".to_string());
+    agent_policy.blocked_services.insert("service-beta".to_string());
+
+    let composite = compose_policies(&org_policy, &agent_policy);
+
+    assert!(composite.blocked_assets.contains("BTC"));
+    assert!(composite.blocked_assets.contains("ETH"));
+    assert!(composite.blocked_services.contains("service-alpha"));
+    assert!(composite.blocked_services.contains("service-beta"));
+}
+
 
 

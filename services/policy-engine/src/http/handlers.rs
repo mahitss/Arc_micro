@@ -76,6 +76,7 @@ fn parse_authorize_request(
     } else {
         Policy {
             policy_id: None,
+            policy_version: None,
             organization_id: payload.organization_id.clone(),
             agent_id: payload.agent_id.clone(),
             enabled: false,
@@ -93,9 +94,11 @@ fn parse_authorize_request(
             max_transactions_per_hour: None,
             hourly_transaction_count: None,
             allowed_assets: std::collections::HashSet::new(),
+            blocked_assets: std::collections::HashSet::new(),
             allowed_recipients: None,
             blocked_recipients: std::collections::HashSet::new(),
             allowed_services: None,
+            blocked_services: std::collections::HashSet::new(),
         }
     };
 

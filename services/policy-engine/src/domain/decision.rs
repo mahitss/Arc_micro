@@ -27,12 +27,17 @@ pub enum ReasonCode {
     RecipientNotAllowed,
     RecipientBlocked,
     ServiceNotAllowed,
+    ServiceBlocked,
     AssetNotAllowed,
+    AssetBlocked,
     DailyTransactionLimitExceeded,
     HourlyVelocityExceeded,
     RiskLow,
     RiskMedium,
     RiskHigh,
+    BudgetUtilizationHigh,
+    DuplicateRequest,
+    TreasuryLimitExceeded,
     InvalidRequest,
 }
 
@@ -63,7 +68,9 @@ impl ReasonCode {
             }
             ReasonCode::RecipientBlocked => "Recipient address is on the blocked recipient list.",
             ReasonCode::ServiceNotAllowed => "Service is not on the allowed service list.",
+            ReasonCode::ServiceBlocked => "Service is on the blocked services list.",
             ReasonCode::AssetNotAllowed => "Asset is not supported or authorized by this policy.",
+            ReasonCode::AssetBlocked => "Asset is on the blocked assets list.",
             ReasonCode::DailyTransactionLimitExceeded => {
                 "Agent has reached its maximum authorized transactions for today."
             }
@@ -73,6 +80,13 @@ impl ReasonCode {
             ReasonCode::RiskLow => "Deterministic risk evaluation returned LOW risk.",
             ReasonCode::RiskMedium => "Deterministic risk evaluation returned MEDIUM risk.",
             ReasonCode::RiskHigh => "Deterministic risk evaluation returned HIGH risk.",
+            ReasonCode::BudgetUtilizationHigh => {
+                "Payment exceeds deterministic budget utilization threshold."
+            }
+            ReasonCode::DuplicateRequest => "Payment request is an unauthorized duplicate.",
+            ReasonCode::TreasuryLimitExceeded => {
+                "Payment exceeds available organization treasury reserves."
+            }
             ReasonCode::InvalidRequest => {
                 "Payment request is invalid or missing required parameters."
             }
@@ -107,6 +121,8 @@ pub struct AuthorizationDecision {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub policy_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub policy_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub evaluated_at: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub risk_level: Option<RiskLevel>,
@@ -129,6 +145,7 @@ impl AuthorizationDecision {
             reason_code: ReasonCode::Approved,
             reason: ReasonCode::Approved.default_message().to_string(),
             policy_id: None,
+            policy_version: None,
             evaluated_at: None,
             risk_level: Some(RiskLevel::Low),
             risk_score: Some(0),
@@ -146,6 +163,7 @@ impl AuthorizationDecision {
             reason_code: code,
             reason: code.default_message().to_string(),
             policy_id: None,
+            policy_version: None,
             evaluated_at: None,
             risk_level: None,
             risk_score: None,
@@ -167,6 +185,7 @@ impl AuthorizationDecision {
             reason_code: code,
             reason: message.into(),
             policy_id: None,
+            policy_version: None,
             evaluated_at: None,
             risk_level: None,
             risk_score: None,
@@ -184,6 +203,7 @@ impl AuthorizationDecision {
             reason_code: code,
             reason: code.default_message().to_string(),
             policy_id: None,
+            policy_version: None,
             evaluated_at: None,
             risk_level: None,
             risk_score: None,
@@ -205,6 +225,7 @@ impl AuthorizationDecision {
             reason_code: code,
             reason: message.into(),
             policy_id: None,
+            policy_version: None,
             evaluated_at: None,
             risk_level: None,
             risk_score: None,

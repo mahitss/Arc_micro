@@ -334,6 +334,34 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 		default:
 			evtType = domain.EventPaymentIntentDenied
 		}
+		payload := map[string]interface{}{
+			"intent_id":         intent.IntentID,
+			"agent_id":          intent.AgentID,
+			"organization_id":   intent.OrganizationID,
+			"service_id":        intent.ServiceID,
+			"amount":            intent.Amount,
+			"asset":             intent.Asset,
+			"recipient":         intent.Recipient,
+			"decision":          string(decision.Decision),
+			"reason_code":       string(decision.ReasonCode),
+			"reason":            decision.Reason,
+			"policy_version":    decision.PolicyVersion,
+			"status":            string(newStatus),
+			"requires_approval": intent.RequiresApproval,
+		}
+		if decision.RiskLevel != nil {
+			payload["risk_level"] = string(*decision.RiskLevel)
+		}
+		if decision.RiskScore != nil {
+			payload["risk_score"] = *decision.RiskScore
+		}
+		if decision.RemainingDailyLimit != nil {
+			payload["remaining_daily_limit"] = *decision.RemainingDailyLimit
+		}
+		if len(decision.Checks) > 0 {
+			payload["checks"] = decision.Checks
+		}
+
 		evt := domain.NewDomainEvent(
 			evtType,
 			intent.OrganizationID,
@@ -341,13 +369,7 @@ func (s *Service) AuthorizeIntent(ctx context.Context, intentID string) (*Paymen
 			"policy-engine",
 			intent.RequestID,
 			correlationID,
-			map[string]interface{}{
-				"intent_id":   intent.IntentID,
-				"agent_id":    intent.AgentID,
-				"decision":    string(decision.Decision),
-				"reason_code": string(decision.ReasonCode),
-				"status":      string(newStatus),
-			},
+			payload,
 		)
 		evt.PaymentIntentID = intent.IntentID
 		evt.AgentID = intent.AgentID

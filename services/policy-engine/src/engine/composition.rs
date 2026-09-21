@@ -88,6 +88,13 @@ pub fn compose_policies(org_policy: &Policy, agent_policy: &Policy) -> Policy {
         .cloned()
         .collect();
 
+    // 7b. Blocked assets: union (if either blocks, asset is blocked)
+    let blocked_assets: HashSet<String> = org_policy
+        .blocked_assets
+        .union(&agent_policy.blocked_assets)
+        .cloned()
+        .collect();
+
     // 8. Blocked recipients: union (if either blocks, recipient is blocked)
     let blocked_recipients: HashSet<_> = org_policy
         .blocked_recipients
@@ -111,8 +118,21 @@ pub fn compose_policies(org_policy: &Policy, agent_policy: &Policy) -> Policy {
         (None, None) => None,
     };
 
+    // 11. Blocked services: union (if either blocks, service is blocked)
+    let blocked_services: HashSet<String> = org_policy
+        .blocked_services
+        .union(&agent_policy.blocked_services)
+        .cloned()
+        .collect();
+
+    let policy_version = agent_policy
+        .policy_version
+        .clone()
+        .or_else(|| org_policy.policy_version.clone());
+
     Policy {
         policy_id: agent_policy.policy_id.clone().or_else(|| org_policy.policy_id.clone()),
+        policy_version,
         organization_id: org_policy
             .organization_id
             .clone()
@@ -133,8 +153,10 @@ pub fn compose_policies(org_policy: &Policy, agent_policy: &Policy) -> Policy {
         max_transactions_per_hour,
         hourly_transaction_count,
         allowed_assets,
+        blocked_assets,
         allowed_recipients,
         blocked_recipients,
         allowed_services,
+        blocked_services,
     }
 }

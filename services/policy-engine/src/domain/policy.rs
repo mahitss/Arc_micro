@@ -11,6 +11,8 @@ pub struct Policy {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub policy_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub organization_id: Option<String>,
     pub agent_id: String,
     pub enabled: bool,
@@ -45,9 +47,13 @@ pub struct Policy {
 
     // Allow/Block Lists
     pub allowed_assets: HashSet<String>,
+    #[serde(default)]
+    pub blocked_assets: HashSet<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed_recipients: Option<HashSet<Address>>,
     pub blocked_recipients: HashSet<Address>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed_services: Option<HashSet<String>>,
+    #[serde(default)]
+    pub blocked_services: HashSet<String>,
 }

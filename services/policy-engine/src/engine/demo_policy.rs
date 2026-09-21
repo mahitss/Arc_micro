@@ -27,6 +27,7 @@ pub fn get_demo_policy() -> Policy {
 
     Policy {
         policy_id: Some("pol_demo_research".to_string()),
+        policy_version: Some("v1.0.0".to_string()),
         organization_id: Some("org_default".to_string()),
         agent_id: "research-agent".to_string(),
         enabled: true,
@@ -46,6 +47,8 @@ pub fn get_demo_policy() -> Policy {
         allowed_recipients: Some(allowed_recipients),
         blocked_recipients,
         allowed_assets,
+        blocked_assets: HashSet::new(),
         allowed_services: None,
+        blocked_services: HashSet::new(),
     }
 }

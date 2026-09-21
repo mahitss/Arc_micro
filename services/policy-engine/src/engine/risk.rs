@@ -145,6 +145,30 @@ pub fn evaluate_risk(
         ),
     });
 
+    // 6. Service Familiarity & Novelty (if service_id is provided)
+    let service_pts = if request.service_id.is_some() {
+        if context.service_prior_tx_count >= 5 {
+            0
+        } else if context.service_prior_tx_count >= 1 {
+            5
+        } else {
+            10 // First time using this service adds novelty points
+        }
+    } else {
+        0
+    };
+    total_score = total_score.saturating_add(service_pts);
+    if request.service_id.is_some() {
+        checks.push(RuleCheck {
+            rule: "risk_service_novelty".to_string(),
+            passed: service_pts == 0,
+            message: format!(
+                "Service familiarity (prior txs: {}): +{} pts",
+                context.service_prior_tx_count, service_pts
+            ),
+        });
+    }
+
     // Bounded between 0 and 100
     let final_score = total_score.min(100);
 

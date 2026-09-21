@@ -38,6 +38,9 @@ fn base_policy() -> Policy {
         blocked_recipients,
         allowed_assets,
         allowed_services: None,
+        blocked_services: HashSet::new(),
+        blocked_assets: HashSet::new(),
+        policy_version: Some("v1.0.0".to_string()),
     }
 }
 
@@ -137,6 +140,21 @@ fn bench_scenarios(c: &mut Criterion) {
                 let composed = compose_policies(black_box(&org_policy), black_box(&agent_policy));
                 let decision = authorize(black_box(&req), black_box(&composed));
                 assert_eq!(decision.decision, Decision::Allow);
+            })
+        });
+    }
+
+    // 7. Blocked Service DENY
+    {
+        let mut policy = base_policy();
+        policy.blocked_services.insert("evil-service".to_string());
+        let mut req = base_request();
+        req.service_id = Some("evil-service".to_string());
+
+        group.bench_function("07_service_blocked_deny", |b| {
+            b.iter(|| {
+                let decision = authorize(black_box(&req), black_box(&policy));
+                assert_eq!(decision.decision, Decision::Deny);
             })
         });
     }

@@ -187,3 +187,43 @@ func TestPolicyClient_CheckHealth(t *testing.T) {
 		t.Fatalf("expected error for unavailable client, got nil")
 	}
 }
+
+func TestPolicyClient_Authorize_BlockedService_And_PolicyVersion(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := domain.AuthorizationDecision{
+			RequestID:     "req_test_blocked_service",
+			Decision:      domain.DecisionDeny,
+			ReasonCode:    domain.ReasonServiceBlocked,
+			Reason:        "Service 'evil-service' is explicitly blocked.",
+			PolicyVersion: "v1.2.3",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer ts.Close()
+
+	client := NewClient(ts.URL, 2*time.Second)
+	req := domain.PaymentRequest{
+		RequestID: "req_test_blocked_service",
+		AgentID:   "research-agent",
+		ServiceID: "evil-service",
+		Recipient: "0x1111111111111111111111111111111111111111",
+		Amount:    "1000",
+		Asset:     "USDC",
+		Purpose:   "compute",
+	}
+
+	decision, err := client.Authorize(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if decision.Decision != domain.DecisionDeny {
+		t.Errorf("expected DENY, got %s", decision.Decision)
+	}
+	if decision.ReasonCode != domain.ReasonServiceBlocked {
+		t.Errorf("expected SERVICE_BLOCKED, got %s", decision.ReasonCode)
+	}
+	if decision.PolicyVersion != "v1.2.3" {
+		t.Errorf("expected policy version v1.2.3, got %s", decision.PolicyVersion)
+	}
+}

@@ -53,6 +53,7 @@ pub fn authorize_with_context(
         });
         let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::GlobalPaused);
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -65,6 +66,7 @@ pub fn authorize_with_context(
         });
         let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::OrganizationPaused);
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -77,6 +79,7 @@ pub fn authorize_with_context(
         });
         let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::AgentPaused);
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -89,6 +92,7 @@ pub fn authorize_with_context(
         });
         let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::PolicyDisabled);
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -107,6 +111,7 @@ pub fn authorize_with_context(
         });
         let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::InvalidAmount);
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -116,7 +121,25 @@ pub fn authorize_with_context(
         message: format!("Amount {} is positive base units.", request.amount),
     });
 
-    // 5. Validate asset
+    // 5. Validate asset: check blocked list first, then allowed list
+    if policy.blocked_assets.contains(&request.asset) {
+        checks.push(RuleCheck {
+            rule: "asset_blocked".to_string(),
+            passed: false,
+            message: format!("Asset '{}' is on the blocked assets list.", request.asset),
+        });
+        let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::AssetBlocked);
+        d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
+        d.checks = checks;
+        return d;
+    }
+    checks.push(RuleCheck {
+        rule: "asset_blocked".to_string(),
+        passed: true,
+        message: "Asset is not on the blocked assets list.".to_string(),
+    });
+
     if !policy.allowed_assets.contains(&request.asset) {
         checks.push(RuleCheck {
             rule: "allowed_asset".to_string(),
@@ -125,6 +148,7 @@ pub fn authorize_with_context(
         });
         let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::AssetNotAllowed);
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -143,6 +167,7 @@ pub fn authorize_with_context(
         });
         let mut d = AuthorizationDecision::deny(&request.request_id, ReasonCode::RecipientBlocked);
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -165,6 +190,7 @@ pub fn authorize_with_context(
                 ReasonCode::RecipientNotAllowed,
             );
             d.policy_id = policy.policy_id.clone();
+            d.policy_version = policy.policy_version.clone();
             d.checks = checks;
             return d;
         }
@@ -175,7 +201,31 @@ pub fn authorize_with_context(
         message: "Recipient is permitted by policy.".to_string(),
     });
 
-    // 8. Check allowed services if allowlist is configured
+    // 8. Check blocked services (denylist takes precedence)
+    if let Some(ref sid) = request.service_id {
+        if policy.blocked_services.contains(sid) {
+            checks.push(RuleCheck {
+                rule: "service_blocked".to_string(),
+                passed: false,
+                message: format!("Service '{}' is on the blocked services list.", sid),
+            });
+            let mut d = AuthorizationDecision::deny(
+                &request.request_id,
+                ReasonCode::ServiceBlocked,
+            );
+            d.policy_id = policy.policy_id.clone();
+            d.policy_version = policy.policy_version.clone();
+            d.checks = checks;
+            return d;
+        }
+    }
+    checks.push(RuleCheck {
+        rule: "service_blocked".to_string(),
+        passed: true,
+        message: "Service is not on the blocked services list.".to_string(),
+    });
+
+    // 9. Check allowed services if allowlist is configured
     if let Some(ref allowed_services) = policy.allowed_services {
         match &request.service_id {
             Some(sid) if allowed_services.contains(sid) => {
@@ -196,6 +246,7 @@ pub fn authorize_with_context(
                     ReasonCode::ServiceNotAllowed,
                 );
                 d.policy_id = policy.policy_id.clone();
+                d.policy_version = policy.policy_version.clone();
                 d.checks = checks;
                 return d;
             }
@@ -211,13 +262,14 @@ pub fn authorize_with_context(
                     "Policy requires an authorized service_id.",
                 );
                 d.policy_id = policy.policy_id.clone();
+                d.policy_version = policy.policy_version.clone();
                 d.checks = checks;
                 return d;
             }
         }
     }
 
-    // 9. Check per-transaction limit
+    // 10. Check per-transaction limit
     if request.amount > policy.per_transaction_limit {
         checks.push(RuleCheck {
             rule: "per_transaction_limit".to_string(),
@@ -232,6 +284,7 @@ pub fn authorize_with_context(
             ReasonCode::AmountExceedsTransactionLimit,
         );
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -241,7 +294,7 @@ pub fn authorize_with_context(
         message: format!("Amount {} is within per-transaction limit.", request.amount),
     });
 
-    // 10. Check daily transaction count
+    // 11. Check daily transaction count
     if policy.daily_transaction_count >= policy.max_transactions_per_day {
         checks.push(RuleCheck {
             rule: "daily_transaction_count".to_string(),
@@ -256,6 +309,7 @@ pub fn authorize_with_context(
             ReasonCode::DailyTransactionLimitExceeded,
         );
         d.policy_id = policy.policy_id.clone();
+        d.policy_version = policy.policy_version.clone();
         d.checks = checks;
         return d;
     }
@@ -268,7 +322,7 @@ pub fn authorize_with_context(
         ),
     });
 
-    // 11. Check daily spending limit with overflow protection
+    // 12. Check daily spending limit with overflow protection
     let projected_daily = match policy.daily_spent.checked_add(request.amount) {
         Some(spent) if spent <= policy.daily_limit => spent,
         _ => {
@@ -285,6 +339,7 @@ pub fn authorize_with_context(
                 ReasonCode::DailyLimitExceeded,
             );
             d.policy_id = policy.policy_id.clone();
+            d.policy_version = policy.policy_version.clone();
             d.checks = checks;
             return d;
         }
@@ -298,7 +353,7 @@ pub fn authorize_with_context(
         ),
     });
 
-    // 12. Check hourly velocity limit if configured
+    // 13. Check hourly velocity limit if configured
     if let Some(hourly_limit) = policy.hourly_limit {
         let current_hourly = policy.hourly_spent.unwrap_or(0);
         match current_hourly.checked_add(request.amount) {
@@ -326,13 +381,14 @@ pub fn authorize_with_context(
                     ReasonCode::HourlyVelocityExceeded,
                 );
                 d.policy_id = policy.policy_id.clone();
+                d.policy_version = policy.policy_version.clone();
                 d.checks = checks;
                 return d;
             }
         }
     }
 
-    // 13. Check hourly transaction count if configured
+    // 14. Check hourly transaction count if configured
     if let Some(max_hourly_txs) = policy.max_transactions_per_hour {
         let current_hourly_txs = policy.hourly_transaction_count.unwrap_or(0);
         if current_hourly_txs >= max_hourly_txs {
@@ -349,15 +405,15 @@ pub fn authorize_with_context(
                 ReasonCode::HourlyVelocityExceeded,
             );
             d.policy_id = policy.policy_id.clone();
+            d.policy_version = policy.policy_version.clone();
             d.checks = checks;
             return d;
         }
     }
 
-    // 14. Deterministic Risk Evaluation
+    // 15. Deterministic Risk Evaluation
     let remaining_daily = policy.daily_limit.saturating_sub(projected_daily);
     let (risk_level, risk_score) = if let Some(ctx) = risk_context {
-
         let risk_eval = evaluate_risk(request, policy, ctx);
         checks.extend(risk_eval.checks);
 
@@ -380,6 +436,7 @@ pub fn authorize_with_context(
                     risk_eval.score
                 ),
                 policy_id: policy.policy_id.clone(),
+                policy_version: policy.policy_version.clone(),
                 evaluated_at: request.timestamp,
                 risk_level: Some(risk_eval.level),
                 risk_score: Some(risk_eval.score),
@@ -393,7 +450,7 @@ pub fn authorize_with_context(
         (Some(RiskLevel::Low), Some(0))
     };
 
-    // 15. Approval threshold check: if amount >= approval_threshold -> APPROVAL_REQUIRED
+    // 16. Approval threshold check: if amount >= approval_threshold -> APPROVAL_REQUIRED
     if let Some(threshold) = policy.approval_threshold {
         if request.amount >= threshold {
             checks.push(RuleCheck {
@@ -413,6 +470,7 @@ pub fn authorize_with_context(
                     request.amount, threshold
                 ),
                 policy_id: policy.policy_id.clone(),
+                policy_version: policy.policy_version.clone(),
                 evaluated_at: request.timestamp,
                 risk_level,
                 risk_score,
@@ -429,13 +487,14 @@ pub fn authorize_with_context(
         message: "Amount is below approval threshold.".to_string(),
     });
 
-    // 16. Return ALLOW
+    // 17. Return ALLOW
     AuthorizationDecision {
         request_id: request.request_id.clone(),
         decision: Decision::Allow,
         reason_code: ReasonCode::Approved,
         reason: ReasonCode::Approved.default_message().to_string(),
         policy_id: policy.policy_id.clone(),
+        policy_version: policy.policy_version.clone(),
         evaluated_at: request.timestamp,
         risk_level,
         risk_score,
@@ -444,4 +503,3 @@ pub fn authorize_with_context(
         simulation: false,
     }
 }
-

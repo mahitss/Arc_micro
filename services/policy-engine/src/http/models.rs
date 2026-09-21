@@ -33,6 +33,8 @@ pub struct AuthorizeHttpResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub policy_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub policy_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub evaluated_at: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub risk_level: Option<RiskLevel>,
@@ -54,6 +56,7 @@ impl From<AuthorizationDecision> for AuthorizeHttpResponse {
             reason_code: dec.reason_code,
             reason: dec.reason,
             policy_id: dec.policy_id,
+            policy_version: dec.policy_version,
             evaluated_at: dec.evaluated_at,
             risk_level: dec.risk_level,
             risk_score: dec.risk_score,
