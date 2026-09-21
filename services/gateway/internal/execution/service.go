@@ -2,20 +2,18 @@ package execution
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"log"
 	"math/big"
-	"strings"
 	"time"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/signer"
 )
 
 // Service defines the interface for blockchain payment execution.
@@ -29,9 +27,11 @@ type ExecutionService struct {
 	cfg              *config.Config
 	blockchainClient blockchain.Client
 	store            Store
+	signer           signer.TransactionSigner
+	auditRecorder    signer.AuditRecorder
 }
 
-// NewExecutionService creates a new ExecutionService instance.
+// NewExecutionService creates a new ExecutionService instance with default signer resolution.
 func NewExecutionService(cfg *config.Config, client blockchain.Client, store Store) *ExecutionService {
 	if store == nil {
 		store = NewMemoryStore()
@@ -41,6 +41,47 @@ func NewExecutionService(cfg *config.Config, client blockchain.Client, store Sto
 		blockchainClient: client,
 		store:            store,
 	}
+}
+
+// NewExecutionServiceWithSigner creates a new ExecutionService with an explicit TransactionSigner and AuditRecorder.
+func NewExecutionServiceWithSigner(cfg *config.Config, client blockchain.Client, store Store, txSigner signer.TransactionSigner, auditRecorder signer.AuditRecorder) *ExecutionService {
+	if store == nil {
+		store = NewMemoryStore()
+	}
+	return &ExecutionService{
+		cfg:              cfg,
+		blockchainClient: client,
+		store:            store,
+		signer:           txSigner,
+		auditRecorder:    auditRecorder,
+	}
+}
+
+// SetSigner sets or overrides the transaction signer.
+func (s *ExecutionService) SetSigner(txSigner signer.TransactionSigner) {
+	s.signer = txSigner
+}
+
+// SetAuditRecorder sets the audit recorder.
+func (s *ExecutionService) SetAuditRecorder(recorder signer.AuditRecorder) {
+	s.auditRecorder = recorder
+}
+
+// Signer returns the configured transaction signer, if any.
+func (s *ExecutionService) Signer() signer.TransactionSigner {
+	return s.signer
+}
+
+func (s *ExecutionService) getSigner() (signer.TransactionSigner, error) {
+	if s.signer != nil {
+		return s.signer, nil
+	}
+	txSigner, err := signer.NewSignerFromConfig(s.cfg, s.auditRecorder)
+	if err != nil {
+		return nil, &blockchain.ConfigurationError{Reason: err.Error()}
+	}
+	s.signer = txSigner
+	return s.signer, nil
 }
 
 // BlockchainClient returns the underlying blockchain client.
@@ -98,17 +139,12 @@ func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.Pa
 		return nil, &blockchain.ConfigurationError{Reason: "blockchain client is not initialized"}
 	}
 
-	trimmedKey := strings.TrimSpace(strings.TrimPrefix(s.cfg.ExecutorPrivateKey, "0x"))
-	if trimmedKey == "" {
-		return nil, &blockchain.ConfigurationError{Reason: "EXECUTOR_PRIVATE_KEY is not configured"}
-	}
-
-	privateKey, err := crypto.HexToECDSA(trimmedKey)
+	txSigner, err := s.getSigner()
 	if err != nil {
-		return nil, &blockchain.ConfigurationError{Reason: "invalid EXECUTOR_PRIVATE_KEY format"}
+		return nil, err
 	}
 
-	// 5. Validate Arc chain ID against connected RPC
+	// 5. Validate Arc chain ID against connected RPC and signer
 	actualChainID, err := s.blockchainClient.ChainID(ctx)
 	if err != nil {
 		return nil, err
@@ -116,9 +152,13 @@ func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.Pa
 	if err := blockchain.ValidateChainID(s.cfg.ArcChainID, actualChainID); err != nil {
 		return nil, err
 	}
+	if actualChainID.Cmp(txSigner.ChainID()) != 0 {
+		return nil, fmt.Errorf("%w: RPC chain ID %s does not match signer configured chain ID %s",
+			signer.ErrInvalidChainID, actualChainID.String(), txSigner.ChainID().String())
+	}
 
 	// 6. Verify executor account balance
-	fromAddress := crypto.PubkeyToAddress(privateKey.PublicKey)
+	fromAddress := txSigner.Address()
 	balance, err := s.blockchainClient.BalanceAt(ctx, fromAddress)
 	if err != nil {
 		return nil, err
@@ -180,9 +220,18 @@ func (s *ExecutionService) ExecutePayment(ctx context.Context, req blockchain.Pa
 		Value:     big.NewInt(0),
 		Data:      calldata,
 	}
+	unsignedTx := types.NewTx(txData)
 
-	signer := types.NewLondonSigner(actualChainID)
-	signedTx, err := types.SignTx(types.NewTx(txData), signer, privateKey)
+	// Transaction Binding: enforces that only the exact authorized destination, amount, calldata, and chain are signed
+	binding := &signer.TransactionBinding{
+		RequestID:        req.RequestID,
+		ChainID:          actualChainID,
+		TargetVault:      vaultAddr,
+		ExpectedCalldata: calldata,
+		ExpectedAmount:   req.Amount,
+	}
+
+	signedTx, err := txSigner.SignTransaction(ctx, unsignedTx, binding)
 	if err != nil {
 		return nil, &blockchain.TransactionSubmissionError{Err: fmt.Errorf("failed to sign transaction: %w", err)}
 	}
@@ -338,8 +387,4 @@ func (s *ExecutionService) waitForReceipt(ctx context.Context, txHash common.Has
 			// Not found yet, continue polling
 		}
 	}
-}
-
-func privKeyToAddress(key *ecdsa.PrivateKey) common.Address {
-	return crypto.PubkeyToAddress(key.PublicKey)
 }

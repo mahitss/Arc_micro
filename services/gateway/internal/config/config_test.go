@@ -95,4 +95,22 @@ func TestValidateLiveExecutionRequirements(t *testing.T) {
 			t.Fatalf("expected error for invalid AgentVault address, got: %v", err)
 		}
 	})
+
+	t.Run("Rejects KMS backend as unavailable without silent fallback", func(t *testing.T) {
+		cfg := validConfig()
+		cfg.SignerBackend = "kms"
+		err := cfg.ValidateLiveExecutionRequirements()
+		if err == nil || !strings.Contains(err.Error(), "KMS signer configured but not available") {
+			t.Fatalf("expected error for KMS signer, got: %v", err)
+		}
+	})
+
+	t.Run("Rejects unsupported SIGNER_BACKEND", func(t *testing.T) {
+		cfg := validConfig()
+		cfg.SignerBackend = "unsupported_backend"
+		err := cfg.ValidateLiveExecutionRequirements()
+		if err == nil || !strings.Contains(err.Error(), "unsupported SIGNER_BACKEND") {
+			t.Fatalf("expected error for unsupported signer backend, got: %v", err)
+		}
+	})
 }

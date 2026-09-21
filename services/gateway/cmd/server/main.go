@@ -19,6 +19,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/signer"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
 
@@ -69,8 +70,6 @@ func main() {
 		}
 	}
 
-	execService := execution.NewExecutionService(cfg, blockchainClient, nil)
-
 	// Initialize Storage Repository
 	repo, db, err := storage.InitializeRepository(context.Background(), cfg)
 	if err != nil {
@@ -84,6 +83,21 @@ func main() {
 			}
 		}()
 	}
+
+	// Initialize Blockchain Transaction Signer Boundary (Day 3 Hardening)
+	auditRecorder := signer.NewStorageAuditRecorder(repo)
+	txSigner, err := signer.NewSignerFromConfig(cfg, auditRecorder)
+	if err != nil {
+		if cfg.EnableLiveExecution {
+			log.Fatalf("[AgentPay Gateway] FATAL: failed to initialize transaction signer: %v", err)
+		}
+		log.Printf("[AgentPay Gateway] Transaction signer not initialized (mock/sim mode): %v", err)
+	} else {
+		log.Printf("[AgentPay Gateway] Transaction signer initialized: backend=%s address=%s chain_id=%s",
+			txSigner.Backend(), txSigner.Address().Hex(), txSigner.ChainID().String())
+	}
+
+	execService := execution.NewExecutionServiceWithSigner(cfg, blockchainClient, nil, txSigner, auditRecorder)
 
 	// Initialize Service Registry
 	serviceRegistry := registry.NewDefaultRegistry()

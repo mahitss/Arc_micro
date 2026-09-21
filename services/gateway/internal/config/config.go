@@ -42,6 +42,11 @@ type Config struct {
 
 	// Day 6: Webhook security configuration
 	AllowLocalhostWebhooks bool
+
+	// Day 3 Hardening: Blockchain Signer Boundary
+	SignerBackend          string // "local" or "kms"
+	KMSKeyID               string
+	KMSRegion              string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -212,6 +217,9 @@ func Load() *Config {
 		AIModel:                os.Getenv("AI_MODEL"),
 		AIAPIKey:               os.Getenv("AI_API_KEY"),
 		AgentVaultAddress:      os.Getenv("AGENTVAULT_ADDRESS"),
+		SignerBackend:          os.Getenv("SIGNER_BACKEND"),
+		KMSKeyID:               os.Getenv("KMS_KEY_ID"),
+		KMSRegion:              os.Getenv("KMS_REGION"),
 	}
 }
 
@@ -234,6 +242,17 @@ func (c *Config) ValidateLiveExecutionRequirements() error {
 	trimmedUSDC := strings.TrimSpace(c.ArcUSDCAddress)
 	if len(trimmedUSDC) != 42 || !strings.HasPrefix(trimmedUSDC, "0x") {
 		return &SafetyCheckError{Reason: "ARC_USDC_ADDRESS must be a valid 42-character 0x hex address"}
+	}
+
+	backend := strings.ToLower(strings.TrimSpace(c.SignerBackend))
+	if backend == "" {
+		backend = "local"
+	}
+	if backend == "kms" {
+		return &SafetyCheckError{Reason: "KMS signer configured but not available: production KMS/HSM integration requires AWS/GCP KMS key ARN and client adapter"}
+	}
+	if backend != "local" {
+		return &SafetyCheckError{Reason: "unsupported SIGNER_BACKEND: only 'local' and 'kms' are recognized"}
 	}
 
 	trimmedKey := strings.TrimSpace(strings.TrimPrefix(c.ExecutorPrivateKey, "0x"))

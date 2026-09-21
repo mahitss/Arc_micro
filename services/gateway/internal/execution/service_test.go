@@ -2,7 +2,9 @@ package execution_test
 
 import (
 	"context"
+	"errors"
 	"math/big"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/signer"
 )
 
 // mockBlockchainClient simulates an EVM node for execution service tests.
@@ -280,4 +283,131 @@ func TestExecutionService_LiveExecutionSuccess(t *testing.T) {
 	if res.ExplorerURL == "" {
 		t.Error("expected non-empty explorer URL")
 	}
+}
+
+// 9. Signing failure does not broadcast and does not create a successful payment
+func TestExecutionService_SigningFailureDoesNotBroadcast(t *testing.T) {
+	cfg := &config.Config{
+		EnableLiveExecution: true,
+		ArcChainID:          "5042",
+		ExecutorPrivateKey:  "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+	}
+	sent := false
+	mockClient := &mockBlockchainClient{
+		sendTransactionFn: func(ctx context.Context, tx *types.Transaction) error {
+			sent = true
+			return nil
+		},
+	}
+	store := execution.NewMemoryStore()
+	svc := execution.NewExecutionService(cfg, mockClient, store)
+
+	// Inject a mock signer that always fails
+	failingSigner := &mockFailingSigner{
+		address: common.HexToAddress("0x90F79bf6EB2c4f870365E785982E1f101E93b906"),
+		chainID: big.NewInt(5042),
+		err:     errors.New("hsm hardware communication error"),
+	}
+	svc.SetSigner(failingSigner)
+
+	req := validExecRequest("req_sign_fail")
+	res, err := svc.ExecutePayment(context.Background(), req)
+	if err == nil {
+		t.Fatal("expected error on signing failure, got nil")
+	}
+	if sent {
+		t.Fatal("CRITICAL: transaction was broadcast despite signing failure!")
+	}
+	if res != nil {
+		t.Fatalf("expected nil result on signing failure, got %+v", res)
+	}
+	if _, found := store.Get("req_sign_fail"); found {
+		t.Fatal("expected no stored successful record when signing fails")
+	}
+}
+
+// 10. KMS configured backend fails closed without broadcasting
+func TestExecutionService_KMSBackendFailsClosed(t *testing.T) {
+	cfg := &config.Config{
+		EnableLiveExecution: true,
+		ArcChainID:          "5042",
+		SignerBackend:       "kms",
+		KMSKeyID:            "arn:aws:kms:us-east-1:123456789012:key/test",
+		ExecutorPrivateKey:  "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+	}
+	sent := false
+	mockClient := &mockBlockchainClient{
+		sendTransactionFn: func(ctx context.Context, tx *types.Transaction) error {
+			sent = true
+			return nil
+		},
+	}
+	svc := execution.NewExecutionService(cfg, mockClient, nil)
+
+	req := validExecRequest("req_kms_closed")
+	_, err := svc.ExecutePayment(context.Background(), req)
+	if err == nil {
+		t.Fatal("expected KMS unavailable error, got nil")
+	}
+	if sent {
+		t.Fatal("CRITICAL: transaction broadcast occurred under unimplemented KMS!")
+	}
+	if !strings.Contains(err.Error(), "KMS signer configured but not available") {
+		t.Errorf("expected KMS unavailable error message, got: %v", err)
+	}
+}
+
+// 11. Custom signer injection and address binding
+func TestExecutionService_CustomSignerInjection(t *testing.T) {
+	cfg := &config.Config{
+		EnableLiveExecution:    true,
+		ArcChainID:             "5042",
+		ArcExplorerURL:         "https://explorer.arc.io",
+		ArcConfirmationTimeout: 5 * time.Second,
+	}
+	sent := false
+	mockClient := &mockBlockchainClient{
+		sendTransactionFn: func(ctx context.Context, tx *types.Transaction) error {
+			sent = true
+			return nil
+		},
+	}
+
+	chainID := big.NewInt(5042)
+	auditRec := &signer.MemoryAuditRecorder{}
+	customSigner, err := signer.NewLocalSigner("4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d", chainID, auditRec)
+	if err != nil {
+		t.Fatalf("failed to create signer: %v", err)
+	}
+
+	svc := execution.NewExecutionServiceWithSigner(cfg, mockClient, nil, customSigner, auditRec)
+
+	req := validExecRequest("req_custom_signer")
+	res, err := svc.ExecutePayment(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !sent {
+		t.Error("expected transaction to be broadcast")
+	}
+	if res.Status != blockchain.StateConfirmed {
+		t.Errorf("expected CONFIRMED status, got %s", res.Status)
+	}
+	if len(auditRec.Events) == 0 {
+		t.Error("expected audit event to be recorded by custom signer")
+	}
+}
+
+type mockFailingSigner struct {
+	address common.Address
+	chainID *big.Int
+	err     error
+}
+
+func (m *mockFailingSigner) Address() common.Address { return m.address }
+func (m *mockFailingSigner) ChainID() *big.Int       { return m.chainID }
+func (m *mockFailingSigner) Backend() string         { return "mock_failing" }
+func (m *mockFailingSigner) SignTransaction(ctx context.Context, tx *types.Transaction, binding *signer.TransactionBinding) (*types.Transaction, error) {
+	return nil, m.err
 }
