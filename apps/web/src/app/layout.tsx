@@ -96,6 +96,13 @@ export default function RootLayout({
                   Events
                 </Link>
                 <Link
+                  href="/security-lab"
+                  className="px-3 py-1.5 rounded-lg text-rose-300 hover:text-white hover:bg-rose-500/20 transition-colors flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  Security Lab
+                </Link>
+                <Link
                   href="/settings"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >

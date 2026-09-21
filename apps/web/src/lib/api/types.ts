@@ -315,4 +315,37 @@ export interface PaymentTrace {
   blockchain_evidence?: BlockchainEvidence;
 }
 
+export type ScenarioStatus = 'PASS' | 'FAIL' | 'NOT_VERIFIED';
+
+export interface SecurityScenario {
+  id: string;
+  name: string;
+  category: 'AUTHORIZATION' | 'FINANCIAL' | 'RESILIENCE' | string;
+  attack_vector: string;
+  expected_behavior: string;
+  actual_behavior: string;
+  status: ScenarioStatus;
+  evidence?: Record<string, any>;
+  execution_time_ms: number;
+}
+
+export interface InvariantResult {
+  id: number;
+  description: string;
+  status: ScenarioStatus;
+  details: string;
+}
+
+export interface SecurityLabReport {
+  generated_at: string;
+  total_scenarios: number;
+  passed_scenarios: number;
+  failed_scenarios: number;
+  invariants_total: number;
+  invariants_verified: number;
+  scenarios: SecurityScenario[];
+  invariants: InvariantResult[];
+}
+
+
 

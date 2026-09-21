@@ -146,6 +146,11 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/events", eventHandler.HandleList)
 		mux.HandleFunc("GET /v1/events/{id}", eventHandler.HandleGet)
 
+		// 12. Day 7: Adversarial Security Lab Control Plane
+		securityLabHandler := handlers.NewSecurityLabHandler(nil)
+		mux.HandleFunc("GET /v1/security-lab/report", securityLabHandler.HandleGetReport)
+		mux.HandleFunc("POST /v1/security-lab/run", securityLabHandler.HandleRunSuite)
+
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {
 			intentService.SetExecutionGate(execution.NewExecutionGate(repo, em, nil))
