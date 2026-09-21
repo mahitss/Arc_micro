@@ -72,10 +72,17 @@ func main() {
 	execService := execution.NewExecutionService(cfg, blockchainClient, nil)
 
 	// Initialize Storage Repository
-	var repo storage.Repository = storage.NewMemoryRepository()
-	if cfg.DatabaseURL != "" {
-		log.Printf("[AgentPay Gateway] Database URL configured: %s (PostgreSQL persistence ready)", cfg.DatabaseURL)
-		// Postgres repository can be attached here when PostgreSQL is running
+	repo, db, err := storage.InitializeRepository(context.Background(), cfg)
+	if err != nil {
+		log.Fatalf("[AgentPay Gateway] FATAL: storage initialization failed: %v", err)
+	}
+	if db != nil {
+		defer func() {
+			log.Printf("[AgentPay Storage] closing database connection pool...")
+			if err := db.Close(); err != nil {
+				log.Printf("[AgentPay Storage] error closing database pool: %v", err)
+			}
+		}()
 	}
 
 	// Initialize Service Registry

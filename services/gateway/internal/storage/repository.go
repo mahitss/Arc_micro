@@ -701,6 +701,12 @@ func (m *MemoryRepository) CompareAndSwapApprovalStatus(ctx context.Context, id 
 func (m *MemoryRepository) CreateReservation(ctx context.Context, res *TreasuryReservation) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	for _, existing := range m.reservations {
+		if existing.IntentID == res.IntentID {
+			*res = *existing
+			return nil
+		}
+	}
 	copyRes := *res
 	if copyRes.OrganizationID == "" {
 		copyRes.OrganizationID = "org_default"
@@ -1580,9 +1586,11 @@ func (p *PostgresRepository) CreateReservation(ctx context.Context, res *Treasur
 	}
 	query := `INSERT INTO treasury_reservations (id, organization_id, vault_address, payment_intent_id, amount, status, created_at, updated_at)
 	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	          ON CONFLICT (id) DO UPDATE SET status = $6, updated_at = $8`
-	_, err := p.db.ExecContext(ctx, query, res.ID, orgID, res.VaultAddress, res.IntentID, res.Amount, res.Status, res.CreatedAt, res.UpdatedAt)
-	return err
+	          ON CONFLICT (payment_intent_id) DO UPDATE
+	          SET updated_at = treasury_reservations.updated_at
+	          RETURNING id, organization_id, vault_address, payment_intent_id, amount, status, created_at, updated_at`
+	row := p.db.QueryRowContext(ctx, query, res.ID, orgID, res.VaultAddress, res.IntentID, res.Amount, res.Status, res.CreatedAt, res.UpdatedAt)
+	return row.Scan(&res.ID, &res.OrganizationID, &res.VaultAddress, &res.IntentID, &res.Amount, &res.Status, &res.CreatedAt, &res.UpdatedAt)
 }
 
 func (p *PostgresRepository) GetReservationByIntent(ctx context.Context, intentID string) (*TreasuryReservation, error) {

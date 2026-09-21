@@ -1,17 +1,36 @@
 # ==============================================================================
 # AgentPay Local Service Orchestration
 # ==============================================================================
-# This docker-compose configuration provides an optional containerized environment
-# for running the backend services (Gateway and Policy Engine) locally with network
-# isolation and consistent environment variables.
-#
-# Frontend (Next.js) and Contracts (Foundry) are managed directly via native
-# tooling for optimal hot-reloading and compilation speed.
+# Coherent multi-service configuration for AgentPay:
+# - postgres: Production-grade relational persistence with volume isolation
+# - policy-engine: Rust deterministic policy evaluator
+# - gateway: Go financial control plane gateway
+# - web: Next.js operator control center
 # ==============================================================================
 
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentpay-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agentpay}
+      POSTGRES_USER: ${POSTGRES_USER:-agentpay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentpay_dev_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agentpay} -d ${POSTGRES_DB:-agentpay}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - agentpay-network
+
   policy-engine:
     build:
       context: ./services/policy-engine
@@ -27,6 +46,8 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
+    networks:
+      - agentpay-network
 
   gateway:
     build:
@@ -37,11 +58,18 @@ services:
       - "${GATEWAY_PORT:-8080}:8080"
     environment:
       - GATEWAY_PORT=8080
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - POLICY_ENGINE_URL=http://policy-engine:8081
-      - ARC_RPC_URL=${ARC_RPC_URL:-}
-      - ARC_CHAIN_ID=${ARC_CHAIN_ID:-}
-      - ARC_USDC_ADDRESS=${ARC_USDC_ADDRESS:-}
+      - DATABASE_URL=${DATABASE_URL:-postgres://agentpay:agentpay_dev_secret@postgres:5432/agentpay?sslmode=disable}
+      - DB_AUTO_MIGRATE=true
+      - ARC_RPC_URL=${ARC_RPC_URL:-https://rpc.mainnet.arc.io}
+      - ARC_CHAIN_ID=${ARC_CHAIN_ID:-5042}
+      - ARC_USDC_ADDRESS=${ARC_USDC_ADDRESS:-0x3600000000000000000000000000000000000000}
+      - ARC_EXPLORER_URL=${ARC_EXPLORER_URL:-https://explorer.arc.io}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
     depends_on:
+      postgres:
+        condition: service_healthy
       policy-engine:
         condition: service_healthy
     healthcheck:
@@ -50,3 +78,35 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
+    networks:
+      - agentpay-network
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: agentpay-web
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - NEXT_PUBLIC_GATEWAY_URL=${NEXT_PUBLIC_GATEWAY_URL:-http://localhost:8080}
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - agentpay-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  agentpay-network:
+    driver: bridge

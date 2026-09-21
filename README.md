@@ -181,6 +181,9 @@ cd services/gateway && go test -count=1 ./...
 # Run Rust Policy Engine Tests
 cd services/policy-engine && cargo test
 
+# Run Rust Criterion Policy Engine Benchmarks
+cd services/policy-engine && cargo bench
+
 # Run Foundry Solidity Smart Contract Tests & Fuzzing
 cd contracts && forge test
 
@@ -188,8 +191,11 @@ cd contracts && forge test
 cd packages/sdk-typescript && npm test
 
 # Run Python SDK Tests
-cd packages/sdk-python && python -m unittest tests/test_sdk.py
+cd packages/sdk-python && pytest
 
-# Build Next.js Web Dashboard
-cd apps/web && npm run build
+# Run Developer CLI Tests
+cd packages/cli && npm test
+
+# Run Web Tests & Build Next.js Dashboard
+cd apps/web && npm test && npm run build
 ```

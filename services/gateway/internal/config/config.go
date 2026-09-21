@@ -25,6 +25,12 @@ type Config struct {
 
 	// Task 6: AI Agent & Storage Configuration
 	DatabaseURL            string
+	Environment            string
+	DBMaxOpenConns         int
+	DBMaxIdleConns         int
+	DBConnMaxLifetime      time.Duration
+	DBConnMaxIdleTime      time.Duration
+	AutoMigrate            bool
 	AgentAutoExecution     bool
 	PaymentIntentTTLSeconds int
 	AIProvider             string
@@ -135,6 +141,49 @@ func Load() *Config {
 		aiProvider = "mock"
 	}
 
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = os.Getenv("ENVIRONMENT")
+	}
+	if env == "" {
+		env = "development"
+	}
+
+	maxOpenConns := 25
+	if rawMaxOpen := os.Getenv("DB_MAX_OPEN_CONNS"); rawMaxOpen != "" {
+		if parsed, err := strconv.Atoi(rawMaxOpen); err == nil && parsed > 0 {
+			maxOpenConns = parsed
+		}
+	}
+
+	maxIdleConns := 5
+	if rawMaxIdle := os.Getenv("DB_MAX_IDLE_CONNS"); rawMaxIdle != "" {
+		if parsed, err := strconv.Atoi(rawMaxIdle); err == nil && parsed > 0 {
+			maxIdleConns = parsed
+		}
+	}
+
+	connMaxLifetime := 15 * time.Minute
+	if rawLifetime := os.Getenv("DB_CONN_MAX_LIFETIME_MINUTES"); rawLifetime != "" {
+		if parsed, err := strconv.Atoi(rawLifetime); err == nil && parsed > 0 {
+			connMaxLifetime = time.Duration(parsed) * time.Minute
+		}
+	}
+
+	connMaxIdleTime := 5 * time.Minute
+	if rawIdleTime := os.Getenv("DB_CONN_MAX_IDLE_TIME_MINUTES"); rawIdleTime != "" {
+		if parsed, err := strconv.Atoi(rawIdleTime); err == nil && parsed > 0 {
+			connMaxIdleTime = time.Duration(parsed) * time.Minute
+		}
+	}
+
+	autoMigrate := true
+	if rawAutoMigrate := os.Getenv("AUTO_MIGRATE"); rawAutoMigrate != "" {
+		if strings.EqualFold(rawAutoMigrate, "false") || rawAutoMigrate == "0" {
+			autoMigrate = false
+		}
+	}
+
 	return &Config{
 		Port:                   port,
 		PolicyEngineURL:        policyEngineURL,
@@ -151,6 +200,12 @@ func Load() *Config {
 		ArcConfirmationTimeout: time.Duration(confirmationTimeoutMs) * time.Millisecond,
 
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
+		Environment:            env,
+		DBMaxOpenConns:         maxOpenConns,
+		DBMaxIdleConns:         maxIdleConns,
+		DBConnMaxLifetime:      connMaxLifetime,
+		DBConnMaxIdleTime:      connMaxIdleTime,
+		AutoMigrate:            autoMigrate,
 		AgentAutoExecution:     agentAutoExecution,
 		PaymentIntentTTLSeconds: ttlSeconds,
 		AIProvider:             aiProvider,
