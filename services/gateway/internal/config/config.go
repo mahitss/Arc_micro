@@ -244,11 +244,12 @@ func (c *Config) ValidateLiveExecutionRequirements() error {
 		return &SafetyCheckError{Reason: "EXECUTOR_PRIVATE_KEY must be a 64-character hex string (32 bytes)"}
 	}
 
-	if c.AgentVaultAddress != "" {
-		trimmedVault := strings.TrimSpace(c.AgentVaultAddress)
-		if len(trimmedVault) != 42 || !strings.HasPrefix(trimmedVault, "0x") {
-			return &SafetyCheckError{Reason: "AGENTVAULT_ADDRESS must be a valid 42-character 0x hex address"}
-		}
+	trimmedVault := strings.TrimSpace(c.AgentVaultAddress)
+	if trimmedVault == "" {
+		return &SafetyCheckError{Reason: "AGENTVAULT_ADDRESS must be specified when ENABLE_LIVE_EXECUTION is true"}
+	}
+	if len(trimmedVault) != 42 || !strings.HasPrefix(trimmedVault, "0x") {
+		return &SafetyCheckError{Reason: "AGENTVAULT_ADDRESS must be a valid 42-character 0x hex address"}
 	}
 
 	return nil
