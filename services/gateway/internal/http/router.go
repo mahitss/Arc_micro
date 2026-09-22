@@ -101,6 +101,23 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/missions/{id}/trace", missionHandler.HandleGetTrace)
 		mux.HandleFunc("GET /v1/marketplace", missionHandler.HandleMarketplace)
 		mux.HandleFunc("GET /v1/economy/reputation", missionHandler.HandleReputation)
+
+		// 5.6 Agent-to-Agent (A2A) Economic Network APIs
+		agentEconHandler := handlers.NewAgentEconomyHandler(missionSvc)
+		mux.HandleFunc("GET /v1/agents/discover", agentEconHandler.HandleDiscoverAgents)
+		mux.HandleFunc("GET /v1/agents/services/{id}", agentEconHandler.HandleGetAgentServices)
+		mux.HandleFunc("GET /v1/agent-services/{id}", agentEconHandler.HandleGetAgentServices)
+		mux.HandleFunc("POST /v1/agent-services/{id}/quotes", agentEconHandler.HandleCreateQuote)
+		mux.HandleFunc("GET /v1/quotes/{id}", agentEconHandler.HandleGetQuote)
+		mux.HandleFunc("POST /v1/quotes/{id}/accept", agentEconHandler.HandleAcceptQuote)
+		mux.HandleFunc("POST /v1/quotes/{id}/reject", agentEconHandler.HandleRejectQuote)
+		mux.HandleFunc("POST /v1/quotes/{id}/counter", agentEconHandler.HandleCounterQuote)
+		mux.HandleFunc("POST /v1/hires", agentEconHandler.HandleCreateHire)
+		mux.HandleFunc("GET /v1/hires/{id}", agentEconHandler.HandleGetHire)
+		mux.HandleFunc("POST /v1/hires/{id}/cancel", agentEconHandler.HandleCancelHire)
+		mux.HandleFunc("POST /v1/hires/{id}/result", agentEconHandler.HandleSubmitResult)
+		mux.HandleFunc("GET /v1/missions/{id}/economic-graph", agentEconHandler.HandleGetEconomicGraph)
+		mux.HandleFunc("GET /v1/missions/{id}/hires", agentEconHandler.HandleListMissionHires)
 	}
 
 	// 6. V1 Query & List APIs for Web Control Center

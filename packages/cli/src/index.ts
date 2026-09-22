@@ -4,9 +4,13 @@ import { getConfig, maskApiKey, setConfigKey } from './config.js';
 import {
   printAgentBudget,
   printAgentDetail,
+  printAgentQuote,
   printAgentsList,
+  printAgentServicesList,
   printApprovalsList,
+  printEconomicGraph,
   printEventsList,
+  printHire,
   printJson,
   printPaymentIntent,
   printPaymentIntentsList,
@@ -55,6 +59,20 @@ Commands:
   agents list                      List registered agents
   agents get <id>                  Get details of an agent
   agents budget <id>               Get read-only financial budget and limits
+  agents discover                  Discover peer agents (--capability, --max-price, etc.)
+  agents services <id>             List economic services provided by an agent
+
+  quotes request <service_id>      Request inter-agent quote (--buyer <id> [--price <units>])
+  quotes counter <id>              Counter-offer quote (--agent <id> --price <units>)
+  quotes accept <id>               Accept an offered or countered quote
+  quotes get <id>                  Get quote details
+
+  hires create                     Create hire agreement (--buyer, --quote, --mission)
+  hires get <id>                   Get hire status
+  hires pay <id>                   Execute hire payment through AgentPay financial engine
+  hires cancel <id>                Cancel hire agreement
+
+  missions graph <id>              Display directed economic network DAG for a mission
 
   services list                    List approved service providers
     --category <cat>               Filter by category (RESEARCH, DATA, COMPUTE, etc.)
@@ -186,6 +204,27 @@ async function main(): Promise<void> {
         const budget = await client.agents.getBudget(targetId);
         if (isJson) printJson(budget);
         else printAgentBudget(budget);
+        return;
+      }
+      if (action === 'discover') {
+        const capability = flags['capability'] as string | undefined;
+        const maxPrice = flags['max-price'] as string | undefined;
+        const minReputation = flags['min-reputation'] !== undefined ? Number(flags['min-reputation']) : undefined;
+        const risk = flags['risk'] as string | undefined;
+        const availability = flags['availability'] as string | undefined;
+        const services = await client.agents.discover({ capability, maxPrice, minReputation, risk, availability });
+        if (isJson) printJson(services);
+        else printAgentServicesList(services);
+        return;
+      }
+      if (action === 'services') {
+        if (!targetId) {
+          console.error('Error: "agents services" requires an agent <id>');
+          process.exit(1);
+        }
+        const services = await client.agents.getServices(targetId);
+        if (isJson) printJson(services);
+        else printAgentServicesList(services);
         return;
       }
     }
@@ -372,6 +411,123 @@ async function main(): Promise<void> {
           console.log(valid ? 'Signature VALID.' : 'Signature INVALID.');
         }
         if (!valid) process.exit(1);
+        return;
+      }
+    }
+
+    // 8. Quotes & Negotiation
+    if (resource === 'quotes' || resource === 'quote') {
+      if (action === 'request') {
+        const serviceId = targetId || (flags['service'] as string);
+        const buyer = flags['buyer'] as string;
+        const price = flags['price'] as string | undefined;
+        if (!serviceId || !buyer) {
+          console.error('Error: "quotes request" requires service <id> and --buyer <agent_id>');
+          process.exit(1);
+        }
+        const quote = await client.quotes.request(serviceId, { buyer_agent_id: buyer, proposed_price: price });
+        if (isJson) printJson(quote);
+        else printAgentQuote(quote);
+        return;
+      }
+      if (action === 'get') {
+        if (!targetId) {
+          console.error('Error: "quotes get" requires a quote <id>');
+          process.exit(1);
+        }
+        const quote = await client.quotes.get(targetId);
+        if (isJson) printJson(quote);
+        else printAgentQuote(quote);
+        return;
+      }
+      if (action === 'counter') {
+        const agent = flags['agent'] as string;
+        const price = flags['price'] as string;
+        if (!targetId || !agent || !price) {
+          console.error('Error: "quotes counter" requires quote <id>, --agent <agent_id>, and --price <units>');
+          process.exit(1);
+        }
+        const quote = await client.quotes.counter(targetId, { agent_id: agent, proposed_price: price });
+        if (isJson) printJson(quote);
+        else printAgentQuote(quote);
+        return;
+      }
+      if (action === 'accept') {
+        if (!targetId) {
+          console.error('Error: "quotes accept" requires quote <id>');
+          process.exit(1);
+        }
+        const quote = await client.quotes.accept(targetId);
+        if (isJson) printJson(quote);
+        else printAgentQuote(quote);
+        return;
+      }
+    }
+
+    // 9. Hires & Execution
+    if (resource === 'hires' || resource === 'hire') {
+      if (action === 'create') {
+        const buyer = flags['buyer'] as string;
+        const quoteId = flags['quote'] as string;
+        const missionId = flags['mission'] as string;
+        const expected = (flags['expected'] as string) || 'execution_result';
+        if (!buyer || !quoteId || !missionId) {
+          console.error('Error: "hires create" requires --buyer <id>, --quote <id>, and --mission <id>');
+          process.exit(1);
+        }
+        const hire = await client.hires.create({
+          buyer_agent_id: buyer,
+          quote_id: quoteId,
+          mission_id: missionId,
+          expected_result: expected,
+        });
+        if (isJson) printJson(hire);
+        else printHire(hire);
+        return;
+      }
+      if (action === 'get') {
+        if (!targetId) {
+          console.error('Error: "hires get" requires a hire <id>');
+          process.exit(1);
+        }
+        const hire = await client.hires.get(targetId);
+        if (isJson) printJson(hire);
+        else printHire(hire);
+        return;
+      }
+      if (action === 'pay') {
+        if (!targetId) {
+          console.error('Error: "hires pay" requires a hire <id>');
+          process.exit(1);
+        }
+        const hire = await client.hires.executePayment(targetId);
+        if (isJson) printJson(hire);
+        else printHire(hire);
+        return;
+      }
+      if (action === 'cancel') {
+        if (!targetId) {
+          console.error('Error: "hires cancel" requires a hire <id>');
+          process.exit(1);
+        }
+        const reason = flags['reason'] as string | undefined;
+        const hire = await client.hires.cancel(targetId, reason);
+        if (isJson) printJson(hire);
+        else printHire(hire);
+        return;
+      }
+    }
+
+    // 10. Missions & Network Graph
+    if (resource === 'missions' || resource === 'mission') {
+      if (action === 'graph') {
+        if (!targetId) {
+          console.error('Error: "missions graph" requires a mission <id>');
+          process.exit(1);
+        }
+        const graph = await client.missions.economicGraph(targetId);
+        if (isJson) printJson(graph);
+        else printEconomicGraph(graph);
         return;
       }
     }

@@ -20,7 +20,10 @@ export {
 export { AgentsResource } from './resources/agents.js';
 export { ApprovalsResource } from './resources/approvals.js';
 export { EventsResource } from './resources/events.js';
+export { HiresResource } from './resources/hires.js';
+export { MissionsResource } from './resources/missions.js';
 export { PaymentIntentsResource } from './resources/payment-intents.js';
+export { QuotesResource } from './resources/quotes.js';
 export { ServicesResource } from './resources/services.js';
 export { SimulationsResource } from './resources/simulations.js';
 export { TransactionsResource } from './resources/transactions.js';
@@ -28,32 +31,50 @@ export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookS
 export type {
   Agent,
   AgentBudget,
+  AgentCapability,
   AgentDetail,
+  AgentDiscoveryFilter,
+  AgentQuote,
+  AgentResult,
+  AgentService,
   Approval,
   ApprovalEvidence,
   BlockchainEvidence,
   ClientOptions,
+  CounterQuoteParams,
+  CreateHireParams,
   CreatePaymentIntentParams,
   CreateWebhookEndpointParams,
   CreateWebhookEndpointResponse,
   DomainEvent,
+  EconomicGraph,
   ExecutionMode,
+  GraphEdge,
+  GraphEdgeType,
+  GraphNode,
+  GraphNodeType,
+  Hire,
+  HireStatus,
   IntentDecision,
   ListEventsFilter,
+  NegotiationProposal,
   PaymentIntent,
   PaymentIntentDetail,
   PaymentNextAction,
   PaymentSummary,
   PaymentTrace,
   PolicyEvidence,
+  QuoteStatus,
   RegisteredService,
   RequestOptions,
   RequestPaymentInput,
   RequestPaymentResult,
+  RequestQuoteParams,
   ServiceFilter,
   ServiceQuote,
   SimulationRequest,
   SimulationResponse,
+  SubmitResultParams,
   TraceStep,
   TransactionRecord,
   TreasuryEvidence,

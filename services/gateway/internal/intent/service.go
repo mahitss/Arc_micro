@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
@@ -94,6 +95,7 @@ type Service struct {
 	gate          Gate
 	treasury      TreasuryService
 	dispatcher    EventDispatcher
+	createMu      sync.Mutex
 }
 
 // NewService creates a new intent Service.
@@ -144,6 +146,11 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 	orgID := params.OrganizationID
 	if orgID == "" {
 		orgID = "org_default"
+	}
+
+	if params.RequestID != "" {
+		s.createMu.Lock()
+		defer s.createMu.Unlock()
 	}
 
 	// 0. Idempotency check: if RequestID provided and already exists, return existing intent
@@ -213,6 +220,12 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 	}
 
 	if err := s.repo.SaveIntent(ctx, intent); err != nil {
+		if params.RequestID != "" {
+			existing, getErr := s.repo.GetIntentByRequestID(ctx, orgID, params.RequestID)
+			if getErr == nil && existing != nil {
+				return existing, nil
+			}
+		}
 		return nil, fmt.Errorf("failed to save payment intent: %w", err)
 	}
 

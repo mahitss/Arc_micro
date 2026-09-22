@@ -239,6 +239,130 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         sig = hmac.new(secret.encode("utf-8"), f"{now}.{payload}".encode("utf-8"), hashlib.sha256).hexdigest()
         self.assertTrue(verify_webhook(payload, f"t={now},v1={sig}", secret))
 
+    @patch("requests.request")
+    def test_a2a_discovery_and_services(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "agents": [
+                {
+                    "agent_id": "agent_data_01",
+                    "service_id": "data-processing",
+                    "capabilities": ["data_extraction"],
+                    "pricing_model": "FIXED",
+                    "base_price": "500000",
+                    "reputation": 9800,
+                }
+            ]
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        discovered = client.agents.discover(capability="data_extraction", min_reputation=9000)
+        self.assertEqual(len(discovered), 1)
+        self.assertEqual(discovered[0]["agent_id"], "agent_data_01")
+
+        mock_resp.json.return_value = {
+            "services": [
+                {"agent_id": "agent_data_01", "service_id": "data-processing"}
+            ]
+        }
+        services = client.agents.get_services("agent_data_01")
+        self.assertEqual(len(services), 1)
+        self.assertEqual(services[0]["service_id"], "data-processing")
+
+    @patch("requests.request")
+    def test_a2a_quotes_and_negotiation(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "quote_id": "quote_py_01",
+            "buyer_agent_id": "agent_buyer",
+            "seller_agent_id": "agent_seller",
+            "service_id": "data-processing",
+            "price": "480000",
+            "status": "OFFERED",
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        quote = client.quotes.request(
+            service_id="data-processing",
+            buyer_agent_id="agent_buyer",
+            proposed_price="450000",
+        )
+        self.assertEqual(quote["quote_id"], "quote_py_01")
+        self.assertEqual(quote["price"], "480000")
+
+        countered = client.quotes.counter("quote_py_01", agent_id="agent_buyer", proposed_price="460000")
+        self.assertEqual(countered["quote_id"], "quote_py_01")
+
+        accepted = client.quotes.accept("quote_py_01")
+        self.assertEqual(accepted["quote_id"], "quote_py_01")
+
+    @patch("requests.request")
+    def test_a2a_hires_payments_and_results(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "id": "hire_py_01",
+            "buyer_agent_id": "agent_buyer",
+            "seller_agent_id": "agent_seller",
+            "service_id": "data-processing",
+            "call_depth": 1,
+            "status": "CREATED",
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        hire = client.hires.create(
+            buyer_agent_id="agent_buyer",
+            quote_id="quote_py_01",
+            mission_id="mission_100",
+            expected_result="json_data",
+        )
+        self.assertEqual(hire["id"], "hire_py_01")
+
+        mock_resp.json.return_value = {"id": "hire_py_01", "status": "PAID"}
+        paid = client.hires.execute_payment("hire_py_01")
+        self.assertEqual(paid["status"], "PAID")
+
+        mock_resp.json.return_value = {"id": "hire_py_01", "status": "RESULT_RECEIVED"}
+        result = client.hires.submit_result(
+            hire_id="hire_py_01",
+            result_type="json",
+            result={"key": "val"},
+            quality=0.98,
+        )
+        self.assertEqual(result["status"], "RESULT_RECEIVED")
+
+        mock_resp.json.return_value = {"id": "hire_py_01", "status": "CANCELLED"}
+        cancelled = client.hires.cancel("hire_py_01", "Test cancellation")
+        self.assertEqual(cancelled["status"], "CANCELLED")
+
+    @patch("requests.request")
+    def test_a2a_economic_graph(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "mission_id": "mission_py_99",
+            "nodes": [
+                {"id": "mission_py_99", "type": "MISSION", "label": "Analysis"},
+                {"id": "agent_01", "type": "AGENT", "label": "Agent Alpha"},
+            ],
+            "edges": [
+                {"source": "agent_01", "target": "hire_py_01", "type": "HIRED"},
+            ],
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        graph = client.missions.economic_graph("mission_py_99")
+        self.assertEqual(graph["mission_id"], "mission_py_99")
+        self.assertEqual(len(graph["nodes"]), 2)
+        self.assertEqual(len(graph["edges"]), 1)
+
 if __name__ == "__main__":
     unittest.main()
+
 

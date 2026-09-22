@@ -65,16 +65,19 @@ type MissionTrace struct {
 
 // MissionService coordinates the autonomous economic mission lifecycle.
 type MissionService struct {
-	mu            sync.Mutex
-	repo          MissionRepository
-	reg           *registry.Registry
-	planner       Planner
-	economyEngine *EconomyEngine
-	budgetCtrl    *BudgetController
-	reputationMgr *ReputationManager
-	agentCoord    *AgentCoordinator
-	intentService *intent.Service
-	simulator     *MissionSimulator
+	mu                sync.Mutex
+	repo              MissionRepository
+	reg               *registry.Registry
+	planner           Planner
+	economyEngine     *EconomyEngine
+	budgetCtrl        *BudgetController
+	reputationMgr     *ReputationManager
+	agentCoord        *AgentCoordinator
+	intentService     *intent.Service
+	simulator         *MissionSimulator
+	hiringService     *HiringService
+	negotiationEngine *NegotiationEngine
+	graphBuilder      *GraphBuilder
 }
 
 // NewMissionService initializes the MissionService.
@@ -106,17 +109,23 @@ func NewMissionService(
 	}
 
 	sim := NewMissionSimulator(planner, reg, engine, repMgr, policyClient)
+	hiring := NewHiringService(agentCoord, intentService, budgetCtrl)
+	negotiation := NewNegotiationEngine(agentCoord, budgetCtrl)
+	graph := NewGraphBuilder()
 
 	return &MissionService{
-		repo:          repo,
-		reg:           reg,
-		planner:       planner,
-		economyEngine: engine,
-		budgetCtrl:    budgetCtrl,
-		reputationMgr: repMgr,
-		agentCoord:    agentCoord,
-		intentService: intentService,
-		simulator:     sim,
+		repo:              repo,
+		reg:               reg,
+		planner:           planner,
+		economyEngine:     engine,
+		budgetCtrl:        budgetCtrl,
+		reputationMgr:     repMgr,
+		agentCoord:        agentCoord,
+		intentService:     intentService,
+		simulator:         sim,
+		hiringService:     hiring,
+		negotiationEngine: negotiation,
+		graphBuilder:      graph,
 	}
 }
 
@@ -611,3 +620,43 @@ func (s *MissionService) recordAudit(ctx context.Context, m *Mission, eventType 
 	evt.AgentID = m.AgentID
 	_ = s.repo.SaveDomainEvent(ctx, evt)
 }
+
+// GetHiringService returns the inter-agent hiring coordinator.
+func (s *MissionService) GetHiringService() *HiringService {
+	return s.hiringService
+}
+
+// GetNegotiationEngine returns the economic negotiation engine.
+func (s *MissionService) GetNegotiationEngine() *NegotiationEngine {
+	return s.negotiationEngine
+}
+
+// GetAgentCoordinator returns the agent coordinator.
+func (s *MissionService) GetAgentCoordinator() *AgentCoordinator {
+	return s.agentCoord
+}
+
+// GetEconomicGraph returns the full directed economic graph of agents, hires, and payments for a mission.
+func (s *MissionService) GetEconomicGraph(ctx context.Context, missionID string) (*EconomicGraph, error) {
+	s.mu.Lock()
+	m, err := s.repo.GetMission(ctx, missionID)
+	if err != nil {
+		s.mu.Unlock()
+		return nil, err
+	}
+	steps, _ := s.repo.ListMissionSteps(ctx, missionID)
+	s.mu.Unlock()
+
+	var hires []*Hire
+	if s.hiringService != nil {
+		hires, _ = s.hiringService.ListHiresByMission(ctx, missionID)
+	}
+
+	copiedSteps := make([]MissionStep, len(steps))
+	for i, st := range steps {
+		copiedSteps[i] = *st
+	}
+
+	return s.graphBuilder.BuildEconomicGraph(ctx, m, hires, copiedSteps), nil
+}
+

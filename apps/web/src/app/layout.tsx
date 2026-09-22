@@ -60,6 +60,13 @@ export default function RootLayout({
                   Marketplace
                 </Link>
                 <Link
+                  href="/network"
+                  className="px-3 py-1.5 rounded-lg text-emerald-300 hover:text-white hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Network
+                </Link>
+                <Link
                   href="/economy"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >

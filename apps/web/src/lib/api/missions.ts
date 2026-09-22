@@ -179,6 +179,8 @@ export async function fetchMissions(options?: { useDemo?: boolean }): Promise<Mi
   }
 }
 
+export const listMissions = fetchMissions;
+
 export async function fetchMission(id: string, options?: { useDemo?: boolean }): Promise<Mission> {
   if (options?.useDemo) {
     const found = DEMO_MISSIONS.find((m) => m.id === id);

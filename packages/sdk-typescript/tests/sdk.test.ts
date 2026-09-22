@@ -658,3 +658,186 @@ test('AgentPay SDK — Financial Flight Recorder Trace Retrieval', async () => {
   assert.equal(trace.steps[0].type, 'PAYMENT_REQUESTED');
 });
 
+test('AgentPay SDK — Agent-to-Agent Discovery and Services', async () => {
+  let capturedUrl = '';
+  const mockFetch: typeof fetch = async (input) => {
+    capturedUrl = input.toString();
+    const item = {
+      agent_id: 'agent_data_01',
+      service_id: 'data-processing',
+      organization_id: 'org_default',
+      name: 'Data Extraction Agent',
+      description: 'Extracts structured data from web and documents',
+      capabilities: ['data_extraction', 'sentiment_analysis'],
+      pricing_model: 'FIXED',
+      base_price: '500000',
+      max_price: '1500000',
+      supported_assets: ['USDC'],
+      availability: 'ONLINE',
+      reputation: 9800,
+      success_rate_bps: 9950,
+      average_latency_ms: 120,
+      risk_profile: 'LOW',
+      enabled: true,
+      verified: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const payload = capturedUrl.includes('/services/') ? { services: [item] } : { agents: [item] };
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const discovered = await client.agents.discover({ capability: 'data_extraction', minReputation: 9000 });
+
+  assert.ok(capturedUrl.includes('/v1/agents/discover?capability=data_extraction&min_reputation=9000'));
+  assert.equal(discovered.length, 1);
+  assert.equal(discovered[0].agent_id, 'agent_data_01');
+  assert.equal(discovered[0].pricing_model, 'FIXED');
+
+  const services = await client.agents.getServices('agent_data_01');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/agents/services/agent_data_01');
+  assert.equal(services.length, 1);
+});
+
+test('AgentPay SDK — Agent Quotes and Negotiation', async () => {
+  let capturedUrl = '';
+  let capturedBody = '';
+  let capturedMethod = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+    capturedBody = (init?.body as string) || '';
+
+    return new Response(
+      JSON.stringify({
+        quote_id: 'quote_a2a_001',
+        buyer_agent_id: 'agent_buyer',
+        seller_agent_id: 'agent_seller',
+        service_id: 'data-processing',
+        price: '480000',
+        asset: 'USDC',
+        estimated_latency_ms: 250,
+        quality: 9500,
+        valid_until: new Date(Date.now() + 600000).toISOString(),
+        status: 'OFFERED',
+        created_at: new Date().toISOString(),
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const quote = await client.quotes.request('data-processing', {
+    buyer_agent_id: 'agent_buyer',
+    proposed_price: '450000',
+  });
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/agent-services/data-processing/quotes');
+  assert.equal(capturedMethod, 'POST');
+  assert.equal(quote.quote_id, 'quote_a2a_001');
+  assert.equal(quote.price, '480000');
+
+  const countered = await client.quotes.counter('quote_a2a_001', {
+    agent_id: 'agent_buyer',
+    proposed_price: '460000',
+  });
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/quotes/quote_a2a_001/counter');
+
+  const accepted = await client.quotes.accept('quote_a2a_001');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/quotes/quote_a2a_001/accept');
+  assert.equal(accepted.quote_id, 'quote_a2a_001');
+});
+
+test('AgentPay SDK — Inter-Agent Hires, Payments, and Results', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+    return new Response(
+      JSON.stringify({
+        id: 'hire_test_01',
+        organization_id: 'org_default',
+        buyer_agent_id: 'agent_buyer',
+        seller_agent_id: 'agent_seller',
+        service_id: 'data-processing',
+        capability: 'data_extraction',
+        mission_id: 'mission_root_100',
+        root_mission_id: 'mission_root_100',
+        call_depth: 1,
+        quote_id: 'quote_a2a_001',
+        price: '480000',
+        asset: 'USDC',
+        expected_result: 'structured_json',
+        status: 'PAID',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const hire = await client.hires.create({
+    buyer_agent_id: 'agent_buyer',
+    quote_id: 'quote_a2a_001',
+    mission_id: 'mission_root_100',
+    expected_result: 'structured_json',
+  });
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/hires');
+  assert.equal(hire.id, 'hire_test_01');
+  assert.equal(hire.call_depth, 1);
+
+  const paidHire = await client.hires.executePayment('hire_test_01');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/hires/hire_test_01/pay');
+  assert.equal(paidHire.status, 'PAID');
+
+  const resHire = await client.hires.submitResult('hire_test_01', {
+    result_type: 'data',
+    result: { items: [1, 2, 3] },
+    quality: 0.99,
+  });
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/hires/hire_test_01/results');
+
+  const cancelled = await client.hires.cancel('hire_test_01', 'Test complete');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/hires/hire_test_01/cancel');
+});
+
+test('AgentPay SDK — Economic Graph Retrieval', async () => {
+  let capturedUrl = '';
+  const mockFetch: typeof fetch = async (input) => {
+    capturedUrl = input.toString();
+    return new Response(
+      JSON.stringify({
+        mission_id: 'mission_123',
+        nodes: [
+          { id: 'mission_123', type: 'MISSION', label: 'Market Research Mission' },
+          { id: 'agent_buyer', type: 'AGENT', label: 'Primary Coordinator' },
+          { id: 'hire_test_01', type: 'HIRE', label: 'Hire: Data Extraction' },
+        ],
+        edges: [
+          { source: 'agent_buyer', target: 'hire_test_01', type: 'HIRED' },
+        ],
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const graph = await client.missions.economicGraph('mission_123');
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/missions/mission_123/economic-graph');
+  assert.equal(graph.mission_id, 'mission_123');
+  assert.equal(graph.nodes.length, 3);
+  assert.equal(graph.edges.length, 1);
+  assert.equal(graph.edges[0].type, 'HIRED');
+});
+
+

@@ -2,8 +2,12 @@ import type {
   Agent,
   AgentBudget,
   AgentDetail,
+  AgentQuote,
+  AgentService,
   Approval,
   DomainEvent,
+  EconomicGraph,
+  Hire,
   PaymentIntent,
   PaymentIntentDetail,
   PaymentTrace,
@@ -280,4 +284,93 @@ export function printPaymentTrace(trace: PaymentTrace): void {
     console.log(`  [${num}] ${type} ${status} ${actor} ${step.timestamp}`);
   }
 }
+
+export function printAgentServicesList(services: AgentService[]): void {
+  if (services.length === 0) {
+    console.log('No peer agents or services discovered.');
+    return;
+  }
+  console.log(`Discovered Agent Services (${services.length})`);
+  console.log('──────────────────────────────────────────────────────────────────────────────');
+  console.log(
+    'AGENT ID'.padEnd(20) +
+    'SERVICE ID'.padEnd(22) +
+    'BASE PRICE'.padEnd(14) +
+    'AVAILABILITY'.padEnd(14) +
+    'REPUTATION'
+  );
+  console.log('──────────────────────────────────────────────────────────────────────────────');
+  for (const s of services) {
+    const aid = (s.agent_id || '').padEnd(20);
+    const sid = (s.service_id || '').padEnd(22);
+    const price = formatUsdc(s.base_price || '0').padEnd(14);
+    const avail = (s.availability || 'ONLINE').padEnd(14);
+    const rep = `${((s.reputation || 0) / 100).toFixed(1)}%`;
+    console.log(`${aid}${sid}${price}${avail}${rep}`);
+  }
+}
+
+export function printAgentQuote(quote: AgentQuote): void {
+  console.log('Agent-to-Agent Quote');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Quote ID:     ${quote.quote_id}`);
+  console.log(`Service:      ${quote.service_id}`);
+  console.log(`Buyer Agent:  ${quote.buyer_agent_id}`);
+  console.log(`Seller Agent: ${quote.seller_agent_id}`);
+  console.log(`Status:       ${quote.status}`);
+  console.log(`Price:        ${formatUsdc(quote.price)} (${quote.price} base units)`);
+  console.log(`Asset:        ${quote.asset}`);
+  console.log(`Quality:      ${(quote.quality / 100).toFixed(1)}%`);
+  console.log(`Latency:      ${quote.estimated_latency_ms} ms`);
+  console.log(`Valid Until:  ${quote.valid_until}`);
+  if (quote.negotiation_rounds && quote.negotiation_rounds.length > 0) {
+    console.log('──────────────────────────────────────────────────');
+    console.log('Negotiation Rounds:');
+    for (const r of quote.negotiation_rounds) {
+      console.log(`  Round ${r.round} [${r.proposer_agent_id}]: ${formatUsdc(r.proposed_price)} (${r.status})`);
+    }
+  }
+}
+
+export function printHire(hire: Hire): void {
+  console.log('Agent Hire Agreement');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Hire ID:       ${hire.id}`);
+  console.log(`Status:        ${hire.status}`);
+  console.log(`Buyer Agent:   ${hire.buyer_agent_id}`);
+  console.log(`Seller Agent:  ${hire.seller_agent_id}`);
+  console.log(`Service:       ${hire.service_id}`);
+  console.log(`Price:         ${formatUsdc(hire.price)} (${hire.price} base units)`);
+  console.log(`Call Depth:    ${hire.call_depth} (Max allowed: 3)`);
+  console.log(`Mission ID:    ${hire.mission_id}`);
+  if (hire.payment_intent_id) {
+    console.log(`Payment Intent:${hire.payment_intent_id}`);
+  }
+  if (hire.expected_result) {
+    console.log(`Expected:      ${hire.expected_result}`);
+  }
+  if (hire.result) {
+    console.log('──────────────────────────────────────────────────');
+    console.log('Result Received:');
+    console.log(`  Status:      ${hire.result.status}`);
+    console.log(`  Type:        ${hire.result.result_type}`);
+    console.log(`  SHA-256:     ${hire.result.checksum_sha256}`);
+    console.log(`  Execution:   ${hire.result.execution_time_ms} ms`);
+  }
+}
+
+export function printEconomicGraph(graph: EconomicGraph): void {
+  console.log(`Economic Network Graph — Mission ${graph.mission_id}`);
+  console.log('──────────────────────────────────────────────────────────────────────────────');
+  console.log(`Nodes: ${graph.nodes.length} | Edges: ${graph.edges.length}`);
+  console.log('Vertices:');
+  for (const n of graph.nodes) {
+    console.log(`  [${n.type.padEnd(8)}] ${n.id.padEnd(24)} ${n.label}`);
+  }
+  console.log('Relationships:');
+  for (const e of graph.edges) {
+    console.log(`  ${e.source} ──(${e.type})──> ${e.target}`);
+  }
+}
+
 

@@ -29,6 +29,19 @@ type Metrics struct {
 	ServiceSpend              uint64 `json:"service_spend_total"`
 	ServiceSuccess            uint64 `json:"service_success_total"`
 	ServiceFailure            uint64 `json:"service_failure_total"`
+	// Phase 25: Agent-to-Agent Metrics
+	A2AQuotesTotal           uint64 `json:"a2a_quotes_total"`
+	A2AQuotesAcceptedTotal   uint64 `json:"a2a_quotes_accepted_total"`
+	A2AQuotesRejectedTotal   uint64 `json:"a2a_quotes_rejected_total"`
+	A2AQuotesExpiredTotal    uint64 `json:"a2a_quotes_expired_total"`
+	HiresCreatedTotal        uint64 `json:"hires_created_total"`
+	HiresCompletedTotal      uint64 `json:"hires_completed_total"`
+	HiresFailedTotal         uint64 `json:"hires_failed_total"`
+	AgentPaymentsTotal       uint64 `json:"agent_payments_total"`
+	AgentPaymentVolume       uint64 `json:"agent_payment_volume"`
+	AgentResultFailuresTotal uint64 `json:"agent_result_failures_total"`
+	AgentDepthLimitTotal     uint64 `json:"agent_depth_limit_total"`
+	NegotiationRoundsTotal   uint64 `json:"negotiation_rounds_total"`
 }
 
 // Global default metrics tracker
@@ -57,6 +70,18 @@ type MetricsTracker struct {
 	serviceSpend             atomic.Uint64
 	serviceSuccess           atomic.Uint64
 	serviceFailure           atomic.Uint64
+	a2aQuotesTotal           atomic.Uint64
+	a2aQuotesAcceptedTotal   atomic.Uint64
+	a2aQuotesRejectedTotal   atomic.Uint64
+	a2aQuotesExpiredTotal    atomic.Uint64
+	hiresCreatedTotal        atomic.Uint64
+	hiresCompletedTotal      atomic.Uint64
+	hiresFailedTotal         atomic.Uint64
+	agentPaymentsTotal       atomic.Uint64
+	agentPaymentVolume       atomic.Uint64
+	agentResultFailuresTotal atomic.Uint64
+	agentDepthLimitTotal     atomic.Uint64
+	negotiationRoundsTotal   atomic.Uint64
 }
 
 func (m *MetricsTracker) IncrAuthAttempts()              { m.authAttempts.Add(1) }
@@ -80,6 +105,20 @@ func (m *MetricsTracker) AddMissionSpend(amt uint64)     { m.missionSpend.Add(am
 func (m *MetricsTracker) AddServiceSpend(amt uint64)     { m.serviceSpend.Add(amt) }
 func (m *MetricsTracker) IncrServiceSuccess()            { m.serviceSuccess.Add(1) }
 func (m *MetricsTracker) IncrServiceFailure()            { m.serviceFailure.Add(1) }
+
+// A2A metric increments
+func (m *MetricsTracker) IncrA2AQuotes()                 { m.a2aQuotesTotal.Add(1) }
+func (m *MetricsTracker) IncrA2AQuotesAccepted()         { m.a2aQuotesAcceptedTotal.Add(1) }
+func (m *MetricsTracker) IncrA2AQuotesRejected()         { m.a2aQuotesRejectedTotal.Add(1) }
+func (m *MetricsTracker) IncrA2AQuotesExpired()          { m.a2aQuotesExpiredTotal.Add(1) }
+func (m *MetricsTracker) IncrHiresCreated()              { m.hiresCreatedTotal.Add(1) }
+func (m *MetricsTracker) IncrHiresCompleted()            { m.hiresCompletedTotal.Add(1) }
+func (m *MetricsTracker) IncrHiresFailed()               { m.hiresFailedTotal.Add(1) }
+func (m *MetricsTracker) IncrAgentPayments()             { m.agentPaymentsTotal.Add(1) }
+func (m *MetricsTracker) AddAgentPaymentVolume(amt uint64) { m.agentPaymentVolume.Add(amt) }
+func (m *MetricsTracker) IncrAgentResultFailures()       { m.agentResultFailuresTotal.Add(1) }
+func (m *MetricsTracker) IncrAgentDepthLimit()           { m.agentDepthLimitTotal.Add(1) }
+func (m *MetricsTracker) IncrNegotiationRounds()         { m.negotiationRoundsTotal.Add(1) }
 
 // Snapshot returns a point-in-time copy of metrics counters.
 func (m *MetricsTracker) Snapshot() Metrics {
@@ -105,6 +144,18 @@ func (m *MetricsTracker) Snapshot() Metrics {
 		ServiceSpend:             m.serviceSpend.Load(),
 		ServiceSuccess:           m.serviceSuccess.Load(),
 		ServiceFailure:           m.serviceFailure.Load(),
+		A2AQuotesTotal:           m.a2aQuotesTotal.Load(),
+		A2AQuotesAcceptedTotal:   m.a2aQuotesAcceptedTotal.Load(),
+		A2AQuotesRejectedTotal:   m.a2aQuotesRejectedTotal.Load(),
+		A2AQuotesExpiredTotal:    m.a2aQuotesExpiredTotal.Load(),
+		HiresCreatedTotal:        m.hiresCreatedTotal.Load(),
+		HiresCompletedTotal:      m.hiresCompletedTotal.Load(),
+		HiresFailedTotal:         m.hiresFailedTotal.Load(),
+		AgentPaymentsTotal:       m.agentPaymentsTotal.Load(),
+		AgentPaymentVolume:       m.agentPaymentVolume.Load(),
+		AgentResultFailuresTotal: m.agentResultFailuresTotal.Load(),
+		AgentDepthLimitTotal:     m.agentDepthLimitTotal.Load(),
+		NegotiationRoundsTotal:   m.negotiationRoundsTotal.Load(),
 	}
 }
 

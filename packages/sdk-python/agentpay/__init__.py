@@ -1,7 +1,20 @@
 """
 AgentPay Python SDK
 """
-from .client import AgentPay
+from .client import (
+    AgentPay,
+    AgentsResource,
+    ApprovalsResource,
+    EventsResource,
+    HiresResource,
+    MissionsResource,
+    PaymentIntentsResource,
+    QuotesResource,
+    ServicesResource,
+    SimulationsResource,
+    TransactionsResource,
+    WebhooksResource,
+)
 from .errors import (
     AgentPayError,
     ApprovalRequiredError,
@@ -20,6 +33,17 @@ from .webhook import verify_signature, verify_webhook
 
 __all__ = [
     "AgentPay",
+    "AgentsResource",
+    "ApprovalsResource",
+    "EventsResource",
+    "HiresResource",
+    "MissionsResource",
+    "PaymentIntentsResource",
+    "QuotesResource",
+    "ServicesResource",
+    "SimulationsResource",
+    "TransactionsResource",
+    "WebhooksResource",
     "AgentPayError",
     "ApprovalRequiredError",
     "AuthenticationError",

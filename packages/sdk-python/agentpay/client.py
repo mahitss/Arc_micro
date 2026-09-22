@@ -126,6 +126,33 @@ class AgentsResource:
     def get_budget(self, agent_id: str) -> Dict[str, Any]:
         return self._client._request("GET", f"/v1/agent-budgets/{agent_id}")
 
+    def discover(
+        self,
+        capability: Optional[str] = None,
+        max_price: Optional[str] = None,
+        min_reputation: Optional[int] = None,
+        risk: Optional[str] = None,
+        availability: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        params = {}
+        if capability:
+            params["capability"] = capability
+        if max_price:
+            params["max_price"] = max_price
+        if min_reputation is not None:
+            params["min_reputation"] = min_reputation
+        if risk:
+            params["risk"] = risk
+        if availability:
+            params["availability"] = availability
+        res = self._client._request("GET", "/v1/agents/discover", params=params or None)
+        return res.get("agents", [])
+
+    def get_services(self, agent_id: str) -> List[Dict[str, Any]]:
+        res = self._client._request("GET", f"/v1/agents/services/{agent_id}")
+        return res.get("services", [])
+
+
 class ServicesResource:
     def __init__(self, client: "AgentPay"):
         self._client = client
@@ -290,6 +317,110 @@ class WebhooksResource:
     def verify_signature(self, raw_body: Any, signature_header: str, secret: str, tolerance_seconds: int = 300) -> bool:
         return verify_signature(raw_body, signature_header, secret, tolerance_seconds)
 
+class QuotesResource:
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def request(
+        self,
+        service_id: str,
+        buyer_agent_id: str,
+        proposed_price: Optional[str] = None,
+        terms: Optional[Dict[str, str]] = None,
+        mission_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        payload = {"buyer_agent_id": buyer_agent_id}
+        if proposed_price:
+            payload["proposed_price"] = proposed_price
+        if terms:
+            payload["terms"] = terms
+        if mission_id:
+            payload["mission_id"] = mission_id
+        return self._client._request("POST", f"/v1/agent-services/{service_id}/quotes", json=payload)
+
+    def get(self, quote_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/quotes/{quote_id}")
+
+    def counter(
+        self,
+        quote_id: str,
+        agent_id: str,
+        proposed_price: str,
+        terms: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "agent_id": agent_id,
+            "proposed_price": proposed_price,
+        }
+        if terms:
+            payload["terms"] = terms
+        return self._client._request("POST", f"/v1/quotes/{quote_id}/counter", json=payload)
+
+    def accept(self, quote_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/quotes/{quote_id}/accept")
+
+class HiresResource:
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def create(
+        self,
+        buyer_agent_id: str,
+        quote_id: str,
+        mission_id: str,
+        expected_result: str,
+        root_mission_id: Optional[str] = None,
+        parent_hire_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "buyer_agent_id": buyer_agent_id,
+            "quote_id": quote_id,
+            "mission_id": mission_id,
+            "expected_result": expected_result,
+        }
+        if root_mission_id:
+            payload["root_mission_id"] = root_mission_id
+        if parent_hire_id:
+            payload["parent_hire_id"] = parent_hire_id
+        return self._client._request("POST", "/v1/hires", json=payload)
+
+    def get(self, hire_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/hires/{hire_id}")
+
+    def execute_payment(self, hire_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/hires/{hire_id}/pay")
+
+    def submit_result(
+        self,
+        hire_id: str,
+        result_type: str,
+        result: Dict[str, Any],
+        quality: Optional[float] = None,
+        execution_time_ms: Optional[int] = None,
+        provider_metadata: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "result_type": result_type,
+            "result": result,
+        }
+        if quality is not None:
+            payload["quality"] = quality
+        if execution_time_ms is not None:
+            payload["execution_time_ms"] = execution_time_ms
+        if provider_metadata:
+            payload["provider_metadata"] = provider_metadata
+        return self._client._request("POST", f"/v1/hires/{hire_id}/results", json=payload)
+
+    def cancel(self, hire_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/hires/{hire_id}/cancel", json={"reason": reason or "Cancelled"})
+
+class MissionsResource:
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def economic_graph(self, mission_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/missions/{mission_id}/economic-graph")
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -308,6 +439,9 @@ class AgentPay:
         self.payments = self.payment_intents
         self.agents = AgentsResource(self)
         self.services = ServicesResource(self)
+        self.quotes = QuotesResource(self)
+        self.hires = HiresResource(self)
+        self.missions = MissionsResource(self)
         self.approvals = ApprovalsResource(self)
         self.transactions = TransactionsResource(self)
         self.events = EventsResource(self)

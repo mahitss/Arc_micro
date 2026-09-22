@@ -543,6 +543,13 @@ func (m *MemoryRepository) SaveIntent(ctx context.Context, pi *intent.PaymentInt
 	if copyPI.OrganizationID == "" {
 		copyPI.OrganizationID = "org_default"
 	}
+	if copyPI.RequestID != "" {
+		for _, existing := range m.intents {
+			if existing.OrganizationID == copyPI.OrganizationID && existing.RequestID == copyPI.RequestID {
+				return ErrAlreadyExists
+			}
+		}
+	}
 	m.intents[pi.IntentID] = &copyPI
 	return nil
 }

@@ -31,6 +31,20 @@ const (
 	EventAPIKeyCreated                 EventType = "api_key.created"
 	EventAPIKeyRevoked                 EventType = "api_key.revoked"
 	EventTestPing                      EventType = "test.ping"
+	// Agent-to-Agent (A2A) Canonical Events
+	EventAgentDiscovered        EventType = "agent.discovered"
+	EventQuoteRequested         EventType = "quote.requested"
+	EventQuoteOffered           EventType = "quote.offered"
+	EventQuoteCountered         EventType = "quote.countered"
+	EventQuoteAccepted          EventType = "quote.accepted"
+	EventQuoteExpired           EventType = "quote.expired"
+	EventHireCreated            EventType = "hire.created"
+	EventHireAccepted           EventType = "hire.accepted"
+	EventHireExecuting          EventType = "hire.executing"
+	EventHireResultReceived     EventType = "hire.result_received"
+	EventHireCompleted          EventType = "hire.completed"
+	EventHireFailed             EventType = "hire.failed"
+	EventAgentPaymentAuthorized EventType = "agent.payment.authorized"
 )
 
 // DomainEvent represents a versioned, immutable, and correlated event envelope.

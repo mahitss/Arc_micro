@@ -4,7 +4,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { test } from 'node:test';
 import { getConfig, maskApiKey, setConfigKey } from '../src/config.js';
-import { formatUsdc, printPaymentTrace } from '../src/output.js';
+import { formatUsdc, printPaymentTrace, printAgentServicesList, printAgentQuote, printHire, printEconomicGraph } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
   const originalConfig = getConfig();
@@ -85,4 +85,80 @@ test('AgentPay CLI Output — Payment Trace Formatter', () => {
     printPaymentTrace(mockTrace);
   });
 });
+
+test('AgentPay CLI Output — Agent-to-Agent Formatters', () => {
+  const mockService = {
+    agent_id: 'agent_research_01',
+    service_id: 'web-research',
+    organization_id: 'org_default',
+    name: 'Web Research Agent',
+    description: 'Deep web analysis',
+    capabilities: ['search', 'summarization'],
+    pricing_model: 'FIXED',
+    base_price: '300000',
+    max_price: '1000000',
+    supported_assets: ['USDC'],
+    availability: 'ONLINE',
+    reputation: 9900,
+    success_rate_bps: 9950,
+    average_latency_ms: 150,
+    risk_profile: 'LOW',
+    enabled: true,
+    verified: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const mockQuote = {
+    quote_id: 'quote_test_01',
+    buyer_agent_id: 'agent_buyer',
+    seller_agent_id: 'agent_research_01',
+    service_id: 'web-research',
+    price: '300000',
+    asset: 'USDC',
+    estimated_latency_ms: 150,
+    quality: 9800,
+    valid_until: new Date().toISOString(),
+    status: 'OFFERED',
+    created_at: new Date().toISOString(),
+  };
+
+  const mockHire = {
+    id: 'hire_test_01',
+    organization_id: 'org_default',
+    buyer_agent_id: 'agent_buyer',
+    seller_agent_id: 'agent_research_01',
+    service_id: 'web-research',
+    capability: 'search',
+    mission_id: 'mission_100',
+    root_mission_id: 'mission_100',
+    call_depth: 1,
+    quote_id: 'quote_test_01',
+    price: '300000',
+    asset: 'USDC',
+    expected_result: 'report',
+    status: 'COMPLETED',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const mockGraph = {
+    mission_id: 'mission_100',
+    nodes: [
+      { id: 'mission_100', type: 'MISSION', label: 'Research' },
+      { id: 'agent_buyer', type: 'AGENT', label: 'Coordinator' },
+    ],
+    edges: [
+      { source: 'agent_buyer', target: 'hire_test_01', type: 'HIRED' },
+    ],
+  };
+
+  assert.doesNotThrow(() => {
+    printAgentServicesList([mockService]);
+    printAgentQuote(mockQuote);
+    printHire(mockHire);
+    printEconomicGraph(mockGraph);
+  });
+});
+
 

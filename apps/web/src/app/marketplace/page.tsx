@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { fetchMarketplaceServices } from '../../lib/api/missions';
-import { MarketplaceService } from '../../lib/api/types';
+import { discoverAgents } from '../../lib/api/a2a';
+import { MarketplaceService, AgentService } from '../../lib/api/types';
 
 export default function MarketplacePage() {
   const [services, setServices] = useState<MarketplaceService[]>([]);
+  const [peerAgents, setPeerAgents] = useState<AgentService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -14,8 +17,16 @@ export default function MarketplacePage() {
     const load = async () => {
       setLoading(true);
       try {
-        const data = await fetchMarketplaceServices();
-        setServices(data);
+        const [servicesData, agentsData] = await Promise.allSettled([
+          fetchMarketplaceServices(),
+          discoverAgents(),
+        ]);
+        if (servicesData.status === 'fulfilled') {
+          setServices(servicesData.value);
+        }
+        if (agentsData.status === 'fulfilled') {
+          setPeerAgents(agentsData.value);
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to load marketplace');
       } finally {
@@ -25,12 +36,19 @@ export default function MarketplacePage() {
     load();
   }, []);
 
-  const categories = ['ALL', 'RESEARCH', 'COMPUTE', 'DATA', 'AGENT'];
+  const categories = ['ALL', 'AGENT', 'RESEARCH', 'COMPUTE', 'DATA'];
 
   const filteredServices =
     selectedCategory === 'ALL'
       ? services
+      : selectedCategory === 'AGENT'
+      ? []
       : services.filter((s) => s.category.toUpperCase() === selectedCategory);
+
+  const filteredAgents =
+    selectedCategory === 'ALL' || selectedCategory === 'AGENT'
+      ? peerAgents
+      : [];
 
   const formatUsdc = (baseUnits?: string) => {
     const val = parseInt(baseUnits || '0', 10);
@@ -150,6 +168,72 @@ export default function MarketplacePage() {
                   <span className="text-slate-400">
                     {svc.recipient.slice(0, 8)}...{svc.recipient.slice(-6)}
                   </span>
+                </div>
+              </div>
+            </div>
+          ))}
+          {filteredAgents.map((agent) => (
+            <div
+              key={`${agent.agent_id}-${agent.service_id}`}
+              className="p-6 rounded-xl bg-slate-900/60 border border-cyan-500/30 hover:border-cyan-500/60 transition-all space-y-4 shadow-lg shadow-black/20 flex flex-col justify-between"
+            >
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                        PEER AGENT
+                      </span>
+                    </div>
+                    <span className="font-mono text-xs text-slate-500">{agent.agent_id}</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-cyan-300 border border-slate-700">
+                    {agent.availability || 'ONLINE'}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">{agent.description}</p>
+
+                {/* Capabilities Tags */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {agent.capabilities?.map((cap) => (
+                    <span
+                      key={cap}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-950 text-slate-400 border border-slate-800"
+                    >
+                      {cap}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Economic Telemetry & Action Box */}
+              <div className="pt-3 border-t border-slate-800/80 space-y-3">
+                <div className="grid grid-cols-3 gap-2 text-center font-mono text-xs">
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <span className="text-[10px] text-slate-500 block">REPUTATION</span>
+                    <span className="text-emerald-400 font-bold">
+                      {((agent.reputation || 0) / 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <span className="text-[10px] text-slate-500 block">BASE PRICE</span>
+                    <span className="text-white font-bold">{formatUsdc(agent.base_price)}</span>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <span className="text-[10px] text-slate-500 block">PRICING</span>
+                    <span className="text-cyan-300 font-bold">{agent.pricing_model}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link
+                    href={`/marketplace/agents/${agent.agent_id}`}
+                    className="block w-full py-2 px-3 text-center rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-mono font-semibold text-xs border border-cyan-500/40 transition-colors"
+                  >
+                    Negotiate &amp; Hire Agent &rarr;
+                  </Link>
                 </div>
               </div>
             </div>

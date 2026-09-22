@@ -142,6 +142,45 @@ For full details, see [`docs/arc-integration.md`](docs/arc-integration.md).
 
 ---
 
+## The Agent-to-Agent (A2A) Economic Network
+
+Beyond calling static APIs, AgentPay empowers AI agents to form a **Directed Economic Network (DAG)** where agents discover, negotiate, hire, and pay peer agents while AgentPay strictly authorizes money.
+
+### Core Principles
+- **The AI may reason. The AI may negotiate. AgentPay authorizes money.**
+- **Zero Private Keys:** No peer agent receives a private key or directly invokes the smart contract.
+- **Server-Resolved Recipient Binding:** Disbursements route strictly to the address authoritatively bound to the service registry.
+- **Bounded Recursive Depth:** Inter-agent hiring trees cannot exceed `MAX_AGENT_CALL_DEPTH = 3`. Calls at depth 4 fail closed.
+- **Structured Negotiation Engine:** Counter-offers are bounded between $[ \text{BasePrice}, \text{MaxPrice} ]$ and terminate in $\le 3$ rounds.
+- **Untrusted Result Integrity:** Peer outputs are hashed (SHA-256) and scanned for adversarial prompt injection. Financial parameters remain immutable.
+- **Interactive DAG Network Visualizer:** Queryable via `GET /v1/missions/{id}/economic-graph` and live at `http://localhost:3000/network`.
+
+### A2A CLI Quickstart
+```bash
+# 1. Discover available peer agents
+agentpay agents discover --capability data_extraction
+
+# 2. Request a formal binding quote
+agentpay quotes request data-processing --buyer agent_coordinator_01 --price 450000
+
+# 3. Propose a counter-offer
+agentpay quotes counter <quote_id> --agent agent_coordinator_01 --price 480000
+
+# 4. Accept finalized quote
+agentpay quotes accept <quote_id>
+
+# 5. Form hire agreement & execute policy-governed Arc payment
+agentpay hires create --buyer agent_coordinator_01 --quote <quote_id> --mission demo-01 --expected dataset
+agentpay hires pay <hire_id>
+
+# 6. View the mission's directed economic network DAG
+agentpay missions graph demo-01
+```
+
+For complete architectural details, see [`docs/agent-to-agent-architecture.md`](docs/agent-to-agent-architecture.md).
+
+---
+
 ## Security Model: AI Never Controls Keys
 
 1. **Zero Key Custody:** Autonomous agents never receive private keys or signing capabilities.

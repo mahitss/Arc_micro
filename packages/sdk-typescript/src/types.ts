@@ -548,3 +548,191 @@ export interface PaymentTrace {
   blockchain_evidence?: BlockchainEvidence;
 }
 
+/**
+ * Agent-to-Agent Economic Network Types
+ */
+
+export interface AgentCapability {
+  capability: string;
+  version: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  input_schema?: Record<string, unknown>;
+  output_schema?: Record<string, unknown>;
+}
+
+export interface AgentService {
+  agent_id: string;
+  service_id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  capabilities: string[];
+  structured_capabilities?: AgentCapability[];
+  pricing_model: 'FIXED' | 'VARIABLE' | 'QUOTE_REQUIRED' | string;
+  base_price: string;
+  max_price: string;
+  supported_assets: string[];
+  availability: 'ONLINE' | 'BUSY' | 'OFFLINE' | string;
+  reputation: number;
+  success_rate_bps: number;
+  average_latency_ms: number;
+  risk_profile: 'LOW' | 'MEDIUM' | 'HIGH' | string;
+  enabled: boolean;
+  verified: boolean;
+  trust_metadata?: Record<string, string>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AgentDiscoveryFilter {
+  capability?: string;
+  maxPrice?: string;
+  minReputation?: number;
+  risk?: string;
+  availability?: string;
+}
+
+export interface NegotiationProposal {
+  round: number;
+  proposer_agent_id: string;
+  proposed_price: string;
+  terms?: Record<string, string>;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COUNTERED' | string;
+  created_at: string;
+}
+
+export type QuoteStatus =
+  | 'REQUESTED'
+  | 'OFFERED'
+  | 'ACCEPTED'
+  | 'EXPIRED'
+  | 'REJECTED'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | string;
+
+export interface AgentQuote {
+  quote_id: string;
+  buyer_agent_id: string;
+  seller_agent_id: string;
+  service_id: string;
+  mission_id?: string;
+  price: string;
+  asset: string;
+  estimated_latency_ms: number;
+  quality: number;
+  valid_until: string;
+  terms?: Record<string, string>;
+  status: QuoteStatus;
+  negotiation_rounds?: NegotiationProposal[];
+  created_at: string;
+}
+
+export interface RequestQuoteParams {
+  buyer_agent_id: string;
+  mission_id?: string;
+  proposed_price?: string;
+  terms?: Record<string, string>;
+}
+
+export interface CounterQuoteParams {
+  agent_id: string;
+  proposed_price: string;
+  terms?: Record<string, string>;
+}
+
+export type HireStatus =
+  | 'PROPOSED'
+  | 'ACCEPTED'
+  | 'PAYMENT_PENDING'
+  | 'PAID'
+  | 'EXECUTING'
+  | 'RESULT_PENDING'
+  | 'RESULT_RECEIVED'
+  | 'VALIDATING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | string;
+
+export interface AgentResult {
+  hire_id: string;
+  status: 'SUCCESS' | 'FAILED' | string;
+  result_type: string;
+  result: Record<string, unknown>;
+  quality: number;
+  execution_time_ms: number;
+  provider_metadata?: Record<string, string>;
+  checksum_sha256: string;
+  is_sanitized: boolean;
+  created_at: string;
+}
+
+export interface Hire {
+  id: string;
+  organization_id: string;
+  buyer_agent_id: string;
+  seller_agent_id: string;
+  service_id: string;
+  capability: string;
+  mission_id: string;
+  root_mission_id: string;
+  parent_hire_id?: string;
+  call_depth: number;
+  quote_id: string;
+  price: string;
+  asset: string;
+  payment_intent_id?: string;
+  expected_result: string;
+  status: HireStatus;
+  result?: AgentResult;
+  error?: string;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+}
+
+export interface CreateHireParams {
+  buyer_agent_id: string;
+  quote_id: string;
+  mission_id: string;
+  root_mission_id?: string;
+  parent_hire_id?: string;
+  expected_result: string;
+}
+
+export interface SubmitResultParams {
+  result_type: string;
+  result: Record<string, unknown>;
+  quality?: number;
+  execution_time_ms?: number;
+  provider_metadata?: Record<string, string>;
+}
+
+export type GraphNodeType = 'AGENT' | 'SERVICE' | 'MISSION' | 'HIRE' | 'PAYMENT' | string;
+export type GraphEdgeType = 'HIRED' | 'PAID' | 'DEPENDS_ON' | 'PRODUCED' | 'VALIDATED_BY' | string;
+
+export interface GraphNode {
+  id: string;
+  type: GraphNodeType;
+  label: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  type: GraphEdgeType;
+  label?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface EconomicGraph {
+  mission_id: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+

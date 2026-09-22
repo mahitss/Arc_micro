@@ -15,7 +15,10 @@ import {
 import { AgentsResource } from './resources/agents.js';
 import { ApprovalsResource } from './resources/approvals.js';
 import { EventsResource } from './resources/events.js';
+import { HiresResource } from './resources/hires.js';
+import { MissionsResource } from './resources/missions.js';
 import { PaymentIntentsResource } from './resources/payment-intents.js';
+import { QuotesResource } from './resources/quotes.js';
 import { ServicesResource } from './resources/services.js';
 import { SimulationsResource } from './resources/simulations.js';
 import { TransactionsResource } from './resources/transactions.js';
@@ -45,6 +48,9 @@ export class AgentPay {
 
   public readonly agents: AgentsResource;
   public readonly services: ServicesResource;
+  public readonly quotes: QuotesResource;
+  public readonly hires: HiresResource;
+  public readonly missions: MissionsResource;
   public readonly paymentIntents: PaymentIntentsResource;
   public readonly payments: PaymentIntentsResource;
   public readonly approvals: ApprovalsResource;
@@ -65,6 +71,9 @@ export class AgentPay {
 
     this.agents = new AgentsResource(this);
     this.services = new ServicesResource(this);
+    this.quotes = new QuotesResource(this);
+    this.hires = new HiresResource(this);
+    this.missions = new MissionsResource(this);
     this.paymentIntents = new PaymentIntentsResource(this);
     this.payments = this.paymentIntents;
     this.approvals = new ApprovalsResource(this);
