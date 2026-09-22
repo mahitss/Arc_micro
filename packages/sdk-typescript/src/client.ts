@@ -21,6 +21,7 @@ import { PaymentIntentsResource } from './resources/payment-intents.js';
 import { QuotesResource } from './resources/quotes.js';
 import { ServicesResource } from './resources/services.js';
 import { SimulationsResource } from './resources/simulations.js';
+import { SwarmsResource } from './resources/swarms.js';
 import { TransactionsResource } from './resources/transactions.js';
 import { WebhooksResource } from './resources/webhooks.js';
 import type { ClientOptions, RequestOptions } from './types.js';
@@ -58,6 +59,7 @@ export class AgentPay {
   public readonly webhooks: WebhooksResource;
   public readonly events: EventsResource;
   public readonly simulations: SimulationsResource;
+  public readonly swarms: SwarmsResource;
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
@@ -81,6 +83,7 @@ export class AgentPay {
     this.webhooks = new WebhooksResource(this);
     this.events = new EventsResource(this);
     this.simulations = new SimulationsResource(this);
+    this.swarms = new SwarmsResource(this);
   }
 
   /**

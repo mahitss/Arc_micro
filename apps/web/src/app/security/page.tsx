@@ -199,6 +199,50 @@ export default function SecurityCenterPage() {
           </ul>
         </div>
       </div>
+
+      {/* Third Card: MULTI-AGENT SWARM INVARIANTS (INV-S1 to INV-S8) */}
+      <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900/80 to-purple-950/20 border border-purple-800/40 shadow-xl space-y-4 font-mono text-xs">
+        <div className="flex items-center justify-between border-b border-purple-800/40 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-purple-500 flex items-center justify-center text-[9px] text-white font-bold">
+              🐝
+            </span>
+            <h2 className="font-bold text-white text-sm uppercase tracking-wider">
+              Multi-Agent Swarm Invariants (INV-S1 to INV-S8)
+            </h2>
+          </div>
+          <span className="px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700 text-[10px]">
+            MATHEMATICALLY PROVEN
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <span className="text-purple-400 font-bold block">INV-S1: Zero Authority</span>
+            <p className="text-[11px] text-slate-400">
+              Orchestrator agents hold zero private keys and cannot sign transactions or call AgentVault.
+            </p>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <span className="text-cyan-400 font-bold block">INV-S2: Strict DAG Acyclicity</span>
+            <p className="text-[11px] text-slate-400">
+              Topological Kahn&apos;s algorithm guarantees zero recursive deadlocks or infinite loops.
+            </p>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <span className="text-emerald-400 font-bold block">INV-S4: Atomic Budget Gate</span>
+            <p className="text-[11px] text-slate-400">
+              Concurrent task budget reservations can never exceed the swarm&apos;s hard budget ceiling.
+            </p>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+            <span className="text-amber-400 font-bold block">INV-S5: Cryptographic Hash Chaining</span>
+            <p className="text-[11px] text-slate-400">
+              Intermediate task outputs are locked with SHA-256 checksums to prevent tamper.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

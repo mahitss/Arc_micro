@@ -129,6 +129,37 @@ func NewRouter(
 		mux.HandleFunc("POST /v1/missions/{id}/replan", intelHandler.HandleReplanMission)
 		mux.HandleFunc("GET /v1/missions/{id}/recovery", intelHandler.HandleGetMissionRecovery)
 		mux.HandleFunc("GET /v1/missions/{id}/intelligence", intelHandler.HandleGetMissionIntelligence)
+
+		// 5.8 Multi-Agent Swarm Orchestration Layer APIs (Phase 30)
+		swarmValidator := economy.NewSwarmGraphValidator(20, 4)
+		swarmPlanner := economy.NewSwarmPlanner(swarmValidator)
+		swarmBudgetMgr := economy.NewSwarmBudgetManager()
+		hiringSvc := economy.NewHiringService(agentCoord, intentService, budgetCtrl)
+		swarmEngine := economy.NewSwarmEngine(
+			swarmPlanner,
+			swarmValidator,
+			swarmBudgetMgr,
+			reg,
+			agentCoord,
+			hiringSvc,
+			econEngine,
+			intentService,
+			policyClient,
+			nil,
+			nil,
+			nil,
+		)
+		swarmsHandler := handlers.NewSwarmsHandler(swarmEngine, nil)
+		mux.HandleFunc("POST /v1/swarms", swarmsHandler.HandleCreate)
+		mux.HandleFunc("GET /v1/swarms/{id}", swarmsHandler.HandleGet)
+		mux.HandleFunc("POST /v1/swarms/{id}/start", swarmsHandler.HandleStart)
+		mux.HandleFunc("POST /v1/swarms/{id}/cancel", swarmsHandler.HandleCancel)
+		mux.HandleFunc("POST /v1/swarms/simulate", swarmsHandler.HandleSimulate)
+		mux.HandleFunc("GET /v1/swarms/{id}/tasks", swarmsHandler.HandleGetTasks)
+		mux.HandleFunc("GET /v1/swarms/{id}/graph", swarmsHandler.HandleGetGraph)
+		mux.HandleFunc("GET /v1/swarms/{id}/trace", swarmsHandler.HandleGetTrace)
+		mux.HandleFunc("GET /v1/swarms/{id}/risk", swarmsHandler.HandleGetRisk)
+		mux.HandleFunc("POST /v1/swarms/{id}/replan", swarmsHandler.HandleReplan)
 	}
 
 	// 6. V1 Query & List APIs for Web Control Center

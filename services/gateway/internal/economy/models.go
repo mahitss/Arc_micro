@@ -311,6 +311,8 @@ const (
 	NodeTypeMission GraphNodeType = "MISSION"
 	NodeTypeHire    GraphNodeType = "HIRE"
 	NodeTypePayment GraphNodeType = "PAYMENT"
+	NodeTypeSwarm   GraphNodeType = "SWARM"
+	NodeTypeTask    GraphNodeType = "TASK"
 )
 
 // GraphEdgeType categorizes directed edges in the economic graph.
@@ -322,6 +324,7 @@ const (
 	EdgeTypeDependsOn   GraphEdgeType = "DEPENDS_ON"
 	EdgeTypeProduced    GraphEdgeType = "PRODUCED"
 	EdgeTypeValidatedBy GraphEdgeType = "VALIDATED_BY"
+	EdgeTypeAssigned    GraphEdgeType = "ASSIGNED"
 )
 
 // GraphNode represents a single vertex in the economic DAG.

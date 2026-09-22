@@ -21,7 +21,13 @@ import {
   printServiceAnomalies,
   printServicePerformance,
   printServicesList,
+  printSimulateSwarm,
   printSimulationResult,
+  printSwarm,
+  printSwarmGraph,
+  printSwarmRisk,
+  printSwarmTasks,
+  printSwarmTrace,
   printTransactionsList,
   printWebhooksList,
 } from './output.js';
@@ -77,6 +83,17 @@ Commands:
   hires cancel <id>                Cancel hire agreement
 
   missions graph <id>              Display directed economic network DAG for a mission
+
+  swarms create                    Create a new multi-agent swarm (--name, --objective, --budget)
+  swarms get <id>                  Get swarm details and status
+  swarms start <id>                Start autonomous swarm execution
+  swarms cancel <id>               Cancel swarm execution and release budget
+  swarms simulate                  Simulate a swarm DAG plan (--name, --objective, --budget)
+  swarms tasks <id>                List all tasks in a swarm
+  swarms graph <id>                Display directed economic network DAG for a swarm
+  swarms trace <id>                Display audit trace events for a swarm
+  swarms risk <id>                 Display risk scoring and intelligence for a swarm
+  swarms replan <id>               Trigger adaptive replanning for a swarm
 
   services list                    List approved service providers
     --category <cat>               Filter by category (RESEARCH, DATA, COMPUTE, etc.)
@@ -599,6 +616,136 @@ async function main(): Promise<void> {
         const obs = await client.missions.observations(targetId);
         if (isJson) printJson(obs);
         else console.log(JSON.stringify(obs, null, 2));
+        return;
+      }
+    }
+
+    // 14. Swarms commands
+    if (resource === 'swarms') {
+      if (action === 'create') {
+        const name = flags['name'] as string;
+        const objective = flags['objective'] as string;
+        const maxBudget = (flags['budget'] || flags['max-budget']) as string;
+        const asset = (flags['asset'] as string) || 'USDC';
+
+        if (!name || !objective || !maxBudget) {
+          console.error('Error: "swarms create" requires --name, --objective, and --budget');
+          process.exit(1);
+        }
+
+        const sw = await client.swarms.create({
+          name,
+          objective,
+          max_budget: maxBudget,
+          asset,
+        });
+
+        if (isJson) printJson(sw);
+        else printSwarm(sw);
+        return;
+      }
+
+      if (action === 'get') {
+        if (!targetId) {
+          console.error('Error: "swarms get" requires a swarm <id>');
+          process.exit(1);
+        }
+        const sw = await client.swarms.get(targetId);
+        if (isJson) printJson(sw);
+        else printSwarm(sw);
+        return;
+      }
+
+      if (action === 'start') {
+        if (!targetId) {
+          console.error('Error: "swarms start" requires a swarm <id>');
+          process.exit(1);
+        }
+        const sw = await client.swarms.start(targetId);
+        if (isJson) printJson(sw);
+        else printSwarm(sw);
+        return;
+      }
+
+      if (action === 'cancel') {
+        if (!targetId) {
+          console.error('Error: "swarms cancel" requires a swarm <id>');
+          process.exit(1);
+        }
+        const sw = await client.swarms.cancel(targetId);
+        if (isJson) printJson(sw);
+        else printSwarm(sw);
+        return;
+      }
+
+      if (action === 'simulate') {
+        const name = (flags['name'] as string) || 'Simulated Swarm';
+        const objective = (flags['objective'] as string) || 'Simulated Objective';
+        const maxBudget = ((flags['budget'] || flags['max-budget']) as string) || '10000000';
+
+        const sim = await client.swarms.simulate({
+          name,
+          objective,
+          max_budget: maxBudget,
+        });
+
+        if (isJson) printJson(sim);
+        else printSimulateSwarm(sim);
+        return;
+      }
+
+      if (action === 'tasks') {
+        if (!targetId) {
+          console.error('Error: "swarms tasks" requires a swarm <id>');
+          process.exit(1);
+        }
+        const tasks = await client.swarms.tasks(targetId);
+        if (isJson) printJson(tasks);
+        else printSwarmTasks(tasks);
+        return;
+      }
+
+      if (action === 'graph') {
+        if (!targetId) {
+          console.error('Error: "swarms graph" requires a swarm <id>');
+          process.exit(1);
+        }
+        const g = await client.swarms.graph(targetId);
+        if (isJson) printJson(g);
+        else printSwarmGraph(g);
+        return;
+      }
+
+      if (action === 'trace') {
+        if (!targetId) {
+          console.error('Error: "swarms trace" requires a swarm <id>');
+          process.exit(1);
+        }
+        const tr = await client.swarms.trace(targetId);
+        if (isJson) printJson(tr);
+        else printSwarmTrace(tr);
+        return;
+      }
+
+      if (action === 'risk') {
+        if (!targetId) {
+          console.error('Error: "swarms risk" requires a swarm <id>');
+          process.exit(1);
+        }
+        const rk = await client.swarms.risk(targetId);
+        if (isJson) printJson(rk);
+        else printSwarmRisk(rk);
+        return;
+      }
+
+      if (action === 'replan') {
+        if (!targetId) {
+          console.error('Error: "swarms replan" requires a swarm <id>');
+          process.exit(1);
+        }
+        const rep = await client.swarms.replan(targetId);
+        if (isJson) printJson(rep);
+        else printReplanProposal(rep);
         return;
       }
     }

@@ -986,5 +986,201 @@ test('AgentPay SDK — Mission Intelligence: Telemetry, Recommendations, Replan,
   assert.equal(obs.observations.length, 2);
 });
 
+test('AgentPay SDK — Multi-Agent Swarm Orchestration: Lifecycle, Tasks, Graph, Risk, Simulation', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+  let capturedBody = '';
+
+  const mockFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+    capturedBody = (init?.body as string) || '';
+
+    if (capturedUrl.endsWith('/v1/swarms') && capturedMethod === 'POST') {
+      return new Response(
+        JSON.stringify({
+          swarm: {
+            id: 'swm_789',
+            name: 'Market Intelligence Swarm',
+            objective: 'Analyze AI infrastructure',
+            status: 'CREATED',
+            max_budget: '5000000',
+            total_spent: '0',
+            total_reserved: '0',
+            task_count: 5,
+            completed_tasks: 0,
+            failed_tasks: 0,
+            orchestrator_agent_id: 'orch_1',
+          },
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789') && capturedMethod === 'GET') {
+      return new Response(
+        JSON.stringify({
+          swarm: {
+            id: 'swm_789',
+            name: 'Market Intelligence Swarm',
+            status: 'RUNNING',
+            max_budget: '5000000',
+            task_count: 5,
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789/start')) {
+      return new Response(
+        JSON.stringify({
+          swarm: { id: 'swm_789', status: 'RUNNING' },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789/cancel')) {
+      return new Response(
+        JSON.stringify({
+          swarm: { id: 'swm_789', status: 'CANCELLED' },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/simulate')) {
+      return new Response(
+        JSON.stringify({
+          estimated_cost: '2500000',
+          estimated_latency_ms: 1200,
+          task_count: 5,
+          max_depth: 3,
+          is_valid_dag: true,
+          risk_score: {
+            overall_score: 15,
+            risk_level: 'LOW',
+            budget_exhaustion_risk: 10,
+            dependency_bottleneck_risk: 15,
+            agent_reliability_risk: 12,
+            data_tampering_risk: 5,
+            recommendations: ['DAG is acyclic and within bounds'],
+            evaluated_at: new Date().toISOString(),
+          },
+          tasks: [],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789/tasks')) {
+      return new Response(
+        JSON.stringify({
+          tasks: [
+            { id: 'task_1', title: 'Research task', status: 'COMPLETED', depth: 0 },
+            { id: 'task_2', title: 'Data aggregation', status: 'IN_PROGRESS', depth: 1 },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789/graph')) {
+      return new Response(
+        JSON.stringify({
+          graph: {
+            nodes: [{ id: 'task_1', type: 'TASK', label: 'Research' }],
+            edges: [],
+            depth: 2,
+            is_dag: true,
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789/trace')) {
+      return new Response(
+        JSON.stringify({
+          trace: {
+            swarm_id: 'swm_789',
+            events: [{ event_type: 'swarm.created', timestamp: new Date().toISOString() }],
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789/risk')) {
+      return new Response(
+        JSON.stringify({
+          risk_score: {
+            overall_score: 20,
+            risk_level: 'LOW',
+            recommendations: ['All policy checks passed'],
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.endsWith('/v1/swarms/swm_789/replan')) {
+      return new Response(
+        JSON.stringify({
+          proposal: {
+            mission_id: 'swm_789',
+            strategy: 'TRY_ALTERNATIVE_SERVICE',
+            confidence: 'HIGH',
+            requires_human: false,
+            estimated_cost: '350000',
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response('Not Found', { status: 404 });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  // 1. Create Swarm
+  const swarm = await client.swarms.create({
+    name: 'Market Intelligence Swarm',
+    objective: 'Analyze AI infrastructure',
+    max_budget: '5000000',
+  });
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/swarms');
+  assert.equal(capturedMethod, 'POST');
+  assert.equal(swarm.id, 'swm_789');
+
+  // 2. Get Swarm
+  const fetched = await client.swarms.get('swm_789');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/swarms/swm_789');
+  assert.equal(fetched.id, 'swm_789');
+
+  // 3. Start Swarm
+  const started = await client.swarms.start('swm_789');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/swarms/swm_789/start');
+  assert.equal(started.status, 'RUNNING');
+
+  // 4. Simulate
+  const sim = await client.swarms.simulate({
+    name: 'Simulated Swarm',
+    objective: 'Simulate workflow',
+    max_budget: '3000000',
+  });
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/swarms/simulate');
+  assert.equal(sim.is_valid_dag, true);
+
+  // 5. Tasks
+  const tasks = await client.swarms.tasks('swm_789');
+  assert.equal(tasks.length, 2);
+
+  // 6. Graph
+  const g = await client.swarms.graph('swm_789');
+  assert.equal(g.is_dag, true);
+
+  // 7. Trace
+  const t = await client.swarms.trace('swm_789');
+  assert.equal(t.swarm_id, 'swm_789');
+
+  // 8. Risk
+  const r = await client.swarms.risk('swm_789');
+  assert.equal(r.risk_level, 'LOW');
+
+  // 9. Replan
+  const rep = await client.swarms.replan('swm_789');
+  assert.equal(rep.strategy, 'TRY_ALTERNATIVE_SERVICE');
+
+  // 10. Cancel
+  const cancelled = await client.swarms.cancel('swm_789');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/swarms/swm_789/cancel');
+  assert.equal(cancelled.status, 'CANCELLED');
+});
+
 
 

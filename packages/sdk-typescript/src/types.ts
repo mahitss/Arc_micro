@@ -889,5 +889,202 @@ export interface MissionRecoveryResponse {
   status: string;
 }
 
+/**
+ * Multi-Agent Swarm Orchestration Types (Phase 30)
+ */
+
+export type SwarmStatus =
+  | 'CREATED'
+  | 'PLANNING'
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED';
+
+export type AgentRole =
+  | 'ORCHESTRATOR'
+  | 'RESEARCHER'
+  | 'DATA_PROVIDER'
+  | 'ANALYST'
+  | 'VERIFIER'
+  | 'CRITIC'
+  | 'SYNTHESIZER';
+
+export type TaskStatus =
+  | 'PENDING'
+  | 'READY'
+  | 'ASSIGNED'
+  | 'IN_PROGRESS'
+  | 'VALIDATING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'BLOCKED'
+  | 'SKIPPED';
+
+export interface CriticFeedback {
+  task_id: string;
+  critic_agent_id: string;
+  score: number;
+  feedback: string;
+  passed: boolean;
+  reviewed_at: string;
+}
+
+export interface ConsensusValidation {
+  task_id: string;
+  verifier_count: number;
+  approval_count: number;
+  rejection_count: number;
+  consensus_reached: boolean;
+  confidence: number;
+  completed_at: string;
+}
+
+export interface SwarmCostIntelligence {
+  total_budget: string;
+  allocated_budget: string;
+  committed_spend: string;
+  active_reservations: string;
+  unallocated_budget: string;
+  budget_utilization_pct: number;
+  projected_final_cost: string;
+  cost_variance: string;
+  is_over_budget_risk: boolean;
+}
+
+export interface SwarmRiskScore {
+  overall_score: number;
+  risk_level: string;
+  budget_exhaustion_risk: number;
+  dependency_bottleneck_risk: number;
+  agent_reliability_risk: number;
+  data_tampering_risk: number;
+  recommendations: string[];
+  evaluated_at: string;
+}
+
+export interface TaskNode {
+  id: string;
+  swarm_id: string;
+  mission_id: string;
+  title: string;
+  role: AgentRole;
+  required_capability: string;
+  dependencies: string[];
+  status: TaskStatus;
+  assigned_agent_id?: string;
+  assigned_service_id?: string;
+  budget: string;
+  actual_cost: string;
+  depth: number;
+  input_payload?: Record<string, unknown>;
+  output_payload?: Record<string, unknown>;
+  output_checksum?: string;
+  critic_feedback?: CriticFeedback;
+  consensus_validation?: ConsensusValidation;
+  hire_id?: string;
+  payment_id?: string;
+  error_message?: string;
+  retry_count: number;
+  max_retries: number;
+  created_at: string;
+  updated_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+export interface Swarm {
+  id: string;
+  organization_id: string;
+  root_mission_id: string;
+  name: string;
+  objective: string;
+  status: SwarmStatus;
+  max_budget: string;
+  total_spent: string;
+  total_reserved: string;
+  asset: string;
+  deadline?: string;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+  task_count: number;
+  completed_tasks: number;
+  failed_tasks: number;
+  orchestrator_agent_id: string;
+  risk_score?: SwarmRiskScore;
+  cost_intelligence?: SwarmCostIntelligence;
+  tasks?: TaskNode[];
+}
+
+export interface SwarmGraphNode {
+  id: string;
+  type: string;
+  label: string;
+  role?: string;
+  status?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface SwarmGraphEdge {
+  id: string;
+  from: string;
+  to: string;
+  type: string;
+  label?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface SwarmGraph {
+  nodes: SwarmGraphNode[];
+  edges: SwarmGraphEdge[];
+  depth: number;
+  is_dag: boolean;
+}
+
+export interface SwarmTraceEvent {
+  event_type: string;
+  task_id?: string;
+  agent_id?: string;
+  details?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface SwarmTrace {
+  swarm_id: string;
+  events: SwarmTraceEvent[];
+}
+
+export interface TaskNodeInput {
+  title: string;
+  role: AgentRole;
+  required_capability: string;
+  dependencies?: string[];
+  budget: string;
+  input_payload?: Record<string, unknown>;
+}
+
+export interface CreateSwarmRequest {
+  name: string;
+  objective: string;
+  max_budget: string;
+  asset?: string;
+  deadline?: string;
+  organization_id?: string;
+  orchestrator_agent_id?: string;
+  tasks?: TaskNodeInput[];
+}
+
+export interface SimulateSwarmResponse {
+  estimated_cost: string;
+  estimated_latency_ms: number;
+  task_count: number;
+  max_depth: number;
+  is_valid_dag: boolean;
+  risk_score: SwarmRiskScore;
+  tasks: TaskNode[];
+}
+
 
 

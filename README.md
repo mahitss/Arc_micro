@@ -37,6 +37,44 @@ Agents need economic agency to pay for data, compute, and third-party APIs. Exis
 
 ---
 
+## Multi-Agent Swarm Orchestration Layer (Phase 30)
+
+AgentPay supports coordinated collectives of specialized agents working together toward root objectives under **zero-authority economic guarantees**:
+
+```
+                    ROOT MISSION
+                         │
+                         ▼
+                 ORCHESTRATOR AGENT
+                         │
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+   RESEARCH AGENT   DATA AGENT      ANALYST AGENT
+        │                │                │
+        └────────────────┼────────────────┘
+                         ▼
+                   VERIFIER AGENT
+                         │
+                         ▼
+                    CRITIC AGENT
+                         │
+                         ▼
+                  SYNTHESIZER AGENT
+                         │
+                         ▼
+                 FINAL DELIVERABLE
+```
+
+### Key Capabilities
+1. **DAG Cycle Prevention:** Kahn's topological sort rejects circular subcontracts.
+2. **Bounded Hierarchy:** Maximum DAG depth of 4, maximum 20 tasks, and bounded 4-worker concurrency.
+3. **Atomic Budget Reservations:** Concurrency-safe reservation pool ensures parallel tasks can never overrun the swarm budget ceiling.
+4. **Cryptographic Output Chaining:** Intermediate outputs are sealed with SHA-256 checksums to prevent tamper.
+5. **Anti-Collusion Consensus:** Deliverables require quorum verification by independent verifiers before payment authorization.
+6. **Zero Elevation Security (INV-S1):** Swarm and orchestrator agents have zero private keys and zero direct vault access.
+
+---
+
 ## How It Works
 
 ```
@@ -215,8 +253,14 @@ An interactive demonstration is available at **`http://localhost:3000/demo`**:
 
 ---
 
-## Documentation Index
-
+- **Multi-Agent Swarm Architecture:** [`docs/swarm-orchestration-architecture.md`](docs/swarm-orchestration-architecture.md)
+- **Swarm Security Boundaries (INV-S1 to INV-S8):** [`docs/swarm-security-boundaries.md`](docs/swarm-security-boundaries.md)
+- **Swarm Economic Model & Reservations:** [`docs/swarm-economic-model.md`](docs/swarm-economic-model.md)
+- **Swarm DAG Validation & Kahn's Algorithm:** [`docs/swarm-dag-validation.md`](docs/swarm-dag-validation.md)
+- **Swarm Role Matrix & Matchmaking:** [`docs/swarm-role-matrix.md`](docs/swarm-role-matrix.md)
+- **Swarm Adversarial Scenarios (20 Tests):** [`docs/swarm-adversarial-scenarios.md`](docs/swarm-adversarial-scenarios.md)
+- **Swarm API & SDK Reference:** [`docs/swarm-api-reference.md`](docs/swarm-api-reference.md)
+- **Swarm Implementation Report:** [`docs/swarm-implementation-report.md`](docs/swarm-implementation-report.md)
 - **Mission Control UI Architecture:** [`docs/mission-control-ui-architecture.md`](docs/mission-control-ui-architecture.md)
 - **Mission Control User Guide:** [`docs/mission-control-user-guide.md`](docs/mission-control-user-guide.md)
 - **Mission Control 90-Second Demo:** [`docs/mission-control-demo.md`](docs/mission-control-demo.md)

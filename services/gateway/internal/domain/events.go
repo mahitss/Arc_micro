@@ -55,6 +55,23 @@ const (
 	EventMissionRecoveryStarted            EventType = "mission.recovery_started"
 	EventMissionRecoveryCompleted          EventType = "mission.recovery_completed"
 	EventMissionRecoveryFailed             EventType = "mission.recovery_failed"
+	// Multi-Agent Swarm Orchestration Events (Phase 32)
+	EventSwarmCreated             EventType = "swarm.created"
+	EventSwarmStarted             EventType = "swarm.started"
+	EventSwarmTaskReady           EventType = "swarm.task_ready"
+	EventSwarmTaskStarted         EventType = "swarm.task_started"
+	EventSwarmTaskCompleted       EventType = "swarm.task_completed"
+	EventSwarmTaskFailed          EventType = "swarm.task_failed"
+	EventSwarmTaskBlocked         EventType = "swarm.task_blocked"
+	EventSwarmAgentAssigned       EventType = "swarm.agent_assigned"
+	EventSwarmHireCreated         EventType = "swarm.hire_created"
+	EventSwarmPaymentAuthorized   EventType = "swarm.payment_authorized"
+	EventSwarmResultReceived      EventType = "swarm.result_received"
+	EventSwarmValidationCompleted EventType = "swarm.validation_completed"
+	EventSwarmReplanStarted       EventType = "swarm.replan_started"
+	EventSwarmReplanCompleted     EventType = "swarm.replan_completed"
+	EventSwarmCompleted           EventType = "swarm.completed"
+	EventSwarmFailed              EventType = "swarm.failed"
 )
 
 // DomainEvent represents a versioned, immutable, and correlated event envelope.

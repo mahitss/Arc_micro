@@ -26,6 +26,7 @@ export { PaymentIntentsResource } from './resources/payment-intents.js';
 export { QuotesResource } from './resources/quotes.js';
 export { ServicesResource } from './resources/services.js';
 export { SimulationsResource } from './resources/simulations.js';
+export { SwarmsResource } from './resources/swarms.js';
 export { TransactionsResource } from './resources/transactions.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
@@ -36,16 +37,20 @@ export type {
   AgentDiscoveryFilter,
   AgentQuote,
   AgentResult,
+  AgentRole,
   AgentService,
   Approval,
   ApprovalEvidence,
   BlockchainEvidence,
   ClientOptions,
+  ConsensusValidation,
   CounterQuoteParams,
   CreateHireParams,
   CreatePaymentIntentParams,
+  CreateSwarmRequest,
   CreateWebhookEndpointParams,
   CreateWebhookEndpointResponse,
+  CriticFeedback,
   DomainEvent,
   EconomicGraph,
   ExecutionMode,
@@ -90,7 +95,20 @@ export type {
   ServiceReputation,
   SimulationRequest,
   SimulationResponse,
+  SimulateSwarmResponse,
   SubmitResultParams,
+  Swarm,
+  SwarmCostIntelligence,
+  SwarmGraph,
+  SwarmGraphEdge,
+  SwarmGraphNode,
+  SwarmRiskScore,
+  SwarmStatus,
+  SwarmTrace,
+  SwarmTraceEvent,
+  TaskNode,
+  TaskNodeInput,
+  TaskStatus,
   TraceStep,
   TransactionRecord,
   TreasuryEvidence,

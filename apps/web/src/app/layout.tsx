@@ -80,6 +80,13 @@ export default function RootLayout({
                   Intelligence
                 </Link>
                 <Link
+                  href="/swarms"
+                  className="px-3 py-1.5 rounded-lg text-purple-300 font-semibold bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                  Swarms
+                </Link>
+                <Link
                   href="/approvals"
                   className="px-3 py-1.5 rounded-lg text-amber-300 hover:text-white hover:bg-amber-500/20 transition-colors"
                 >

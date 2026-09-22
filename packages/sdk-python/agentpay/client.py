@@ -471,6 +471,87 @@ class MissionsResource:
             params["organization_id"] = organization_id
         return self._client._request("GET", f"/v1/missions/{mission_id}/observations", params=params)
 
+class SwarmsResource:
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def create(
+        self,
+        name: str,
+        objective: str,
+        max_budget: str,
+        asset: Optional[str] = None,
+        deadline: Optional[str] = None,
+        tasks: Optional[List[Dict[str, Any]]] = None,
+        organization_id: Optional[str] = None,
+        orchestrator_agent_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "name": name,
+            "objective": objective,
+            "max_budget": max_budget,
+        }
+        if asset:
+            payload["asset"] = asset
+        if deadline:
+            payload["deadline"] = deadline
+        if tasks:
+            payload["tasks"] = tasks
+        if organization_id:
+            payload["organization_id"] = organization_id
+        if orchestrator_agent_id:
+            payload["orchestrator_agent_id"] = orchestrator_agent_id
+        res = self._client._request("POST", "/v1/swarms", json=payload)
+        return res.get("swarm", res)
+
+    def get(self, swarm_id: str) -> Dict[str, Any]:
+        res = self._client._request("GET", f"/v1/swarms/{swarm_id}")
+        return res.get("swarm", res)
+
+    def start(self, swarm_id: str) -> Dict[str, Any]:
+        res = self._client._request("POST", f"/v1/swarms/{swarm_id}/start")
+        return res.get("swarm", res)
+
+    def cancel(self, swarm_id: str) -> Dict[str, Any]:
+        res = self._client._request("POST", f"/v1/swarms/{swarm_id}/cancel")
+        return res.get("swarm", res)
+
+    def simulate(
+        self,
+        name: str,
+        objective: str,
+        max_budget: str,
+        tasks: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "name": name,
+            "objective": objective,
+            "max_budget": max_budget,
+        }
+        if tasks:
+            payload["tasks"] = tasks
+        return self._client._request("POST", "/v1/swarms/simulate", json=payload)
+
+    def tasks(self, swarm_id: str) -> List[Dict[str, Any]]:
+        res = self._client._request("GET", f"/v1/swarms/{swarm_id}/tasks")
+        return res.get("tasks", [])
+
+    def graph(self, swarm_id: str) -> Dict[str, Any]:
+        res = self._client._request("GET", f"/v1/swarms/{swarm_id}/graph")
+        return res.get("graph", res)
+
+    def trace(self, swarm_id: str) -> Dict[str, Any]:
+        res = self._client._request("GET", f"/v1/swarms/{swarm_id}/trace")
+        return res.get("trace", res)
+
+    def risk(self, swarm_id: str) -> Dict[str, Any]:
+        res = self._client._request("GET", f"/v1/swarms/{swarm_id}/risk")
+        return res.get("risk_score", res)
+
+    def replan(self, swarm_id: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        res = self._client._request("POST", f"/v1/swarms/{swarm_id}/replan", json=payload or {})
+        return res.get("proposal", res)
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -497,6 +578,7 @@ class AgentPay:
         self.events = EventsResource(self)
         self.webhooks = WebhooksResource(self)
         self.simulations = SimulationsResource(self)
+        self.swarms = SwarmsResource(self)
 
     def _request(
         self,

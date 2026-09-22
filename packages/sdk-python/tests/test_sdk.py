@@ -417,6 +417,97 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         obs = client.missions.observations("msn_100")
         self.assertEqual(len(obs["observations"]), 1)
 
+    @patch("requests.request")
+    def test_swarms_orchestration(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "swarm": {
+                "id": "swm_py_01",
+                "name": "Market Intelligence Swarm",
+                "objective": "Build industry report",
+                "status": "CREATED",
+                "max_budget": "5000000",
+                "task_count": 5,
+            }
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+
+        # 1. Create Swarm
+        sw = client.swarms.create(
+            name="Market Intelligence Swarm",
+            objective="Build industry report",
+            max_budget="5000000",
+        )
+        self.assertEqual(sw["id"], "swm_py_01")
+        self.assertEqual(sw["status"], "CREATED")
+
+        # 2. Get Swarm
+        mock_resp.json.return_value = {"swarm": {"id": "swm_py_01", "status": "RUNNING"}}
+        sw_get = client.swarms.get("swm_py_01")
+        self.assertEqual(sw_get["id"], "swm_py_01")
+
+        # 3. Start Swarm
+        mock_resp.json.return_value = {"swarm": {"id": "swm_py_01", "status": "RUNNING"}}
+        sw_started = client.swarms.start("swm_py_01")
+        self.assertEqual(sw_started["status"], "RUNNING")
+
+        # 4. Simulate
+        mock_resp.json.return_value = {
+            "is_valid_dag": True,
+            "task_count": 5,
+            "estimated_cost": "2500000",
+            "risk_score": {"overall_score": 10, "risk_level": "LOW"},
+        }
+        sim = client.swarms.simulate(
+            name="Simulated Swarm",
+            objective="Build report",
+            max_budget="3000000",
+        )
+        self.assertTrue(sim["is_valid_dag"])
+
+        # 5. Tasks
+        mock_resp.json.return_value = {
+            "tasks": [{"id": "t1", "title": "Research"}, {"id": "t2", "title": "Data"}]
+        }
+        tasks = client.swarms.tasks("swm_py_01")
+        self.assertEqual(len(tasks), 2)
+
+        # 6. Graph
+        mock_resp.json.return_value = {
+            "graph": {"nodes": [{"id": "t1"}], "edges": [], "is_dag": True}
+        }
+        g = client.swarms.graph("swm_py_01")
+        self.assertTrue(g["is_dag"])
+
+        # 7. Trace
+        mock_resp.json.return_value = {
+            "trace": {"swarm_id": "swm_py_01", "events": [{"event_type": "swarm.started"}]}
+        }
+        tr = client.swarms.trace("swm_py_01")
+        self.assertEqual(tr["swarm_id"], "swm_py_01")
+
+        # 8. Risk
+        mock_resp.json.return_value = {
+            "risk_score": {"overall_score": 15, "risk_level": "LOW"}
+        }
+        rk = client.swarms.risk("swm_py_01")
+        self.assertEqual(rk["risk_level"], "LOW")
+
+        # 9. Replan
+        mock_resp.json.return_value = {
+            "proposal": {"strategy": "TRY_ALTERNATIVE_SERVICE", "confidence": "HIGH"}
+        }
+        rep = client.swarms.replan("swm_py_01")
+        self.assertEqual(rep["strategy"], "TRY_ALTERNATIVE_SERVICE")
+
+        # 10. Cancel
+        mock_resp.json.return_value = {"swarm": {"id": "swm_py_01", "status": "CANCELLED"}}
+        canc = client.swarms.cancel("swm_py_01")
+        self.assertEqual(canc["status"], "CANCELLED")
+
 if __name__ == "__main__":
     unittest.main()
 

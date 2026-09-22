@@ -18,7 +18,13 @@ import type {
   ServiceAnomaliesResponse,
   ServicePerformance,
   ServiceQuote,
+  SimulateSwarmResponse,
   SimulationResponse,
+  Swarm,
+  SwarmGraph,
+  SwarmRiskScore,
+  SwarmTrace,
+  TaskNode,
   TransactionRecord,
   WebhookEndpoint,
 } from '@agentpay/sdk';
@@ -430,6 +436,107 @@ export function printReplanProposal(prop: ReplanProposal): void {
   console.log(`Confidence:        ${prop.confidence}`);
   console.log(`Requires Human:    ${prop.requires_human ? 'YES' : 'NO'}`);
   console.log(`Explanation:       ${prop.explanation}`);
+}
+
+export function printSwarm(sw: Swarm): void {
+  console.log('Swarm Details');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`ID:                ${sw.id}`);
+  console.log(`Name:              ${sw.name}`);
+  console.log(`Objective:         ${sw.objective}`);
+  console.log(`Status:            ${sw.status}`);
+  console.log(`Max Budget:        ${formatUsdc(sw.max_budget)} (${sw.max_budget} base units)`);
+  console.log(`Total Spent:       ${formatUsdc(sw.total_spent)}`);
+  console.log(`Total Reserved:    ${formatUsdc(sw.total_reserved)}`);
+  console.log(`Asset:             ${sw.asset}`);
+  console.log(`Orchestrator:      ${sw.orchestrator_agent_id}`);
+  console.log(`Tasks:             ${sw.completed_tasks} / ${sw.task_count} completed (${sw.failed_tasks} failed)`);
+  if (sw.deadline) {
+    console.log(`Deadline:          ${sw.deadline}`);
+  }
+  if (sw.cost_intelligence) {
+    console.log('Cost Intelligence:');
+    console.log(`  - Allocated:     ${formatUsdc(sw.cost_intelligence.allocated_budget)}`);
+    console.log(`  - Committed:     ${formatUsdc(sw.cost_intelligence.committed_spend)}`);
+    console.log(`  - Utilization:   ${sw.cost_intelligence.budget_utilization_pct.toFixed(1)}%`);
+    console.log(`  - Projected:     ${formatUsdc(sw.cost_intelligence.projected_final_cost)}`);
+  }
+}
+
+export function printSwarmTasks(tasks: TaskNode[]): void {
+  console.log(`Swarm Tasks (${tasks.length})`);
+  console.log('──────────────────────────────────────────────────');
+  for (const t of tasks) {
+    console.log(`[${t.status}] ${t.id} (Depth ${t.depth})`);
+    console.log(`  Title:       ${t.title}`);
+    console.log(`  Role:        ${t.role}`);
+    console.log(`  Capability:  ${t.required_capability}`);
+    console.log(`  Budget:      ${formatUsdc(t.budget)} (Spent: ${formatUsdc(t.actual_cost)})`);
+    if (t.dependencies && t.dependencies.length > 0) {
+      console.log(`  Depends on:  ${t.dependencies.join(', ')}`);
+    }
+    if (t.assigned_agent_id) {
+      console.log(`  Assigned:    ${t.assigned_agent_id}`);
+    }
+    if (t.critic_feedback) {
+      console.log(`  Critic:      Score ${t.critic_feedback.score}/100 (${t.critic_feedback.passed ? 'PASSED' : 'FAILED'})`);
+    }
+  }
+}
+
+export function printSwarmGraph(g: SwarmGraph): void {
+  console.log('Swarm Directed Economic Network DAG');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`DAG Valid:     ${g.is_dag ? 'YES' : 'NO'}`);
+  console.log(`Max Depth:     ${g.depth}`);
+  console.log(`Nodes Count:   ${g.nodes.length}`);
+  console.log(`Edges Count:   ${g.edges.length}`);
+  console.log('Nodes:');
+  for (const n of g.nodes) {
+    console.log(`  - [${n.type}] ${n.id} : ${n.label} (${n.status || 'N/A'})`);
+  }
+  if (g.edges.length > 0) {
+    console.log('Edges:');
+    for (const e of g.edges) {
+      console.log(`  - ${e.from} ──[${e.type}]──> ${e.to}`);
+    }
+  }
+}
+
+export function printSwarmTrace(trace: SwarmTrace): void {
+  console.log(`Swarm Trace (${trace.events.length} events)`);
+  console.log('──────────────────────────────────────────────────');
+  for (const ev of trace.events) {
+    console.log(`[${ev.timestamp}] ${ev.event_type}${ev.task_id ? ` (Task: ${ev.task_id})` : ''}${ev.agent_id ? ` (Agent: ${ev.agent_id})` : ''}`);
+  }
+}
+
+export function printSwarmRisk(risk: SwarmRiskScore): void {
+  console.log('Swarm Risk Assessment');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Overall Score:   ${risk.overall_score}/100`);
+  console.log(`Risk Level:      ${risk.risk_level}`);
+  console.log(`Budget Exhaustion Risk:       ${risk.budget_exhaustion_risk}/100`);
+  console.log(`Dependency Bottleneck Risk:   ${risk.dependency_bottleneck_risk}/100`);
+  console.log(`Agent Reliability Risk:       ${risk.agent_reliability_risk}/100`);
+  console.log(`Data Tampering Risk:          ${risk.data_tampering_risk}/100`);
+  if (risk.recommendations && risk.recommendations.length > 0) {
+    console.log('Recommendations:');
+    for (const rec of risk.recommendations) {
+      console.log(`  - ${rec}`);
+    }
+  }
+}
+
+export function printSimulateSwarm(sim: SimulateSwarmResponse): void {
+  console.log('Swarm Simulation Result (Zero Broadcast)');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Valid DAG:         ${sim.is_valid_dag ? 'YES' : 'NO'}`);
+  console.log(`Tasks:             ${sim.task_count}`);
+  console.log(`Max Depth:         ${sim.max_depth}`);
+  console.log(`Estimated Cost:    ${formatUsdc(sim.estimated_cost)} (${sim.estimated_cost} base units)`);
+  console.log(`Estimated Latency: ${sim.estimated_latency_ms}ms`);
+  console.log(`Risk Level:        ${sim.risk_score.risk_level} (Score: ${sim.risk_score.overall_score}/100)`);
 }
 
 
