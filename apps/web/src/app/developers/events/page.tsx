@@ -51,6 +51,7 @@ export default function EventsAuditPage() {
 
   useEffect(() => {
     fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

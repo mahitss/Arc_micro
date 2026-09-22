@@ -1,10 +1,19 @@
 # AgentPay
 
-Programmable financial control plane for autonomous AI agents, with deterministic policy controls and native USDC settlement on Arc.
+Programmable financial control plane and autonomous economic operating system for AI agents, featuring deterministic policy controls and native USDC settlement on Arc.
 
 ---
 
-## Why AgentPay
+## The Autonomous Economy Engine & Mission Control
+
+AgentPay is the control center for an autonomous AI economy: **"AI Requests → AgentPay Controls → Arc Settles."**
+
+Autonomous agents can plan, discover, hire, and pay peer agents and external services while AgentPay governs every movement of money through deterministic Rust policy evaluation, real-time risk scoring, multi-tenant agent vaults, and verifiable on-chain settlement.
+
+### The Autonomous Mission Flow
+```
+Objective → Autonomous Mission → Agents → Service Marketplace → Economic Decisions → Policy / Risk → Payments → Arc Settlement → Results → Mission Completion
+```
 
 Autonomous AI agents can plan, reason, and execute complex workflows, but giving them direct access to crypto private keys presents catastrophic financial risk. A single software bug, hallucination, or adversarial prompt injection can instantly drain a funded wallet.
 
@@ -157,6 +166,11 @@ An interactive demonstration is available at **`http://localhost:3000/demo`**:
 
 ## Documentation Index
 
+- **Mission Control UI Architecture:** [`docs/mission-control-ui-architecture.md`](docs/mission-control-ui-architecture.md)
+- **Mission Control User Guide:** [`docs/mission-control-user-guide.md`](docs/mission-control-user-guide.md)
+- **Mission Control 90-Second Demo:** [`docs/mission-control-demo.md`](docs/mission-control-demo.md)
+- **Mission Control Implementation Report:** [`docs/mission-control-implementation-report.md`](docs/mission-control-implementation-report.md)
+- **Autonomous Economy Engine Architecture:** [`docs/autonomous-economy-architecture.md`](docs/autonomous-economy-architecture.md)
 - **Final Architecture:** [`docs/final-architecture.md`](docs/final-architecture.md)
 - **Financial Invariants (16 Formal Invariants):** [`docs/financial-invariants.md`](docs/financial-invariants.md)
 - **Production Readiness Matrix (21 Domains):** [`docs/production-readiness-matrix.md`](docs/production-readiness-matrix.md)

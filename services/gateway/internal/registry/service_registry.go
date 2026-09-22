@@ -50,34 +50,45 @@ const (
 
 // Service represents a registered external service provider in the AgentPay economy.
 type Service struct {
-	ID                    string   `json:"id"`
-	Name                  string   `json:"name"`
-	Description           string   `json:"description"`
-	Category              string   `json:"category"`
-	Capabilities          []string `json:"capabilities,omitempty"`
-	Recipient             string   `json:"recipient"`      // Authoritative server-side settlement address
-	Asset                 string   `json:"asset"`          // Default "USDC"
-	Enabled               bool     `json:"enabled"`
-	MaxPrice              string   `json:"max_price"`      // Maximum allowable price in base units
-	FixedPrice            string   `json:"fixed_price,omitempty"`
-	PricingModel          string   `json:"pricing_model"`  // FIXED, VARIABLE, QUOTE_REQUIRED
-	TrustStatus           string   `json:"trust_status"`   // TRUSTED, VERIFIED, UNVERIFIED, DISABLED
-	HistoricalReliability string   `json:"historical_reliability,omitempty"`
-	CreatedAt             string   `json:"created_at"`
-	UpdatedAt             string   `json:"updated_at"`
+	ID                    string            `json:"id"`
+	Name                  string            `json:"name"`
+	Description           string            `json:"description"`
+	Category              string            `json:"category"`
+	Capabilities          []string          `json:"capabilities,omitempty"`
+	Recipient             string            `json:"recipient"`      // Authoritative server-side settlement address
+	Asset                 string            `json:"asset"`          // Default "USDC"
+	Enabled               bool              `json:"enabled"`
+	Verified              bool              `json:"verified"`
+	MaxPrice              string            `json:"max_price"`      // Maximum allowable price in base units
+	FixedPrice            string            `json:"fixed_price,omitempty"`
+	PricingModel          string            `json:"pricing_model"`  // FIXED, VARIABLE, QUOTE_REQUIRED
+	TrustStatus           string            `json:"trust_status"`   // TRUSTED, VERIFIED, UNVERIFIED, DISABLED
+	HistoricalReliability string            `json:"historical_reliability,omitempty"`
+	SuccessRateBps        int64             `json:"success_rate_bps"`        // Basis points (0-10000)
+	AverageLatencyMs      int64             `json:"average_latency_ms"`      // Milliseconds
+	RiskScore             uint32            `json:"risk_score"`             // 0-100
+	HistoricalTxCount     uint64            `json:"historical_tx_count"`
+	Metadata              map[string]string `json:"metadata,omitempty"`
+	CreatedAt             string            `json:"created_at"`
+	UpdatedAt             string            `json:"updated_at"`
 }
 
 // Quote represents a time-bound, cryptographically identified pricing commitment.
 type Quote struct {
-	ID                string    `json:"quote_id"`
-	ServiceID         string    `json:"service_id"`
-	Recipient         string    `json:"recipient"`
-	Amount            string    `json:"amount"`
-	Asset             string    `json:"asset"`
-	Purpose           string    `json:"purpose,omitempty"`
-	EstimatedDelivery string    `json:"estimated_delivery,omitempty"`
-	ExpiresAt         time.Time `json:"expires_at"`
-	CreatedAt         time.Time `json:"created_at"`
+	ID                 string    `json:"quote_id"`
+	ServiceID          string    `json:"service_id"`
+	MissionID          string    `json:"mission_id,omitempty"`
+	Recipient          string    `json:"recipient"`
+	Amount             string    `json:"amount"`
+	Asset              string    `json:"asset"`
+	Purpose            string    `json:"purpose,omitempty"`
+	EstimatedDelivery  string    `json:"estimated_delivery,omitempty"`
+	EstimatedLatencyMs int64     `json:"estimated_latency_ms"`
+	QualityScore       int64     `json:"quality_score"`    // Basis points (0-10000)
+	RiskScore          int64     `json:"risk_score"`       // Basis points (0-10000)
+	ReputationScore    int64     `json:"reputation_score"` // Basis points (0-10000)
+	ExpiresAt          time.Time `json:"expires_at"`
+	CreatedAt          time.Time `json:"created_at"`
 }
 
 // Registry manages the set of approved external services and quotes.
@@ -338,6 +349,9 @@ func (r *Registry) ListByCapability(capability string) []*Service {
 			}
 		}
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].ID < list[j].ID
+	})
 	return list
 }
 
@@ -392,16 +406,39 @@ func (r *Registry) CreateQuoteWithTerms(serviceID, requestedAmount, asset, purpo
 	quoteID := fmt.Sprintf("qt_%s", hex.EncodeToString(randBytes))
 
 	now := time.Now().UTC()
+	latency := s.AverageLatencyMs
+	if latency <= 0 {
+		latency = 450
+	}
+	quality := int64(9500)
+	if s.TrustStatus == TrustStatusVerified {
+		quality = 9000
+	} else if s.TrustStatus == TrustStatusUnverified {
+		quality = 7500
+	}
+	risk := int64(s.RiskScore * 100)
+	if risk <= 0 {
+		risk = 1000 // 10%
+	}
+	reputation := s.SuccessRateBps
+	if reputation <= 0 {
+		reputation = 9800 // 98%
+	}
+
 	quote := &Quote{
-		ID:                quoteID,
-		ServiceID:         s.ID,
-		Recipient:         s.Recipient,
-		Amount:            finalAmount,
-		Asset:             s.Asset,
-		Purpose:           purpose,
-		EstimatedDelivery: estimatedDelivery,
-		CreatedAt:         now,
-		ExpiresAt:         now.Add(ttl),
+		ID:                 quoteID,
+		ServiceID:          s.ID,
+		Recipient:          s.Recipient,
+		Amount:             finalAmount,
+		Asset:              s.Asset,
+		Purpose:            purpose,
+		EstimatedDelivery:  estimatedDelivery,
+		EstimatedLatencyMs: latency,
+		QualityScore:       quality,
+		RiskScore:          risk,
+		ReputationScore:    reputation,
+		CreatedAt:          now,
+		ExpiresAt:          now.Add(ttl),
 	}
 
 	r.mu.Lock()

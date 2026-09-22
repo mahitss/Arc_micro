@@ -347,5 +347,217 @@ export interface SecurityLabReport {
   invariants: InvariantResult[];
 }
 
+export type MissionStatus =
+  | 'CREATED'
+  | 'PLANNING'
+  | 'DISCOVERING'
+  | 'EVALUATING'
+  | 'SELECTING'
+  | 'AWAITING_APPROVAL'
+  | 'EXECUTING'
+  | 'WAITING_FOR_RESULT'
+  | 'EVALUATING_RESULT'
+  | 'CONTINUING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'BUDGET_EXHAUSTED'
+  | 'EXPIRED';
+
+export interface MissionStep {
+  step_id: string;
+  mission_id: string;
+  required_capability: string;
+  max_budget: string;
+  currency: string;
+  selected_service_id?: string;
+  selected_quote_id?: string;
+  payment_intent_id?: string;
+  status: string;
+  result_data?: string;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+export interface Mission {
+  id: string;
+  organization_id: string;
+  agent_id: string;
+  objective: string;
+  status: MissionStatus;
+  budget: string;
+  spent: string;
+  remaining_budget: string;
+  currency: string;
+  max_execution_amount: string;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  deadline?: string;
+  current_step?: string;
+  failure_reason?: string;
+  metadata?: Record<string, string>;
+  correlation_id?: string;
+}
+
+export interface MissionTrace {
+  mission_id: string;
+  organization_id: string;
+  agent_id: string;
+  objective: string;
+  status: MissionStatus;
+  budget: string;
+  spent: string;
+  remaining: string;
+  currency: string;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  steps: MissionStep[];
+  events: Array<{
+    id: string;
+    type: string;
+    actor: string;
+    timestamp: string;
+    payload: Record<string, any>;
+  }>;
+}
+
+export interface ServiceReputation {
+  service_id: string;
+  organization_id: string;
+  total_requests: number;
+  successful_requests: number;
+  failed_requests: number;
+  payment_count: number;
+  total_volume_base: string;
+  average_price_base: string;
+  average_latency_ms: number;
+  failure_rate_bps: number;
+  reputation_score: number;
+  last_success_at?: string;
+  last_failure_at?: string;
+}
+
+export interface MissionQuote {
+  quote_id: string;
+  service_id: string;
+  service_name?: string;
+  mission_id?: string;
+  price: string;
+  asset: string;
+  estimated_latency_ms: number;
+  quality_score: number;
+  risk_score: number;
+  reputation_score: number;
+  expires_at: string;
+  recipient_binding: string;
+}
+
+export interface MarketplaceService {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  capabilities: string[];
+  recipient: string;
+  asset: string;
+  enabled: boolean;
+  verified: boolean;
+  max_price: string;
+  fixed_price?: string;
+  pricing_model: string;
+  trust_status: string;
+  success_rate_bps: number;
+  average_latency_ms: number;
+  risk_score: number;
+  historical_tx_count: number;
+  metadata?: Record<string, string>;
+}
+
+export interface SimulatedMissionStep {
+  step_id: string;
+  required_capability: string;
+  selected_service_id: string;
+  selected_quote_id: string;
+  quoted_price: string;
+  quality_score: number;
+  reputation_score: number;
+  risk_score: number;
+  policy_decision: string;
+  requires_approval: boolean;
+  recipient: string;
+}
+
+export interface MissionSimulationResponse {
+  simulation_only: boolean;
+  all_steps_approved: boolean;
+  requires_human_approval: boolean;
+  total_projected_spend: string;
+  currency: string;
+  candidate_count: number;
+  simulated_steps: SimulatedMissionStep[];
+  policy_violations: string[];
+  evaluated_at: string;
+}
+
+export interface OverviewMetrics {
+  active_missions: number | null;
+  total_agents: number | null;
+  total_services: number | null;
+  today_volume_base: string | null;
+  today_transactions: number | null;
+  pending_approvals: number | null;
+  policy_blocks: number | null;
+  mission_success_rate_bps: number | null;
+}
+
+export interface ApprovalItem {
+  id: string;
+  intent_id: string;
+  mission_id?: string;
+  agent_id: string;
+  service_id: string;
+  amount: string;
+  asset: string;
+  reason: string;
+  risk_level: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+  policy_evaluation?: string;
+  created_at: string;
+}
+
+export interface GlobalActivityEvent {
+  id: string;
+  type: string;
+  category: 'MISSION' | 'PAYMENT' | 'POLICY' | 'RISK' | 'APPROVAL' | 'SECURITY' | 'ARC' | string;
+  actor: string;
+  mission_id?: string;
+  amount?: string;
+  status: string;
+  correlation_id: string;
+  timestamp: string;
+  payload: Record<string, any>;
+}
+
+export interface SubsystemStatus {
+  name: string;
+  status: 'OPERATIONAL' | 'DEGRADED' | 'OFFLINE' | 'PARTIAL' | string;
+  verified: boolean;
+  details: string;
+}
+
+export interface SecuritySubsystemsReport {
+  policy_engine: SubsystemStatus;
+  risk_engine: SubsystemStatus;
+  approval_system: SubsystemStatus;
+  treasury: SubsystemStatus;
+  signer: SubsystemStatus;
+  agent_vault: SubsystemStatus;
+  arc_settlement: SubsystemStatus;
+}
+
+
 
 

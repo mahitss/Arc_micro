@@ -42,12 +42,12 @@ fi
 
 # 3. Web Application Tests & Lint
 echo ""
-echo "--> Running Web Application lint & typecheck..."
+echo "--> Running Web Application lint & tests..."
 if [ -d "apps/web" ]; then
-  if (cd apps/web && npm run lint); then
-    echo "  [PASS] Web Application lint passed."
+  if (cd apps/web && npm run lint && npm test); then
+    echo "  [PASS] Web Application lint and tests passed."
   else
-    echo "  [FAIL] Web Application lint failed."
+    echo "  [FAIL] Web Application lint/tests failed."
     FAILED=1
   fi
 fi

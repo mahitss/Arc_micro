@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
-import { NetworkBadge } from '../components/NetworkBadge';
+import { SystemStatusBanner } from '../components/SystemStatusBanner';
 
 export const metadata: Metadata = {
-  title: 'AgentPay - Programmable USDC Infrastructure for Autonomous Agents',
+  title: 'AgentPay - Autonomous Mission Control Center',
   description:
-    'Developer control center for autonomous AI agents, deterministic spending policies, and on-chain Arc USDC settlement.',
+    'The control center for an autonomous AI economy. Deterministic spending policies, keyless agents, and on-chain Arc USDC settlement.',
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
         <header className="border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center space-x-6">
-              <Link href="/" className="flex items-center space-x-3 group">
+              <Link href="/overview" className="flex items-center space-x-3 group">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center font-bold text-slate-950 text-sm shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
                   AP
                 </div>
@@ -28,30 +28,24 @@ export default function RootLayout({
                   <span className="font-semibold text-base tracking-tight text-white group-hover:text-teal-400 transition-colors">
                     AgentPay
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400 leading-none">
-                    Control Center
+                  <span className="text-[10px] font-mono text-teal-400 leading-none">
+                    Mission Control
                   </span>
                 </div>
               </Link>
 
-              <nav className="hidden md:flex items-center space-x-1 text-xs font-medium">
+              <nav className="hidden lg:flex items-center space-x-1 text-xs font-mono font-medium">
                 <Link
-                  href="/demo"
-                  className="px-3 py-1.5 rounded-lg text-teal-300 font-semibold bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
-                >
-                  Live Demo
-                </Link>
-                <Link
-                  href="/demo/agent"
-                  className="px-3 py-1.5 rounded-lg text-indigo-300 font-semibold bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
-                >
-                  Autonomous Agent
-                </Link>
-                <Link
-                  href="/dashboard"
+                  href="/overview"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >
-                  Dashboard
+                  Overview
+                </Link>
+                <Link
+                  href="/missions"
+                  className="px-3 py-1.5 rounded-lg text-teal-300 font-semibold bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
+                >
+                  Missions
                 </Link>
                 <Link
                   href="/agents"
@@ -60,90 +54,78 @@ export default function RootLayout({
                   Agents
                 </Link>
                 <Link
-                  href="/payment-intents"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                  href="/marketplace"
+                  className="px-3 py-1.5 rounded-lg text-cyan-300 hover:text-white hover:bg-cyan-500/20 transition-colors"
                 >
-                  Payment Intents
+                  Marketplace
                 </Link>
                 <Link
-                  href="/transactions"
+                  href="/economy"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >
-                  Transactions
+                  Economy
                 </Link>
                 <Link
-                  href="/services"
+                  href="/approvals"
+                  className="px-3 py-1.5 rounded-lg text-amber-300 hover:text-white hover:bg-amber-500/20 transition-colors"
+                >
+                  Approvals
+                </Link>
+                <Link
+                  href="/activity"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >
-                  Services
+                  Activity
                 </Link>
                 <Link
-                  href="/simulations"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  Simulations
-                </Link>
-                <Link
-                  href="/developers/webhooks"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  Webhooks
-                </Link>
-                <Link
-                  href="/developers/events"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  Events
-                </Link>
-                <Link
-                  href="/security-lab"
+                  href="/security"
                   className="px-3 py-1.5 rounded-lg text-rose-300 hover:text-white hover:bg-rose-500/20 transition-colors flex items-center gap-1.5"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  Security Lab
+                  Security
                 </Link>
                 <Link
-                  href="/settings"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                  href="/demo"
+                  className="px-3 py-1.5 rounded-lg text-indigo-300 hover:text-white hover:bg-indigo-500/20 transition-colors"
                 >
-                  Settings
+                  Live Demo
                 </Link>
               </nav>
             </div>
 
             <div className="flex items-center space-x-3">
-              <NetworkBadge isVerifiedMainnet={false} />
+              <SystemStatusBanner />
             </div>
           </div>
 
           {/* Mobile sub-nav */}
-          <div className="md:hidden flex items-center space-x-1 px-4 py-2 border-t border-slate-800/60 overflow-x-auto text-xs font-mono">
-            <Link href="/demo" className="px-2.5 py-1 rounded text-teal-300 font-semibold bg-teal-500/10 whitespace-nowrap">
-              Demo
+          <div className="lg:hidden flex items-center space-x-1 px-4 py-2 border-t border-slate-800/60 overflow-x-auto text-xs font-mono">
+            <Link href="/overview" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Overview
             </Link>
-            <Link href="/demo/agent" className="px-2.5 py-1 rounded text-indigo-300 font-semibold bg-indigo-500/10 whitespace-nowrap">
-              Agent
-            </Link>
-            <Link href="/dashboard" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Dashboard
+            <Link href="/missions" className="px-2.5 py-1 rounded text-teal-300 font-semibold bg-teal-500/10 whitespace-nowrap">
+              Missions
             </Link>
             <Link href="/agents" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
               Agents
             </Link>
-            <Link href="/payment-intents" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Intents
+            <Link href="/marketplace" className="px-2.5 py-1 rounded text-cyan-300 hover:text-white whitespace-nowrap">
+              Marketplace
             </Link>
-            <Link href="/transactions" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Transactions
+            <Link href="/economy" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Economy
             </Link>
-            <Link href="/services" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Services
+            <Link href="/approvals" className="px-2.5 py-1 rounded text-amber-300 hover:text-white whitespace-nowrap">
+              Approvals
             </Link>
-            <Link href="/simulations" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Simulations
+            <Link href="/activity" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
+              Activity
             </Link>
-            <Link href="/settings" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Settings
+            <Link href="/security" className="px-2.5 py-1 rounded text-rose-300 hover:text-white whitespace-nowrap">
+              Security
+            </Link>
+            <Link href="/demo" className="px-2.5 py-1 rounded text-indigo-300 hover:text-white whitespace-nowrap">
+              Demo
             </Link>
           </div>
         </header>

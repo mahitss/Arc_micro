@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/webhook"
@@ -138,6 +139,7 @@ type Repository interface {
 	// Organization operations
 	SaveOrganization(ctx context.Context, o *Organization) error
 	GetOrganization(ctx context.Context, id string) (*Organization, error)
+	GetOrganizationStatus(ctx context.Context, id string) (string, error)
 	ListOrganizations(ctx context.Context) ([]*Organization, error)
 
 	// Agent operations
@@ -220,6 +222,17 @@ type Repository interface {
 	GetPendingOutboxEvents(ctx context.Context, limit int) ([]*webhook.OutboxEvent, error)
 	MarkOutboxEventProcessed(ctx context.Context, id string, processedAt time.Time) error
 	SaveDomainEvent(ctx context.Context, event *domain.DomainEvent) error
+
+	// Mission & Autonomous Economy operations (Day 11)
+	SaveMission(ctx context.Context, m *economy.Mission) error
+	GetMission(ctx context.Context, id string) (*economy.Mission, error)
+	ListMissions(ctx context.Context, orgID string) ([]*economy.Mission, error)
+	UpdateMissionStatus(ctx context.Context, id string, status economy.MissionStatus, updatedAt time.Time) error
+	UpdateMissionBudget(ctx context.Context, id string, spent, remaining string, updatedAt time.Time) error
+	SaveMissionStep(ctx context.Context, step *economy.MissionStep) error
+	GetMissionStep(ctx context.Context, missionID, stepID string) (*economy.MissionStep, error)
+	ListMissionSteps(ctx context.Context, missionID string) ([]*economy.MissionStep, error)
+	UpdateMissionStep(ctx context.Context, step *economy.MissionStep) error
 }
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
@@ -239,6 +252,8 @@ type MemoryRepository struct {
 	webhookEndpoints  map[string]*webhook.WebhookEndpoint
 	webhookDeliveries map[string]*webhook.WebhookDelivery
 	outboxEvents      map[string]*webhook.OutboxEvent
+	missions          map[string]*economy.Mission
+	missionSteps      map[string]map[string]*economy.MissionStep
 }
 
 // NewMemoryRepository creates a new in-memory repository instance seeded with defaults.
@@ -259,6 +274,8 @@ func NewMemoryRepository() *MemoryRepository {
 		webhookEndpoints:  make(map[string]*webhook.WebhookEndpoint),
 		webhookDeliveries: make(map[string]*webhook.WebhookDelivery),
 		outboxEvents:      make(map[string]*webhook.OutboxEvent),
+		missions:          make(map[string]*economy.Mission),
+		missionSteps:      make(map[string]map[string]*economy.MissionStep),
 	}
 
 	// Seed default demo API key (apk_live_demo1234567890abcdef1234567890abcdef)
@@ -378,6 +395,16 @@ func (m *MemoryRepository) GetOrganization(ctx context.Context, id string) (*Org
 	}
 	copyO := *o
 	return &copyO, nil
+}
+
+func (m *MemoryRepository) GetOrganizationStatus(ctx context.Context, id string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	o, ok := m.organizations[id]
+	if !ok {
+		return "ACTIVE", nil
+	}
+	return o.Status, nil
 }
 
 func (m *MemoryRepository) ListOrganizations(ctx context.Context) ([]*Organization, error) {
@@ -1134,6 +1161,118 @@ func (m *MemoryRepository) UpdateAPIKeyLastUsed(ctx context.Context, id string, 
 	return nil
 }
 
+// --- Mission & Autonomous Economy Methods ---
+
+func (m *MemoryRepository) SaveMission(ctx context.Context, msn *economy.Mission) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyMsn := *msn
+	m.missions[msn.ID] = &copyMsn
+	return nil
+}
+
+func (m *MemoryRepository) GetMission(ctx context.Context, id string) (*economy.Mission, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	msn, ok := m.missions[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyMsn := *msn
+	return &copyMsn, nil
+}
+
+func (m *MemoryRepository) ListMissions(ctx context.Context, orgID string) ([]*economy.Mission, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	list := make([]*economy.Mission, 0, len(m.missions))
+	for _, msn := range m.missions {
+		if orgID != "" && msn.OrganizationID != orgID {
+			continue
+		}
+		copyMsn := *msn
+		list = append(list, &copyMsn)
+	}
+	return list, nil
+}
+
+func (m *MemoryRepository) UpdateMissionStatus(ctx context.Context, id string, status economy.MissionStatus, updatedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	msn, ok := m.missions[id]
+	if !ok {
+		return ErrNotFound
+	}
+	msn.Status = status
+	return nil
+}
+
+func (m *MemoryRepository) UpdateMissionBudget(ctx context.Context, id string, spent, remaining string, updatedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	msn, ok := m.missions[id]
+	if !ok {
+		return ErrNotFound
+	}
+	msn.Spent = spent
+	msn.RemainingBudget = remaining
+	return nil
+}
+
+func (m *MemoryRepository) SaveMissionStep(ctx context.Context, step *economy.MissionStep) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.missionSteps[step.MissionID]; !ok {
+		m.missionSteps[step.MissionID] = make(map[string]*economy.MissionStep)
+	}
+	copyStep := *step
+	m.missionSteps[step.MissionID][step.StepID] = &copyStep
+	return nil
+}
+
+func (m *MemoryRepository) GetMissionStep(ctx context.Context, missionID, stepID string) (*economy.MissionStep, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	steps, ok := m.missionSteps[missionID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	step, ok := steps[stepID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyStep := *step
+	return &copyStep, nil
+}
+
+func (m *MemoryRepository) ListMissionSteps(ctx context.Context, missionID string) ([]*economy.MissionStep, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	steps, ok := m.missionSteps[missionID]
+	if !ok {
+		return []*economy.MissionStep{}, nil
+	}
+	list := make([]*economy.MissionStep, 0, len(steps))
+	for _, st := range steps {
+		copySt := *st
+		list = append(list, &copySt)
+	}
+	return list, nil
+}
+
+func (m *MemoryRepository) UpdateMissionStep(ctx context.Context, step *economy.MissionStep) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	steps, ok := m.missionSteps[step.MissionID]
+	if !ok {
+		steps = make(map[string]*economy.MissionStep)
+		m.missionSteps[step.MissionID] = steps
+	}
+	copyStep := *step
+	steps[step.StepID] = &copyStep
+	return nil
+}
+
 // =============================================================================
 // PostgreSQL Implementation
 // =============================================================================
@@ -1169,6 +1308,19 @@ func (p *PostgresRepository) GetOrganization(ctx context.Context, id string) (*O
 		return nil, err
 	}
 	return &o, nil
+}
+
+func (p *PostgresRepository) GetOrganizationStatus(ctx context.Context, id string) (string, error) {
+	query := `SELECT status FROM organizations WHERE id = $1`
+	var status string
+	err := p.db.QueryRowContext(ctx, query, id).Scan(&status)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "ACTIVE", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return status, nil
 }
 
 func (p *PostgresRepository) ListOrganizations(ctx context.Context) ([]*Organization, error) {
@@ -2018,6 +2170,161 @@ func (p *PostgresRepository) SaveDomainEvent(ctx context.Context, event *domain.
 		CreatedAt:      now,
 	}
 	return p.SaveOutboxEvent(ctx, outboxEvt)
+}
+
+// --- Mission & Autonomous Economy Methods (Postgres) ---
+
+func (p *PostgresRepository) SaveMission(ctx context.Context, m *economy.Mission) error {
+	metaJSON, _ := json.Marshal(m.Metadata)
+	query := `INSERT INTO missions (id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, current_step, failure_reason, metadata, correlation_id)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+	          ON CONFLICT (id) DO UPDATE SET status = $5, spent = $7, remaining_budget = $8, completed_at = $13, failure_reason = $16`
+	_, err := p.db.ExecContext(ctx, query, m.ID, m.OrganizationID, m.AgentID, m.Objective, string(m.Status), m.Budget, m.Spent, m.RemainingBudget, m.Currency, m.MaxExecutionAmount, m.CreatedAt, m.StartedAt, m.CompletedAt, m.Deadline, m.CurrentStep, m.FailureReason, string(metaJSON), m.CorrelationID)
+	return err
+}
+
+func (p *PostgresRepository) GetMission(ctx context.Context, id string) (*economy.Mission, error) {
+	query := `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, current_step, failure_reason, metadata, correlation_id
+	          FROM missions WHERE id = $1`
+	var m economy.Mission
+	var statusStr, metaStr string
+	err := p.db.QueryRowContext(ctx, query, id).Scan(
+		&m.ID, &m.OrganizationID, &m.AgentID, &m.Objective, &statusStr, &m.Budget, &m.Spent, &m.RemainingBudget,
+		&m.Currency, &m.MaxExecutionAmount, &m.CreatedAt, &m.StartedAt, &m.CompletedAt, &m.Deadline,
+		&m.CurrentStep, &m.FailureReason, &metaStr, &m.CorrelationID,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	m.Status = economy.MissionStatus(statusStr)
+	if metaStr != "" {
+		_ = json.Unmarshal([]byte(metaStr), &m.Metadata)
+	}
+	return &m, nil
+}
+
+func (p *PostgresRepository) ListMissions(ctx context.Context, orgID string) ([]*economy.Mission, error) {
+	var rows *sql.Rows
+	var err error
+	if orgID != "" {
+		rows, err = p.db.QueryContext(ctx, `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, current_step, failure_reason, metadata, correlation_id FROM missions WHERE organization_id = $1 ORDER BY created_at DESC`, orgID)
+	} else {
+		rows, err = p.db.QueryContext(ctx, `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, current_step, failure_reason, metadata, correlation_id FROM missions ORDER BY created_at DESC`)
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := make([]*economy.Mission, 0)
+	for rows.Next() {
+		var m economy.Mission
+		var statusStr, metaStr string
+		if err := rows.Scan(
+			&m.ID, &m.OrganizationID, &m.AgentID, &m.Objective, &statusStr, &m.Budget, &m.Spent, &m.RemainingBudget,
+			&m.Currency, &m.MaxExecutionAmount, &m.CreatedAt, &m.StartedAt, &m.CompletedAt, &m.Deadline,
+			&m.CurrentStep, &m.FailureReason, &metaStr, &m.CorrelationID,
+		); err != nil {
+			return nil, err
+		}
+		m.Status = economy.MissionStatus(statusStr)
+		if metaStr != "" {
+			_ = json.Unmarshal([]byte(metaStr), &m.Metadata)
+		}
+		list = append(list, &m)
+	}
+	return list, nil
+}
+
+func (p *PostgresRepository) UpdateMissionStatus(ctx context.Context, id string, status economy.MissionStatus, updatedAt time.Time) error {
+	query := `UPDATE missions SET status = $1 WHERE id = $2`
+	res, err := p.db.ExecContext(ctx, query, string(status), id)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) UpdateMissionBudget(ctx context.Context, id string, spent, remaining string, updatedAt time.Time) error {
+	query := `UPDATE missions SET spent = $1, remaining_budget = $2 WHERE id = $3`
+	res, err := p.db.ExecContext(ctx, query, spent, remaining, id)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) SaveMissionStep(ctx context.Context, step *economy.MissionStep) error {
+	query := `INSERT INTO mission_steps (step_id, mission_id, step_index, required_capability, category, max_budget, selected_service_id, selected_quote_id, payment_intent_id, status, result_data, error, started_at, completed_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+	          ON CONFLICT (mission_id, step_id) DO UPDATE SET status = $10, result_data = $11, error = $12, completed_at = $14`
+	_, err := p.db.ExecContext(ctx, query, step.StepID, step.MissionID, step.Index, step.RequiredCapability, step.Category, step.MaxBudget, step.SelectedServiceID, step.SelectedQuoteID, step.PaymentIntentID, step.Status, step.ResultData, step.Error, step.StartedAt, step.CompletedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetMissionStep(ctx context.Context, missionID, stepID string) (*economy.MissionStep, error) {
+	query := `SELECT step_id, mission_id, step_index, required_capability, category, max_budget, selected_service_id, selected_quote_id, payment_intent_id, status, result_data, error, started_at, completed_at
+	          FROM mission_steps WHERE mission_id = $1 AND step_id = $2`
+	var step economy.MissionStep
+	err := p.db.QueryRowContext(ctx, query, missionID, stepID).Scan(
+		&step.StepID, &step.MissionID, &step.Index, &step.RequiredCapability, &step.Category, &step.MaxBudget,
+		&step.SelectedServiceID, &step.SelectedQuoteID, &step.PaymentIntentID, &step.Status,
+		&step.ResultData, &step.Error, &step.StartedAt, &step.CompletedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &step, nil
+}
+
+func (p *PostgresRepository) ListMissionSteps(ctx context.Context, missionID string) ([]*economy.MissionStep, error) {
+	query := `SELECT step_id, mission_id, step_index, required_capability, category, max_budget, selected_service_id, selected_quote_id, payment_intent_id, status, result_data, error, started_at, completed_at
+	          FROM mission_steps WHERE mission_id = $1 ORDER BY step_index ASC`
+	rows, err := p.db.QueryContext(ctx, query, missionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := make([]*economy.MissionStep, 0)
+	for rows.Next() {
+		var step economy.MissionStep
+		if err := rows.Scan(
+			&step.StepID, &step.MissionID, &step.Index, &step.RequiredCapability, &step.Category, &step.MaxBudget,
+			&step.SelectedServiceID, &step.SelectedQuoteID, &step.PaymentIntentID, &step.Status,
+			&step.ResultData, &step.Error, &step.StartedAt, &step.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		list = append(list, &step)
+	}
+	return list, nil
+}
+
+func (p *PostgresRepository) UpdateMissionStep(ctx context.Context, step *economy.MissionStep) error {
+	query := `UPDATE mission_steps SET status = $1, payment_intent_id = $2, result_data = $3, error = $4, completed_at = $5 WHERE mission_id = $6 AND step_id = $7`
+	_, err := p.db.ExecContext(ctx, query, step.Status, step.PaymentIntentID, step.ResultData, step.Error, step.CompletedAt, step.MissionID, step.StepID)
+	return err
 }
 
 // ApplyMigrations executes the initial schema migration statements.

@@ -6,6 +6,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/health"
@@ -79,6 +80,27 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/payment-intents/{id}/trace", piHandler.HandleGetTrace)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/authorize", piHandler.HandleAuthorize)
 		mux.HandleFunc("POST /v1/payment-intents/{id}/confirm", piHandler.HandleConfirm)
+	}
+
+	// 5.5 Autonomous Economy Engine & Mission APIs
+	if repo != nil {
+		repMgr := economy.NewReputationManager()
+		agentCoord := economy.NewAgentCoordinator(reg)
+		planner := economy.NewPlanner()
+		econEngine := economy.NewEconomyEngine(nil)
+		budgetCtrl := economy.NewBudgetController(repo, reg, policyClient)
+		missionSvc := economy.NewMissionService(repo, reg, planner, econEngine, budgetCtrl, repMgr, agentCoord, intentService, policyClient)
+		missionHandler := handlers.NewMissionsHandler(missionSvc, reg, repMgr, agentCoord)
+
+		mux.HandleFunc("POST /v1/missions", missionHandler.HandleCreate)
+		mux.HandleFunc("GET /v1/missions", missionHandler.HandleList)
+		mux.HandleFunc("GET /v1/missions/{id}", missionHandler.HandleGet)
+		mux.HandleFunc("POST /v1/missions/{id}/start", missionHandler.HandleStart)
+		mux.HandleFunc("POST /v1/missions/{id}/cancel", missionHandler.HandleCancel)
+		mux.HandleFunc("POST /v1/missions/simulate", missionHandler.HandleSimulate)
+		mux.HandleFunc("GET /v1/missions/{id}/trace", missionHandler.HandleGetTrace)
+		mux.HandleFunc("GET /v1/marketplace", missionHandler.HandleMarketplace)
+		mux.HandleFunc("GET /v1/economy/reputation", missionHandler.HandleReputation)
 	}
 
 	// 6. V1 Query & List APIs for Web Control Center
