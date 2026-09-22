@@ -31,22 +31,43 @@ class PaymentIntentsResource:
 
     def create(
         self,
-        agent_id: str,
-        service: str,
-        amount: str,
+        amount: Any,
         purpose: str,
+        agent_id: Optional[str] = None,
+        service: Optional[str] = None,
+        service_id: Optional[str] = None,
+        quote_id: Optional[str] = None,
         asset: str = "USDC",
         justification: Optional[str] = None,
         idempotency_key: Optional[str] = None,
+        vault_address: Optional[str] = None,
     ) -> Dict[str, Any]:
+        if isinstance(amount, float):
+            raise ValueError(
+                "Floating-point amounts are prohibited for safe financial representation. "
+                "Use integer base units (e.g. '180000' for 0.18 USDC), Decimal, or string."
+            )
+
+        svc = service or service_id
+        if not svc:
+            raise ValueError("Either service or service_id is required.")
+
+        agent = agent_id or getattr(self._client, "default_agent_id", "agent_default")
+
         payload = {
-            "agent_id": agent_id,
-            "service": service,
+            "agent_id": agent,
+            "service": svc,
             "amount": str(amount),
             "asset": asset,
             "purpose": purpose,
-            "justification": justification,
         }
+        if quote_id:
+            payload["quote_id"] = quote_id
+        if justification:
+            payload["justification"] = justification
+        if vault_address:
+            payload["vault_address"] = vault_address
+
         headers = {}
         if idempotency_key:
             headers["Idempotency-Key"] = idempotency_key
@@ -55,6 +76,12 @@ class PaymentIntentsResource:
 
     def get(self, intent_id: str) -> Dict[str, Any]:
         return self._client._request("GET", f"/v1/payment-intents/{intent_id}")
+
+    def trace(self, intent_id: str) -> Dict[str, Any]:
+        """
+        Retrieve the deterministic Financial Flight Recorder trace for a payment intent.
+        """
+        return self._client._request("GET", f"/v1/payment-intents/{intent_id}/trace")
 
     def list(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
         params = {"status": status} if status else None
@@ -130,10 +157,23 @@ class ServicesResource:
     ) -> Dict[str, Any]:
         payload = {}
         if amount is not None:
+            if isinstance(amount, float):
+                raise ValueError("Floating-point amounts prohibited. Use string or Decimal.")
             payload["amount"] = str(amount)
         if asset is not None:
             payload["asset"] = asset
         return self._client._request("POST", f"/v1/services/{service_id}/quote", json=payload)
+
+    def quote(
+        self,
+        service_id: str,
+        amount: Optional[str] = None,
+        asset: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Request a price quote from an approved service provider (convenience alias).
+        """
+        return self.get_quote(service_id=service_id, amount=amount, asset=asset)
 
 class SimulationsResource:
     def __init__(self, client: "AgentPay"):
@@ -265,6 +305,7 @@ class AgentPay:
         self.timeout = timeout
 
         self.payment_intents = PaymentIntentsResource(self)
+        self.payments = self.payment_intents
         self.agents = AgentsResource(self)
         self.services = ServicesResource(self)
         self.approvals = ApprovalsResource(self)

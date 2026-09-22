@@ -24,22 +24,28 @@ export { PaymentIntentsResource } from './resources/payment-intents.js';
 export { ServicesResource } from './resources/services.js';
 export { SimulationsResource } from './resources/simulations.js';
 export { TransactionsResource } from './resources/transactions.js';
-export { VerifySignatureOptions, WebhooksResource } from './resources/webhooks.js';
+export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
   Agent,
   AgentBudget,
   AgentDetail,
   Approval,
+  ApprovalEvidence,
+  BlockchainEvidence,
   ClientOptions,
   CreatePaymentIntentParams,
   CreateWebhookEndpointParams,
   CreateWebhookEndpointResponse,
   DomainEvent,
+  ExecutionMode,
   IntentDecision,
   ListEventsFilter,
   PaymentIntent,
   PaymentIntentDetail,
   PaymentNextAction,
+  PaymentSummary,
+  PaymentTrace,
+  PolicyEvidence,
   RegisteredService,
   RequestOptions,
   RequestPaymentInput,
@@ -48,7 +54,9 @@ export type {
   ServiceQuote,
   SimulationRequest,
   SimulationResponse,
+  TraceStep,
   TransactionRecord,
+  TreasuryEvidence,
   UpdateWebhookEndpointParams,
   WaitForCompletionOptions,
   WebhookDelivery,

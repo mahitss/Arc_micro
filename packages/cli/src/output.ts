@@ -6,6 +6,7 @@ import type {
   DomainEvent,
   PaymentIntent,
   PaymentIntentDetail,
+  PaymentTrace,
   RegisteredService,
   ServiceQuote,
   SimulationResponse,
@@ -230,3 +231,53 @@ export function printWebhooksList(endpoints: WebhookEndpoint[]): void {
     console.log(`${id} ${status} ${failures} ${url}`);
   }
 }
+
+export function printPaymentTrace(trace: PaymentTrace): void {
+  console.log('Payment Flight Recorder Trace');
+  console.log('══════════════════════════════════════════════════════════════════════════════');
+  console.log(`Trace ID:       ${trace.trace_id}`);
+  console.log(`Intent ID:      ${trace.payment_intent_id}`);
+  console.log(`Status:         ${trace.status}`);
+  console.log(`Execution Mode: ${trace.execution_mode} ${trace.execution_mode === 'SIMULATION' ? '(Simulation - Zero Real USDC)' : '(Live Arc Settlement)'}`);
+  console.log(`Agent ID:       ${trace.agent_id}`);
+  console.log(`Organization:   ${trace.organization_id}`);
+  console.log('──────────────────────────────────────────────────────────────────────────────');
+  console.log('Summary:');
+  console.log(`  Amount:       ${formatUsdc(trace.payment_summary?.amount || '0')} (${trace.payment_summary?.amount || '0'} base units)`);
+  console.log(`  Asset:        ${trace.payment_summary?.asset || 'USDC'}`);
+  console.log(`  Service:      ${trace.payment_summary?.service_id || 'N/A'}`);
+  console.log(`  Recipient:    ${trace.payment_summary?.recipient || 'N/A'}`);
+  console.log(`  Purpose:      ${trace.payment_summary?.purpose || 'N/A'}`);
+  if (trace.payment_summary?.request_id) {
+    console.log(`  Request ID:   ${trace.payment_summary.request_id} (Idempotency Key)`);
+  }
+
+  if (trace.policy_evidence) {
+    console.log('──────────────────────────────────────────────────────────────────────────────');
+    console.log('Policy & Risk Evidence:');
+    console.log(`  Decision:     ${trace.policy_evidence.decision}`);
+    console.log(`  Reason Code:  ${trace.policy_evidence.reason_code}`);
+    if (trace.policy_evidence.risk_level) {
+      console.log(`  Risk Level:   ${trace.policy_evidence.risk_level} (Score: ${trace.policy_evidence.risk_score ?? 'N/A'})`);
+    }
+  }
+
+  if (trace.blockchain_evidence && trace.blockchain_evidence.transaction_hash) {
+    console.log('──────────────────────────────────────────────────────────────────────────────');
+    console.log('Blockchain Evidence:');
+    console.log(`  Tx Hash:      ${trace.blockchain_evidence.transaction_hash}`);
+    console.log(`  Chain ID:     ${trace.blockchain_evidence.chain_id || '5042'}`);
+    console.log(`  Explorer:     ${trace.blockchain_evidence.explorer_url || 'N/A'}`);
+  }
+
+  console.log('──────────────────────────────────────────────────────────────────────────────');
+  console.log('Lifecycle Trail:');
+  for (const step of trace.steps || []) {
+    const num = String(step.step_number).padStart(2);
+    const type = step.type.padEnd(24);
+    const status = step.status.padEnd(10);
+    const actor = (step.actor || 'SYSTEM').padEnd(16);
+    console.log(`  [${num}] ${type} ${status} ${actor} ${step.timestamp}`);
+  }
+}
+

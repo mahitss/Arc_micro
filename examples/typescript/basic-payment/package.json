@@ -1,0 +1,17 @@
+{
+  "name": "@agentpay/example-basic-payment-typescript",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@agentpay/sdk": "file:../../../packages/sdk-typescript"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0"
+  }
+}

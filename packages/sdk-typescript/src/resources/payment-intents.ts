@@ -4,6 +4,7 @@ import type {
   CreatePaymentIntentParams,
   PaymentIntent,
   PaymentIntentDetail,
+  PaymentTrace,
   RequestOptions,
   WaitForCompletionOptions,
 } from '../types.js';
@@ -33,7 +34,8 @@ export class PaymentIntentsResource {
   ): Promise<PaymentIntent> {
     const payload = {
       agent_id: params.agentId,
-      service: params.service,
+      service: params.service || params.serviceId,
+      quote_id: params.quoteId,
       amount: params.amount,
       asset: params.asset || 'USDC',
       purpose: params.purpose,
@@ -57,6 +59,17 @@ export class PaymentIntentsResource {
   async get(id: string, options?: RequestOptions): Promise<PaymentIntentDetail> {
     return this.client.request<PaymentIntentDetail>(
       `/v1/payment-intents/${encodeURIComponent(id)}`,
+      { method: 'GET' },
+      options
+    );
+  }
+
+  /**
+   * Retrieve the deterministic financial flight recorder trace for a payment intent.
+   */
+  async trace(id: string, options?: RequestOptions): Promise<PaymentTrace> {
+    return this.client.request<PaymentTrace>(
+      `/v1/payment-intents/${encodeURIComponent(id)}/trace`,
       { method: 'GET' },
       options
     );

@@ -46,6 +46,7 @@ export class AgentPay {
   public readonly agents: AgentsResource;
   public readonly services: ServicesResource;
   public readonly paymentIntents: PaymentIntentsResource;
+  public readonly payments: PaymentIntentsResource;
   public readonly approvals: ApprovalsResource;
   public readonly transactions: TransactionsResource;
   public readonly webhooks: WebhooksResource;
@@ -65,6 +66,7 @@ export class AgentPay {
     this.agents = new AgentsResource(this);
     this.services = new ServicesResource(this);
     this.paymentIntents = new PaymentIntentsResource(this);
+    this.payments = this.paymentIntents;
     this.approvals = new ApprovalsResource(this);
     this.transactions = new TransactionsResource(this);
     this.webhooks = new WebhooksResource(this);

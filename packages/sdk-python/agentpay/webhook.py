@@ -50,3 +50,4 @@ def verify_signature(
     ).hexdigest()
 
     return hmac.compare_digest(signature, expected_signature)
+verify_webhook = verify_signature

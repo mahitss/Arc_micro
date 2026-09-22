@@ -1,20 +1,67 @@
-# AgentPay Developer 5-Minute Quickstart
+# AgentPay Developer Quickstart: From Zero to First Payment
 
-Welcome to AgentPay — the programmable financial control plane for autonomous AI agents on Arc.
-
-In this 5-minute quickstart, you will:
-1. Install the SDK / CLI
-2. Configure your API key
-3. Query approved services
-4. Request a payment from an AI agent with idempotency
-5. Observe policy evaluation and Arc settlement
-6. Verify an incoming webhook signature
+> **The AgentPay Thesis**: *"Give your AI agent controlled access to programmable payments."*
+>
+> Autonomous agents need to pay for compute, data, inference, and oracles. However, granting agents direct access to blockchain private keys, transaction signing, or arbitrary recipient addresses is an unacceptable financial and security hazard.
+>
+> AgentPay is the enterprise financial control plane: developers integrate programmable payments with a single SDK method call, while AgentPay enforces policy, limits, human approvals, treasury reservation, and Arc mainnet settlement.
 
 ---
 
-## 1. Installation
+## 1. What AgentPay Does
 
-### TypeScript / Node.js
+AgentPay removes the entire Web3 infrastructure burden from the developer:
+- **No private keys**: Autonomous agents never store, manage, or access private keys.
+- **No raw signing**: The agent cannot craft or sign raw transactions.
+- **No arbitrary recipients**: Payments can only route to registered, verified service providers.
+- **No contract calldata**: Agents request economic capabilities, not smart contract functions.
+- **No gas or nonce management**: Nonce sequencing and gas sponsorship are handled by the control plane.
+- **No AgentVault internals**: Safe vault interactions are executed deterministically on Arc.
+
+---
+
+## 2. Architecture & Execution Modes
+
+```
++------------------+         +----------------------------+         +--------------------+
+| Autonomous Agent | ------> | AgentPay Control Plane     | ------> | Arc Mainnet (5042) |
+| (TS / Python)    |         | - API Key Auth & Isolation |         | - AgentVault       |
+| - Discover       |         | - Deterministic Policy     |         | - USDC Settlement  |
+| - Quote          |         | - Human Approval Gate      |         +--------------------+
+| - Request Pay    |         | - Flight Recorder Trace    |
++------------------+         +----------------------------+
+```
+
+### Critical Mode Distinction
+> [!IMPORTANT]
+> - **SIMULATION**: Uses local or test gateway. Zero real USDC is transferred. No on-chain state is altered. Ideal for rapid iteration, agent benchmarking, and policy testing.
+> - **LIVE ARC MAINNET**: Settles USDC on Arc Mainnet Chain ID 5042 via the deployed AgentVault contract. Requires operator-configured signer and deposited USDC treasury.
+
+---
+
+## 3. Prerequisites
+
+- Node.js 18+ (for TypeScript / CLI) or Python 3.10+ (for Python SDK)
+- An active AgentPay Gateway instance (`http://localhost:8080` for local dev or production URL)
+- Organization API Key (`ap_live_...`)
+
+---
+
+## 4. Authentication & API Key Setup
+
+API keys are scoped, hashed using SHA-256 upon creation, and never stored in plaintext.
+
+Set your API key in the environment:
+```bash
+export AGENTPAY_API_KEY="ap_live_0123456789abcdef0123456789abcdef"
+export AGENTPAY_BASE_URL="http://localhost:8080" # or production gateway
+```
+
+---
+
+## 5. Install SDK
+
+### TypeScript
 ```bash
 npm install @agentpay/sdk
 ```
@@ -31,179 +78,216 @@ npm install -g @agentpay/cli
 
 ---
 
-## 2. Authentication
-
-Configure your API key in your environment or CLI:
-
-```bash
-export AGENTPAY_API_KEY="ap_live_your_key_here"
-export AGENTPAY_BASE_URL="http://localhost:8080" # or production endpoint
-```
-
-Or configure via CLI:
-```bash
-agentpay config set api-key ap_live_your_key_here
-agentpay config set base-url http://localhost:8080
-```
-
----
-
-## 3. Discover Approved Services
-
-Agents can only pay approved service providers registered in the organization registry.
+## 6. Configure Client
 
 ### TypeScript
 ```typescript
 import { AgentPay } from '@agentpay/sdk';
 
-const agentpay = new AgentPay({ apiKey: process.env.AGENTPAY_API_KEY });
-
-const services = await agentpay.services.list();
-console.log('Approved Services:', services);
+const client = new AgentPay({
+  apiKey: process.env.AGENTPAY_API_KEY,
+  baseUrl: process.env.AGENTPAY_BASE_URL || 'http://localhost:8080',
+});
 ```
 
-### CLI
-```bash
-agentpay services list
+### Python
+```python
+import os
+from agentpay import AgentPay
+
+client = AgentPay(
+    api_key=os.environ.get("AGENTPAY_API_KEY"),
+    base_url=os.environ.get("AGENTPAY_BASE_URL", "http://localhost:8080"),
+)
 ```
 
 ---
 
-## 4. Request a Payment from an AI Agent
+## 7. Discover Services
 
-> [!IMPORTANT]
-> **Zero Private Keys Invariant**: The agent never holds private keys, signs transactions, or selects recipient addresses. AgentPay resolves the recipient and executes settlement.
+Autonomous agents discover approved service providers from the registry:
+
+### TypeScript
+```typescript
+const services = await client.services.list({ enabled: true });
+console.log(`Found ${services.length} approved services.`);
+const service = services[0];
+```
+
+### Python
+```python
+services = client.services.list(enabled=True)
+print(f"Found {len(services)} approved services.")
+service = services[0]
+```
+
+---
+
+## 8. Request a Price Quote
+
+Quotes lock in exchange and pricing terms with an expiry timestamp:
+
+### TypeScript
+```typescript
+const quote = await client.services.getQuote(service.id, {
+  amount: "180000", // 0.18 USDC in micro-units (6 decimals)
+  asset: "USDC",
+});
+console.log(`Received quote ${quote.quote_id} for ${quote.amount} micro-USDC.`);
+```
+
+### Python
+```python
+quote = client.services.quote(
+    service_id=service["id"],
+    amount="180000", # Safe string representation (never use floats)
+    asset="USDC",
+)
+print(f"Received quote {quote['quote_id']} for {quote['amount']} micro-USDC.")
+```
+
+---
+
+## 9. Request Programmable Payment
+
+Create a Payment Intent bound to the quote and pass an **Idempotency Key**.
 
 > [!TIP]
-> **Denomination**: Amounts are specified as strings in base units (6 decimals for USDC: `1000000` = $1.00 USDC, `2500000` = $2.50 USDC).
+> **Idempotency Rule**: If you retry a payment request due to network timeouts, always reuse the identical `Idempotency-Key`. AgentPay guarantees that retries with the same key return the identical payment without duplicate billing. Submitting a different payload with an existing key produces an `IDEMPOTENCY_CONFLICT` (HTTP 409).
 
 ### TypeScript
 ```typescript
-import { AgentPay, PolicyDeniedError, ApprovalRequiredError } from '@agentpay/sdk';
+const payment = await client.payments.create(
+  {
+    agentId: 'agent_alpha',
+    serviceId: quote.service_id,
+    quoteId: quote.quote_id,
+    amount: quote.amount,
+    asset: 'USDC',
+    purpose: 'Procure autonomous web research report',
+  },
+  { idempotencyKey: `run_${Date.now()}` }
+);
 
-const agentpay = new AgentPay();
-
-try {
-  const payment = await agentpay.paymentIntents.create(
-    {
-      agentId: 'agent_research_01',
-      service: 'research-api',
-      amount: '1500000', // 1.50 USDC
-      asset: 'USDC',
-      purpose: 'Procure real-time market liquidity telemetry',
-      justification: 'Automated agent research task',
-    },
-    {
-      idempotencyKey: 'task_run_12345', // Prevents double-charging on network retries
-    }
-  );
-
-  console.log(`Payment Intent Created: ${payment.id}`);
-  console.log(`Status: ${payment.status}`); // AUTHORIZED, APPROVAL_REQUIRED, or DENIED
-
-  if (payment.status === 'AUTHORIZED') {
-    // Confirm settlement on Arc
-    const settlement = await agentpay.paymentIntents.confirm(payment.id);
-    console.log('Confirmed on Arc! Tx Hash:', settlement.execution.transaction_hash);
-  }
-} catch (err) {
-  if (err instanceof PolicyDeniedError) {
-    console.error('Payment violated policy limits:', err.message);
-  } else if (err instanceof ApprovalRequiredError) {
-    console.warn('Payment requires human approval in dashboard.');
-  }
-}
+console.log(`Payment Intent ID: ${payment.id}, Status: ${payment.status}`);
 ```
 
-### CLI
-```bash
-agentpay payments create \
-  --agent agent_research_01 \
-  --service research-api \
-  --amount 1500000 \
-  --purpose "Procure market telemetry" \
-  --idempotency-key "cli_test_001"
+### Python
+```python
+import time
+
+payment = client.payments.create(
+    service_id=quote["service_id"],
+    quote_id=quote["quote_id"],
+    amount=quote["amount"],
+    asset="USDC",
+    purpose="Procure autonomous web research report",
+    idempotency_key=f"run_{int(time.time() * 1000)}",
+)
+
+print(f"Payment Intent ID: {payment['id']}, Status: {payment['status']}")
 ```
 
 ---
 
-## 5. Formalized Agent Tool Contract
+## 10. Check Status & Polling
 
-If you are using LangChain, CrewAI, AutoGen, or custom agent loops, expose the formalized `request_payment` tool contract:
+Payment statuses follow a deterministic state machine:
+`CREATED` -> `AUTHORIZED` -> (`APPROVAL_REQUIRED` / `APPROVED`) -> `EXECUTING` -> `CONFIRMED`
 
+### TypeScript
 ```typescript
-import { AgentPaymentTool } from '@agentpay/example-payment-agent';
+// Instant check:
+const detail = await client.payments.get(payment.id);
 
-// Tool input
-const result = await agentTool.requestPayment({
-  service_id: 'research-api',
-  amount: '1500000',
-  purpose: 'Analyze orderbook depth',
-  idempotency_key: 'agent_step_42',
+// Or safe polling helper with timeout:
+const finalResult = await client.payments.waitForCompletion(payment.id, {
+  timeoutMs: 15000,
+  intervalMs: 1000,
 });
+console.log('Final status:', finalResult.intent.status);
+```
 
-// The tool returns a structured decision with actionable next_action:
-switch (result.next_action) {
-  case 'CONTINUE':
-  case 'WAIT_FOR_EXECUTION':
-    // Payment approved! Agent retrieves the paid data.
-    break;
-  case 'WAIT_FOR_APPROVAL':
-    // Limit exceeded. Agent notifies human user to approve in dashboard.
-    break;
-  case 'HANDLE_DENIAL':
-    // Policy rejected. Agent pivots to alternative free resource.
-    break;
-}
+### Python
+```python
+# Instant check:
+detail = client.payments.get(payment["id"])
+
+# Or safe polling:
+final_result = client.payments.wait_for_completion(payment["id"], timeout_seconds=15)
+print("Final status:", final_result["intent"]["status"])
 ```
 
 ---
 
-## 6. Verify Incoming Webhooks
+## 11. Inspect Financial Flight Recorder Trace
 
-AgentPay signs all webhooks using HMAC-SHA256 (`AgentPay-Signature: t=<unix>,v1=<sig>`).
+Retrieve complete mathematical proof of policy evaluation, human review, and on-chain settlement:
 
+### TypeScript
 ```typescript
-import express from 'express';
-import { AgentPay } from '@agentpay/sdk';
-
-const app = express();
-const agentpay = new AgentPay();
-
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['agentpay-signature'] as string;
-
-  const isValid = agentpay.webhooks.verifySignature({
-    payload: req.body,
-    signature,
-    secret: process.env.AGENTPAY_WEBHOOK_SECRET!,
-    toleranceSeconds: 300, // Replay attack protection
-  });
-
-  if (!isValid) {
-    return res.status(401).send('Invalid signature');
-  }
-
-  const event = JSON.parse(req.body.toString());
-  console.log(`Received verified event: ${event.type} (${event.id})`);
-
-  // Consumers should treat event.id as idempotency key
-  res.status(200).json({ received: true });
+const trace = await client.payments.trace(payment.id);
+console.log(`Flight Recorder Trace: ${trace.trace_id}`);
+console.log(`Execution Mode: ${trace.execution_mode}`);
+trace.steps.forEach((step) => {
+  console.log(`  [#${step.step_number}] ${step.type} -> ${step.status} (${step.actor})`);
 });
+```
+
+### Python
+```python
+trace = client.payments.trace(payment["id"])
+print(f"Flight Recorder Trace: {trace['trace_id']}")
+for step in trace.get("steps", []):
+    print(f"  [#{step['step_number']}] {step['type']} -> {step['status']}")
 ```
 
 ---
 
-## 7. Polling Payment Completion
+## 12. Webhook Configuration & Signature Verification
 
-For asynchronous payments requiring approval or on-chain mining, use `waitForCompletion()`:
+AgentPay delivers HMAC-SHA256 signed webhooks for payment events. Verify signatures with timing-safe helpers:
 
+### TypeScript
 ```typescript
-const detail = await agentpay.paymentIntents.waitForCompletion(payment.id, {
-  timeoutMs: 60000,   // Wait up to 60s
-  intervalMs: 2000,    // Poll every 2s
-});
+import { verifyWebhookSignature } from '@agentpay/sdk';
 
-console.log('Final Status:', detail.intent.status);
-console.log('Transaction Hash:', detail.transaction_hash);
+const isValid = verifyWebhookSignature(
+  rawRequestBody,
+  req.headers['agentpay-signature'],
+  process.env.AGENTPAY_WEBHOOK_SECRET
+);
+if (!isValid) throw new Error('Unauthorized webhook delivery');
 ```
+
+### Python
+```python
+from agentpay import verify_webhook
+
+is_valid = verify_webhook(
+    raw_request_body,
+    request.headers.get("AgentPay-Signature"),
+    os.environ.get("AGENTPAY_WEBHOOK_SECRET"),
+)
+if not is_valid:
+    raise PermissionError("Unauthorized webhook delivery")
+```
+
+---
+
+## 13. Troubleshooting & Common Errors
+
+| Error Code | HTTP Status | Cause | Action |
+|---|---|---|---|
+| `AUTHENTICATION_FAILED` | 401 | Missing or invalid API key | Verify `AGENTPAY_API_KEY` header. |
+| `POLICY_DENIED` | 400 | Exceeds transaction or daily limits | Check agent budget via `client.agents.get_budget(id)`. |
+| `APPROVAL_REQUIRED` | 400 / 200 | Payment requires human sign-off | Direct operator to `/dashboard` or wait for resolution. |
+| `IDEMPOTENCY_CONFLICT` | 409 | Same key re-used with different params | Use a new key for a new request; reuse same key for retry. |
+| `SERVICE_NOT_FOUND` | 404 | Service not approved or active | Verify service ID via `client.services.list()`. |
+| `QUOTE_EXPIRED` | 400 | Quote TTL expired before submission | Request a fresh quote before payment creation. |
+
+---
+
+## Summary
+
+With AgentPay, developers provide AI agents with autonomous economic agency while retaining 100% control over spending policies, approvals, and on-chain settlement.

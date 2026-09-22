@@ -529,3 +529,132 @@ test('AgentPay SDK — Financial Simulation (Day 8)', async () => {
   assert.equal(sim.predicted_outcome, 'WOULD_EXECUTE');
   assert.equal(sim.approval_required, false);
 });
+
+test('AgentPay SDK — payments Alias, quoteId, and Idempotency Key', async () => {
+  let capturedUrl = '';
+  let capturedBody = '';
+  let capturedHeaders: Record<string, string> = {};
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedBody = (init?.body as string) || '';
+    if (init?.headers) {
+      if (init.headers instanceof Headers) {
+        init.headers.forEach((val, key) => {
+          capturedHeaders[key.toLowerCase()] = val;
+        });
+      } else if (Array.isArray(init.headers)) {
+        for (const [k, v] of init.headers) {
+          capturedHeaders[k.toLowerCase()] = v;
+        }
+      } else {
+        for (const [k, v] of Object.entries(init.headers as Record<string, string>)) {
+          capturedHeaders[k.toLowerCase()] = v;
+        }
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        id: 'pi_test_day8',
+        agent_id: 'agent_alpha',
+        service: 'web-research',
+        amount: '180000',
+        asset: 'USDC',
+        purpose: 'Day 8 developer platform test',
+        status: 'AUTHORIZED',
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 600000).toISOString(),
+      }),
+      { status: 201, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  // Verify payments alias is identical to paymentIntents
+  assert.equal(client.payments, client.paymentIntents);
+
+  const payment = await client.payments.create(
+    {
+      agentId: 'agent_alpha',
+      serviceId: 'web-research',
+      quoteId: 'quote_day8_123',
+      amount: '180000',
+      asset: 'USDC',
+      purpose: 'Day 8 developer platform test',
+    },
+    { idempotencyKey: 'idem_day8_test_key' }
+  );
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/payment-intents');
+  const body = JSON.parse(capturedBody);
+  assert.equal(body.agent_id, 'agent_alpha');
+  assert.equal(body.service, 'web-research');
+  assert.equal(body.quote_id, 'quote_day8_123');
+  assert.equal(body.amount, '180000');
+  assert.equal(capturedHeaders['idempotency-key'], 'idem_day8_test_key');
+  assert.equal(payment.id, 'pi_test_day8');
+  assert.equal(payment.status, 'AUTHORIZED');
+});
+
+test('AgentPay SDK — Financial Flight Recorder Trace Retrieval', async () => {
+  let capturedUrl = '';
+
+  const mockFetch: typeof fetch = async (input) => {
+    capturedUrl = input.toString();
+    return new Response(
+      JSON.stringify({
+        trace_id: 'trc_pi_100',
+        organization_id: 'org_dev',
+        agent_id: 'agent_alpha',
+        payment_intent_id: 'pi_100',
+        status: 'CONFIRMED',
+        execution_mode: 'SIMULATION',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        steps: [
+          {
+            step_number: 1,
+            step_id: 'step_1',
+            trace_id: 'trc_pi_100',
+            type: 'PAYMENT_REQUESTED',
+            status: 'COMPLETED',
+            timestamp: new Date().toISOString(),
+            actor: 'AGENT:agent_alpha',
+          },
+          {
+            step_number: 2,
+            step_id: 'step_2',
+            trace_id: 'trc_pi_100',
+            type: 'POLICY_EVALUATED',
+            status: 'COMPLETED',
+            timestamp: new Date().toISOString(),
+            actor: 'SYSTEM',
+          },
+        ],
+        payment_summary: {
+          intent_id: 'pi_100',
+          organization_id: 'org_dev',
+          agent_id: 'agent_alpha',
+          service_id: 'web-research',
+          recipient: '0x1234567890123456789012345678901234567890',
+          amount: '180000',
+          asset: 'USDC',
+          purpose: 'flight recorder verification',
+        },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+  const trace = await client.payments.trace('pi_100');
+
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/payment-intents/pi_100/trace');
+  assert.equal(trace.trace_id, 'trc_pi_100');
+  assert.equal(trace.status, 'CONFIRMED');
+  assert.equal(trace.execution_mode, 'SIMULATION');
+  assert.equal(trace.steps.length, 2);
+  assert.equal(trace.steps[0].type, 'PAYMENT_REQUESTED');
+});
+

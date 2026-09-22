@@ -16,7 +16,7 @@ from .errors import (
     RateLimitedError,
     ValidationError,
 )
-from .webhook import verify_signature
+from .webhook import verify_signature, verify_webhook
 
 __all__ = [
     "AgentPay",
@@ -33,4 +33,5 @@ __all__ = [
     "RateLimitedError",
     "ValidationError",
     "verify_signature",
+    "verify_webhook",
 ]

@@ -16,6 +16,74 @@ export interface VerifySignatureOptions {
   toleranceSeconds?: number;
 }
 
+/**
+ * Verify incoming webhook signature using HMAC-SHA256 with timestamp replay protection.
+ */
+export function verifyWebhookSignature(
+  payloadOrOptions: string | Buffer | VerifySignatureOptions,
+  signatureHeader?: string,
+  secret?: string,
+  toleranceSeconds: number = 300
+): boolean {
+  let payload: string | Buffer;
+  let sig: string;
+  let sec: string;
+  let tol: number = toleranceSeconds;
+
+  if (typeof payloadOrOptions === 'object' && !Buffer.isBuffer(payloadOrOptions) && 'payload' in payloadOrOptions) {
+    payload = payloadOrOptions.payload;
+    sig = payloadOrOptions.signature;
+    sec = payloadOrOptions.secret;
+    tol = payloadOrOptions.toleranceSeconds ?? 300;
+  } else {
+    payload = payloadOrOptions as string | Buffer;
+    sig = signatureHeader || '';
+    sec = secret || '';
+  }
+
+  if (!sig || !sec) {
+    return false;
+  }
+
+  const parts = sig.split(',');
+  let timestamp = 0;
+  let signature = '';
+
+  for (const part of parts) {
+    const [key, val] = part.trim().split('=');
+    if (key === 't') {
+      timestamp = parseInt(val, 10);
+    } else if (key === 'v1') {
+      signature = val;
+    }
+  }
+
+  if (!timestamp || !signature) {
+    return false;
+  }
+
+  // Check replay tolerance
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - timestamp) > tol) {
+    return false;
+  }
+
+  // Compute expected signature: HMAC-SHA256(secret, timestamp + "." + payload)
+  const payloadStr = typeof payload === 'string' ? payload : payload.toString('utf-8');
+  const canonical = `${timestamp}.${payloadStr}`;
+  const expectedSig = createHmac('sha256', sec).update(canonical).digest('hex');
+
+  try {
+    const sigBuf = Buffer.from(signature, 'hex');
+    const expectedBuf = Buffer.from(expectedSig, 'hex');
+    return sigBuf.length === expectedBuf.length && timingSafeEqual(sigBuf, expectedBuf);
+  } catch {
+    return false;
+  }
+}
+
+export const verifyWebhook = verifyWebhookSignature;
+
 export class WebhooksResource {
   constructor(private readonly client: AgentPay) {}
 
@@ -160,60 +228,6 @@ export class WebhooksResource {
     secret?: string,
     toleranceSeconds: number = 300
   ): boolean {
-    let payload: string | Buffer;
-    let sig: string;
-    let sec: string;
-    let tol: number = toleranceSeconds;
-
-    if (typeof payloadOrOptions === 'object' && !Buffer.isBuffer(payloadOrOptions) && 'payload' in payloadOrOptions) {
-      payload = payloadOrOptions.payload;
-      sig = payloadOrOptions.signature;
-      sec = payloadOrOptions.secret;
-      tol = payloadOrOptions.toleranceSeconds ?? 300;
-    } else {
-      payload = payloadOrOptions as string | Buffer;
-      sig = signatureHeader || '';
-      sec = secret || '';
-    }
-
-    if (!sig || !sec) {
-      return false;
-    }
-
-    const parts = sig.split(',');
-    let timestamp = 0;
-    let signature = '';
-
-    for (const part of parts) {
-      const [key, val] = part.trim().split('=');
-      if (key === 't') {
-        timestamp = parseInt(val, 10);
-      } else if (key === 'v1') {
-        signature = val;
-      }
-    }
-
-    if (!timestamp || !signature) {
-      return false;
-    }
-
-    // Check replay tolerance
-    const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - timestamp) > tol) {
-      return false;
-    }
-
-    // Compute expected signature: HMAC-SHA256(secret, timestamp + "." + payload)
-    const payloadStr = typeof payload === 'string' ? payload : payload.toString('utf-8');
-    const canonical = `${timestamp}.${payloadStr}`;
-    const expectedSig = createHmac('sha256', sec).update(canonical).digest('hex');
-
-    try {
-      const sigBuf = Buffer.from(signature, 'hex');
-      const expectedBuf = Buffer.from(expectedSig, 'hex');
-      return sigBuf.length === expectedBuf.length && timingSafeEqual(sigBuf, expectedBuf);
-    } catch {
-      return false;
-    }
+    return verifyWebhookSignature(payloadOrOptions, signatureHeader, secret, toleranceSeconds);
   }
 }

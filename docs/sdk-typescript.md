@@ -140,6 +140,28 @@ const tx = await agentpay.transactions.get('intent_9525df7cd3120591');
 console.log(tx.transaction_hash);
 ```
 
+### 5. Financial Flight Recorder Trace (`agentpay.payments.trace`)
+
+Retrieve the deterministic decision trace:
+
+```typescript
+const trace = await agentpay.payments.trace('intent_123');
+console.log(`Trace: ${trace.trace_id}, Execution Mode: ${trace.execution_mode}`);
+trace.steps.forEach(s => console.log(`[${s.type}] ${s.status}`));
+```
+
+### 6. Webhook Verification
+
+```typescript
+import { verifyWebhookSignature } from '@agentpay/sdk';
+
+const isValid = verifyWebhookSignature(
+  rawBody,
+  req.headers['agentpay-signature'],
+  process.env.AGENTPAY_WEBHOOK_SECRET
+);
+```
+
 ---
 
 ## Error Handling
@@ -157,7 +179,7 @@ import {
 } from '@agentpay/sdk';
 
 try {
-  const intent = await agentpay.paymentIntents.create({ ... });
+  const intent = await agentpay.payments.create({ ... });
 } catch (err) {
   if (err instanceof PolicyDeniedError) {
     // Payment violated spending policy
@@ -173,3 +195,4 @@ try {
   }
 }
 ```
+

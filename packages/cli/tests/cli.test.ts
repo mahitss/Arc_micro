@@ -4,7 +4,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { test } from 'node:test';
 import { getConfig, maskApiKey, setConfigKey } from '../src/config.js';
-import { formatUsdc } from '../src/output.js';
+import { formatUsdc, printPaymentTrace } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
   const originalConfig = getConfig();
@@ -39,3 +39,50 @@ test('AgentPay CLI Output — USDC Amount Formatting', () => {
   assert.equal(formatUsdc('500000'), '0.50 USDC');
   assert.equal(formatUsdc('0'), '0.00 USDC');
 });
+
+test('AgentPay CLI Output — Payment Trace Formatter', () => {
+  const mockTrace = {
+    trace_id: 'trc_pi_test_01',
+    organization_id: 'org_test',
+    agent_id: 'agent_test',
+    payment_intent_id: 'pi_test_01',
+    status: 'CONFIRMED',
+    execution_mode: 'SIMULATION',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    payment_summary: {
+      intent_id: 'pi_test_01',
+      organization_id: 'org_test',
+      agent_id: 'agent_test',
+      service_id: 'web-research',
+      recipient: '0x1234567890123456789012345678901234567890',
+      amount: '180000',
+      asset: 'USDC',
+      purpose: 'CLI unit test',
+      request_id: 'req_idem_cli_01',
+    },
+    policy_evidence: {
+      decision: 'ALLOW',
+      reason_code: 'POLICY_PERMITTED',
+      risk_level: 'LOW',
+      evaluated_at: new Date().toISOString(),
+    },
+    steps: [
+      {
+        step_number: 1,
+        step_id: 'st_1',
+        trace_id: 'trc_pi_test_01',
+        type: 'PAYMENT_REQUESTED',
+        status: 'COMPLETED',
+        timestamp: new Date().toISOString(),
+        actor: 'AGENT:agent_test',
+      },
+    ],
+  };
+
+  // Ensure calling printPaymentTrace does not throw
+  assert.doesNotThrow(() => {
+    printPaymentTrace(mockTrace);
+  });
+});
+

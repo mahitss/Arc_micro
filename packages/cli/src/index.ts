@@ -10,12 +10,14 @@ import {
   printJson,
   printPaymentIntent,
   printPaymentIntentsList,
+  printPaymentTrace,
   printQuote,
   printServicesList,
   printSimulationResult,
   printTransactionsList,
   printWebhooksList,
 } from './output.js';
+import { verifyWebhookSignature } from '@agentpay/sdk';
 
 function parseFlags(args: string[]): { flags: Record<string, string | boolean>; positional: string[] } {
   const flags: Record<string, string | boolean> = {};
@@ -76,9 +78,11 @@ Commands:
     --amount <units>               Amount in base units, e.g. 2500000 (required)
     --asset <asset>                Currency asset (default: USDC)
     --purpose <purpose>            Payment purpose (required)
+    --quote <quote_id>             Bound quote ID (optional)
     --idempotency-key <key>        Idempotency key for safe retries
 
   payments get <id>                Get payment intent by ID
+  payments trace <id>              Get payment flight recorder trace by ID
   payments list                    List payment intents
     --status <status>              Filter by status (e.g. AUTHORIZED, CONFIRMED)
 
@@ -88,6 +92,10 @@ Commands:
     --limit <number>               Maximum events to return (default: 20)
 
   webhooks list                    List registered webhook endpoints
+  webhooks verify                  Verify HMAC-SHA256 signature of incoming webhook
+    --payload <json>               Raw webhook payload
+    --signature <sig>              AgentPay-Signature header (t=...,v1=...)
+    --secret <secret>              Webhook signing secret (whsec_...)
 
 Options:
   --json                           Output response in machine-readable JSON format
@@ -183,7 +191,7 @@ async function main(): Promise<void> {
     }
 
     // 3. Services
-    if (resource === 'services') {
+    if (resource === 'services' || resource === 'service') {
       if (action === 'list') {
         const category = flags['category'] as string | undefined;
         const trustStatus = flags['trust'] as string | undefined;
@@ -243,13 +251,14 @@ async function main(): Promise<void> {
     }
 
     // 4. Payments
-    if (resource === 'payments') {
+    if (resource === 'payments' || resource === 'payment') {
       if (action === 'create') {
         const agentId = flags['agent'] as string;
         const service = flags['service'] as string;
         const amount = flags['amount'] as string;
         const asset = (flags['asset'] as string) || 'USDC';
         const purpose = (flags['purpose'] as string) || 'CLI payment intent';
+        const quoteId = flags['quote'] as string | undefined;
         const idempotencyKey = flags['idempotency-key'] as string;
 
         if (!agentId || !service || !amount) {
@@ -262,6 +271,7 @@ async function main(): Promise<void> {
           {
             agentId,
             service,
+            quoteId,
             amount: String(amount),
             asset,
             purpose,
@@ -271,6 +281,17 @@ async function main(): Promise<void> {
 
         if (isJson) printJson(res);
         else printPaymentIntent(res);
+        return;
+      }
+
+      if (action === 'trace') {
+        if (!targetId) {
+          console.error('Error: "payments trace" requires a payment intent <id>');
+          process.exit(1);
+        }
+        const trace = await client.paymentIntents.trace(targetId);
+        if (isJson) printJson(trace);
+        else printPaymentTrace(trace);
         return;
       }
 
@@ -326,11 +347,31 @@ async function main(): Promise<void> {
     }
 
     // 8. Webhooks
-    if (resource === 'webhooks') {
+    if (resource === 'webhooks' || resource === 'webhook') {
       if (action === 'list') {
         const list = await client.webhooks.list();
         if (isJson) printJson(list);
         else printWebhooksList(list);
+        return;
+      }
+
+      if (action === 'verify') {
+        const payload = flags['payload'] as string;
+        const signature = flags['signature'] as string;
+        const secret = flags['secret'] as string;
+
+        if (!payload || !signature || !secret) {
+          console.error('Error: "webhook verify" requires --payload, --signature, and --secret');
+          process.exit(1);
+        }
+
+        const valid = verifyWebhookSignature(payload, signature, secret);
+        if (isJson) {
+          printJson({ valid });
+        } else {
+          console.log(valid ? 'Signature VALID.' : 'Signature INVALID.');
+        }
+        if (!valid) process.exit(1);
         return;
       }
     }

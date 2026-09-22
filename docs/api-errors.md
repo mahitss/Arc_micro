@@ -71,3 +71,35 @@ try {
   }
 }
 ```
+
+---
+
+## Python SDK Mapping
+
+The `agentpay` Python SDK similarly maps API errors into typed Python exceptions:
+
+```python
+from agentpay import (
+    AgentPay,
+    AgentPayError,
+    PolicyDeniedError,
+    ApprovalRequiredError,
+    AuthenticationError,
+    NotFoundError,
+    RateLimitedError,
+    ConflictError,
+)
+
+try:
+    payment = client.payments.create(...)
+except PolicyDeniedError as e:
+    print(f"Policy denied: {e.message} (Reason: {e.reason})")
+except ApprovalRequiredError as e:
+    print(f"Approval required: {e.message}")
+except ConflictError as e:
+    print(f"Idempotency conflict: {e.message}")
+except AuthenticationError as e:
+    print(f"Invalid credentials: {e.message}")
+except AgentPayError as e:
+    print(f"AgentPay API error [{e.code}] (HTTP {e.status_code}): {e.message}")
+```

@@ -168,5 +168,77 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         self.assertEqual(sim["simulation_id"], "sim_py_1")
         self.assertEqual(sim["predicted_outcome"], "WOULD_EXECUTE")
 
+    @patch("requests.request")
+    def test_day8_developer_flow_and_float_safety(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "id": "pi_py_day8",
+            "agent_id": "agent_alpha",
+            "service": "web-research",
+            "quote_id": "quote_py_999",
+            "amount": "180000",
+            "asset": "USDC",
+            "purpose": "Day 8 python dev test",
+            "status": "AUTHORIZED",
+        }
+        mock_resp.headers = {"x-request-id": "req_py_day8"}
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        # 1. client.payments is alias of client.payment_intents
+        self.assertIs(client.payments, client.payment_intents)
+
+        # 2. Float rejection
+        with self.assertRaises(ValueError):
+            client.payments.create(
+                service_id="web-research",
+                amount=0.18, # Prohibited float
+                purpose="test",
+            )
+
+        # 3. Valid payment creation with string amount and quote_id
+        payment = client.payments.create(
+            service_id="web-research",
+            quote_id="quote_py_999",
+            amount="180000",
+            asset="USDC",
+            purpose="Day 8 python dev test",
+            idempotency_key="idem_py_123",
+        )
+
+        self.assertEqual(payment["id"], "pi_py_day8")
+        self.assertEqual(payment["status"], "AUTHORIZED")
+        _, kwargs = mock_req.call_args
+        self.assertEqual(kwargs["json"]["quote_id"], "quote_py_999")
+        self.assertEqual(kwargs["json"]["service"], "web-research")
+        self.assertEqual(kwargs["headers"]["Idempotency-Key"], "idem_py_123")
+
+    @patch("requests.request")
+    def test_day8_trace_and_webhook_alias(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "trace_id": "trc_py_01",
+            "status": "CONFIRMED",
+            "execution_mode": "SIMULATION",
+            "steps": [{"step_number": 1, "type": "PAYMENT_REQUESTED"}],
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        trace = client.payments.trace("pi_py_day8")
+        self.assertEqual(trace["trace_id"], "trc_py_01")
+        self.assertEqual(trace["execution_mode"], "SIMULATION")
+
+        # Test verify_webhook alias
+        from agentpay import verify_webhook
+        secret = "whsec_abc123"
+        now = int(time.time())
+        payload = '{"test":true}'
+        sig = hmac.new(secret.encode("utf-8"), f"{now}.{payload}".encode("utf-8"), hashlib.sha256).hexdigest()
+        self.assertTrue(verify_webhook(payload, f"t={now},v1={sig}", secret))
+
 if __name__ == "__main__":
     unittest.main()
+

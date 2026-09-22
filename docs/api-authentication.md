@@ -50,6 +50,8 @@ AgentPay enforces the **Principle of Least Privilege**. An autonomous agent shou
 | `agents:read` | Inspect agent profiles, spending policies, and daily limits | AI Agents, Dashboards |
 | `services:read` | List approved external services and pricing bounds | AI Agents, Integrations |
 | `treasury:read` | View vault balances and reserved liquidity | Financial Admins |
+| `webhooks:read` | Inspect registered webhook endpoints and delivery history | Integrations |
+| `webhooks:manage` | Register, update, and rotate webhook signing secrets | Admins |
 
 ### Safety Invariant: Restricted Privileges
 

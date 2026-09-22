@@ -50,6 +50,7 @@ type CreatePaymentIntentRequest struct {
 	AgentID       string `json:"agent_id"`
 	Service       string `json:"service"`
 	ServiceID     string `json:"service_id,omitempty"`
+	QuoteID       string `json:"quote_id,omitempty"`
 	Amount        string `json:"amount"`
 	Asset         string `json:"asset"`
 	Purpose       string `json:"purpose"`
@@ -137,6 +138,7 @@ func (h *PaymentIntentsHandler) HandleCreate(w http.ResponseWriter, r *http.Requ
 		AgentID:        req.AgentID,
 		VaultAddress:   vaultAddr,
 		ServiceID:      svcID,
+		QuoteID:        req.QuoteID,
 		Amount:         req.Amount,
 		Asset:          req.Asset,
 		Purpose:        req.Purpose,
@@ -144,6 +146,10 @@ func (h *PaymentIntentsHandler) HandleCreate(w http.ResponseWriter, r *http.Requ
 		RequestID:      idempotencyKey,
 	})
 	if err != nil {
+		if errors.Is(err, intent.ErrIdempotencyConflict) {
+			writeError(w, http.StatusConflict, "IDEMPOTENCY_CONFLICT", err.Error(), ctxReqID)
+			return
+		}
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error(), ctxReqID)
 		return
 	}

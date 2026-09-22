@@ -195,6 +195,8 @@ const (
 	ScopeAgentsRead      = "agents:read"
 	ScopeServicesRead    = "services:read"
 	ScopeTreasuryRead    = "treasury:read"
+	ScopeWebhooksRead    = "webhooks:read"
+	ScopeWebhooksManage  = "webhooks:manage"
 )
 
 // APIKey represents an authorized developer platform credential.

@@ -21,7 +21,8 @@ var (
 	ErrNotAuthorized     = errors.New("payment intent must be authorized before confirmation")
 	ErrAlreadyConfirmed  = errors.New("payment intent is already confirmed")
 	ErrAlreadyExecuting  = errors.New("payment intent is currently being executed")
-	ErrExecutionFailed   = errors.New("payment intent execution failed")
+	ErrExecutionFailed      = errors.New("payment intent execution failed")
+	ErrIdempotencyConflict  = errors.New("idempotency conflict: key already used with different request parameters")
 )
 
 // Clock allows injecting time for deterministic testing.
@@ -149,6 +150,12 @@ func (s *Service) CreateIntent(ctx context.Context, params CreateIntentParams) (
 	if params.RequestID != "" {
 		existing, err := s.repo.GetIntentByRequestID(ctx, orgID, params.RequestID)
 		if err == nil && existing != nil {
+			if (params.ServiceID != "" && existing.ServiceID != params.ServiceID) ||
+				(params.Amount != "" && existing.Amount != params.Amount) ||
+				(params.Asset != "" && existing.Asset != params.Asset) ||
+				(params.AgentID != "" && existing.AgentID != params.AgentID) {
+				return nil, ErrIdempotencyConflict
+			}
 			return existing, nil
 		}
 	}

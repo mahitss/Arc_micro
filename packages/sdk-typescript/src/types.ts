@@ -130,7 +130,9 @@ export interface PaymentIntentDetail {
  */
 export interface CreatePaymentIntentParams {
   agentId: string;
-  service: string;
+  service?: string;
+  serviceId?: string;
+  quoteId?: string;
   /**
    * Amount in base units as a string (e.g. "2500000" for 2.50 USDC).
    */
@@ -426,3 +428,123 @@ export interface RequestPaymentResult {
   reason?: string;
   tx_hash?: string;
 }
+
+/**
+ * Execution Mode for Payment Intents.
+ */
+export type ExecutionMode = 'LIVE' | 'SIMULATION' | string;
+
+/**
+ * Individual step recorded in the Financial Flight Recorder trace.
+ */
+export interface TraceStep {
+  step_number: number;
+  step_id: string;
+  trace_id: string;
+  type: string;
+  status: string;
+  timestamp: string;
+  actor: string;
+  correlation_id?: string;
+  metadata?: Record<string, unknown>;
+  reason_codes?: string[];
+}
+
+/**
+ * Payment summary embedded inside the Financial Flight Recorder trace.
+ */
+export interface PaymentSummary {
+  intent_id: string;
+  organization_id: string;
+  agent_id: string;
+  service_id: string;
+  recipient: string;
+  amount: string;
+  asset: string;
+  purpose: string;
+  justification?: string;
+  request_id?: string;
+}
+
+/**
+ * Policy evaluation audit evidence.
+ */
+export interface PolicyEvidence {
+  policy_id?: string;
+  policy_version?: string;
+  decision: string;
+  reason_code: string;
+  reason?: string;
+  risk_level?: string;
+  risk_score?: number;
+  checks?: Array<Record<string, unknown>>;
+  remaining_daily_limit?: number;
+  evaluated_at: string;
+}
+
+/**
+ * Human approval audit evidence.
+ */
+export interface ApprovalEvidence {
+  approval_id: string;
+  required: boolean;
+  status: string;
+  requested_at: string;
+  resolved_at?: string;
+  approved_by?: string;
+  rejection_reason?: string;
+}
+
+/**
+ * Treasury reservation audit evidence.
+ */
+export interface TreasuryEvidence {
+  reservation_id?: string;
+  vault_address: string;
+  amount: string;
+  asset: string;
+  status: string;
+  reserved_at: string;
+  settled_at?: string;
+  released_at?: string;
+  release_reason?: string;
+}
+
+/**
+ * Blockchain settlement proof on Arc.
+ */
+export interface BlockchainEvidence {
+  chain_id: string;
+  network: string;
+  transaction_hash?: string;
+  block_number?: string;
+  from?: string;
+  to?: string;
+  submitted_at?: string;
+  confirmed_at?: string;
+  status: string;
+  explorer_url?: string;
+  error_message?: string;
+}
+
+/**
+ * Deterministic Financial Flight Recorder record for a Payment Intent.
+ */
+export interface PaymentTrace {
+  trace_id: string;
+  organization_id: string;
+  agent_id: string;
+  payment_intent_id: string;
+  payment_execution_id?: string;
+  status: string;
+  execution_mode: ExecutionMode;
+  created_at: string;
+  updated_at: string;
+  steps: TraceStep[];
+  payment_summary: PaymentSummary;
+  policy_evidence?: PolicyEvidence;
+  approval_evidence?: ApprovalEvidence;
+  treasury_evidence?: TreasuryEvidence;
+  blockchain_evidence?: BlockchainEvidence;
+}
+
