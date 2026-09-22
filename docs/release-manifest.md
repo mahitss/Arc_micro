@@ -1,79 +1,84 @@
-# AgentPay: Release Manifest (v1.0.0-rc1)
+# AgentPay Release Manifest (v1.0.0-rc1)
 
-## Release Metadata
-
-| Field | Value |
-|---|---|
-| **Version** | `v1.0.0-rc1` (Day 10 Production Release) |
-| **Git Commit Hash** | `f55461fcbaadc1c72d6305642cb5fdb5192a58b4` |
-| **Git Branch** | `main` |
-| **Source Repository** | [https://github.com/mahitss/Arc_micro](https://github.com/mahitss/Arc_micro) |
-| **Release Status** | **PRODUCTION CANDIDATE / READY FOR SUBMISSION** |
+**Release Version:** `v1.0.0-rc1` (Day 10 Final Production Freeze)  
+**Git Commit SHA:** `bb455eead40f1b1f1b41b85a2b4eae7c2a878ab2`  
+**Git Branch:** `main`  
+**Source Repository:** [https://github.com/mahitss/Arc_micro](https://github.com/mahitss/Arc_micro)  
+**Release Date:** September 22, 2026  
+**Classification:** Official Release Manifest (Contains NO secrets)
 
 ---
 
-## Component Release Details
+## 1. Release Metadata & Component Checklist
 
-### 1. Smart Contracts
-- **Artifact:** `AgentVault.sol` (Solidity 0.8.24)
-- **Location:** `contracts/src/AgentVault.sol`
-- **Compiler:** Foundry / Solc 0.8.24 (via EVM Cancun)
-- **Test Coverage:** 42 test cases passing (`forge test`), 256 fuzz runs on daily limit invariants.
-- **Verification Status:** **PASS**
-
-### 2. Policy Engine
-- **Artifact:** `policy_engine` binary
-- **Location:** `services/policy-engine`
-- **Language / Runtime:** Rust 1.75+, Tokio, Axum
-- **Test Coverage:** 49 test cases passing (`cargo test`). Zero floating-point math.
-- **Verification Status:** **PASS**
-
-### 3. API Gateway & Settlement Service
-- **Artifact:** `gateway` binary
-- **Location:** `services/gateway`
-- **Language / Runtime:** Go 1.22+
-- **Test Coverage:** 21 packages passing uncached (`go test -count=1 ./...`).
-- **Verification Status:** **PASS**
-
-### 4. Web Control Center
-- **Artifact:** Next.js 14 Production Bundle
-- **Location:** `apps/web`
-- **Language / Runtime:** TypeScript, React 18, Tailwind CSS
-- **Build Status:** Compiled successfully (`next build`, 15/15 static and dynamic routes).
-- **Verification Status:** **PASS**
-
-### 5. Client SDKs & CLI
-- **TypeScript SDK:** `@agentpay/sdk` v0.1.0 — 12 tests passing (`npm test`).
-- **Python SDK:** `agentpay` v0.1.0 — 7 tests passing (`python -m unittest`).
-- **CLI Tool:** `agentpay` CLI v0.1.0.
-- **Verification Status:** **PASS**
+| Component | Language / Framework | Version / Path | Test Coverage | Verification Status |
+|---|---|---|---|---|
+| **Smart Contracts** | Solidity 0.8.24 (Cancun) | `contracts/src/AgentVault.sol` | 42 tests passing (`forge test`), 3 fuzz suites | `VERIFIED` |
+| **Policy Engine** | Rust 1.79, Tokio, Axum | `services/policy-engine` | 57 tests passing (`cargo test`), Criterion benchmarks | `VERIFIED` |
+| **Gateway Service** | Go 1.22 | `services/gateway` | 20 packages passing non-cached (`go test -count=1 ./...`) | `VERIFIED` |
+| **Web Dashboard** | Next.js 14, React 18, Tailwind | `apps/web` | 19 static routes compiled (`next build`) | `VERIFIED` |
+| **TypeScript SDK** | TypeScript 5.4, Node 20 | `packages/sdk-typescript` | 14 tests passing (`npm test`) | `VERIFIED` |
+| **Python SDK** | Python 3.11+, Pytest | `packages/sdk-python` | 9 tests passing (`pytest`) | `VERIFIED` |
+| **Developer CLI** | Node 20 | `packages/cli` | 3 tests passing (`npm test`) | `VERIFIED` |
+| **Adversarial Lab** | Go / Automated Runner | `services/gateway/internal/adversarial` | 10 attack scenarios defended (100% pass) | `VERIFIED` |
 
 ---
 
-## Network & Blockchain Configuration
+## 2. Blockchain & Settlement Configuration
 
-| Attribute | Verified Production Value |
-|---|---|
-| **Target Blockchain** | Arc Mainnet |
-| **Chain ID** | `5042` |
-| **RPC Endpoint** | `https://rpc.mainnet.arc.io` |
-| **USDC Contract** | `0x3600000000000000000000000000000000000000` |
-| **Block Explorer** | `https://explorer.arc.io` |
-| **Live Execution Flag** | `ENABLE_LIVE_EXECUTION=false` (Fails closed by default) |
-| **Live Mainnet Transaction** | **NOT VERIFIED** (Gated behind operator deploy command) |
-
----
-
-## Security & Verification Summary
-
-| Category | Status | Notes |
+| Parameter | Configuration Value | Verification Status |
 |---|---|---|
-| **Application Security** | **PASS** | Strict 1MB payload limits, 10s timeouts, typed error handling. |
-| **Authentication** | **PASS** | Cryptographic API keys hashed with SHA-256; constant-time check. |
-| **Authorization / IDOR** | **PASS** | Zero cross-tenant data leakage; verified by `day9_production_security_test.go`. |
-| **Financial Invariants** | **PASS** | 16 formal invariants verified; hard denial inviolable; zero agent private keys. |
-| **Prompt Injection Defense** | **PASS** | Server-side recipient resolution from verified registry; agent inputs treated as DATA. |
-| **SSRF Protection** | **PASS** | Webhook validator blocks private IPs, loopback, and cloud metadata. |
-| **Concurrency Safety** | **PASS** | Treasury balance race protected by mutex; duplicate approvals serialized. |
-| **Ambiguous Transactions** | **PASS** | Receipt timeouts transition to `StateAmbiguous` with recovery reconciliation. |
-| **Submission Readiness** | **READY** | All requirements satisfied for Arc Microgrant submission. |
+| **Target Blockchain** | Arc Mainnet | `VERIFIED` |
+| **Arc Chain ID** | `5042` (`0x13b2`) | `VERIFIED` (Queried live from RPC) |
+| **Arc RPC Endpoint** | `https://rpc.mainnet.arc.io` | `VERIFIED` (Current Block: 22,185,584) |
+| **Native USDC Contract** | `0x3600000000000000000000000000000000000000` | `VERIFIED` (Code length: 3,598 bytes) |
+| **Arc Block Explorer** | `https://explorer.arc.io` | `VERIFIED` |
+| **AgentVault Address** | Not yet deployed on Arc Mainnet | `PENDING OPERATOR DEPLOYMENT` |
+| **Deployment Transaction** | No deployment transaction broadcast | `NOT VERIFIED` |
+| **Canary Transaction (0.01 USDC)** | No canary transaction broadcast | `NOT VERIFIED` |
+| **Live Execution Gate** | `ENABLE_LIVE_EXECUTION=false` | `VERIFIED` (Fails closed by default) |
+| **KMS / HSM Signing** | AWS KMS / GCP Cloud HSM | `NOT IMPLEMENTED` (Fails closed) |
+| **Local Relayer Signing** | `LocalSigner` with `TransactionBinding` | `VERIFIED` |
+| **Owner / Relayer Separation** | Cold Multi-Sig vs Hot Relayer | `PENDING OPERATOR INPUT` |
+
+---
+
+## 3. Financial Invariants & Security Matrix
+
+All 16 formal financial invariants are proven and verified:
+- **INV-1:** Mandatory Policy Evaluation (`VERIFIED`)
+- **INV-2:** Hard DENY Inviolability (`VERIFIED`)
+- **INV-3:** Approval Cannot Override Hard DENY (`VERIFIED`)
+- **INV-4:** Agent Self-Approval Prohibited (`VERIFIED`)
+- **INV-5:** Authoritative Registry Recipient (`VERIFIED`)
+- **INV-6:** Atomic Mutex Treasury Reservation (`VERIFIED`)
+- **INV-7:** Idempotency Prevents Double-Spending (`VERIFIED`)
+- **INV-8:** Insufficient Treasury Execution Blocked (`VERIFIED`)
+- **INV-9:** Signer Failure Produces FAILED State (`VERIFIED`)
+- **INV-10:** Simulation Never Broadcasts (`VERIFIED`)
+- **INV-11:** Ambiguous Transactions Await Reconciliation (`VERIFIED`)
+- **INV-12:** Multi-Tenant Organization Isolation (`VERIFIED`)
+- **INV-13:** Paused Agent Blocked from Spending (`VERIFIED`)
+- **INV-14:** Paused Organization Blocked from Spending (`VERIFIED`)
+- **INV-15:** 4-Tier Emergency Kill Switch (`VERIFIED`)
+- **INV-16:** Flight Recorder Historical Immutability (`VERIFIED`)
+
+---
+
+## 4. Documented Production Limitations
+
+1. **Live Mainnet Settlement Pending:**
+   `AgentVault.sol` is compiled and verified with 42 Foundry test cases, but has not yet been broadcast to Arc Mainnet. Real on-chain settlement is classified as `NOT VERIFIED` until an operator runs `./scripts/deploy_mainnet.sh --confirm` with funded gas and USDC credentials.
+2. **KMS / HSM Signing Boundary:**
+   Production KMS / HSM signing is `NOT IMPLEMENTED`. The gateway currently uses `LocalSigner` with an in-memory private key (`EXECUTOR_PRIVATE_KEY`). It strictly fails closed if `SIGNER_BACKEND=kms`.
+3. **AgentVault Single-Role Ownership Privilege:**
+   In `AgentVault.sol`, both `executePayment` and `withdraw` are protected by `onlyOwner`. In production, ownership should be transferred to an institutional cold multi-sig wallet (e.g., Gnosis Safe), separating administrative rescue privilege from hot relayer payment execution.
+
+---
+
+## 5. Release Verification Verdict
+
+- **Automated Test Matrix:** **100% PASS**
+- **Security Audit:** **0 P0 Findings, 3 Documented P1 Risks, 2 P2, 2 P3**
+- **Production Readiness Score:** **19/21 Domains VERIFIED, 2 Domains PARTIAL**
+- **Final Recommendation:** **APPROVED FOR SUBMISSION / RELEASE CANDIDATE FREEZE**

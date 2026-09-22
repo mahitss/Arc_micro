@@ -159,15 +159,15 @@ An interactive demonstration is available at **`http://localhost:3000/demo`**:
 
 - **Final Architecture:** [`docs/final-architecture.md`](docs/final-architecture.md)
 - **Financial Invariants (16 Formal Invariants):** [`docs/financial-invariants.md`](docs/financial-invariants.md)
-- **Threat Model v3:** [`docs/threat-model-v3.md`](docs/threat-model-v3.md)
-- **Arc Integration Rationale:** [`docs/arc-integration.md`](docs/arc-integration.md)
-- **Arc Mainnet Evidence:** [`docs/arc-mainnet-evidence.md`](docs/arc-mainnet-evidence.md)
-- **Production Readiness Scorecard:** [`docs/production-readiness-report.md`](docs/production-readiness-report.md)
+- **Production Readiness Matrix (21 Domains):** [`docs/production-readiness-matrix.md`](docs/production-readiness-matrix.md)
 - **Day 9 Security & Reliability Audit:** [`docs/day-9-production-readiness-report.md`](docs/day-9-production-readiness-report.md)
-- **Deployment & Operations Runbook:** [`docs/deployment.md`](docs/deployment.md)
+- **Arc Mainnet Evidence & Status:** [`docs/arc-mainnet-evidence.md`](docs/arc-mainnet-evidence.md)
+- **Mainnet Operations Runbook:** [`docs/mainnet-operations-runbook.md`](docs/mainnet-operations-runbook.md)
 - **Incident Response Runbook:** [`docs/incident-response.md`](docs/incident-response.md)
+- **Final Release Manifest:** [`docs/release-manifest.md`](docs/release-manifest.md)
 - **Reviewer Quickstart (5 Minutes):** [`docs/reviewer-quickstart.md`](docs/reviewer-quickstart.md)
 - **Arc Microgrant Submission Package:** [`docs/submission.md`](docs/submission.md)
+- **Threat Model v3:** [`docs/threat-model-v3.md`](docs/threat-model-v3.md)
 - **Demo Video Script:** [`docs/demo-script.md`](docs/demo-script.md)
 
 ---
