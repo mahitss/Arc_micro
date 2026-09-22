@@ -202,6 +202,26 @@ class ServicesResource:
         """
         return self.get_quote(service_id=service_id, amount=amount, asset=asset)
 
+    def performance(self, service_id: str, window: Optional[str] = None, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if window:
+            params["window"] = window
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("GET", f"/v1/services/{service_id}/performance", params=params)
+
+    def reputation(self, service_id: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("GET", f"/v1/services/{service_id}/reputation", params=params)
+
+    def anomalies(self, service_id: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("GET", f"/v1/services/{service_id}/anomalies", params=params)
+
 class SimulationsResource:
     def __init__(self, client: "AgentPay"):
         self._client = client
@@ -420,6 +440,36 @@ class MissionsResource:
 
     def economic_graph(self, mission_id: str) -> Dict[str, Any]:
         return self._client._request("GET", f"/v1/missions/{mission_id}/economic-graph")
+
+    def intelligence(self, mission_id: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("GET", f"/v1/missions/{mission_id}/intelligence", params=params)
+
+    def recommendations(self, mission_id: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("GET", f"/v1/missions/{mission_id}/recommendations", params=params)
+
+    def replan(self, mission_id: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("POST", f"/v1/missions/{mission_id}/replan", params=params)
+
+    def recovery(self, mission_id: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("GET", f"/v1/missions/{mission_id}/recovery", params=params)
+
+    def observations(self, mission_id: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        return self._client._request("GET", f"/v1/missions/{mission_id}/observations", params=params)
 
 class AgentPay:
     """

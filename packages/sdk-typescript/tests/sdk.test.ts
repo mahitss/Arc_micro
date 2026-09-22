@@ -840,4 +840,151 @@ test('AgentPay SDK — Economic Graph Retrieval', async () => {
   assert.equal(graph.edges[0].type, 'HIRED');
 });
 
+test('AgentPay SDK — Services Intelligence: Performance, Reputation, Anomalies', async () => {
+  let capturedUrl = '';
+  const mockFetch: typeof fetch = async (input) => {
+    capturedUrl = input.toString();
+    if (capturedUrl.includes('/performance')) {
+      return new Response(
+        JSON.stringify({
+          service_id: 'data-agent',
+          organization_id: 'org_test',
+          window: 'last_10_jobs',
+          success_rate_bps: 9800,
+          failure_rate_bps: 200,
+          average_price: '300000',
+          average_latency_ms: 350,
+          confidence: 'HIGH',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.includes('/anomalies')) {
+      return new Response(
+        JSON.stringify({
+          service_id: 'data-agent',
+          circuit_breaker_status: 'HEALTHY',
+          anomalies: [],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.includes('/reputation')) {
+      return new Response(
+        JSON.stringify({
+          service_id: 'data-agent',
+          reputation_score: 9800,
+          historical_reliability: '99.8%',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    return new Response('Not Found', { status: 404 });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  const perf = await client.services.performance('data-agent', { window: 'last_10_jobs' });
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/services/data-agent/performance?window=last_10_jobs');
+  assert.equal(perf.success_rate_bps, 9800);
+  assert.equal(perf.confidence, 'HIGH');
+
+  const anom = await client.services.anomalies('data-agent');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/services/data-agent/anomalies');
+  assert.equal(anom.circuit_breaker_status, 'HEALTHY');
+
+  const rep = await client.services.reputation('data-agent');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/services/data-agent/reputation');
+  assert.equal(rep.reputation_score, 9800);
+});
+
+test('AgentPay SDK — Mission Intelligence: Telemetry, Recommendations, Replan, Recovery', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+
+    if (capturedUrl.includes('/intelligence')) {
+      return new Response(
+        JSON.stringify({
+          mission_id: 'msn_456',
+          recovery_attempts: 1,
+          max_recovery_attempts: 3,
+          learning_trace: [
+            { timestamp: new Date().toISOString(), event: 'SERVICE_FAILED', details: 'Timeout' },
+            { timestamp: new Date().toISOString(), event: 'ALTERNATIVE_SELECTED', details: 'Selected DataAgent B' },
+          ],
+          confidence: 'HIGH',
+          status: 'COMPLETED',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.includes('/replan')) {
+      return new Response(
+        JSON.stringify({
+          mission_id: 'msn_456',
+          reason: 'SERVICE_FAILURE',
+          strategy: 'TRY_ALTERNATIVE_SERVICE',
+          proposed_steps: [
+            {
+              step_id: 'step_1_alt',
+              recommended_service_id: 'data-agent-b',
+              estimated_cost: '350000',
+              estimated_latency_ms: 300,
+            },
+          ],
+          estimated_cost: '350000',
+          confidence: 'HIGH',
+          requires_human: false,
+          explanation: 'Optimal alternative selected',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.includes('/recovery')) {
+      return new Response(
+        JSON.stringify({
+          mission_id: 'msn_456',
+          recovery_attempts: 1,
+          max_recovery_attempts: 3,
+          status: 'COMPLETED',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else if (capturedUrl.includes('/observations')) {
+      return new Response(
+        JSON.stringify({
+          mission_id: 'msn_456',
+          observations: [
+            { id: 'obs_1', event_type: 'SERVICE_FAILURE', success: false },
+            { id: 'obs_2', event_type: 'SERVICE_SUCCESS', success: true },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    return new Response('Not Found', { status: 404 });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  const intel = await client.missions.intelligence('msn_456');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/missions/msn_456/intelligence');
+  assert.equal(intel.recovery_attempts, 1);
+  assert.equal(intel.learning_trace.length, 2);
+
+  const proposal = await client.missions.replan('msn_456');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/missions/msn_456/replan');
+  assert.equal(capturedMethod, 'POST');
+  assert.equal(proposal.strategy, 'TRY_ALTERNATIVE_SERVICE');
+  assert.equal(proposal.proposed_steps[0].recommended_service_id, 'data-agent-b');
+
+  const rec = await client.missions.recovery('msn_456');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/missions/msn_456/recovery');
+  assert.equal(rec.recovery_attempts, 1);
+
+  const obs = await client.missions.observations('msn_456');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/missions/msn_456/observations');
+  assert.equal(obs.observations.length, 2);
+});
+
+
 

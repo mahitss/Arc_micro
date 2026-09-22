@@ -118,6 +118,17 @@ func NewRouter(
 		mux.HandleFunc("POST /v1/hires/{id}/result", agentEconHandler.HandleSubmitResult)
 		mux.HandleFunc("GET /v1/missions/{id}/economic-graph", agentEconHandler.HandleGetEconomicGraph)
 		mux.HandleFunc("GET /v1/missions/{id}/hires", agentEconHandler.HandleListMissionHires)
+
+		// 5.7 AgentPay Intelligence Layer APIs
+		intelHandler := handlers.NewIntelligenceHandler(missionSvc)
+		mux.HandleFunc("GET /v1/services/{id}/performance", intelHandler.HandleGetServicePerformance)
+		mux.HandleFunc("GET /v1/services/{id}/reputation", intelHandler.HandleGetServiceReputation)
+		mux.HandleFunc("GET /v1/services/{id}/anomalies", intelHandler.HandleGetServiceAnomalies)
+		mux.HandleFunc("GET /v1/missions/{id}/observations", intelHandler.HandleGetMissionObservations)
+		mux.HandleFunc("GET /v1/missions/{id}/recommendations", intelHandler.HandleGetMissionRecommendations)
+		mux.HandleFunc("POST /v1/missions/{id}/replan", intelHandler.HandleReplanMission)
+		mux.HandleFunc("GET /v1/missions/{id}/recovery", intelHandler.HandleGetMissionRecovery)
+		mux.HandleFunc("GET /v1/missions/{id}/intelligence", intelHandler.HandleGetMissionIntelligence)
 	}
 
 	// 6. V1 Query & List APIs for Web Control Center

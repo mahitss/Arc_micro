@@ -1,6 +1,15 @@
 import type { AgentPay } from '../client.js';
 import { NotFoundError } from '../errors.js';
-import type { RegisteredService, RequestOptions, ServiceFilter, ServiceQuote } from '../types.js';
+import type {
+  PerformanceWindow,
+  RegisteredService,
+  RequestOptions,
+  ServiceAnomaliesResponse,
+  ServiceFilter,
+  ServicePerformance,
+  ServiceQuote,
+  ServiceReputation,
+} from '../types.js';
 
 export class ServicesResource {
   constructor(private readonly client: AgentPay) {}
@@ -54,5 +63,51 @@ export class ServicesResource {
       },
       options
     );
+  }
+
+  /**
+   * Retrieve deterministic performance calculations for a service in a given window.
+   */
+  async performance(
+    serviceId: string,
+    params?: { window?: PerformanceWindow; organizationId?: string },
+    options?: RequestOptions
+  ): Promise<ServicePerformance> {
+    const q = new URLSearchParams();
+    if (params?.window) q.set('window', params.window);
+    if (params?.organizationId) q.set('organization_id', params.organizationId);
+    const qs = q.toString();
+    const path = `/v1/services/${encodeURIComponent(serviceId)}/performance${qs ? `?${qs}` : ''}`;
+    return this.client.request<ServicePerformance>(path, { method: 'GET' }, options);
+  }
+
+  /**
+   * Retrieve isolated economic reputation for a service.
+   */
+  async reputation(
+    serviceId: string,
+    params?: { organizationId?: string },
+    options?: RequestOptions
+  ): Promise<ServiceReputation> {
+    const q = new URLSearchParams();
+    if (params?.organizationId) q.set('organization_id', params.organizationId);
+    const qs = q.toString();
+    const path = `/v1/services/${encodeURIComponent(serviceId)}/reputation${qs ? `?${qs}` : ''}`;
+    return this.client.request<ServiceReputation>(path, { method: 'GET' }, options);
+  }
+
+  /**
+   * Retrieve statistical anomaly signals and circuit breaker status for a service.
+   */
+  async anomalies(
+    serviceId: string,
+    params?: { organizationId?: string },
+    options?: RequestOptions
+  ): Promise<ServiceAnomaliesResponse> {
+    const q = new URLSearchParams();
+    if (params?.organizationId) q.set('organization_id', params.organizationId);
+    const qs = q.toString();
+    const path = `/v1/services/${encodeURIComponent(serviceId)}/anomalies${qs ? `?${qs}` : ''}`;
+    return this.client.request<ServiceAnomaliesResponse>(path, { method: 'GET' }, options);
   }
 }

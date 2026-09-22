@@ -32,6 +32,16 @@ func NewEconomyEngine(weights *SelectionWeights) *EconomyEngine {
 
 // RankCandidates evaluates and deterministically orders a list of candidate quotes for a planned mission step.
 func (e *EconomyEngine) RankCandidates(step *MissionStep, quotes []*Quote, reputations map[string]*ServiceReputation) ([]ScoredCandidate, error) {
+	return e.RankCandidatesAdaptive(step, quotes, reputations, nil)
+}
+
+// RankCandidatesAdaptive evaluates candidate quotes using historical reputation, contextual capability metrics, and recent performance trends.
+func (e *EconomyEngine) RankCandidatesAdaptive(
+	step *MissionStep,
+	quotes []*Quote,
+	reputations map[string]*ServiceReputation,
+	perfs map[string]*ServicePerformance,
+) ([]ScoredCandidate, error) {
 	if len(quotes) == 0 {
 		return nil, ErrNoQuotesProvided
 	}
@@ -94,7 +104,29 @@ func (e *EconomyEngine) RankCandidates(step *MissionStep, quotes []*Quote, reput
 		}
 		latencyContrib := (latencyScore * e.weights.LatencyWeight) / 10000
 
-		// 4. Price Penalty: Price relative to step budget
+		// 4. Contextual & Recent Performance Components
+		contextSuccess := int64(8000)
+		recentSuccess := int64(8500)
+		conf := ConfidenceUnknown
+
+		if perfs != nil {
+			if p, okP := perfs[q.ServiceID]; okP && p != nil {
+				conf = p.Confidence
+				if p.RecentSuccessRateBps > 0 {
+					recentSuccess = p.RecentSuccessRateBps
+				}
+				if p.ContextualBreakdown != nil {
+					if cp, okC := p.ContextualBreakdown[step.RequiredCapability]; okC {
+						contextSuccess = cp.SuccessRateBps
+					}
+				}
+			}
+		}
+
+		contextContrib := (contextSuccess * e.weights.ContextualWeight) / 10000
+		recentContrib := (recentSuccess * e.weights.RecentPerfWeight) / 10000
+
+		// 5. Price Penalty: Price relative to step budget
 		// Ratio = (price * 10000) / stepBudget
 		priceRatio := new(big.Int).Mul(priceInt, big.NewInt(10000))
 		priceRatio.Div(priceRatio, stepBudgetInt)
@@ -104,7 +136,7 @@ func (e *EconomyEngine) RankCandidates(step *MissionStep, quotes []*Quote, reput
 		}
 		pricePenalty := (priceBasisPoints * e.weights.PriceWeight) / 10000
 
-		// 5. Risk Penalty: Risk in basis points
+		// 6. Risk Penalty: Risk in basis points
 		risk := q.RiskScore
 		if risk < 0 {
 			risk = 0
@@ -114,12 +146,12 @@ func (e *EconomyEngine) RankCandidates(step *MissionStep, quotes []*Quote, reput
 		riskPenalty := (risk * e.weights.RiskWeight) / 10000
 
 		// Deterministic Total Utility Formula:
-		// UTILITY = Quality + Reliability + Reputation + Latency - Price - Risk
-		utilityScore := qualityContrib + relContrib + repContrib + latencyContrib - pricePenalty - riskPenalty
+		// UTILITY = Quality + Reliability + Reputation + Latency + Context + Recent - Price - Risk
+		utilityScore := qualityContrib + relContrib + repContrib + latencyContrib + contextContrib + recentContrib - pricePenalty - riskPenalty
 
 		explanation := fmt.Sprintf(
-			"utility=%d (quality=+%d, rel=+%d, rep=+%d, lat=+%d, price=-%d, risk=-%d)",
-			utilityScore, qualityContrib, relContrib, repContrib, latencyContrib, pricePenalty, riskPenalty,
+			"utility=%d (quality=+%d, rel=+%d, rep=+%d, lat=+%d, ctx=+%d, recent=+%d, price=-%d, risk=-%d, conf=%s)",
+			utilityScore, qualityContrib, relContrib, repContrib, latencyContrib, contextContrib, recentContrib, pricePenalty, riskPenalty, conf,
 		)
 
 		candidates = append(candidates, ScoredCandidate{
@@ -129,8 +161,11 @@ func (e *EconomyEngine) RankCandidates(step *MissionStep, quotes []*Quote, reput
 			ReliabilityContrib:  relContrib,
 			ReputationContrib:   repContrib,
 			LatencyContrib:      latencyContrib,
+			ContextualContrib:   contextContrib,
+			RecentPerfContrib:   recentContrib,
 			PricePenalty:        pricePenalty,
 			RiskPenalty:         riskPenalty,
+			Confidence:          conf,
 			Explanation:         explanation,
 		})
 	}
@@ -173,6 +208,23 @@ func (e *EconomyEngine) RankCandidates(step *MissionStep, quotes []*Quote, reput
 // SelectBestCandidate selects the highest ranked candidate under deterministic scoring.
 func (e *EconomyEngine) SelectBestCandidate(step *MissionStep, quotes []*Quote, reputations map[string]*ServiceReputation) (*ScoredCandidate, error) {
 	ranked, err := e.RankCandidates(step, quotes, reputations)
+	if err != nil {
+		return nil, err
+	}
+	if len(ranked) == 0 {
+		return nil, ErrNoQuotesProvided
+	}
+	return &ranked[0], nil
+}
+
+// SelectBestCandidateAdaptive selects the highest ranked candidate under adaptive contextual scoring.
+func (e *EconomyEngine) SelectBestCandidateAdaptive(
+	step *MissionStep,
+	quotes []*Quote,
+	reputations map[string]*ServiceReputation,
+	perfs map[string]*ServicePerformance,
+) (*ScoredCandidate, error) {
+	ranked, err := e.RankCandidatesAdaptive(step, quotes, reputations, perfs)
 	if err != nil {
 		return nil, err
 	}

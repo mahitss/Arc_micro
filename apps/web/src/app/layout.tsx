@@ -73,6 +73,13 @@ export default function RootLayout({
                   Economy
                 </Link>
                 <Link
+                  href="/intelligence"
+                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-semibold bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  Intelligence
+                </Link>
+                <Link
                   href="/approvals"
                   className="px-3 py-1.5 rounded-lg text-amber-300 hover:text-white hover:bg-amber-500/20 transition-colors"
                 >

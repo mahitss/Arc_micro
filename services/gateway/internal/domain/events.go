@@ -45,6 +45,16 @@ const (
 	EventHireCompleted          EventType = "hire.completed"
 	EventHireFailed             EventType = "hire.failed"
 	EventAgentPaymentAuthorized EventType = "agent.payment.authorized"
+	// Intelligence Layer & Adaptive Replanning Events
+	EventIntelligenceObservationCreated    EventType = "intelligence.observation_created"
+	EventIntelligenceOutcomeEvaluated      EventType = "intelligence.outcome_evaluated"
+	EventIntelligenceAnomalyDetected       EventType = "intelligence.anomaly_detected"
+	EventIntelligenceRecommendationCreated EventType = "intelligence.recommendation_created"
+	EventMissionReplanProposed             EventType = "mission.replan_proposed"
+	EventMissionReplanAccepted             EventType = "mission.replan_accepted"
+	EventMissionRecoveryStarted            EventType = "mission.recovery_started"
+	EventMissionRecoveryCompleted          EventType = "mission.recovery_completed"
+	EventMissionRecoveryFailed             EventType = "mission.recovery_failed"
 )
 
 // DomainEvent represents a versioned, immutable, and correlated event envelope.

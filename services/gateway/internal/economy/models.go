@@ -92,37 +92,46 @@ type Quote struct {
 
 // ScoredCandidate holds a quote evaluated by the Economic Selection Engine.
 type ScoredCandidate struct {
-	Quote               *Quote `json:"quote"`
-	UtilityScore        int64  `json:"utility_score"` // Scaled integer score
-	QualityContribution int64  `json:"quality_contrib"`
-	ReliabilityContrib  int64  `json:"reliability_contrib"`
-	ReputationContrib   int64  `json:"reputation_contrib"`
-	LatencyContrib      int64  `json:"latency_contrib"`
-	PricePenalty        int64  `json:"price_penalty"`
-	RiskPenalty         int64  `json:"risk_penalty"`
-	Explanation         string `json:"explanation"`
+	Quote               *Quote          `json:"quote"`
+	UtilityScore        int64           `json:"utility_score"` // Scaled integer score
+	QualityContribution int64           `json:"quality_contrib"`
+	ReliabilityContrib  int64           `json:"reliability_contrib"`
+	ReputationContrib   int64           `json:"reputation_contrib"`
+	LatencyContrib      int64           `json:"latency_contrib"`
+	ContextualContrib   int64           `json:"contextual_contrib,omitempty"`
+	RecentPerfContrib   int64           `json:"recent_perf_contrib,omitempty"`
+	PricePenalty        int64           `json:"price_penalty"`
+	RiskPenalty         int64           `json:"risk_penalty"`
+	Confidence          ConfidenceLevel `json:"confidence,omitempty"`
+	Explanation         string          `json:"explanation"`
 }
 
 // SelectionWeights defines deterministic weights for the utility scoring formula.
 // All weights are integers in basis points (summing to 10,000 for standard normalization).
 type SelectionWeights struct {
-	PriceWeight       int64 `json:"price_weight"`
-	QualityWeight     int64 `json:"quality_weight"`
-	ReputationWeight  int64 `json:"reputation_weight"`
-	ReliabilityWeight int64 `json:"reliability_weight"`
-	LatencyWeight     int64 `json:"latency_weight"`
-	RiskWeight        int64 `json:"risk_weight"`
+	Version           string `json:"version"` // "v2.0"
+	PriceWeight       int64  `json:"price_weight"`
+	QualityWeight     int64  `json:"quality_weight"`
+	ReputationWeight  int64  `json:"reputation_weight"`
+	ReliabilityWeight int64  `json:"reliability_weight"`
+	LatencyWeight     int64  `json:"latency_weight"`
+	RiskWeight        int64  `json:"risk_weight"`
+	ContextualWeight  int64  `json:"contextual_weight,omitempty"`
+	RecentPerfWeight  int64  `json:"recent_perf_weight,omitempty"`
 }
 
 // DefaultSelectionWeights returns the production baseline weights.
 func DefaultSelectionWeights() SelectionWeights {
 	return SelectionWeights{
-		PriceWeight:       2500, // 25%
-		QualityWeight:     2000, // 20%
+		Version:           "v2.0",
+		PriceWeight:       2000, // 20%
+		QualityWeight:     1500, // 15%
 		ReputationWeight:  1500, // 15%
-		ReliabilityWeight: 2000, // 20%
+		ReliabilityWeight: 1500, // 15%
 		LatencyWeight:     1000, // 10%
 		RiskWeight:        1000, // 10%
+		ContextualWeight:  1000, // 10%
+		RecentPerfWeight:  500,  // 5%
 	}
 }
 
@@ -337,5 +346,222 @@ type EconomicGraph struct {
 	MissionID string      `json:"mission_id"`
 	Nodes     []GraphNode `json:"nodes"`
 	Edges     []GraphEdge `json:"edges"`
+}
+
+// Bounded loop execution limits to prevent infinite loops and guarantee fail-closed behavior
+const (
+	MAX_MISSION_ITERATIONS = 10
+	MAX_RECOVERY_ATTEMPTS  = 3
+	MAX_REPLAN_COUNT       = 3
+	MAX_RETRIES_PER_HIRE   = 2
+)
+
+// ObservationType defines canonical economic interaction observation events.
+type ObservationType string
+
+const (
+	ObservationServiceSuccess   ObservationType = "SERVICE_SUCCESS"
+	ObservationServiceFailure   ObservationType = "SERVICE_FAILURE"
+	ObservationQuoteAccepted    ObservationType = "QUOTE_ACCEPTED"
+	ObservationQuoteRejected    ObservationType = "QUOTE_REJECTED"
+	ObservationQuoteExpired     ObservationType = "QUOTE_EXPIRED"
+	ObservationPaymentSuccess   ObservationType = "PAYMENT_SUCCESS"
+	ObservationPaymentFailure   ObservationType = "PAYMENT_FAILURE"
+	ObservationResultValidated  ObservationType = "RESULT_VALIDATED"
+	ObservationResultRejected   ObservationType = "RESULT_REJECTED"
+	ObservationMissionCompleted ObservationType = "MISSION_COMPLETED"
+	ObservationMissionFailed    ObservationType = "MISSION_FAILED"
+)
+
+// OutcomeStatus defines the high-level evaluation of an economic action.
+type OutcomeStatus string
+
+const (
+	OutcomeSuccess        OutcomeStatus = "SUCCESS"
+	OutcomePartialSuccess OutcomeStatus = "PARTIAL_SUCCESS"
+	OutcomeFailure        OutcomeStatus = "FAILURE"
+)
+
+// ConfidenceLevel captures evidence availability for recommendations and evaluations.
+type ConfidenceLevel string
+
+const (
+	ConfidenceHigh    ConfidenceLevel = "HIGH"    // >= 10 observations
+	ConfidenceMedium  ConfidenceLevel = "MEDIUM"  // 3-9 observations
+	ConfidenceLow     ConfidenceLevel = "LOW"     // 1-2 observations
+	ConfidenceUnknown ConfidenceLevel = "UNKNOWN" // 0 observations
+)
+
+// FailureClass categorizes the root cause of an economic or execution failure.
+type FailureClass string
+
+const (
+	FailureTransient      FailureClass = "TRANSIENT"
+	FailurePermanent      FailureClass = "PERMANENT"
+	FailureTimeout        FailureClass = "TIMEOUT"
+	FailureQualityFailure FailureClass = "QUALITY_FAILURE"
+	FailurePolicyFailure  FailureClass = "POLICY_FAILURE"
+	FailurePaymentFailure FailureClass = "PAYMENT_FAILURE"
+	FailureUnknown        FailureClass = "UNKNOWN"
+)
+
+// RecoveryStrategy defines deterministic recovery paths upon service or execution failure.
+type RecoveryStrategy string
+
+const (
+	StrategyRetrySameService      RecoveryStrategy = "RETRY_SAME_SERVICE"
+	StrategyTryAlternativeService RecoveryStrategy = "TRY_ALTERNATIVE_SERVICE"
+	StrategyReduceScope           RecoveryStrategy = "REDUCE_SCOPE"
+	StrategyIncreaseVerification  RecoveryStrategy = "INCREASE_VERIFICATION"
+	StrategyRequestHumanApproval  RecoveryStrategy = "REQUEST_HUMAN_APPROVAL"
+	StrategyAbortMission          RecoveryStrategy = "ABORT_MISSION"
+)
+
+// PerformanceWindow defines explicit aggregation timeframes.
+type PerformanceWindow string
+
+const (
+	WindowLast10Jobs  PerformanceWindow = "last_10_jobs"
+	WindowLast24Hours PerformanceWindow = "last_24_hours"
+	WindowLast7Days   PerformanceWindow = "last_7_days"
+	WindowAllTime     PerformanceWindow = "all_time"
+)
+
+// EconomicObservation represents an immutable, append-only record of an economic interaction.
+type EconomicObservation struct {
+	ID             string                 `json:"id"`
+	OrganizationID string                 `json:"organization_id"`
+	MissionID      string                 `json:"mission_id"`
+	AgentID        string                 `json:"agent_id"`
+	ServiceID      string                 `json:"service_id"`
+	HireID         string                 `json:"hire_id,omitempty"`
+	PaymentID      string                 `json:"payment_id,omitempty"`
+	EventType      ObservationType        `json:"event_type"`
+	InputContext   map[string]interface{} `json:"input_context,omitempty"`
+	Outcome        OutcomeStatus          `json:"outcome"`
+	Price          string                 `json:"price"` // micro-USDC integer string
+	LatencyMs      int64                  `json:"latency_ms"`
+	QualityScore   int64                  `json:"quality_score"` // 0-10000 basis points
+	RiskScore      int64                  `json:"risk_score"`    // 0-10000 basis points
+	Success        bool                   `json:"success"`
+	FailureReason  string                 `json:"failure_reason,omitempty"`
+	Timestamp      time.Time              `json:"timestamp"`
+	CorrelationID  string                 `json:"correlation_id"`
+}
+
+// ContextualPerformance records capability-specific performance metrics for a service.
+type ContextualPerformance struct {
+	Capability        string `json:"capability"`
+	TotalJobs         uint64 `json:"total_jobs"`
+	SuccessRateBps    int64  `json:"success_rate_bps"`
+	AverageLatencyMs  int64  `json:"average_latency_ms"`
+	AverageQualityBps int64  `json:"average_quality_bps"`
+}
+
+// ServicePerformance summarizes aggregated deterministic performance within an explicit window.
+type ServicePerformance struct {
+	ServiceID            string                           `json:"service_id"`
+	OrganizationID       string                           `json:"organization_id"`
+	Window               PerformanceWindow                `json:"window"`
+	SuccessRateBps       int64                            `json:"success_rate_bps"`        // Basis points (0-10000)
+	FailureRateBps       int64                            `json:"failure_rate_bps"`        // Basis points (0-10000)
+	AveragePrice         *big.Int                         `json:"average_price"`           // micro-USDC
+	PriceVariance        *big.Int                         `json:"price_variance"`          // Variance in micro-USDC^2
+	AverageLatencyMs     int64                            `json:"average_latency_ms"`
+	LatencyVariance      int64                            `json:"latency_variance"`
+	ResultQualityBps     int64                            `json:"result_quality_bps"`      // Basis points (0-10000)
+	RecentSuccessRateBps int64                            `json:"recent_success_rate_bps"` // Last 10 jobs
+	RecentFailureRateBps int64                            `json:"recent_failure_rate_bps"`
+	TotalJobs            uint64                           `json:"total_jobs"`
+	TotalVolume          *big.Int                         `json:"total_volume"`            // micro-USDC
+	LastSuccess          *time.Time                       `json:"last_success,omitempty"`
+	LastFailure          *time.Time                       `json:"last_failure,omitempty"`
+	ContextualBreakdown  map[string]ContextualPerformance `json:"contextual_breakdown,omitempty"`
+	Confidence           ConfidenceLevel                  `json:"confidence"`
+	UpdatedAt            time.Time                        `json:"updated_at"`
+}
+
+// AnomalyType defines categories of behavioral or pricing divergence.
+type AnomalyType string
+
+const (
+	AnomalyPriceAnomaly   AnomalyType = "PRICE_ANOMALY"
+	AnomalyLatencyAnomaly AnomalyType = "LATENCY_ANOMALY"
+	AnomalyFailureSpike   AnomalyType = "FAILURE_SPIKE"
+	AnomalyQualityDrop    AnomalyType = "QUALITY_DROP"
+)
+
+// CircuitBreakerStatus defines the operational health state of an external service candidate.
+type CircuitBreakerStatus string
+
+const (
+	CircuitBreakerHealthy                CircuitBreakerStatus = "HEALTHY"
+	CircuitBreakerDegraded               CircuitBreakerStatus = "DEGRADED"
+	CircuitBreakerTemporarilyUnavailable CircuitBreakerStatus = "TEMPORARILY_UNAVAILABLE"
+)
+
+// AnomalySignal captures detected statistical deviations from normal service baseline.
+type AnomalySignal struct {
+	ID             string      `json:"id"`
+	ServiceID      string      `json:"service_id"`
+	OrganizationID string      `json:"organization_id"`
+	AnomalyType    AnomalyType `json:"anomaly_type"`
+	Severity       string      `json:"severity"` // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+	BaselineValue  string      `json:"baseline_value"`
+	ObservedValue  string      `json:"observed_value"`
+	Details        string      `json:"details"`
+	DetectedAt     time.Time   `json:"detected_at"`
+}
+
+// ProposedStep represents a step in a proposed replanning recovery.
+type ProposedStep struct {
+	StepID               string           `json:"step_id"`
+	RequiredCapability   string           `json:"required_capability"`
+	RecommendedServiceID string           `json:"recommended_service_id"`
+	EstimatedCost        string           `json:"estimated_cost"` // micro-USDC
+	EstimatedLatencyMs   int64            `json:"estimated_latency_ms"`
+	Strategy             RecoveryStrategy `json:"strategy"`
+	Reason               string           `json:"reason"`
+}
+
+// ReplanProposal represents a structured recommendation for adapting a mission plan.
+// INVARIANT: This is a proposal ONLY and has zero financial authority.
+type ReplanProposal struct {
+	MissionID           string           `json:"mission_id"`
+	Reason              string           `json:"reason"`
+	Strategy            RecoveryStrategy `json:"strategy"`
+	ProposedSteps       []ProposedStep   `json:"proposed_steps"`
+	EstimatedCost       string           `json:"estimated_cost"` // micro-USDC base units
+	EstimatedDurationMs int64            `json:"estimated_duration_ms"`
+	Confidence          ConfidenceLevel  `json:"confidence"`
+	RequiresHuman       bool             `json:"requires_human"`
+	Explanation         string           `json:"explanation"`
+	AlternativeServices []string         `json:"alternative_services,omitempty"`
+	CreatedAt           time.Time        `json:"created_at"`
+}
+
+// LearningTraceEntry represents an event in the mission learning and adaptation history.
+type LearningTraceEntry struct {
+	Timestamp   time.Time        `json:"timestamp"`
+	Event       string           `json:"event"`
+	Details     string           `json:"details"`
+	Strategy    RecoveryStrategy `json:"strategy,omitempty"`
+	ServiceID   string           `json:"service_id,omitempty"`
+	Confidence  ConfidenceLevel  `json:"confidence,omitempty"`
+	CostDelta   string           `json:"cost_delta,omitempty"`
+	Explanation string           `json:"explanation,omitempty"`
+}
+
+// MissionIntelligence provides a unified diagnostic and adaptation view of a mission.
+type MissionIntelligence struct {
+	MissionID             string               `json:"mission_id"`
+	CurrentRecommendation *ReplanProposal      `json:"current_recommendation,omitempty"`
+	RecoveryAttempts      int                  `json:"recovery_attempts"`
+	MaxRecoveryAttempts   int                  `json:"max_recovery_attempts"`
+	LearningTrace         []LearningTraceEntry `json:"learning_trace"`
+	ObservationsCount     int                  `json:"observations_count"`
+	AnomaliesDetected     []AnomalySignal      `json:"anomalies_detected,omitempty"`
+	Confidence            ConfidenceLevel      `json:"confidence"`
+	Status                string               `json:"status"`
 }
 

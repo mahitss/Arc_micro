@@ -4,16 +4,28 @@ Programmable financial control plane and autonomous economic operating system fo
 
 ---
 
-## The Autonomous Economy Engine & Mission Control
+## The Adaptive Autonomous Economic Control Plane
 
 AgentPay is the control center for an autonomous AI economy: **"AI Requests → AgentPay Controls → Arc Settles."**
 
-Autonomous agents can plan, discover, hire, and pay peer agents and external services while AgentPay governs every movement of money through deterministic Rust policy evaluation, real-time risk scoring, multi-tenant agent vaults, and verifiable on-chain settlement.
+**AgentPay doesn't simply execute payments.**  
+**It observes economic outcomes and helps autonomous agents adapt while keeping financial authorization deterministic.**
 
-### The Autonomous Mission Flow
+### The Adaptive Autonomous Mission Loop
 ```
-Objective → Autonomous Mission → Agents → Service Marketplace → Economic Decisions → Policy / Risk → Payments → Arc Settlement → Results → Mission Completion
+PLAN → DISCOVER → QUOTE → SELECT → AUTHORIZE → EXECUTE → OBSERVE → EVALUATE → LEARN → REPLAN → CONTINUE
 ```
+
+When an autonomous mission encounters a service timeout, price spike, or counterparty degradation:
+```
+SERVICE FAILED → ANALYZING → 3 ALTERNATIVES → COMPARING → ALTERNATIVE SELECTED → POLICY → PAYMENT → CONTINUE
+```
+
+### Core Security Principle
+> **The agent can change its plan.**  
+> **The agent cannot change the financial rules.**
+> 
+> The intelligence layer observes empirical outcomes and recommends optimal adaptations. Every proposed financial disbursement must strictly re-enter the canonical `PaymentIntent → Policy → Risk → Approval → Treasury → Signer → AgentVault → Arc` pipeline. AI agents never hold private keys or receive spending elevation.
 
 Autonomous AI agents can plan, reason, and execute complex workflows, but giving them direct access to crypto private keys presents catastrophic financial risk. A single software bug, hallucination, or adversarial prompt injection can instantly drain a funded wallet.
 

@@ -12,10 +12,14 @@ import {
   printEventsList,
   printHire,
   printJson,
+  printMissionIntelligence,
   printPaymentIntent,
   printPaymentIntentsList,
   printPaymentTrace,
   printQuote,
+  printReplanProposal,
+  printServiceAnomalies,
+  printServicePerformance,
   printServicesList,
   printSimulationResult,
   printTransactionsList,
@@ -256,6 +260,29 @@ async function main(): Promise<void> {
         const quote = await client.services.getQuote(targetId, { amount, asset });
         if (isJson) printJson(quote);
         else printQuote(quote);
+        return;
+      }
+
+      if (action === 'performance') {
+        if (!targetId) {
+          console.error('Error: "services performance" requires a service <id>');
+          process.exit(1);
+        }
+        const window = flags['window'] as any;
+        const perf = await client.services.performance(targetId, { window });
+        if (isJson) printJson(perf);
+        else printServicePerformance(perf);
+        return;
+      }
+
+      if (action === 'anomalies') {
+        if (!targetId) {
+          console.error('Error: "services anomalies" requires a service <id>');
+          process.exit(1);
+        }
+        const res = await client.services.anomalies(targetId);
+        if (isJson) printJson(res);
+        else printServiceAnomalies(res);
         return;
       }
     }
@@ -528,6 +555,50 @@ async function main(): Promise<void> {
         const graph = await client.missions.economicGraph(targetId);
         if (isJson) printJson(graph);
         else printEconomicGraph(graph);
+        return;
+      }
+
+      if (action === 'intelligence') {
+        if (!targetId) {
+          console.error('Error: "missions intelligence" requires a mission <id>');
+          process.exit(1);
+        }
+        const intel = await client.missions.intelligence(targetId);
+        if (isJson) printJson(intel);
+        else printMissionIntelligence(intel);
+        return;
+      }
+
+      if (action === 'replan') {
+        if (!targetId) {
+          console.error('Error: "missions replan" requires a mission <id>');
+          process.exit(1);
+        }
+        const proposal = await client.missions.replan(targetId);
+        if (isJson) printJson(proposal);
+        else printReplanProposal(proposal);
+        return;
+      }
+
+      if (action === 'recovery') {
+        if (!targetId) {
+          console.error('Error: "missions recovery" requires a mission <id>');
+          process.exit(1);
+        }
+        const rec = await client.missions.recovery(targetId);
+        if (isJson) printJson(rec);
+        else console.log(JSON.stringify(rec, null, 2));
+        return;
+      }
+
+      if (action === 'observations') {
+        if (!targetId) {
+          console.error('Error: "missions observations" requires a mission <id>');
+          process.exit(1);
+        }
+        const obs = await client.missions.observations(targetId);
+        if (isJson) printJson(obs);
+        else console.log(JSON.stringify(obs, null, 2));
         return;
       }
     }

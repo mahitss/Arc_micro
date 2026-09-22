@@ -5,13 +5,18 @@ import type {
   AgentQuote,
   AgentService,
   Approval,
+  ContextualPerformance,
   DomainEvent,
   EconomicGraph,
   Hire,
+  MissionIntelligence,
   PaymentIntent,
   PaymentIntentDetail,
   PaymentTrace,
   RegisteredService,
+  ReplanProposal,
+  ServiceAnomaliesResponse,
+  ServicePerformance,
   ServiceQuote,
   SimulationResponse,
   TransactionRecord,
@@ -372,5 +377,60 @@ export function printEconomicGraph(graph: EconomicGraph): void {
     console.log(`  ${e.source} ──(${e.type})──> ${e.target}`);
   }
 }
+
+export function printServicePerformance(perf: ServicePerformance): void {
+  console.log('Service Performance');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Service ID:        ${perf.service_id}`);
+  console.log(`Window:            ${perf.window}`);
+  console.log(`Success Rate:      ${(perf.success_rate_bps / 100).toFixed(1)}% (${perf.success_rate_bps} bps)`);
+  console.log(`Total Jobs:        ${perf.total_jobs}`);
+  console.log(`Average Latency:   ${perf.average_latency_ms}ms`);
+  console.log(`Confidence:        ${perf.confidence}`);
+  if (perf.contextual_breakdown) {
+    console.log('Capabilities:');
+    for (const [cap, ctxPerf] of Object.entries(perf.contextual_breakdown)) {
+      const c = ctxPerf as ContextualPerformance;
+      console.log(`  - ${cap}: ${(c.success_rate_bps / 100).toFixed(1)}% success (${c.total_jobs} jobs, ${c.average_latency_ms}ms)`);
+    }
+  }
+}
+
+export function printServiceAnomalies(res: ServiceAnomaliesResponse): void {
+  console.log('Service Health & Anomalies');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Service ID:        ${res.service_id}`);
+  console.log(`Circuit Breaker:   ${res.circuit_breaker_status}`);
+  console.log(`Anomalies Count:   ${res.anomalies.length}`);
+  for (const anom of res.anomalies) {
+    console.log(`  [${anom.severity}] ${anom.anomaly_type}: ${anom.details} (observed: ${anom.observed_value})`);
+  }
+}
+
+export function printMissionIntelligence(intel: MissionIntelligence): void {
+  console.log('Mission Intelligence Telemetry');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Mission ID:        ${intel.mission_id}`);
+  console.log(`Status:            ${intel.status}`);
+  console.log(`Recovery Attempts: ${intel.recovery_attempts} / ${intel.max_recovery_attempts}`);
+  console.log(`Confidence:        ${intel.confidence}`);
+  console.log(`Learning Events:   ${intel.learning_trace.length}`);
+  for (const trace of intel.learning_trace) {
+    console.log(`  [${trace.timestamp}] ${trace.event}: ${trace.details}`);
+  }
+}
+
+export function printReplanProposal(prop: ReplanProposal): void {
+  console.log('Replan Recovery Proposal');
+  console.log('──────────────────────────────────────────────────');
+  console.log(`Mission ID:        ${prop.mission_id}`);
+  console.log(`Strategy:          ${prop.strategy}`);
+  console.log(`Reason:            ${prop.reason}`);
+  console.log(`Estimated Cost:    ${formatUsdc(prop.estimated_cost)}`);
+  console.log(`Confidence:        ${prop.confidence}`);
+  console.log(`Requires Human:    ${prop.requires_human ? 'YES' : 'NO'}`);
+  console.log(`Explanation:       ${prop.explanation}`);
+}
+
 
 

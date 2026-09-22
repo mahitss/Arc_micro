@@ -362,6 +362,61 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         self.assertEqual(len(graph["nodes"]), 2)
         self.assertEqual(len(graph["edges"]), 1)
 
+    @patch("requests.request")
+    def test_intelligence_services(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "service_id": "data_agent",
+            "success_rate_bps": 9800,
+            "confidence": "HIGH",
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        perf = client.services.performance("data_agent", window="last_10_jobs")
+        self.assertEqual(perf["success_rate_bps"], 9800)
+
+        mock_resp.json.return_value = {"service_id": "data_agent", "circuit_breaker_status": "HEALTHY", "anomalies": []}
+        anom = client.services.anomalies("data_agent")
+        self.assertEqual(anom["circuit_breaker_status"], "HEALTHY")
+
+        mock_resp.json.return_value = {"service_id": "data_agent", "reputation_score": 9800}
+        rep = client.services.reputation("data_agent")
+        self.assertEqual(rep["reputation_score"], 9800)
+
+    @patch("requests.request")
+    def test_intelligence_missions(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.json.return_value = {
+            "mission_id": "msn_100",
+            "recovery_attempts": 1,
+            "status": "COMPLETED",
+        }
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        intel = client.missions.intelligence("msn_100")
+        self.assertEqual(intel["mission_id"], "msn_100")
+        self.assertEqual(intel["recovery_attempts"], 1)
+
+        mock_resp.json.return_value = {
+            "mission_id": "msn_100",
+            "strategy": "TRY_ALTERNATIVE_SERVICE",
+            "proposed_steps": [{"recommended_service_id": "agent_data_b"}],
+        }
+        proposal = client.missions.replan("msn_100")
+        self.assertEqual(proposal["strategy"], "TRY_ALTERNATIVE_SERVICE")
+
+        mock_resp.json.return_value = {"mission_id": "msn_100", "recovery_attempts": 1}
+        rec = client.missions.recovery("msn_100")
+        self.assertEqual(rec["recovery_attempts"], 1)
+
+        mock_resp.json.return_value = {"mission_id": "msn_100", "observations": [{"id": "obs_1"}]}
+        obs = client.missions.observations("msn_100")
+        self.assertEqual(len(obs["observations"]), 1)
+
 if __name__ == "__main__":
     unittest.main()
 

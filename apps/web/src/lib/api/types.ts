@@ -707,6 +707,142 @@ export interface EconomicGraph {
   edges: GraphEdge[];
 }
 
+export type EconomicEventType =
+  | 'SERVICE_SUCCESS'
+  | 'SERVICE_FAILURE'
+  | 'QUOTE_ACCEPTED'
+  | 'QUOTE_REJECTED'
+  | 'QUOTE_EXPIRED'
+  | 'PAYMENT_SUCCESS'
+  | 'PAYMENT_FAILURE'
+  | 'RESULT_VALIDATED'
+  | 'RESULT_REJECTED'
+  | 'MISSION_COMPLETED'
+  | 'MISSION_FAILED';
+
+export interface EconomicObservation {
+  id: string;
+  organization_id: string;
+  mission_id: string;
+  agent_id: string;
+  service_id: string;
+  hire_id: string;
+  payment_id: string;
+  event_type: EconomicEventType;
+  input_context: Record<string, string>;
+  outcome: string;
+  price: string;
+  latency_ms: number;
+  quality_score: number;
+  risk_score: number;
+  success: boolean;
+  failure_reason: string;
+  timestamp: string;
+  correlation_id: string;
+}
+
+export type PerformanceWindow = 'last_10_jobs' | 'last_24_hours' | 'last_7_days' | 'all_time';
+
+export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN';
+
+export interface ServicePerformance {
+  service_id: string;
+  organization_id: string;
+  window: PerformanceWindow;
+  total_jobs: number;
+  success_rate: number;
+  failure_rate: number;
+  recent_success_rate: number;
+  recent_failure_rate: number;
+  average_price: string;
+  price_variance: number;
+  average_latency: number;
+  latency_variance: number;
+  result_quality: number;
+  total_volume: string;
+  last_success?: string;
+  last_failure?: string;
+  confidence: ConfidenceLevel;
+}
+
+export interface ContextualPerformance {
+  service_id: string;
+  capability: string;
+  total_jobs: number;
+  success_rate: number;
+  average_latency: number;
+  result_quality: number;
+}
+
+export type CircuitBreakerStatus = 'HEALTHY' | 'DEGRADED' | 'TEMPORARILY_UNAVAILABLE';
+
+export interface AnomalySignal {
+  service_id: string;
+  signal_type: 'PRICE_ANOMALY' | 'LATENCY_ANOMALY' | 'FAILURE_SPIKE' | 'QUALITY_DEGRADATION' | 'NONE';
+  description: string;
+  circuit_breaker: CircuitBreakerStatus;
+  detected_at: string;
+}
+
+export type FailureClass =
+  | 'TRANSIENT'
+  | 'PERMANENT'
+  | 'TIMEOUT'
+  | 'QUALITY_FAILURE'
+  | 'POLICY_FAILURE'
+  | 'PAYMENT_FAILURE'
+  | 'UNKNOWN';
+
+export type RecoveryStrategy =
+  | 'RETRY_SAME_SERVICE'
+  | 'TRY_ALTERNATIVE_SERVICE'
+  | 'REDUCE_SCOPE'
+  | 'INCREASE_VERIFICATION'
+  | 'REQUEST_HUMAN_APPROVAL'
+  | 'ABORT_MISSION';
+
+export interface ProposedStep {
+  step_number: number;
+  capability: string;
+  recommended_service_id: string;
+  estimated_cost: string;
+  estimated_duration_ms: number;
+  reason: string;
+}
+
+export interface ReplanProposal {
+  mission_id: string;
+  reason: string;
+  strategy: RecoveryStrategy;
+  proposed_steps: ProposedStep[];
+  estimated_cost: string;
+  estimated_duration_ms: number;
+  confidence: ConfidenceLevel;
+  human_approval_required: boolean;
+  explanation: string;
+}
+
+export interface LearningTraceEntry {
+  timestamp: string;
+  stage: string;
+  details: string;
+  metadata?: Record<string, string>;
+}
+
+export interface MissionIntelligence {
+  mission_id: string;
+  current_recommendation?: ProposedStep;
+  why_recommended: string;
+  previous_attempts: number;
+  recovery_history: ReplanProposal[];
+  budget_impact: string;
+  confidence: ConfidenceLevel;
+  alternative_services: ProposedStep[];
+  potential_next_actions: string[];
+  learning_trace: LearningTraceEntry[];
+}
+
+
 
 
 

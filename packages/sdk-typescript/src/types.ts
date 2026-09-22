@@ -735,4 +735,159 @@ export interface EconomicGraph {
   edges: GraphEdge[];
 }
 
+// -----------------------------------------------------------------------------
+// Intelligence Layer & Adaptive Replanning Types
+// -----------------------------------------------------------------------------
+
+export type PerformanceWindow = 'last_10_jobs' | 'last_24_hours' | 'last_7_days' | 'all_time';
+export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN';
+export type RecoveryStrategy =
+  | 'RETRY_SAME_SERVICE'
+  | 'TRY_ALTERNATIVE_SERVICE'
+  | 'REDUCE_SCOPE'
+  | 'INCREASE_VERIFICATION'
+  | 'REQUEST_HUMAN_APPROVAL'
+  | 'ABORT_MISSION'
+  | string;
+
+export type CircuitBreakerStatus = 'HEALTHY' | 'DEGRADED' | 'TEMPORARILY_UNAVAILABLE' | string;
+export type AnomalyType = 'PRICE_ANOMALY' | 'LATENCY_ANOMALY' | 'FAILURE_SPIKE' | 'QUALITY_DROP' | string;
+
+export interface ContextualPerformance {
+  capability: string;
+  total_jobs: number;
+  success_rate_bps: number;
+  average_latency_ms: number;
+  average_quality_bps: number;
+}
+
+export interface ServiceReputation {
+  service_id: string;
+  organization_id?: string;
+  reputation_score: number;
+  failure_rate_bps?: number;
+  historical_reliability?: string;
+  total_requests?: number;
+  successful_requests?: number;
+  failed_requests?: number;
+  updated_at?: string;
+}
+
+export interface ServicePerformance {
+  service_id: string;
+  organization_id: string;
+  window: PerformanceWindow;
+  success_rate_bps: number;
+  failure_rate_bps: number;
+  average_price: string;
+  price_variance: string;
+  average_latency_ms: number;
+  latency_variance: number;
+  result_quality_bps: number;
+  recent_success_rate_bps: number;
+  recent_failure_rate_bps: number;
+  total_jobs: number;
+  total_volume: string;
+  last_success?: string;
+  last_failure?: string;
+  contextual_breakdown?: Record<string, ContextualPerformance>;
+  confidence: ConfidenceLevel;
+  updated_at: string;
+}
+
+export interface AnomalySignal {
+  id: string;
+  service_id: string;
+  organization_id: string;
+  anomaly_type: AnomalyType;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | string;
+  baseline_value: string;
+  observed_value: string;
+  details: string;
+  detected_at: string;
+}
+
+export interface ServiceAnomaliesResponse {
+  service_id: string;
+  circuit_breaker_status: CircuitBreakerStatus;
+  anomalies: AnomalySignal[];
+}
+
+export interface EconomicObservation {
+  id: string;
+  organization_id: string;
+  mission_id: string;
+  agent_id: string;
+  service_id: string;
+  hire_id?: string;
+  payment_id?: string;
+  event_type: string;
+  input_context?: Record<string, unknown>;
+  outcome: 'SUCCESS' | 'PARTIAL_SUCCESS' | 'FAILURE' | string;
+  price: string;
+  latency_ms: number;
+  quality_score: number;
+  risk_score: number;
+  success: boolean;
+  failure_reason?: string;
+  timestamp: string;
+  correlation_id: string;
+}
+
+export interface ProposedStep {
+  step_id: string;
+  required_capability: string;
+  recommended_service_id: string;
+  estimated_cost: string;
+  estimated_latency_ms: number;
+  strategy: RecoveryStrategy;
+  reason: string;
+}
+
+export interface ReplanProposal {
+  mission_id: string;
+  reason: string;
+  strategy: RecoveryStrategy;
+  proposed_steps: ProposedStep[];
+  estimated_cost: string;
+  estimated_duration_ms: number;
+  confidence: ConfidenceLevel;
+  requires_human: boolean;
+  explanation: string;
+  alternative_services?: string[];
+  created_at: string;
+}
+
+export interface LearningTraceEntry {
+  timestamp: string;
+  event: string;
+  details: string;
+  strategy?: RecoveryStrategy;
+  service_id?: string;
+  confidence?: ConfidenceLevel;
+  cost_delta?: string;
+  explanation?: string;
+}
+
+export interface MissionIntelligence {
+  mission_id: string;
+  current_recommendation?: ReplanProposal;
+  recovery_attempts: number;
+  max_recovery_attempts: number;
+  learning_trace: LearningTraceEntry[];
+  observations_count: number;
+  anomalies_detected?: AnomalySignal[];
+  confidence: ConfidenceLevel;
+  status: string;
+}
+
+export interface MissionRecoveryResponse {
+  mission_id: string;
+  recovery_attempts: number;
+  max_recovery_attempts: number;
+  recommendation?: ReplanProposal;
+  status: string;
+}
+
+
 
