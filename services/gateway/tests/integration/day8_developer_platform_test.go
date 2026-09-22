@@ -380,7 +380,8 @@ func TestIntegration_Day8DeveloperPlatform(t *testing.T) {
 		payload := map[string]interface{}{
 			"agent_id":   "agent_alpha",
 			"service_id": discoveredServiceID,
-			"amount":     "180000",
+			"quote_id":   quoteID,
+			"amount":     quoteAmount,
 			"asset":      "USDC",
 			"purpose":    "Attacker recipient injection attempt",
 			"recipient":  "0x6666666666666666666666666666666666666666", // Malicious recipient

@@ -237,3 +237,87 @@ curl -X POST https://api.agentpay.io/v1/agents/{agent_id}/pause \
 ### Post-Incident Actions
 - Audit environment variable injection in CI/CD pipeline.
 - Ensure staging environment does not have access to production executor keys.
+
+---
+
+## 11. Signer / Relayer Key Compromise (SEV-0)
+
+### Threat Scenario
+An attacker gains access to the hot Relayer private key (`EXECUTOR_PRIVATE_KEY`) hosted on the Gateway execution instance.
+
+### Immediate Containment (T < 5 Minutes)
+1. **Trigger Immediate On-Chain Vault Pause**:
+   The vault owner (or operator multisig) immediately pauses the `AgentVault` smart contract on Arc Mainnet, blocking any further calls to `executePayment`:
+   ```bash
+   cast send $AGENTVAULT_ADDRESS "pause()" \
+     --rpc-url https://rpc.mainnet.arc.io \
+     --private-key $OPERATOR_KEY
+   ```
+2. **Halt Gateway Process**:
+   Immediately terminate the gateway instance to prevent conflicting nonce submissions:
+   ```bash
+   sudo systemctl stop agentpay-gateway
+   # or docker-compose stop gateway
+   ```
+3. **Trigger Global Gateway Kill Switch**:
+   ```bash
+   curl -X POST http://localhost:8080/v1/system/pause -H "Authorization: Bearer $SYSTEM_ADMIN_KEY"
+   ```
+
+### Emergency Fund Rescue (Cold Storage Extraction)
+If the Relayer key has owner privilege on `AgentVault`, funds must be extracted to cold storage before the attacker drains them:
+```bash
+cast send $AGENTVAULT_ADDRESS "withdraw(address,uint256)" \
+  $COLD_STORAGE_MULTISIG \
+  $VAULT_BALANCE \
+  --rpc-url https://rpc.mainnet.arc.io \
+  --private-key $OPERATOR_OWNER_KEY
+```
+
+### Key Rotation & Recovery
+1. Generate fresh 32-byte SECP256k1 keypair on offline hardware.
+2. Transfer ownership or assign relayer role to new address:
+   ```bash
+   cast send $AGENTVAULT_ADDRESS "transferOwnership(address)" $NEW_RELAYER_ADDRESS \
+     --rpc-url https://rpc.mainnet.arc.io \
+     --private-key $OPERATOR_OWNER_KEY
+   ```
+3. Fund new relayer address with gas tokens.
+4. Update `EXECUTOR_PRIVATE_KEY` in production secrets manager.
+5. Unpause vault and gateway only after security review.
+
+---
+
+## 12. AgentVault Emergency Procedures
+
+### 12.1 On-Chain Emergency Pause
+When triggered, `AgentVault.executePayment` reverts on-chain for all callers:
+```bash
+cast send $AGENTVAULT_ADDRESS "pause()" --rpc-url https://rpc.mainnet.arc.io --private-key $OWNER_KEY
+```
+
+### 12.2 Emergency Recipient Blocklisting
+If a malicious recipient or phishing address is discovered:
+```bash
+cast send $AGENTVAULT_ADDRESS "setRecipientBlocked(address,bool)" \
+  $MALICIOUS_ADDRESS \
+  true \
+  --rpc-url https://rpc.mainnet.arc.io \
+  --private-key $OWNER_KEY
+```
+*Note: In `AgentVault.sol`, `blockedRecipients` takes absolute precedence over `allowedRecipients`.*
+
+### 12.3 Emergency Allowlist Lockdown
+To restrict payments strictly to pre-approved addresses:
+```bash
+cast send $AGENTVAULT_ADDRESS "setAllowlistEnabled(bool)" true \
+  --rpc-url https://rpc.mainnet.arc.io \
+  --private-key $OWNER_KEY
+```
+
+### 12.4 Post-Emergency Unpause
+Once security clearance is achieved:
+```bash
+cast send $AGENTVAULT_ADDRESS "unpause()" --rpc-url https://rpc.mainnet.arc.io --private-key $OWNER_KEY
+```
+

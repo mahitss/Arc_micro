@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -312,6 +313,9 @@ func (r *Registry) ListWithFilter(category, asset, trustStatus string, enabledOn
 		copyService := *s
 		list = append(list, &copyService)
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].ID < list[j].ID
+	})
 	return list
 }
 
