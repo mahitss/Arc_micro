@@ -72,6 +72,18 @@ const (
 	EventSwarmReplanCompleted     EventType = "swarm.replan_completed"
 	EventSwarmCompleted           EventType = "swarm.completed"
 	EventSwarmFailed              EventType = "swarm.failed"
+	// Economic Simulator & Digital Twin Events (Phase 33)
+	EventSimulationCreated          EventType = "simulation.created"
+	EventSimulationStarted          EventType = "simulation.started"
+	EventSimulationStepProjected    EventType = "simulation.step_projected"
+	EventSimulationPolicyEvaluated  EventType = "simulation.policy_evaluated"
+	EventSimulationRiskEvaluated    EventType = "simulation.risk_evaluated"
+	EventSimulationFailureInjected  EventType = "simulation.failure_injected"
+	EventSimulationRecoveryProjected EventType = "simulation.recovery_projected"
+	EventSimulationCompleted        EventType = "simulation.completed"
+	EventSimulationFailed           EventType = "simulation.failed"
+	EventSimulationExpired          EventType = "simulation.expired"
+	EventSimulationCompared         EventType = "simulation.compared"
 )
 
 // DomainEvent represents a versioned, immutable, and correlated event envelope.

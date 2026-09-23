@@ -1086,5 +1086,212 @@ export interface SimulateSwarmResponse {
   tasks: TaskNode[];
 }
 
+// ============================================================
+// Economic Simulator & Digital Twin Types (Phases 0-33)
+// ============================================================
+
+export type SimulationExecutionMode = 'SIMULATION' | 'LIVE';
+
+export type SimulationRunStatus =
+  | 'CREATED'
+  | 'PLANNING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED';
+
+export type FailureInjectionType =
+  | 'NO_FAILURE'
+  | 'SERVICE_TIMEOUT'
+  | 'SERVICE_FAILURE'
+  | 'LOW_QUALITY_RESULT'
+  | 'QUOTE_EXPIRY'
+  | 'PAYMENT_FAILURE'
+  | 'HIGH_RISK'
+  | 'BUDGET_EXHAUSTION'
+  | 'AGENT_UNAVAILABLE'
+  | 'MULTIPLE_FAILURES';
+
+export interface SimulationFailureInjection {
+  step_id?: string;
+  service_id?: string;
+  failure_type: FailureInjectionType;
+  reason: string;
+}
+
+export interface SimulationScenario {
+  id?: string;
+  name: string;
+  objective?: string;
+  budget?: string;
+  currency?: string;
+  deadline_seconds?: number;
+  agent_id?: string;
+  organization_id?: string;
+  is_swarm?: boolean;
+  failure_profile?: FailureInjectionType;
+  injected_failures?: SimulationFailureInjection[];
+  service_constraints?: string[];
+  price_multiplier?: number;
+  latency_multiplier?: number;
+  policy_threshold?: string;
+}
+
+export interface SimulationProjectedEconomics {
+  projected_spend: string;
+  minimum_spend: string;
+  maximum_spend: string;
+  expected_spend: string;
+  remaining_budget: string;
+  number_of_payments: number;
+  number_of_agents: number;
+  number_of_services: number;
+  approval_count: number;
+  risk_score: number;
+  currency: string;
+  is_projected: boolean;
+}
+
+export interface SimulationWorstCaseExposure {
+  maximum_exposure: string;
+  budget_ceiling: string;
+  per_transaction_limit: string;
+  total_steps_planned: number;
+  exposure_formula: string;
+  explanation: string;
+}
+
+export interface SimulationPlanStep {
+  step_number: number;
+  step_id: string;
+  agent_id: string;
+  service_id: string;
+  service_name: string;
+  capability: string;
+  estimated_cost: string;
+  estimated_duration_ms: number;
+  policy_decision: string;
+  policy_reason_code: string;
+  policy_reason: string;
+  risk_level: string;
+  risk_factors: string[];
+  approval_required: boolean;
+  dependencies?: string[];
+  explanation: string;
+}
+
+export interface SimulationExecutionPlan {
+  total_steps: number;
+  estimated_cost: string;
+  estimated_duration_ms: number;
+  max_depth: number;
+  steps: SimulationPlanStep[];
+}
+
+export interface SimulationTraceEvent {
+  event_number: number;
+  timestamp: string;
+  event_type: string;
+  actor: string;
+  step_id?: string;
+  details: string;
+  policy_decision?: string;
+  amount?: string;
+  is_projected: boolean;
+}
+
+export interface SimulationRun {
+  id: string;
+  organization_id: string;
+  created_by: string;
+  source_type: string;
+  source_id?: string;
+  scenario_id: string;
+  status: SimulationRunStatus;
+  seed: number;
+  execution_mode: SimulationExecutionMode;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  duration_ms: number;
+  summary: string;
+  configuration_version: string;
+  snapshot_id?: string;
+  snapshot_version?: string;
+  scenario: SimulationScenario;
+  economics: SimulationProjectedEconomics;
+  exposure: SimulationWorstCaseExposure;
+  plan: SimulationExecutionPlan;
+  trace: SimulationTraceEvent[];
+  is_stale?: boolean;
+  stale_reason?: string;
+}
+
+export interface CounterfactualComparison {
+  baseline_run_id: string;
+  counterfactual_run_id: string;
+  perturbation_description: string;
+  baseline_spend: string;
+  counterfactual_spend: string;
+  delta_spend: string;
+  baseline_approvals: number;
+  counterfactual_approvals: number;
+  delta_approvals: number;
+  baseline_duration_ms: number;
+  counterfactual_duration_ms: number;
+  baseline_completion: SimulationRunStatus;
+  counterfactual_completion: SimulationRunStatus;
+  risk_change: string;
+  explanation: string;
+}
+
+export interface CounterfactualResponse {
+  comparison: CounterfactualComparison;
+  counterfactual_run: SimulationRun;
+}
+
+export interface MonteCarloRequest {
+  scenario: SimulationScenario;
+  snapshot_id?: string;
+  base_seed?: number;
+  iterations?: number;
+}
+
+export interface MonteCarloSummary {
+  run_count: number;
+  completion_rate: number;
+  average_spend: string;
+  minimum_spend: string;
+  maximum_spend: string;
+  p50_spend: string;
+  p90_spend: string;
+  p95_spend: string;
+  avg_duration_ms: number;
+  spend_distribution?: number[];
+  currency: string;
+  model_notice: string;
+}
+
+export interface LiveExecutionPayload {
+  status: string;
+  mode: 'LIVE';
+  revalidated: boolean;
+  payload: {
+    plan_id: string;
+    original_run_id: string;
+    organization_id: string;
+    objective: string;
+    fresh_budget: string;
+    revalidated_steps: SimulationPlanStep[];
+    total_live_cost: string;
+    max_live_exposure: string;
+    policy_decision: string;
+    projected_risk: number;
+    requires_approval: boolean;
+    mode: 'LIVE';
+    prepared_at: string;
+  };
+}
+
 
 

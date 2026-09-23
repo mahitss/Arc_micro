@@ -17,6 +17,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/service"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/simulation"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/trace"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/treasury"
@@ -177,8 +178,29 @@ func NewRouter(
 		mux.HandleFunc("POST /v1/services/{id}/quote", quoteHandler.HandleCreateQuote)
 
 		ts := treasury.NewTreasuryService(repo, nil)
-		simHandler := handlers.NewSimulationHandler(policyClient, reg, ts)
-		mux.HandleFunc("POST /v1/simulations", simHandler.HandleSimulate)
+		legacySimHandler := handlers.NewSimulationHandler(policyClient, reg, ts)
+
+		// Economic Simulator & Digital Twin Suite (Phases 0-33)
+		snapMgr := simulation.NewSnapshotManager()
+		simEngine := simulation.NewSimulationEngine(snapMgr, policyClient)
+		cfEngine := simulation.NewCounterfactualEngine(simEngine)
+		mcEngine := simulation.NewMonteCarloEngine(simEngine)
+		execGate := simulation.NewExecutionGate(snapMgr, simEngine)
+		simSuite := handlers.NewSimulationSuiteHandler(simEngine, cfEngine, mcEngine, execGate, snapMgr, reg, legacySimHandler)
+
+		mux.HandleFunc("POST /v1/simulations", simSuite.HandleCreate)
+		mux.HandleFunc("GET /v1/simulations", simSuite.HandleList)
+		mux.HandleFunc("GET /v1/simulations/{id}", simSuite.HandleGet)
+		mux.HandleFunc("POST /v1/simulations/{id}/run", simSuite.HandleRun)
+		mux.HandleFunc("POST /v1/simulations/{id}/cancel", simSuite.HandleCancel)
+		mux.HandleFunc("GET /v1/simulations/{id}/trace", simSuite.HandleGetTrace)
+		mux.HandleFunc("GET /v1/simulations/{id}/economics", simSuite.HandleGetEconomics)
+		mux.HandleFunc("GET /v1/simulations/{id}/risk", simSuite.HandleGetRisk)
+		mux.HandleFunc("GET /v1/simulations/{id}/plan", simSuite.HandleGetPlan)
+		mux.HandleFunc("POST /v1/simulations/{id}/counterfactual", simSuite.HandleCounterfactual)
+		mux.HandleFunc("GET /v1/simulations/{id}/comparison", simSuite.HandleComparison)
+		mux.HandleFunc("POST /v1/simulations/monte-carlo", simSuite.HandleMonteCarlo)
+		mux.HandleFunc("POST /v1/simulations/{id}/execute-plan", simSuite.HandleExecutePlan)
 
 		// 7. Day 3: Approvals Control Plane
 		ds := service.NewDomainService(repo)

@@ -75,6 +75,55 @@ AgentPay supports coordinated collectives of specialized agents working together
 
 ---
 
+## Economic Simulator & Digital Twin (Pre-Execution Determinism)
+
+Autonomous AI agents cannot operate safely in commercial environments if they must risk live financial capital simply to test workflows, estimate costs, or discover edge-case failures. The **AgentPay Economic Simulator & Digital Twin** answers:
+
+> **"What will happen if this autonomous mission runs?"**
+
+It models execution using the **exact same decision logic as live production** (Rust policy engine, risk scoring, economic selection, Kahn DAG validation, and multi-currency budget accounting), but operates with **zero real financial authority**.
+
+```
+                   LIVE PRODUCTION REALITY (T0)
+                                │
+                                ▼
+                DIGITAL TWIN SNAPSHOT GENERATOR
+            (Immutable in-memory clone & SHA-256 fingerprint)
+                                │
+        ┌───────────────────────┴───────────────────────┐
+        ▼                                               ▼
+   SIMULATION ENGINE                              COUNTERFACTUALS &
+ (Kahn DAG Swarm Scheduling,                        MONTE CARLO
+ Seeded Failure Injection)                      (N=1000 Tail Risk & P95)
+        │                                               │
+        └───────────────────────┬───────────────────────┘
+                                ▼
+                   WORST-CASE EXPOSURE AUDIT
+                                │
+                                ▼
+                   SAFE LIVE EXECUTION GATE
+             (Pre-flight Staleness & Fingerprint Check)
+                                │
+                ┌───────────────┴───────────────┐
+                ▼                               ▼
+         [FINGERPRINT DRIFT /           [VERIFIED & FRESH]
+            TTL EXPIRED]                        │
+                │                               ▼
+     "SIMULATION OUTDATED" (409)     LIVE PAYMENT INTENT (200)
+```
+
+### Key Capabilities
+1. **Zero Financial Authority (INV-SIM-1 to INV-SIM-5):** No real on-chain transactions, no vault state mutations, no real liquidity locks, and zero live webhooks. Mock hashes use the `sim_tx_` prefix.
+2. **Digital Twin Isolation (INV-SIM-7):** In-memory deep cloning creates an isolated cryptographic sandbox with SHA-256 fingerprinting.
+3. **Deterministic Failure Injection (10 Modes):** Latency spikes, upstream HTTP 500s, rate limits, balance exhaustion, gas surges, network partitions, and security circuit breakers.
+4. **Policy What-If & Counterfactuals:** Side-by-side delta comparisons testing perturbations (e.g. $2.5\times$ surge pricing or strict velocity limits).
+5. **Monte Carlo Stochastic Engine:** Runs $N=1,000+$ iterations with reproducible seeds to estimate median P50, P90, and P95 worst-case exposure.
+6. **Safe "Execute This Plan" Transition (INV-SIM-9 & INV-SIM-15):** The `ExecutionGate` asserts fresh reality matches snapshot assumptions. Stale or expired plans trigger `SIMULATION OUTDATED` and fail closed.
+
+Mission Control Simulator is live at **`http://localhost:3000/simulator`**.
+
+---
+
 ## How It Works
 
 ```
@@ -253,6 +302,16 @@ An interactive demonstration is available at **`http://localhost:3000/demo`**:
 
 ---
 
+### Documentation & Specifications
+
+- **Economic Simulator Architecture:** [`docs/economic-simulator-architecture.md`](docs/economic-simulator-architecture.md)
+- **Economic Simulation Specification:** [`docs/economic-simulation.md`](docs/economic-simulation.md)
+- **Digital Twin Snapshot System:** [`docs/digital-twin.md`](docs/digital-twin.md)
+- **Counterfactuals & Policy What-If:** [`docs/counterfactuals.md`](docs/counterfactuals.md)
+- **Simulation Security (INV-SIM-1 to INV-SIM-15):** [`docs/simulation-security.md`](docs/simulation-security.md)
+- **Simulation Execution & Staleness Gate:** [`docs/simulation-execution.md`](docs/simulation-execution.md)
+- **Canonical Demo Scenarios Walkthrough:** [`docs/simulation-demo.md`](docs/simulation-demo.md)
+- **Simulation Implementation Report (Phases 0–33):** [`docs/simulation-implementation-report.md`](docs/simulation-implementation-report.md)
 - **Multi-Agent Swarm Architecture:** [`docs/swarm-orchestration-architecture.md`](docs/swarm-orchestration-architecture.md)
 - **Swarm Security Boundaries (INV-S1 to INV-S8):** [`docs/swarm-security-boundaries.md`](docs/swarm-security-boundaries.md)
 - **Swarm Economic Model & Reservations:** [`docs/swarm-economic-model.md`](docs/swarm-economic-model.md)

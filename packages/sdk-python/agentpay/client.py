@@ -228,22 +228,79 @@ class SimulationsResource:
 
     def create(
         self,
-        agent_id: str,
-        service_id: str,
-        amount: str,
+        scenario: Optional[Dict[str, Any]] = None,
+        agent_id: Optional[str] = None,
+        service_id: Optional[str] = None,
+        amount: Optional[str] = None,
         asset: str = "USDC",
         purpose: Optional[str] = None,
         quote_id: Optional[str] = None,
+        auto_run: bool = False,
     ) -> Dict[str, Any]:
-        payload = {
-            "agent_id": agent_id,
-            "service_id": service_id,
-            "amount": str(amount),
-            "asset": asset,
-            "purpose": purpose,
-            "quote_id": quote_id,
-        }
-        return self._client._request("POST", "/v1/simulations", json=payload)
+        if scenario is not None:
+            payload = scenario
+        else:
+            payload = {
+                "agent_id": agent_id,
+                "service_id": service_id,
+                "amount": str(amount) if amount is not None else None,
+                "asset": asset,
+                "purpose": purpose,
+                "quote_id": quote_id,
+            }
+        params = {"auto_run": "true"} if auto_run else None
+        return self._client._request("POST", "/v1/simulations", json=payload, params=params)
+
+    def run(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/simulations/{simulation_id}/run")
+
+    def get(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/simulations/{simulation_id}")
+
+    def list(self) -> List[Dict[str, Any]]:
+        res = self._client._request("GET", "/v1/simulations")
+        return res.get("simulations", [])
+
+    def cancel(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/simulations/{simulation_id}/cancel")
+
+    def trace(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/simulations/{simulation_id}/trace")
+
+    def economics(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/simulations/{simulation_id}/economics")
+
+    def risk(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/simulations/{simulation_id}/risk")
+
+    def plan(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/simulations/{simulation_id}/plan")
+
+    def counterfactual(
+        self,
+        simulation_id: str,
+        perturbation: Dict[str, Any],
+        description: str = "Counterfactual perturbation analysis",
+    ) -> Dict[str, Any]:
+        payload = {"description": description, "perturbation": perturbation}
+        return self._client._request("POST", f"/v1/simulations/{simulation_id}/counterfactual", json=payload)
+
+    def compare(self, simulation_id: str, compare_to: Optional[str] = None) -> Dict[str, Any]:
+        params = {"compare_to": compare_to} if compare_to else None
+        return self._client._request("GET", f"/v1/simulations/{simulation_id}/comparison", params=params)
+
+    def monte_carlo(
+        self,
+        scenario: Dict[str, Any],
+        base_seed: int = 1337,
+        iterations: int = 50,
+    ) -> Dict[str, Any]:
+        payload = {"scenario": scenario, "base_seed": base_seed, "iterations": iterations}
+        return self._client._request("POST", "/v1/simulations/monte-carlo", json=payload)
+
+    def execute_plan(self, simulation_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/simulations/{simulation_id}/execute-plan")
+
 
 class ApprovalsResource:
     def __init__(self, client: "AgentPay"):

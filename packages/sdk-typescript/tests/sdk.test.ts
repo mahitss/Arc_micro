@@ -1182,5 +1182,165 @@ test('AgentPay SDK — Multi-Agent Swarm Orchestration: Lifecycle, Tasks, Graph,
   assert.equal(cancelled.status, 'CANCELLED');
 });
 
+test('AgentPay SDK — Economic Simulator & Digital Twin Suite (Phases 0-33)', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+  let capturedBody = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = typeof input === 'string' ? input : (input as Request).url;
+    capturedMethod = init?.method ?? 'GET';
+    capturedBody = typeof init?.body === 'string' ? init.body : '';
+
+    if (capturedUrl.includes('/v1/simulations/sim_abc/execute-plan')) {
+      return new Response(
+        JSON.stringify({
+          status: 'PLAN_VERIFIED_AND_PREPARED',
+          mode: 'LIVE',
+          revalidated: true,
+          payload: {
+            plan_id: 'live-plan-sim_abc',
+            original_run_id: 'sim_abc',
+            organization_id: 'org_test',
+            objective: 'Test execution',
+            fresh_budget: '5000000',
+            revalidated_steps: [],
+            total_live_cost: '1200000',
+            max_live_exposure: '5000000',
+            policy_decision: 'ALLOW',
+            projected_risk: 15,
+            requires_approval: false,
+            mode: 'LIVE',
+            prepared_at: new Date().toISOString(),
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/simulations/sim_abc/counterfactual')) {
+      return new Response(
+        JSON.stringify({
+          comparison: {
+            baseline_run_id: 'sim_abc',
+            counterfactual_run_id: 'sim_cf_1',
+            perturbation_description: '2x Price Surge',
+            baseline_spend: '1200000',
+            counterfactual_spend: '2400000',
+            delta_spend: '+1.20',
+            baseline_approvals: 0,
+            counterfactual_approvals: 1,
+            delta_approvals: 1,
+            baseline_duration_ms: 500,
+            counterfactual_duration_ms: 520,
+            baseline_completion: 'COMPLETED',
+            counterfactual_completion: 'COMPLETED',
+            risk_change: 'INCREASED (+10 pts)',
+            explanation: 'Doubling service costs increased spend by $1.20',
+          },
+          counterfactual_run: { id: 'sim_cf_1', status: 'COMPLETED' },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/simulations/monte-carlo')) {
+      return new Response(
+        JSON.stringify({
+          run_count: 50,
+          completion_rate: 0.98,
+          average_spend: '1.25',
+          minimum_spend: '1.10',
+          maximum_spend: '1.50',
+          p50_spend: '1.22',
+          p90_spend: '1.40',
+          p95_spend: '1.48',
+          avg_duration_ms: 450,
+          currency: 'USDC',
+          model_notice: 'MODELLED ESTIMATE',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        id: 'sim_abc',
+        organization_id: 'org_test',
+        created_by: 'research-agent',
+        source_type: 'MISSION',
+        scenario_id: 'scen_1',
+        status: 'COMPLETED',
+        seed: 1337,
+        execution_mode: 'SIMULATION',
+        created_at: new Date().toISOString(),
+        duration_ms: 450,
+        summary: 'Simulation completed successfully',
+        configuration_version: 'v1.0.0',
+        scenario: { name: 'AI Mission', budget: '5000000' },
+        economics: {
+          projected_spend: '1200000',
+          minimum_spend: '1000000',
+          maximum_spend: '1500000',
+          expected_spend: '1200000',
+          remaining_budget: '3800000',
+          number_of_payments: 3,
+          number_of_agents: 3,
+          number_of_services: 3,
+          approval_count: 0,
+          risk_score: 15,
+          currency: 'USDC',
+          is_projected: true,
+        },
+        exposure: {
+          maximum_exposure: '5000000',
+          budget_ceiling: '5000000',
+          per_transaction_limit: '2000000',
+          total_steps_planned: 3,
+          exposure_formula: 'sum(step_ceilings)',
+          explanation: 'Conservative exposure bounds',
+        },
+        plan: { total_steps: 3, estimated_cost: '1200000', estimated_duration_ms: 450, max_depth: 2, steps: [] },
+        trace: [],
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  // 1. Create Scenario Simulation
+  const created = await client.simulations.create({
+    name: 'Autonomous Research Mission',
+    budget: '5000000',
+  });
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/simulations');
+  assert.equal((created as any).execution_mode, 'SIMULATION');
+
+  // 2. Run
+  const run = await client.simulations.run('sim_abc');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/simulations/sim_abc/run');
+  assert.equal(run.status, 'COMPLETED');
+
+  // 3. Counterfactual
+  const cf = await client.simulations.counterfactual('sim_abc', { price_multiplier: 2.0 }, '2x Price Surge');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/simulations/sim_abc/counterfactual');
+  assert.equal(cf.comparison.delta_spend, '+1.20');
+
+  // 4. Monte Carlo
+  const mc = await client.simulations.monteCarlo({
+    scenario: { name: 'Monte Carlo Test', budget: '5000000' },
+    iterations: 50,
+  });
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/simulations/monte-carlo');
+  assert.equal(mc.run_count, 50);
+
+  // 5. Execute Plan
+  const exec = await client.simulations.executePlan('sim_abc');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/simulations/sim_abc/execute-plan');
+  assert.equal(exec.mode, 'LIVE');
+  assert.equal(exec.revalidated, true);
+});
+
 
 

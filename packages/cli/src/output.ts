@@ -20,6 +20,10 @@ import type {
   ServiceQuote,
   SimulateSwarmResponse,
   SimulationResponse,
+  SimulationRun,
+  CounterfactualComparison,
+  MonteCarloSummary,
+  LiveExecutionPayload,
   Swarm,
   SwarmGraph,
   SwarmRiskScore,
@@ -537,6 +541,97 @@ export function printSimulateSwarm(sim: SimulateSwarmResponse): void {
   console.log(`Estimated Cost:    ${formatUsdc(sim.estimated_cost)} (${sim.estimated_cost} base units)`);
   console.log(`Estimated Latency: ${sim.estimated_latency_ms}ms`);
   console.log(`Risk Level:        ${sim.risk_score.risk_level} (Score: ${sim.risk_score.overall_score}/100)`);
+}
+
+export function printSimulationRun(run: SimulationRun): void {
+  console.log('============================================================');
+  console.log('AGENTPAY ECONOMIC SIMULATION (PREVIEW ONLY — ZERO REAL USDC)');
+  console.log('============================================================');
+  console.log(`Simulation ID:      ${run.id}`);
+  console.log(`Status:             ${run.status}`);
+  console.log(`Mode:               ${run.execution_mode} (Strictly Isolated Digital Twin)`);
+  console.log(`Deterministic Seed: ${run.seed}`);
+  console.log(`Duration:           ${run.duration_ms}ms`);
+  console.log(`Summary:            ${run.summary}`);
+  console.log('');
+  console.log('PROJECTED ECONOMICS:');
+  console.log(`  Projected Spend:    ${formatUsdc(run.economics.projected_spend)}`);
+  console.log(`  Remaining Budget:   ${formatUsdc(run.economics.remaining_budget)}`);
+  console.log(`  Payments Planned:   ${run.economics.number_of_payments}`);
+  console.log(`  Approvals Required: ${run.economics.approval_count}`);
+  console.log(`  Projected Risk:     ${run.economics.risk_score}/100`);
+  console.log('');
+  console.log('WORST-CASE EXPOSURE:');
+  console.log(`  Maximum Exposure:   ${formatUsdc(run.exposure.maximum_exposure)}`);
+  console.log(`  Exposure Formula:   ${run.exposure.exposure_formula}`);
+  console.log(`  Explanation:        ${run.exposure.explanation}`);
+  console.log('');
+  console.log(`EXECUTION PLAN STEPS (${run.plan.steps.length}):`);
+  for (const step of run.plan.steps) {
+    console.log(`  [Step ${step.step_number}] ${step.step_id}: ${step.service_name} (${step.capability})`);
+    console.log(`    Estimated Cost:   ${formatUsdc(step.estimated_cost)}`);
+    console.log(`    Policy Decision:  ${step.policy_decision} (${step.policy_reason_code})`);
+    console.log(`    Risk Assessment:  ${step.risk_level}`);
+    if (step.approval_required) {
+      console.log('    >> APPROVAL REQUIRED BEFORE REAL EXECUTION <<');
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printCounterfactualComparison(comp: CounterfactualComparison): void {
+  console.log('============================================================');
+  console.log('AGENTPAY COUNTERFACTUAL WHAT-IF COMPARISON');
+  console.log('============================================================');
+  console.log(`Perturbation:       ${comp.perturbation_description}`);
+  console.log(`Baseline Run:       ${comp.baseline_run_id}`);
+  console.log(`Counterfactual Run: ${comp.counterfactual_run_id}`);
+  console.log('');
+  console.log('COMPARATIVE TELEMETRY:');
+  console.log(`  Baseline Spend:     ${formatUsdc(comp.baseline_spend)}`);
+  console.log(`  Counterfact Spend:  ${formatUsdc(comp.counterfactual_spend)}`);
+  console.log(`  Spend Delta:        ${comp.delta_spend} USDC`);
+  console.log(`  Approvals Delta:    ${comp.delta_approvals > 0 ? '+' : ''}${comp.delta_approvals}`);
+  console.log(`  Risk Change:        ${comp.risk_change}`);
+  console.log(`  Duration Delta:     ${comp.counterfactual_duration_ms - comp.baseline_duration_ms}ms`);
+  console.log(`  Explanation:        ${comp.explanation}`);
+  console.log('============================================================');
+}
+
+export function printMonteCarloSummary(summary: MonteCarloSummary): void {
+  console.log('============================================================');
+  console.log('AGENTPAY ECONOMIC MONTE CARLO DISTRIBUTION');
+  console.log('============================================================');
+  console.log(`Notice:             ${summary.model_notice}`);
+  console.log(`Iterations:         ${summary.run_count} seeded runs`);
+  console.log(`Completion Rate:    ${(summary.completion_rate * 100).toFixed(1)}%`);
+  console.log('');
+  console.log('STATISTICAL SPEND DISTRIBUTION (USD):');
+  console.log(`  Average Spend:      $${summary.average_spend}`);
+  console.log(`  Min Spend:          $${summary.minimum_spend}`);
+  console.log(`  Max Spend:          $${summary.maximum_spend}`);
+  console.log(`  P50 Median:         $${summary.p50_spend}`);
+  console.log(`  P90 Percentile:     $${summary.p90_spend}`);
+  console.log(`  P95 Percentile:     $${summary.p95_spend}`);
+  console.log(`  Avg Duration:       ${summary.avg_duration_ms}ms`);
+  console.log('============================================================');
+}
+
+export function printExecutePlanPayload(res: LiveExecutionPayload): void {
+  console.log('============================================================');
+  console.log('LIVE PLAN PREPARATION & REVALIDATION RESULT');
+  console.log('============================================================');
+  console.log(`Status:             ${res.status}`);
+  console.log(`Mode:               ${res.mode}`);
+  console.log(`Plan ID:            ${res.payload.plan_id}`);
+  console.log(`Original Run ID:    ${res.payload.original_run_id}`);
+  console.log(`Fresh Live Budget:  ${formatUsdc(res.payload.fresh_budget)}`);
+  console.log(`Total Live Cost:    ${formatUsdc(res.payload.total_live_cost)}`);
+  console.log(`Max Live Exposure:  ${formatUsdc(res.payload.max_live_exposure)}`);
+  console.log(`Live Policy Check:  ${res.payload.policy_decision}`);
+  console.log(`Requires Approval:  ${res.payload.requires_approval}`);
+  console.log(`Prepared At:        ${res.payload.prepared_at}`);
+  console.log('============================================================');
 }
 
 
