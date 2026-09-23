@@ -6,6 +6,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/constitution"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
@@ -304,6 +305,21 @@ func NewRouter(
 		mux.HandleFunc("POST /v1/agent-network/disputes/{id}/resolve", netHandler.HandleResolveDispute)
 		mux.HandleFunc("GET /v1/agent-network/graph", netHandler.HandleGetGraph)
 		mux.HandleFunc("GET /v1/agent-network/trust/{id}", netHandler.HandleGetTrust)
+
+		// 14. Economic Constitution Subsystem
+		constitutionStore := constitution.NewMemoryStore()
+		constHandler := handlers.NewConstitutionHandler(constitutionStore)
+		mux.HandleFunc("GET /v1/constitutions/active", constHandler.HandleGetActive)
+		mux.HandleFunc("GET /v1/constitutions", constHandler.HandleList)
+		mux.HandleFunc("GET /v1/constitutions/{version}", constHandler.HandleGetByVersion)
+		mux.HandleFunc("POST /v1/constitutions", constHandler.HandlePropose)
+		mux.HandleFunc("POST /v1/constitutions/evaluate", constHandler.HandleEvaluate)
+		mux.HandleFunc("POST /v1/constitutions/diff", constHandler.HandleDiff)
+		mux.HandleFunc("POST /v1/constitutions/test", constHandler.HandleTest)
+		mux.HandleFunc("POST /v1/constitutions/activate", constHandler.HandleActivate)
+		mux.HandleFunc("POST /v1/constitutions/rollback", constHandler.HandleRollback)
+		mux.HandleFunc("GET /v1/constitutions/changes", constHandler.HandleListChanges)
+		mux.HandleFunc("POST /v1/constitutions/changes/{id}/review", constHandler.HandleReviewChange)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {
