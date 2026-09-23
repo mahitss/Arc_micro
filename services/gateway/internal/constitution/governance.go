@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 )
 
 var (

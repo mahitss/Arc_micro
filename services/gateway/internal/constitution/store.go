@@ -128,7 +128,9 @@ func (s *MemoryStore) SaveConstitution(ctx context.Context, c *EconomicConstitut
 	s.constitutions[c.OrganizationID][c.Version] = &cp
 
 	if cp.Status == StatusActive {
-		s.activeVersions[c.OrganizationID] = c.Version
+		if _, hasActive := s.activeVersions[c.OrganizationID]; !hasActive {
+			s.activeVersions[c.OrganizationID] = c.Version
+		}
 	}
 	return nil
 }
@@ -142,6 +144,10 @@ func (s *MemoryStore) ActivateConstitution(ctx context.Context, orgID string, ta
 	currentActiveVer := s.activeVersions[orgID]
 	if currentActiveVer != expectedPrevVersion {
 		return nil, fmt.Errorf("%w: expected active version %d, but found %d", ErrVersionConflict, expectedPrevVersion, currentActiveVer)
+	}
+
+	if targetVersion <= currentActiveVer {
+		return nil, fmt.Errorf("activation downgrade rejected: target version %d must be greater than current active version %d (use rollback instead)", targetVersion, currentActiveVer)
 	}
 
 	orgMap, ok := s.constitutions[orgID]
