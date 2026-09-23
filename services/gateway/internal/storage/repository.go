@@ -15,6 +15,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/network"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/webhook"
 )
@@ -233,6 +234,24 @@ type Repository interface {
 	GetMissionStep(ctx context.Context, missionID, stepID string) (*economy.MissionStep, error)
 	ListMissionSteps(ctx context.Context, missionID string) ([]*economy.MissionStep, error)
 	UpdateMissionStep(ctx context.Context, step *economy.MissionStep) error
+
+	// Open Agent Network operations (Phase 2)
+	SaveNetworkIdentity(ctx context.Context, id *network.AgentNetworkIdentity) error
+	GetNetworkIdentity(ctx context.Context, agentID string) (*network.AgentNetworkIdentity, error)
+	ListNetworkIdentities(ctx context.Context, orgID string) ([]*network.AgentNetworkIdentity, error)
+	UpdateNetworkIdentityStatus(ctx context.Context, agentID string, status network.IdentityStatus, updatedAt time.Time) error
+	SaveManifest(ctx context.Context, m *network.AgentManifest) error
+	GetManifest(ctx context.Context, agentID string) (*network.AgentManifest, error)
+	SaveServiceContract(ctx context.Context, c *network.AgentServiceContract) error
+	GetServiceContract(ctx context.Context, id string) (*network.AgentServiceContract, error)
+	ListServiceContracts(ctx context.Context, orgID string) ([]*network.AgentServiceContract, error)
+	UpdateServiceContractState(ctx context.Context, id string, state network.ContractState, updatedAt time.Time) error
+	SaveTrustProfile(ctx context.Context, p *network.AgentTrustProfile) error
+	GetTrustProfile(ctx context.Context, agentID string) (*network.AgentTrustProfile, error)
+	SaveDispute(ctx context.Context, d *network.DisputeRecord) error
+	GetDispute(ctx context.Context, id string) (*network.DisputeRecord, error)
+	ListDisputes(ctx context.Context, orgID string) ([]*network.DisputeRecord, error)
+	UpdateDisputeState(ctx context.Context, id string, state network.DisputeState, notes string, refund string, resolvedAt *time.Time) error
 }
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
@@ -254,6 +273,11 @@ type MemoryRepository struct {
 	outboxEvents      map[string]*webhook.OutboxEvent
 	missions          map[string]*economy.Mission
 	missionSteps      map[string]map[string]*economy.MissionStep
+	networkIdentities map[string]*network.AgentNetworkIdentity
+	agentManifests    map[string]*network.AgentManifest
+	serviceContracts  map[string]*network.AgentServiceContract
+	trustProfiles     map[string]*network.AgentTrustProfile
+	agentDisputes     map[string]*network.DisputeRecord
 }
 
 // NewMemoryRepository creates a new in-memory repository instance seeded with defaults.
@@ -276,6 +300,11 @@ func NewMemoryRepository() *MemoryRepository {
 		outboxEvents:      make(map[string]*webhook.OutboxEvent),
 		missions:          make(map[string]*economy.Mission),
 		missionSteps:      make(map[string]map[string]*economy.MissionStep),
+		networkIdentities: make(map[string]*network.AgentNetworkIdentity),
+		agentManifests:    make(map[string]*network.AgentManifest),
+		serviceContracts:  make(map[string]*network.AgentServiceContract),
+		trustProfiles:     make(map[string]*network.AgentTrustProfile),
+		agentDisputes:     make(map[string]*network.DisputeRecord),
 	}
 
 	// Seed default demo API key (apk_live_demo1234567890abcdef1234567890abcdef)
@@ -1277,6 +1306,190 @@ func (m *MemoryRepository) UpdateMissionStep(ctx context.Context, step *economy.
 	}
 	copyStep := *step
 	steps[step.StepID] = &copyStep
+	return nil
+}
+
+// --- Open Agent Network Memory Methods (Phase 2) ---
+
+func (m *MemoryRepository) SaveNetworkIdentity(ctx context.Context, id *network.AgentNetworkIdentity) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyID := *id
+	m.networkIdentities[id.AgentID] = &copyID
+	return nil
+}
+
+func (m *MemoryRepository) GetNetworkIdentity(ctx context.Context, agentID string) (*network.AgentNetworkIdentity, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	id, ok := m.networkIdentities[agentID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyID := *id
+	return &copyID, nil
+}
+
+func (m *MemoryRepository) ListNetworkIdentities(ctx context.Context, orgID string) ([]*network.AgentNetworkIdentity, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var list []*network.AgentNetworkIdentity
+	for _, id := range m.networkIdentities {
+		if orgID == "" || id.OrganizationID == orgID {
+			copyID := *id
+			list = append(list, &copyID)
+		}
+	}
+	return list, nil
+}
+
+func (m *MemoryRepository) UpdateNetworkIdentityStatus(ctx context.Context, agentID string, status network.IdentityStatus, updatedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	id, ok := m.networkIdentities[agentID]
+	if !ok {
+		return ErrNotFound
+	}
+	id.Status = status
+	id.UpdatedAt = updatedAt
+	return nil
+}
+
+func (m *MemoryRepository) SaveManifest(ctx context.Context, mf *network.AgentManifest) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyM := *mf
+	m.agentManifests[mf.AgentID] = &copyM
+	return nil
+}
+
+func (m *MemoryRepository) GetManifest(ctx context.Context, agentID string) (*network.AgentManifest, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	mf, ok := m.agentManifests[agentID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyM := *mf
+	return &copyM, nil
+}
+
+func (m *MemoryRepository) SaveServiceContract(ctx context.Context, c *network.AgentServiceContract) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyC := *c
+	m.serviceContracts[c.ContractID] = &copyC
+	return nil
+}
+
+func (m *MemoryRepository) GetServiceContract(ctx context.Context, id string) (*network.AgentServiceContract, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	c, ok := m.serviceContracts[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyC := *c
+	return &copyC, nil
+}
+
+func (m *MemoryRepository) ListServiceContracts(ctx context.Context, orgID string) ([]*network.AgentServiceContract, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var list []*network.AgentServiceContract
+	for _, c := range m.serviceContracts {
+		if orgID == "" || c.OrganizationID == orgID {
+			copyC := *c
+			list = append(list, &copyC)
+		}
+	}
+	return list, nil
+}
+
+func (m *MemoryRepository) UpdateServiceContractState(ctx context.Context, id string, state network.ContractState, updatedAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	c, ok := m.serviceContracts[id]
+	if !ok {
+		return ErrNotFound
+	}
+	c.State = state
+	c.UpdatedAt = updatedAt
+	if state == network.ContractCompleted || state == network.ContractFailed || state == network.ContractCancelled {
+		now := updatedAt
+		c.CompletedAt = &now
+	}
+	return nil
+}
+
+func (m *MemoryRepository) SaveTrustProfile(ctx context.Context, p *network.AgentTrustProfile) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyP := *p
+	m.trustProfiles[p.AgentID] = &copyP
+	return nil
+}
+
+func (m *MemoryRepository) GetTrustProfile(ctx context.Context, agentID string) (*network.AgentTrustProfile, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	p, ok := m.trustProfiles[agentID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyP := *p
+	return &copyP, nil
+}
+
+func (m *MemoryRepository) SaveDispute(ctx context.Context, d *network.DisputeRecord) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyD := *d
+	m.agentDisputes[d.DisputeID] = &copyD
+	return nil
+}
+
+func (m *MemoryRepository) GetDispute(ctx context.Context, id string) (*network.DisputeRecord, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	d, ok := m.agentDisputes[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyD := *d
+	return &copyD, nil
+}
+
+func (m *MemoryRepository) ListDisputes(ctx context.Context, orgID string) ([]*network.DisputeRecord, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var list []*network.DisputeRecord
+	for _, d := range m.agentDisputes {
+		if orgID == "" || d.OrganizationID == orgID {
+			copyD := *d
+			list = append(list, &copyD)
+		}
+	}
+	return list, nil
+}
+
+func (m *MemoryRepository) UpdateDisputeState(ctx context.Context, id string, state network.DisputeState, notes string, refund string, resolvedAt *time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	d, ok := m.agentDisputes[id]
+	if !ok {
+		return ErrNotFound
+	}
+	d.State = state
+	if notes != "" {
+		d.ResolutionNotes = notes
+	}
+	if refund != "" {
+		d.RefundAmount = refund
+	}
+	if resolvedAt != nil {
+		d.ResolvedAt = resolvedAt
+	}
 	return nil
 }
 
@@ -2332,6 +2545,420 @@ func (p *PostgresRepository) UpdateMissionStep(ctx context.Context, step *econom
 	query := `UPDATE mission_steps SET status = $1, payment_intent_id = $2, result_data = $3, error = $4, completed_at = $5 WHERE mission_id = $6 AND step_id = $7`
 	_, err := p.db.ExecContext(ctx, query, step.Status, step.PaymentIntentID, step.ResultData, step.Error, step.CompletedAt, step.MissionID, step.StepID)
 	return err
+}
+
+// --- Open Agent Network PostgreSQL Methods (Phase 2) ---
+
+func (p *PostgresRepository) SaveNetworkIdentity(ctx context.Context, id *network.AgentNetworkIdentity) error {
+	caps, _ := json.Marshal(id.Capabilities)
+	taskTypes, _ := json.Marshal(id.SupportedTaskTypes)
+	inSchemas, _ := json.Marshal(id.SupportedInputSchemas)
+	outSchemas, _ := json.Marshal(id.SupportedOutputSchemas)
+	pricingModels, _ := json.Marshal(id.PricingModels)
+	currencies, _ := json.Marshal(id.Currencies)
+	settlement, _ := json.Marshal(id.SettlementMethods)
+	trustMeta, _ := json.Marshal(id.TrustMetadata)
+	repSummary, _ := json.Marshal(id.ReputationSummary)
+	endMeta, _ := json.Marshal(id.EndpointMetadata)
+	callbacks, _ := json.Marshal(id.CallbackCapabilities)
+	authMeta, _ := json.Marshal(id.AuthenticationMetadata)
+
+	query := `INSERT INTO agent_network_identities (
+		agent_id, organization_id, display_name, description, version, protocol_version,
+		capabilities, supported_task_types, supported_input_schemas, supported_output_schemas,
+		pricing_models, currencies, settlement_methods, availability, geographic_scope,
+		trust_metadata, reputation_summary, endpoint_metadata, callback_capabilities,
+		authentication_metadata, status, created_at, updated_at
+	) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+	) ON CONFLICT (agent_id) DO UPDATE SET
+		organization_id = $2, display_name = $3, description = $4, version = $5, protocol_version = $6,
+		capabilities = $7, supported_task_types = $8, supported_input_schemas = $9, supported_output_schemas = $10,
+		pricing_models = $11, currencies = $12, settlement_methods = $13, availability = $14, geographic_scope = $15,
+		trust_metadata = $16, reputation_summary = $17, endpoint_metadata = $18, callback_capabilities = $19,
+		authentication_metadata = $20, status = $21, updated_at = $23`
+
+	_, err := p.db.ExecContext(ctx, query,
+		id.AgentID, id.OrganizationID, id.DisplayName, id.Description, id.Version, id.ProtocolVersion,
+		caps, taskTypes, inSchemas, outSchemas, pricingModels, currencies, settlement, id.Availability, id.GeographicScope,
+		trustMeta, repSummary, endMeta, callbacks, authMeta, string(id.Status), id.CreatedAt, id.UpdatedAt,
+	)
+	return err
+}
+
+func (p *PostgresRepository) GetNetworkIdentity(ctx context.Context, agentID string) (*network.AgentNetworkIdentity, error) {
+	query := `SELECT agent_id, organization_id, display_name, description, version, protocol_version,
+		capabilities, supported_task_types, supported_input_schemas, supported_output_schemas,
+		pricing_models, currencies, settlement_methods, availability, geographic_scope,
+		trust_metadata, reputation_summary, endpoint_metadata, callback_capabilities,
+		authentication_metadata, status, created_at, updated_at
+		FROM agent_network_identities WHERE agent_id = $1`
+
+	row := p.db.QueryRowContext(ctx, query, agentID)
+	var id network.AgentNetworkIdentity
+	var caps, taskTypes, inSchemas, outSchemas, pricingModels, currencies, settlement, trustMeta, repSummary, endMeta, callbacks, authMeta []byte
+	var statusStr string
+
+	err := row.Scan(
+		&id.AgentID, &id.OrganizationID, &id.DisplayName, &id.Description, &id.Version, &id.ProtocolVersion,
+		&caps, &taskTypes, &inSchemas, &outSchemas, &pricingModels, &currencies, &settlement, &id.Availability, &id.GeographicScope,
+		&trustMeta, &repSummary, &endMeta, &callbacks, &authMeta, &statusStr, &id.CreatedAt, &id.UpdatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	id.Status = network.IdentityStatus(statusStr)
+	_ = json.Unmarshal(caps, &id.Capabilities)
+	_ = json.Unmarshal(taskTypes, &id.SupportedTaskTypes)
+	_ = json.Unmarshal(inSchemas, &id.SupportedInputSchemas)
+	_ = json.Unmarshal(outSchemas, &id.SupportedOutputSchemas)
+	_ = json.Unmarshal(pricingModels, &id.PricingModels)
+	_ = json.Unmarshal(currencies, &id.Currencies)
+	_ = json.Unmarshal(settlement, &id.SettlementMethods)
+	_ = json.Unmarshal(trustMeta, &id.TrustMetadata)
+	_ = json.Unmarshal(repSummary, &id.ReputationSummary)
+	_ = json.Unmarshal(endMeta, &id.EndpointMetadata)
+	_ = json.Unmarshal(callbacks, &id.CallbackCapabilities)
+	_ = json.Unmarshal(authMeta, &id.AuthenticationMetadata)
+
+	return &id, nil
+}
+
+func (p *PostgresRepository) ListNetworkIdentities(ctx context.Context, orgID string) ([]*network.AgentNetworkIdentity, error) {
+	query := `SELECT agent_id, organization_id, display_name, description, version, protocol_version,
+		capabilities, supported_task_types, supported_input_schemas, supported_output_schemas,
+		pricing_models, currencies, settlement_methods, availability, geographic_scope,
+		trust_metadata, reputation_summary, endpoint_metadata, callback_capabilities,
+		authentication_metadata, status, created_at, updated_at
+		FROM agent_network_identities WHERE ($1 = '' OR organization_id = $1) ORDER BY created_at DESC`
+
+	rows, err := p.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := make([]*network.AgentNetworkIdentity, 0)
+	for rows.Next() {
+		var id network.AgentNetworkIdentity
+		var caps, taskTypes, inSchemas, outSchemas, pricingModels, currencies, settlement, trustMeta, repSummary, endMeta, callbacks, authMeta []byte
+		var statusStr string
+
+		err := rows.Scan(
+			&id.AgentID, &id.OrganizationID, &id.DisplayName, &id.Description, &id.Version, &id.ProtocolVersion,
+			&caps, &taskTypes, &inSchemas, &outSchemas, &pricingModels, &currencies, &settlement, &id.Availability, &id.GeographicScope,
+			&trustMeta, &repSummary, &endMeta, &callbacks, &authMeta, &statusStr, &id.CreatedAt, &id.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		id.Status = network.IdentityStatus(statusStr)
+		_ = json.Unmarshal(caps, &id.Capabilities)
+		_ = json.Unmarshal(taskTypes, &id.SupportedTaskTypes)
+		_ = json.Unmarshal(inSchemas, &id.SupportedInputSchemas)
+		_ = json.Unmarshal(outSchemas, &id.SupportedOutputSchemas)
+		_ = json.Unmarshal(pricingModels, &id.PricingModels)
+		_ = json.Unmarshal(currencies, &id.Currencies)
+		_ = json.Unmarshal(settlement, &id.SettlementMethods)
+		_ = json.Unmarshal(trustMeta, &id.TrustMetadata)
+		_ = json.Unmarshal(repSummary, &id.ReputationSummary)
+		_ = json.Unmarshal(endMeta, &id.EndpointMetadata)
+		_ = json.Unmarshal(callbacks, &id.CallbackCapabilities)
+		_ = json.Unmarshal(authMeta, &id.AuthenticationMetadata)
+		list = append(list, &id)
+	}
+	return list, nil
+}
+
+func (p *PostgresRepository) UpdateNetworkIdentityStatus(ctx context.Context, agentID string, status network.IdentityStatus, updatedAt time.Time) error {
+	query := `UPDATE agent_network_identities SET status = $1, updated_at = $2 WHERE agent_id = $3`
+	res, err := p.db.ExecContext(ctx, query, string(status), updatedAt, agentID)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) SaveManifest(ctx context.Context, mf *network.AgentManifest) error {
+	raw, err := json.Marshal(mf)
+	if err != nil {
+		return err
+	}
+	query := `INSERT INTO agent_manifests (agent_id, organization_id, manifest_json, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (agent_id) DO UPDATE SET manifest_json = $3, updated_at = $5`
+	_, err = p.db.ExecContext(ctx, query, mf.AgentID, mf.OrganizationID, raw, mf.CreatedAt, time.Now().UTC())
+	return err
+}
+
+func (p *PostgresRepository) GetManifest(ctx context.Context, agentID string) (*network.AgentManifest, error) {
+	query := `SELECT manifest_json FROM agent_manifests WHERE agent_id = $1`
+	var raw []byte
+	err := p.db.QueryRowContext(ctx, query, agentID).Scan(&raw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	var mf network.AgentManifest
+	if err := json.Unmarshal(raw, &mf); err != nil {
+		return nil, err
+	}
+	return &mf, nil
+}
+
+func (p *PostgresRepository) SaveServiceContract(ctx context.Context, c *network.AgentServiceContract) error {
+	inputSpec, _ := json.Marshal(c.InputSpec)
+	outputSpec, _ := json.Marshal(c.OutputSpec)
+	var resultPayload []byte
+	if c.Result != nil {
+		resultPayload, _ = json.Marshal(c.Result)
+	}
+
+	query := `INSERT INTO agent_service_contracts (
+		contract_id, organization_id, requester_agent_id, provider_agent_id, capability,
+		mission_id, root_mission_id, parent_contract_id, delegation_depth, input_spec, output_spec,
+		price, currency, budget_ceiling, deadline, expiration, verification_policy, cancellation_policy,
+		dispute_policy, payment_terms, payment_intent_id, quote_id, state, result_payload, error_msg,
+		created_at, updated_at, completed_at
+	) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
+	) ON CONFLICT (contract_id) DO UPDATE SET
+		state = $23, result_payload = $24, error_msg = $25, updated_at = $27, completed_at = $28`
+
+	_, err := p.db.ExecContext(ctx, query,
+		c.ContractID, c.OrganizationID, c.RequesterAgentID, c.ProviderAgentID, c.Capability,
+		c.MissionID, c.RootMissionID, c.ParentContractID, c.DelegationDepth, inputSpec, outputSpec,
+		c.Price, c.Currency, c.BudgetCeiling, c.Deadline, c.Expiration, c.VerificationPolicy, c.CancellationPolicy,
+		c.DisputePolicy, c.PaymentTerms, c.PaymentIntentID, c.QuoteID, string(c.State), resultPayload, c.Error,
+		c.CreatedAt, c.UpdatedAt, c.CompletedAt,
+	)
+	return err
+}
+
+func (p *PostgresRepository) GetServiceContract(ctx context.Context, id string) (*network.AgentServiceContract, error) {
+	query := `SELECT contract_id, organization_id, requester_agent_id, provider_agent_id, capability,
+		mission_id, root_mission_id, parent_contract_id, delegation_depth, input_spec, output_spec,
+		price, currency, budget_ceiling, deadline, expiration, verification_policy, cancellation_policy,
+		dispute_policy, payment_terms, payment_intent_id, quote_id, state, result_payload, error_msg,
+		created_at, updated_at, completed_at
+		FROM agent_service_contracts WHERE contract_id = $1`
+
+	row := p.db.QueryRowContext(ctx, query, id)
+	var c network.AgentServiceContract
+	var inputSpec, outputSpec, resultPayload []byte
+	var stateStr string
+
+	err := row.Scan(
+		&c.ContractID, &c.OrganizationID, &c.RequesterAgentID, &c.ProviderAgentID, &c.Capability,
+		&c.MissionID, &c.RootMissionID, &c.ParentContractID, &c.DelegationDepth, &inputSpec, &outputSpec,
+		&c.Price, &c.Currency, &c.BudgetCeiling, &c.Deadline, &c.Expiration, &c.VerificationPolicy, &c.CancellationPolicy,
+		&c.DisputePolicy, &c.PaymentTerms, &c.PaymentIntentID, &c.QuoteID, &stateStr, &resultPayload, &c.Error,
+		&c.CreatedAt, &c.UpdatedAt, &c.CompletedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	c.State = network.ContractState(stateStr)
+	_ = json.Unmarshal(inputSpec, &c.InputSpec)
+	_ = json.Unmarshal(outputSpec, &c.OutputSpec)
+	if len(resultPayload) > 0 {
+		var res network.AgentResultPayload
+		_ = json.Unmarshal(resultPayload, &res)
+		c.Result = &res
+	}
+	return &c, nil
+}
+
+func (p *PostgresRepository) ListServiceContracts(ctx context.Context, orgID string) ([]*network.AgentServiceContract, error) {
+	query := `SELECT contract_id, organization_id, requester_agent_id, provider_agent_id, capability,
+		mission_id, root_mission_id, parent_contract_id, delegation_depth, input_spec, output_spec,
+		price, currency, budget_ceiling, deadline, expiration, verification_policy, cancellation_policy,
+		dispute_policy, payment_terms, payment_intent_id, quote_id, state, result_payload, error_msg,
+		created_at, updated_at, completed_at
+		FROM agent_service_contracts WHERE ($1 = '' OR organization_id = $1) ORDER BY created_at DESC`
+
+	rows, err := p.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := make([]*network.AgentServiceContract, 0)
+	for rows.Next() {
+		var c network.AgentServiceContract
+		var inputSpec, outputSpec, resultPayload []byte
+		var stateStr string
+
+		err := rows.Scan(
+			&c.ContractID, &c.OrganizationID, &c.RequesterAgentID, &c.ProviderAgentID, &c.Capability,
+			&c.MissionID, &c.RootMissionID, &c.ParentContractID, &c.DelegationDepth, &inputSpec, &outputSpec,
+			&c.Price, &c.Currency, &c.BudgetCeiling, &c.Deadline, &c.Expiration, &c.VerificationPolicy, &c.CancellationPolicy,
+			&c.DisputePolicy, &c.PaymentTerms, &c.PaymentIntentID, &c.QuoteID, &stateStr, &resultPayload, &c.Error,
+			&c.CreatedAt, &c.UpdatedAt, &c.CompletedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		c.State = network.ContractState(stateStr)
+		_ = json.Unmarshal(inputSpec, &c.InputSpec)
+		_ = json.Unmarshal(outputSpec, &c.OutputSpec)
+		if len(resultPayload) > 0 {
+			var res network.AgentResultPayload
+			_ = json.Unmarshal(resultPayload, &res)
+			c.Result = &res
+		}
+		list = append(list, &c)
+	}
+	return list, nil
+}
+
+func (p *PostgresRepository) UpdateServiceContractState(ctx context.Context, id string, state network.ContractState, updatedAt time.Time) error {
+	query := `UPDATE agent_service_contracts SET state = $1, updated_at = $2,
+		completed_at = CASE WHEN $1 IN ('COMPLETED', 'FAILED', 'CANCELLED') THEN $2 ELSE completed_at END
+		WHERE contract_id = $3`
+	res, err := p.db.ExecContext(ctx, query, string(state), updatedAt, id)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) SaveTrustProfile(ctx context.Context, profile *network.AgentTrustProfile) error {
+	query := `INSERT INTO agent_trust_profiles (
+		agent_id, organization_id, successful_jobs, failed_jobs, timeout_count, dispute_count,
+		verification_successes, verification_failures, historical_cost_accurate, historical_cost_deviated,
+		average_latency_ms, policy_violations_count, security_incidents_count, first_seen_at, last_active_at, updated_at
+	) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+	) ON CONFLICT (agent_id) DO UPDATE SET
+		successful_jobs = $3, failed_jobs = $4, timeout_count = $5, dispute_count = $6,
+		verification_successes = $7, verification_failures = $8, historical_cost_accurate = $9,
+		historical_cost_deviated = $10, average_latency_ms = $11, policy_violations_count = $12,
+		security_incidents_count = $13, last_active_at = $15, updated_at = $16`
+
+	_, err := p.db.ExecContext(ctx, query,
+		profile.AgentID, profile.OrganizationID, profile.SuccessfulJobs, profile.FailedJobs, profile.TimeoutCount, profile.DisputeCount,
+		profile.VerificationSuccesses, profile.VerificationFailures, profile.HistoricalCostAccurate, profile.HistoricalCostDeviated,
+		profile.AverageLatencyMs, profile.PolicyViolationsCount, profile.SecurityIncidentsCount, profile.FirstSeenAt, profile.LastActiveAt, profile.UpdatedAt,
+	)
+	return err
+}
+
+func (p *PostgresRepository) GetTrustProfile(ctx context.Context, agentID string) (*network.AgentTrustProfile, error) {
+	query := `SELECT agent_id, organization_id, successful_jobs, failed_jobs, timeout_count, dispute_count,
+		verification_successes, verification_failures, historical_cost_accurate, historical_cost_deviated,
+		average_latency_ms, policy_violations_count, security_incidents_count, first_seen_at, last_active_at, updated_at
+		FROM agent_trust_profiles WHERE agent_id = $1`
+
+	row := p.db.QueryRowContext(ctx, query, agentID)
+	var profile network.AgentTrustProfile
+	err := row.Scan(
+		&profile.AgentID, &profile.OrganizationID, &profile.SuccessfulJobs, &profile.FailedJobs, &profile.TimeoutCount, &profile.DisputeCount,
+		&profile.VerificationSuccesses, &profile.VerificationFailures, &profile.HistoricalCostAccurate, &profile.HistoricalCostDeviated,
+		&profile.AverageLatencyMs, &profile.PolicyViolationsCount, &profile.SecurityIncidentsCount, &profile.FirstSeenAt, &profile.LastActiveAt, &profile.UpdatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &profile, err
+}
+
+func (p *PostgresRepository) SaveDispute(ctx context.Context, d *network.DisputeRecord) error {
+	query := `INSERT INTO agent_disputes (
+		dispute_id, contract_id, organization_id, initiator_agent_id, respondent_agent_id,
+		reason, evidence, state, resolution_notes, refund_amount, created_at, resolved_at
+	) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+	) ON CONFLICT (dispute_id) DO UPDATE SET
+		state = $8, resolution_notes = $9, refund_amount = $10, resolved_at = $12`
+
+	_, err := p.db.ExecContext(ctx, query,
+		d.DisputeID, d.ContractID, d.OrganizationID, d.InitiatorAgentID, d.RespondentAgentID,
+		d.Reason, d.Evidence, string(d.State), d.ResolutionNotes, d.RefundAmount, d.CreatedAt, d.ResolvedAt,
+	)
+	return err
+}
+
+func (p *PostgresRepository) GetDispute(ctx context.Context, id string) (*network.DisputeRecord, error) {
+	query := `SELECT dispute_id, contract_id, organization_id, initiator_agent_id, respondent_agent_id,
+		reason, evidence, state, resolution_notes, refund_amount, created_at, resolved_at
+		FROM agent_disputes WHERE dispute_id = $1`
+
+	row := p.db.QueryRowContext(ctx, query, id)
+	var d network.DisputeRecord
+	var stateStr string
+	err := row.Scan(
+		&d.DisputeID, &d.ContractID, &d.OrganizationID, &d.InitiatorAgentID, &d.RespondentAgentID,
+		&d.Reason, &d.Evidence, &stateStr, &d.ResolutionNotes, &d.RefundAmount, &d.CreatedAt, &d.ResolvedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	d.State = network.DisputeState(stateStr)
+	return &d, err
+}
+
+func (p *PostgresRepository) ListDisputes(ctx context.Context, orgID string) ([]*network.DisputeRecord, error) {
+	query := `SELECT dispute_id, contract_id, organization_id, initiator_agent_id, respondent_agent_id,
+		reason, evidence, state, resolution_notes, refund_amount, created_at, resolved_at
+		FROM agent_disputes WHERE ($1 = '' OR organization_id = $1) ORDER BY created_at DESC`
+
+	rows, err := p.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := make([]*network.DisputeRecord, 0)
+	for rows.Next() {
+		var d network.DisputeRecord
+		var stateStr string
+		err := rows.Scan(
+			&d.DisputeID, &d.ContractID, &d.OrganizationID, &d.InitiatorAgentID, &d.RespondentAgentID,
+			&d.Reason, &d.Evidence, &stateStr, &d.ResolutionNotes, &d.RefundAmount, &d.CreatedAt, &d.ResolvedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		d.State = network.DisputeState(stateStr)
+		list = append(list, &d)
+	}
+	return list, nil
+}
+
+func (p *PostgresRepository) UpdateDisputeState(ctx context.Context, id string, state network.DisputeState, notes string, refund string, resolvedAt *time.Time) error {
+	query := `UPDATE agent_disputes SET state = $1,
+		resolution_notes = CASE WHEN $2 <> '' THEN $2 ELSE resolution_notes END,
+		refund_amount = CASE WHEN $3 <> '' THEN $3 ELSE refund_amount END,
+		resolved_at = CASE WHEN $4::timestamptz IS NOT NULL THEN $4::timestamptz ELSE resolved_at END
+		WHERE dispute_id = $5`
+	res, err := p.db.ExecContext(ctx, query, string(state), notes, refund, resolvedAt, id)
+	if err != nil {
+		return err
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // ApplyMigrations executes the initial schema migration statements.
