@@ -302,8 +302,48 @@ An interactive demonstration is available at **`http://localhost:3000/demo`**:
 
 ---
 
+## Open Agent Network Layer (Phases 34–39)
+
+AgentPay features a decentralized, zero-trust **Open Agent Network (OAN)** based on RFC 002:
+
+```
+               REQUESTER AGENT
+                      │
+           1. Discovery (OAN Registry)
+                      ▼
+            TRUST EVALUATION ENGINE
+       (Deterministic Bayesian Scoring)
+                      │
+           2. Bilateral Contract Proposal
+                      ▼
+               PROVIDER AGENT
+                      │
+           3. Bounded Delegation (Depth ≤ 3)
+                      ▼
+            SUBCONTRACTOR AGENT
+                      │
+           4. Deliverable (SHA-256 Checksum)
+                      ▼
+               RESULT VERIFIER
+                      │
+           5. Settlement via PaymentBridge
+                      ▼
+              ARC USDC ON-CHAIN VAULT
+```
+
+- **Standards-Compliant:** Manifest discovery (`POST /v1/agent-network/agents/register`), dynamic routing plans, bilateral contracts, deliverable verification, and dispute resolution.
+- **Deterministic Trust Scoring:** 0 to 10,000 basis points calculated over completion, deliverable verification, pricing accuracy, and dispute records.
+- **Bounded Delegation:** Strictly enforces Max Depth = 3 and directed acyclic graph anti-cycle invariants.
+- **Zero-Authority Invariant:** Network peer agents never hold cryptographic authority or modify vault balances.
+
+---
+
 ### Documentation & Specifications
 
+- **Open Agent Network RFC 002:** [`docs/agent-network-rfc.md`](docs/agent-network-rfc.md)
+- **Agent Manifest Specification:** [`docs/agent-manifest-spec.md`](docs/agent-manifest-spec.md)
+- **Trust Scoring Mathematics:** [`docs/trust-scoring-math.md`](docs/trust-scoring-math.md)
+- **Agent Contract Lifecycle State Machine:** [`docs/agent-contract-lifecycle.md`](docs/agent-contract-lifecycle.md)
 - **Economic Simulator Architecture:** [`docs/economic-simulator-architecture.md`](docs/economic-simulator-architecture.md)
 - **Economic Simulation Specification:** [`docs/economic-simulation.md`](docs/economic-simulation.md)
 - **Digital Twin Snapshot System:** [`docs/digital-twin.md`](docs/digital-twin.md)
