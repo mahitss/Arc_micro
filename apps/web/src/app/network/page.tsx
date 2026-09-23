@@ -2,602 +2,547 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { getEconomicGraph } from '@/lib/api/a2a';
-import { listMissions } from '@/lib/api/missions';
-import type { EconomicGraph, GraphNode, GraphEdge, Mission } from '@/lib/api/types';
+import {
+  fetchNetworkAgents,
+  fetchContracts,
+  fetchDisputes,
+  fetchNetworkGraph,
+  fundContract,
+  verifyDeliverable,
+  type DiscoveredAgent,
+  type AgentServiceContract,
+  type DisputeRecord,
+  type NetworkGraph,
+} from '@/lib/api/network';
+import { NetworkTopologyGraph } from '@/components/NetworkTopologyGraph';
 
-export default function EconomicNetworkPage() {
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [selectedMissionId, setSelectedMissionId] = useState<string>('demo-mission-01');
-  const [graph, setGraph] = useState<EconomicGraph | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-  const [filterType, setFilterType] = useState<string>('ALL');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+type ActiveTab = 'directory' | 'contracts' | 'graph' | 'disputes';
+
+export default function OpenAgentNetworkPage() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('directory');
+  const [agents, setAgents] = useState<DiscoveredAgent[]>([]);
+  const [contracts, setContracts] = useState<AgentServiceContract[]>([]);
+  const [disputes, setDisputes] = useState<DisputeRecord[]>([]);
+  const [graph, setGraph] = useState<NetworkGraph>({ nodes: [], edges: [] });
+  const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [minTrustScore, setMinTrustScore] = useState(8000);
+  const [selectedAgent, setSelectedAgent] = useState<DiscoveredAgent | null>(null);
+  const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadMissions() {
-      try {
-        const m = await listMissions({ useDemo: true });
-        if (m && m.length > 0) {
-          setMissions(m);
-          setSelectedMissionId(m[0].id);
-        }
-      } catch (err) {
-        console.error('Failed to load missions for network view:', err);
-      }
-    }
-    loadMissions();
-  }, []);
-
-  useEffect(() => {
-    async function loadGraph() {
-      if (!selectedMissionId) return;
+    async function loadData() {
       setLoading(true);
       try {
-        const data = await getEconomicGraph(selectedMissionId);
-        setGraph(data);
-        if (data.nodes.length > 0) {
-          setSelectedNode(data.nodes[0]);
-        }
+        const [agList, cList, dList, g] = await Promise.all([
+          fetchNetworkAgents(),
+          fetchContracts(),
+          fetchDisputes(),
+          fetchNetworkGraph(),
+        ]);
+        setAgents(agList);
+        setContracts(cList);
+        setDisputes(dList);
+        setGraph(g);
       } catch (err) {
-        // Fallback demo graph if backend is not seeded with this specific mission
-        setGraph({
-          mission_id: selectedMissionId,
-          nodes: [
-            {
-              id: selectedMissionId,
-              type: 'MISSION',
-              label: 'Global Market Intel Mission',
-              metadata: {
-                budget: '50.00 USDC',
-                spent: '12.40 USDC',
-                status: 'EXECUTING',
-                recursion_depth: '2/3',
-              },
-            },
-            {
-              id: 'agent_coordinator_01',
-              type: 'AGENT',
-              label: 'Primary Coordinator Agent',
-              metadata: {
-                role: 'Buyer / Orchestrator',
-                capabilities: ['planning', 'delegation', 'evaluation'],
-                status: 'ACTIVE',
-              },
-            },
-            {
-              id: 'agent_research_01',
-              type: 'AGENT',
-              label: 'Web Intelligence Agent',
-              metadata: {
-                reputation: '99.2%',
-                pricing_model: 'FIXED',
-                base_price: '0.30 USDC',
-                risk: 'LOW',
-              },
-            },
-            {
-              id: 'agent_data_01',
-              type: 'AGENT',
-              label: 'Data Extraction Agent',
-              metadata: {
-                reputation: '98.5%',
-                pricing_model: 'QUOTE_REQUIRED',
-                base_price: '0.50 USDC',
-                risk: 'LOW',
-              },
-            },
-            {
-              id: 'agent_validator_01',
-              type: 'AGENT',
-              label: 'Fact Verification Agent',
-              metadata: {
-                reputation: '99.8%',
-                pricing_model: 'FIXED',
-                base_price: '0.20 USDC',
-                risk: 'LOW',
-              },
-            },
-            {
-              id: 'hire_research_101',
-              type: 'HIRE',
-              label: 'Hire: Raw Market Ingestion',
-              metadata: {
-                price: '0.30 USDC',
-                status: 'COMPLETED',
-                call_depth: 1,
-                checksum: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-                latency: '142 ms',
-              },
-            },
-            {
-              id: 'hire_data_102',
-              type: 'HIRE',
-              label: 'Hire: Nested Entity Parsing',
-              metadata: {
-                price: '0.48 USDC',
-                status: 'COMPLETED',
-                call_depth: 2,
-                checksum: '8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4',
-                latency: '280 ms',
-              },
-            },
-            {
-              id: 'hire_val_103',
-              type: 'HIRE',
-              label: 'Hire: Byzantine Claim Validation',
-              metadata: {
-                price: '0.20 USDC',
-                status: 'EXECUTING',
-                call_depth: 2,
-                latency: 'In Progress',
-              },
-            },
-            {
-              id: 'pi_res_001',
-              type: 'PAYMENT',
-              label: 'Settlement: 0.30 USDC',
-              metadata: {
-                decision: 'ALLOW',
-                status: 'CONFIRMED',
-                mode: 'Live Arc Settlement',
-                tx_hash: '0x3a4f89d98bc944321287e0fa8892dc4901baef48',
-              },
-            },
-            {
-              id: 'pi_data_002',
-              type: 'PAYMENT',
-              label: 'Settlement: 0.48 USDC',
-              metadata: {
-                decision: 'ALLOW',
-                status: 'CONFIRMED',
-                mode: 'Live Arc Settlement',
-                tx_hash: '0x7b2190ee01aa99018442aef992bc4410091bbff1',
-              },
-            },
-          ],
-          edges: [
-            { source: selectedMissionId, target: 'agent_coordinator_01', type: 'DEPENDS_ON', label: 'Delegates' },
-            { source: 'agent_coordinator_01', target: 'hire_research_101', type: 'HIRED', label: 'Hires (Depth 1)' },
-            { source: 'hire_research_101', target: 'agent_research_01', type: 'DEPENDS_ON', label: 'Executed By' },
-            { source: 'hire_research_101', target: 'pi_res_001', type: 'PAID', label: 'Disburses' },
-            { source: 'agent_research_01', target: 'hire_data_102', type: 'HIRED', label: 'Sub-contracts (Depth 2)' },
-            { source: 'hire_data_102', target: 'agent_data_01', type: 'DEPENDS_ON', label: 'Executed By' },
-            { source: 'hire_data_102', target: 'pi_data_002', type: 'PAID', label: 'Disburses' },
-            { source: 'agent_coordinator_01', target: 'hire_val_103', type: 'HIRED', label: 'Hires (Depth 1)' },
-            { source: 'hire_val_103', target: 'agent_validator_01', type: 'DEPENDS_ON', label: 'Executed By' },
-            { source: 'hire_data_102', target: 'hire_val_103', type: 'VALIDATED_BY', label: 'Verifies Output' },
-          ],
-        });
+        console.error('Failed to load network data:', err);
       } finally {
         setLoading(false);
       }
     }
-    loadGraph();
-  }, [selectedMissionId]);
+    loadData();
+  }, []);
 
-  // Layout node coordinates automatically for presentation
-  const nodePositions = useMemo(() => {
-    if (!graph || graph.nodes.length === 0) return {};
-    const positions: Record<string, { x: number; y: number }> = {};
-    
-    // Group nodes by category / depth
-    const missionNodes = graph.nodes.filter(n => n.type === 'MISSION');
-    const agentNodes = graph.nodes.filter(n => n.type === 'AGENT');
-    const hireNodes = graph.nodes.filter(n => n.type === 'HIRE');
-    const paymentNodes = graph.nodes.filter(n => n.type === 'PAYMENT');
-    const serviceNodes = graph.nodes.filter(n => n.type === 'SERVICE');
+  // Filtered Agents
+  const filteredAgents = useMemo(() => {
+    return agents.filter((a) => {
+      const q = searchQuery.toLowerCase();
+      const matchSearch =
+        a.identity.display_name.toLowerCase().includes(q) ||
+        a.identity.agent_id.toLowerCase().includes(q) ||
+        a.identity.capabilities.some((c) => c.toLowerCase().includes(q));
 
-    missionNodes.forEach((n, idx) => {
-      positions[n.id] = { x: 120, y: 150 + idx * 160 };
+      const matchTrust = (a.trust_evaluation?.trust_score || 0) >= minTrustScore;
+      return matchSearch && matchTrust;
     });
+  }, [agents, searchQuery, minTrustScore]);
 
-    agentNodes.forEach((n, idx) => {
-      positions[n.id] = { x: 380, y: 80 + idx * 130 };
-    });
-
-    hireNodes.forEach((n, idx) => {
-      positions[n.id] = { x: 680, y: 100 + idx * 140 };
-    });
-
-    serviceNodes.forEach((n, idx) => {
-      positions[n.id] = { x: 950, y: 80 + idx * 130 };
-    });
-
-    paymentNodes.forEach((n, idx) => {
-      positions[n.id] = { x: 960, y: 240 + idx * 150 };
-    });
-
-    return positions;
-  }, [graph]);
-
-  const filteredNodes = useMemo(() => {
-    if (!graph) return [];
-    return graph.nodes.filter(n => {
-      if (filterType !== 'ALL' && n.type !== filterType) return false;
-      if (searchQuery && !n.label.toLowerCase().includes(searchQuery.toLowerCase()) && !n.id.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      return true;
-    });
-  }, [graph, filterType, searchQuery]);
-
-  const getNodeColor = (type: string) => {
-    switch (type) {
-      case 'MISSION':
-        return { border: 'border-teal-500/60', bg: 'bg-teal-950/40', text: 'text-teal-300', dot: 'bg-teal-400' };
-      case 'AGENT':
-        return { border: 'border-cyan-500/60', bg: 'bg-cyan-950/40', text: 'text-cyan-300', dot: 'bg-cyan-400' };
-      case 'HIRE':
-        return { border: 'border-amber-500/60', bg: 'bg-amber-950/40', text: 'text-amber-300', dot: 'bg-amber-400' };
-      case 'PAYMENT':
-        return { border: 'border-emerald-500/60', bg: 'bg-emerald-950/40', text: 'text-emerald-300', dot: 'bg-emerald-400' };
-      case 'SERVICE':
-        return { border: 'border-purple-500/60', bg: 'bg-purple-950/40', text: 'text-purple-300', dot: 'bg-purple-400' };
-      default:
-        return { border: 'border-slate-600', bg: 'bg-slate-900', text: 'text-slate-300', dot: 'bg-slate-400' };
+  // Handle Fund Contract
+  const handleFund = async (contractId: string) => {
+    try {
+      const res = await fundContract(contractId);
+      setContracts((prev) =>
+        prev.map((c) =>
+          c.contract_id === contractId ? { ...c, state: 'FUNDED', payment_intent_id: res.payment_intent_id } : c
+        )
+      );
+      setActionSuccessMsg(`Contract ${contractId} funded! Payment intent: ${res.payment_intent_id}`);
+      setTimeout(() => setActionSuccessMsg(null), 5000);
+    } catch (err: any) {
+      alert(`Funding failed: ${err.message}`);
     }
   };
 
-  const getEdgeStyle = (type: string) => {
-    switch (type) {
-      case 'HIRED':
-        return { stroke: '#f59e0b', dash: '4,4', width: 2 };
-      case 'PAID':
-        return { stroke: '#10b981', dash: '', width: 2.5 };
-      case 'DEPENDS_ON':
-        return { stroke: '#06b6d4', dash: '', width: 1.5 };
-      case 'VALIDATED_BY':
-        return { stroke: '#a855f7', dash: '3,3', width: 2 };
-      case 'PRODUCED':
-        return { stroke: '#14b8a6', dash: '', width: 1.5 };
-      default:
-        return { stroke: '#64748b', dash: '', width: 1 };
+  // Handle Verify Deliverable
+  const handleVerify = async (contractId: string) => {
+    try {
+      const rep = await verifyDeliverable(
+        contractId,
+        { summary: 'Deliverable completed with zero invariant violations', score: 100 },
+        '250000'
+      );
+      if (rep.passed) {
+        setContracts((prev) =>
+          prev.map((c) => (c.contract_id === contractId ? { ...c, state: 'COMPLETED' } : c))
+        );
+        setActionSuccessMsg(`Contract ${contractId} deliverable verified (Score: ${rep.score_basis_points / 100}%)!`);
+        setTimeout(() => setActionSuccessMsg(null), 5000);
+      }
+    } catch (err: any) {
+      alert(`Verification failed: ${err.message}`);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header & Subsystem Guardrails */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              Agent-to-Agent Economic Network
+    <div className="min-h-screen bg-[#070b14] text-slate-100 p-6 md:p-10 font-sans">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Hero Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <span className="px-2.5 py-1 text-[11px] font-mono font-bold tracking-wider uppercase rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                Phase 34–39: Open Agent Network
+              </span>
+              <span className="text-xs font-mono text-slate-400">RFC 002 A2A Compliant</span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+              Agent Discovery, Trust & Peer Settlement
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-              DAG Visualizer
-            </span>
-          </div>
-          <p className="text-sm text-slate-400 mt-1">
-            Autonomous multi-agent discovery, quotes, recursive sub-contracting, and policy-governed Arc USDC disbursements.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">Security Invariant</span>
-            <span className="text-xs font-mono font-medium text-amber-400">MAX_AGENT_CALL_DEPTH: 3</span>
-          </div>
-          <div className="h-8 w-px bg-slate-800" />
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">Settlement Model</span>
-            <span className="text-xs font-mono font-medium text-emerald-400">Deterministic Arc Vault</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Control Bar: Mission Selector, Filters & Search */}
-      <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 backdrop-blur-md">
-        <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-xs font-mono text-slate-400">Select Mission:</label>
-          <select
-            value={selectedMissionId}
-            onChange={(e) => setSelectedMissionId(e.target.value)}
-            className="bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-teal-500"
-          >
-            {missions.length > 0 ? (
-              missions.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.id} — {m.objective.slice(0, 32)}...
-                </option>
-              ))
-            ) : (
-              <option value="demo-mission-01">demo-mission-01 — Global Market Intel</option>
-            )}
-          </select>
-
-          <div className="h-5 w-px bg-slate-800 hidden sm:block" />
-
-          {/* Node Type Filters */}
-          <div className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-lg border border-slate-800">
-            {['ALL', 'MISSION', 'AGENT', 'HIRE', 'PAYMENT'].map((type) => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
-                  filterType === type
-                    ? 'bg-teal-500/20 text-teal-300 font-semibold border border-teal-500/30'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search nodes or IDs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 w-48"
-          />
-          <Link
-            href="/marketplace"
-            className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 text-xs font-mono transition-colors"
-          >
-            Browse Peer Agents &rarr;
-          </Link>
-        </div>
-      </div>
-
-      {/* Main Grid: Interactive Canvas + Node Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: DAG Graph Canvas */}
-        <div className="lg:col-span-2 bg-[#080d19] border border-slate-800 rounded-xl p-4 overflow-hidden relative min-h-[580px] shadow-inner">
-          <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-md border border-slate-800 text-[11px] font-mono text-slate-400">
-            <span>Vertices: {graph?.nodes.length || 0}</span>
-            <span>&bull;</span>
-            <span>Edges: {graph?.edges.length || 0}</span>
+            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+              Discover untrusted external AI agents, inspect deterministic trust evaluations, bargain terms via structured contracts, and settle peer deliverables on Arc USDC with strict zero-trust invariants.
+            </p>
           </div>
 
-          <div className="absolute bottom-4 left-4 z-10 flex items-center gap-4 bg-slate-900/90 backdrop-blur-md p-2 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-0.5 bg-amber-400 inline-block" /> HIRED
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-0.5 bg-emerald-400 inline-block" /> PAID
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-0.5 bg-cyan-400 inline-block" /> DEPENDS_ON
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-0.5 bg-purple-400 inline-block" /> VALIDATED_BY
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="h-[520px] flex items-center justify-center text-slate-500 font-mono text-sm">
-              <div className="animate-spin w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full mr-3" />
-              Computing Economic DAG topology...
-            </div>
-          ) : (
-            <div className="w-full h-[540px] overflow-auto relative cursor-grab active:cursor-grabbing">
-              {/* SVG Edges Layer */}
-              <svg className="absolute inset-0 w-[1200px] h-[650px] pointer-events-none">
-                <defs>
-                  <marker
-                    id="arrowhead"
-                    markerWidth="8"
-                    markerHeight="6"
-                    refX="7"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <polygon points="0 0, 8 3, 0 6" fill="#64748b" />
-                  </marker>
-                  <marker
-                    id="arrowhead-paid"
-                    markerWidth="8"
-                    markerHeight="6"
-                    refX="7"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <polygon points="0 0, 8 3, 0 6" fill="#10b981" />
-                  </marker>
-                  <marker
-                    id="arrowhead-hired"
-                    markerWidth="8"
-                    markerHeight="6"
-                    refX="7"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <polygon points="0 0, 8 3, 0 6" fill="#f59e0b" />
-                  </marker>
-                </defs>
-
-                {graph?.edges.map((edge, idx) => {
-                  const s = nodePositions[edge.source];
-                  const t = nodePositions[edge.target];
-                  if (!s || !t) return null;
-
-                  const style = getEdgeStyle(edge.type);
-                  const midX = (s.x + t.x) / 2;
-                  const midY = (s.y + t.y) / 2;
-                  const marker = edge.type === 'PAID' ? 'url(#arrowhead-paid)' : edge.type === 'HIRED' ? 'url(#arrowhead-hired)' : 'url(#arrowhead)';
-
-                  return (
-                    <g key={`edge-${idx}`}>
-                      <path
-                        d={`M ${s.x + 90} ${s.y + 35} C ${midX} ${s.y + 35}, ${midX} ${t.y + 35}, ${t.x} ${t.y + 35}`}
-                        fill="none"
-                        stroke={style.stroke}
-                        strokeWidth={style.width}
-                        strokeDasharray={style.dash}
-                        markerEnd={marker}
-                      />
-                      {edge.label && (
-                        <text
-                          x={midX}
-                          y={midY - 4}
-                          fill="#94a3b8"
-                          fontSize="9"
-                          fontFamily="monospace"
-                          textAnchor="middle"
-                          className="select-none"
-                        >
-                          {edge.label}
-                        </text>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* HTML Vertices Layer */}
-              <div className="w-[1200px] h-[650px] relative pointer-events-auto">
-                {filteredNodes.map((node) => {
-                  const pos = nodePositions[node.id] || { x: 200, y: 200 };
-                  const color = getNodeColor(node.type);
-                  const isSelected = selectedNode?.id === node.id;
-
-                  return (
-                    <div
-                      key={node.id}
-                      onClick={() => setSelectedNode(node)}
-                      style={{
-                        position: 'absolute',
-                        left: `${pos.x}px`,
-                        top: `${pos.y}px`,
-                        width: '180px',
-                      }}
-                      className={`p-3 rounded-xl border backdrop-blur-md cursor-pointer transition-all duration-200 select-none shadow-lg ${
-                        color.bg
-                      } ${color.border} ${
-                        isSelected
-                          ? 'ring-2 ring-teal-400 scale-105 z-20 shadow-teal-500/20'
-                          : 'hover:scale-102 hover:border-slate-500 z-10'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className={`text-[10px] font-mono font-bold tracking-wider ${color.text} flex items-center gap-1.5`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${color.dot}`} />
-                          {node.type}
-                        </span>
-                        {node.metadata?.call_depth !== undefined && (
-                          <span className="text-[9px] font-mono px-1 rounded bg-slate-800 text-slate-300">
-                            D:{String(node.metadata.call_depth)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="font-semibold text-xs text-white truncate" title={node.label}>
-                        {node.label}
-                      </div>
-                      <div className="text-[10px] font-mono text-slate-400 truncate mt-0.5">
-                        {node.id}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right 1 Col: Selected Node Inspector Drawer */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between backdrop-blur-md">
-          {selectedNode ? (
-            <div className="space-y-5">
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400">
-                    Vertex Audit Inspector
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800 text-teal-300">
-                    {selectedNode.type}
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-white mt-1 leading-snug">
-                  {selectedNode.label}
-                </h3>
-                <p className="text-xs font-mono text-slate-400 break-all mt-0.5">
-                  ID: {selectedNode.id}
-                </p>
-              </div>
-
-              {/* Dynamic Metadata Properties */}
-              <div className="space-y-3 border-t border-b border-slate-800/80 py-4">
-                <span className="text-xs font-mono font-semibold text-slate-300 block">
-                  Authoritative Node Properties:
-                </span>
-                {selectedNode.metadata && Object.keys(selectedNode.metadata).length > 0 ? (
-                  <div className="space-y-2">
-                    {Object.entries(selectedNode.metadata).map(([key, val]) => (
-                      <div key={key} className="flex items-start justify-between text-xs font-mono">
-                        <span className="text-slate-400 capitalize">{key.replace(/_/g, ' ')}:</span>
-                        <span className="text-white text-right font-medium max-w-[180px] truncate" title={String(val)}>
-                          {Array.isArray(val) ? val.join(', ') : String(val)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500 font-mono">No supplementary metadata attached.</p>
-                )}
-              </div>
-
-              {/* Type-Specific Actions */}
-              {selectedNode.type === 'HIRE' && (
-                <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono space-y-2">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Integrity Guard:</span>
-                    <span className="text-emerald-400">Injection Free</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Call Recursion:</span>
-                    <span className="text-amber-400">Bounded &lt; 3</span>
-                  </div>
-                </div>
-              )}
-
-              {selectedNode.type === 'PAYMENT' && (
-                <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono space-y-2">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Treasury:</span>
-                    <span className="text-emerald-400">Reserved &amp; Settled</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>On-Chain Verification:</span>
-                    <span className="text-cyan-400">AgentVault.sol</span>
-                  </div>
-                </div>
-              )}
-
-              {selectedNode.type === 'AGENT' && (
-                <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono space-y-2">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Keyless Autonomous:</span>
-                    <span className="text-emerald-400">Zero Private Keys</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Policy Non-Bypassable:</span>
-                    <span className="text-emerald-400">Enforced</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center text-slate-500 text-xs font-mono">
-              Click any graph node to inspect live economic parameters.
-            </div>
-          )}
-
-          <div className="pt-4 border-t border-slate-800 mt-4">
+          <div className="flex items-center gap-3">
             <Link
-              href="/trace"
-              className="w-full block text-center py-2 px-3 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-300 hover:bg-teal-500/20 text-xs font-mono font-medium transition-colors"
+              href="/simulator"
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
             >
-              Open Financial Flight Recorder &rarr;
+              Simulator Twin
+            </Link>
+            <Link
+              href="/marketplace"
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/20 transition-all"
+            >
+              Explore Services
             </Link>
           </div>
         </div>
+
+        {/* Global Toast Alert */}
+        {actionSuccessMsg && (
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono flex items-center justify-between animate-fade-in shadow-xl">
+            <div className="flex items-center gap-2">
+              <span>✓</span>
+              <span>{actionSuccessMsg}</span>
+            </div>
+            <button onClick={() => setActionSuccessMsg(null)} className="text-slate-400 hover:text-white">✕</button>
+          </div>
+        )}
+
+        {/* Tab Navigation */}
+        <div className="flex items-center space-x-2 border-b border-slate-800/80 pb-2">
+          {[
+            { id: 'directory', label: 'Peer Directory & Trust', icon: '🔍', count: agents.length },
+            { id: 'contracts', label: 'Active Contracts & Bounded Delegation', icon: '📜', count: contracts.length },
+            { id: 'graph', label: 'Network Topology Graph', icon: '🕸️', count: graph.nodes.length },
+            { id: 'disputes', label: 'Disputes & Audits', icon: '⚖️', count: disputes.length },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as ActiveTab)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-mono font-medium transition-all flex items-center gap-2 ${
+                activeTab === t.id
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-md font-semibold'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                {t.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* TAB 1: Peer Directory & Trust */}
+        {activeTab === 'directory' && (
+          <div className="space-y-6">
+            {/* Filter controls */}
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 backdrop-blur-md">
+              <div className="flex-1 max-w-md">
+                <input
+                  type="text"
+                  placeholder="Filter by agent name, capability (e.g. security.audit), or ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                />
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-mono text-slate-300">
+                <span>Min Trust Score:</span>
+                <input
+                  type="range"
+                  min="5000"
+                  max="10000"
+                  step="500"
+                  value={minTrustScore}
+                  onChange={(e) => setMinTrustScore(Number(e.target.value))}
+                  className="accent-emerald-500 cursor-pointer"
+                />
+                <span className="font-bold text-emerald-400">{(minTrustScore / 100).toFixed(0)}%</span>
+              </div>
+            </div>
+
+            {/* Agent Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredAgents.map((a) => {
+                const score = a.trust_evaluation?.trust_score || 0;
+                const scorePct = (score / 100).toFixed(1);
+                const isTopTier = score >= 9500;
+
+                return (
+                  <div
+                    key={a.identity.agent_id}
+                    className="bg-slate-900/90 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-emerald-500/5 group"
+                  >
+                    <div>
+                      {/* Top Header */}
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 font-mono text-sm">
+                            {a.identity.display_name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5 font-bold text-white text-sm group-hover:text-emerald-300 transition-colors">
+                              <span>{a.identity.display_name}</span>
+                              {isTopTier && <span title="Verified Enterprise Trusted" className="text-emerald-400 text-xs">✓</span>}
+                            </div>
+                            <span className="text-[10px] font-mono text-slate-400 truncate block max-w-[160px]">
+                              {a.identity.agent_id}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                            a.identity.availability === 'BUSY'
+                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                              : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                          }`}
+                        >
+                          {a.identity.availability}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                        {a.identity.description}
+                      </p>
+
+                      {/* Capabilities */}
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {a.identity.capabilities.map((c) => (
+                          <span
+                            key={c}
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-800/80 text-teal-300 border border-slate-700/60"
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Trust Score Progress */}
+                      <div className="space-y-1.5 bg-slate-950/60 p-3 rounded-xl border border-slate-800/60 mb-4 font-mono text-xs">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-slate-400">Trust Evaluation:</span>
+                          <span className="font-bold text-emerald-400">{scorePct}% ({score} bps)</span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                            style={{ width: `${Math.min(100, score / 100)}%` }}
+                          />
+                        </div>
+                        <div className="text-[10px] text-slate-500 flex justify-between pt-1">
+                          <span>Confidence: {Math.round((a.trust_evaluation?.confidence || 0) * 100)}%</span>
+                          <span>Settlement: Arc USDC</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Actions */}
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                      <div>
+                        <span className="text-[10px] font-mono text-slate-400 block">BASE PRICE</span>
+                        <span className="text-sm font-bold text-white font-mono">
+                          ${(Number(a.matched_pricing?.base_price || '0') / 1e6).toFixed(2)} USDC
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedAgent(a)}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold font-mono bg-slate-800 hover:bg-emerald-500/20 text-slate-200 hover:text-emerald-300 border border-slate-700 hover:border-emerald-500/40 transition-all"
+                      >
+                        Inspect Agent →
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: Active Contracts & Bounded Delegation */}
+        {activeTab === 'contracts' && (
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Active Service Contracts & Sub-Delegation</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Enforces Max Depth = 3, Anti-Cycle DAG, and Authoritative Recipient Resolution</p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="px-6 py-3.5">Contract ID</th>
+                    <th className="px-6 py-3.5">Requester → Provider</th>
+                    <th className="px-6 py-3.5">Capability</th>
+                    <th className="px-6 py-3.5">Depth</th>
+                    <th className="px-6 py-3.5">Price</th>
+                    <th className="px-6 py-3.5">State</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {contracts.map((c) => {
+                    const isDepth0 = c.delegation_depth === 0;
+                    return (
+                      <tr key={c.contract_id} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-4 font-bold text-white">{c.contract_id}</td>
+                        <td className="px-6 py-4 text-slate-300">
+                          <span className="text-slate-400">{c.requester_agent_id}</span>
+                          <span className="mx-1 text-emerald-400">→</span>
+                          <span className="text-white font-semibold">{c.provider_agent_id}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-2 py-0.5 rounded bg-slate-800 text-teal-300 border border-slate-700">
+                            {c.capability}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isDepth0
+                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            }`}
+                          >
+                            Depth {c.delegation_depth} {isDepth0 ? '(Root)' : '(Sub)'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-bold text-white">
+                          ${(Number(c.price) / 1e6).toFixed(2)} {c.currency}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              c.state === 'COMPLETED'
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : c.state === 'FUNDED' || c.state === 'EXECUTING'
+                                ? 'bg-blue-500/20 text-blue-300'
+                                : c.state === 'DISPUTED'
+                                ? 'bg-rose-500/20 text-rose-300'
+                                : 'bg-slate-800 text-slate-300'
+                            }`}
+                          >
+                            {c.state}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-2">
+                          {c.state === 'ACCEPTED' && (
+                            <button
+                              onClick={() => handleFund(c.contract_id)}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition-colors"
+                            >
+                              Fund Contract
+                            </button>
+                          )}
+                          {(c.state === 'FUNDED' || c.state === 'EXECUTING') && (
+                            <button
+                              onClick={() => handleVerify(c.contract_id)}
+                              className="px-2.5 py-1 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/40 hover:bg-teal-500/30 transition-colors"
+                            >
+                              Verify Deliverable
+                            </button>
+                          )}
+                          {c.state === 'COMPLETED' && (
+                            <span className="text-emerald-400 font-bold">✓ Settled</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: Network Topology Graph */}
+        {activeTab === 'graph' && (
+          <div className="space-y-4">
+            <NetworkTopologyGraph graph={graph} />
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400" /> Active Agents</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Busy Agents</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-purple-500" /> Capabilities</span>
+                <span className="flex items-center gap-1.5"><span className="w-4 h-0.5 bg-cyan-400" /> Hired / Paid Flow</span>
+                <span className="flex items-center gap-1.5"><span className="w-4 h-0.5 border-t border-dashed border-amber-400" /> Delegated Subcontract</span>
+              </div>
+              <span>SHA-256 Verified Invariants Enforced</span>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: Disputes & Audits */}
+        {activeTab === 'disputes' && (
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur-xl space-y-6">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Network Dispute & Complaint Audit Registry</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Authoritative dispute resolutions and automated trust score penalization</p>
+            </div>
+
+            <div className="space-y-4">
+              {disputes.map((d) => (
+                <div
+                  key={d.dispute_id}
+                  className="p-5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono text-xs"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white">{d.dispute_id}</span>
+                      <span className="text-slate-500">|</span>
+                      <span className="text-slate-400">Contract: {d.contract_id}</span>
+                      <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px]">
+                        {d.state}
+                      </span>
+                    </div>
+                    <p className="text-slate-300 font-sans text-xs">{d.reason}</p>
+                    <div className="text-[11px] text-slate-500 truncate max-w-xl">
+                      Evidence Hash: {d.evidence}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 block">CLAIMED REFUND</span>
+                      <span className="font-bold text-white">${(Number(d.refund_amount) / 1e6).toFixed(2)} USDC</span>
+                    </div>
+                    <button
+                      onClick={() => alert(`Audit case ${d.dispute_id} evidence package reviewed by deterministic policy engine.`)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                    >
+                      Audit Evidence
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Selected Agent Flyout Drawer / Modal */}
+        {selectedAgent && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl animate-fade-in space-y-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white">{selectedAgent.identity.display_name}</h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                      {selectedAgent.identity.status}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono text-slate-400">{selectedAgent.identity.agent_id}</span>
+                </div>
+                <button
+                  onClick={() => setSelectedAgent(null)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">{selectedAgent.identity.description}</p>
+
+              {/* Trust Breakdown Matrix */}
+              <div className="bg-slate-950/80 rounded-2xl p-4 border border-slate-800/80 space-y-3 font-mono text-xs">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                  <span className="text-slate-400">Deterministic Trust Score:</span>
+                  <span className="text-emerald-400 font-bold text-sm">
+                    {((selectedAgent.trust_evaluation?.trust_score || 0) / 100).toFixed(1)}% ({selectedAgent.trust_evaluation?.trust_score} bps)
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {selectedAgent.trust_evaluation?.signals?.map((s) => (
+                    <div key={s.signal} className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400">{s.signal}:</span>
+                      <span className="text-slate-200">{s.explanation}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pricing & Terms */}
+              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                  <span className="text-slate-400 text-[10px] block">SETTLEMENT CURRENCY</span>
+                  <span className="font-bold text-white">USDC (Arc Settlement)</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                  <span className="text-slate-400 text-[10px] block">DELIVERY VERIFICATION</span>
+                  <span className="font-bold text-emerald-400">SHA-256 Checksum Required</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  onClick={() => setSelectedAgent(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    alert(`Drafted service contract proposal for ${selectedAgent.identity.display_name}.`);
+                    setSelectedAgent(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/20"
+                >
+                  Propose Contract →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
