@@ -1293,5 +1293,190 @@ export interface LiveExecutionPayload {
   };
 }
 
+// -----------------------------------------------------------------------------
+// Open Agent Network Types
+// -----------------------------------------------------------------------------
+
+export interface AgentManifestPricing {
+  capability: string;
+  model: 'FIXED' | 'VARIABLE' | 'QUOTE_REQUIRED' | string;
+  base_price?: string;
+  currency: string;
+}
+
+export interface AgentManifestEndpoints {
+  task_url: string;
+  health_url?: string;
+  dispute_url?: string;
+}
+
+export interface AgentManifest {
+  protocol_version: string;
+  agent_id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  version: string;
+  capabilities: string[];
+  pricing: AgentManifestPricing[];
+  settlement: string[];
+  endpoints: AgentManifestEndpoints;
+  trust_metadata?: Record<string, string>;
+  created_at?: string;
+}
+
+export interface AgentNetworkIdentity {
+  agent_id: string;
+  organization_id: string;
+  display_name: string;
+  description: string;
+  version: string;
+  protocol_version: string;
+  capabilities: string[];
+  pricing_models: string[];
+  currencies: string[];
+  settlement_methods: string[];
+  availability: string;
+  trust_metadata?: Record<string, string>;
+  endpoint_metadata?: Record<string, string>;
+  status: 'ACTIVE' | 'SUSPENDED' | 'REVOKED' | string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrustSignal {
+  signal: string;
+  value: number;
+  weight: number;
+  impact: number;
+  explanation: string;
+}
+
+export interface TrustEvaluation {
+  agent_id: string;
+  trust_score: number; // 0 - 10000 basis points
+  confidence: number;
+  signals: TrustSignal[];
+  warnings?: string[];
+  evaluated_at: string;
+}
+
+export interface DiscoveredAgent {
+  identity: AgentNetworkIdentity;
+  trust_evaluation: TrustEvaluation;
+  matched_pricing?: AgentManifestPricing;
+}
+
+export interface NetworkDiscoveryFilter {
+  capability?: string;
+  protocol_version?: string;
+  pricing_model?: string;
+  availability?: string;
+  min_trust_score?: number;
+  organization_id?: string;
+  limit?: number;
+}
+
+export interface CandidateRanking {
+  agent_id: string;
+  display_name: string;
+  price_base_units: string;
+  utility_score: number;
+  price_score: number;
+  trust_score: number;
+  latency_score: number;
+  match_score: number;
+  risk_score: number;
+  selected: boolean;
+  explanation: string;
+  warnings?: string[];
+}
+
+export interface ExecutionPlanDraft {
+  plan_id: string;
+  selected_agent_id: string;
+  selected_capability: string;
+  projected_cost: string;
+  currency: string;
+  estimated_latency_ms: number;
+  rankings: CandidateRanking[];
+  selected_ranking: CandidateRanking;
+  safety_notice: string;
+  created_at: string;
+}
+
+export interface AgentServiceContract {
+  contract_id: string;
+  organization_id: string;
+  requester_agent_id: string;
+  provider_agent_id: string;
+  capability: string;
+  mission_id?: string;
+  root_mission_id?: string;
+  parent_contract_id?: string;
+  delegation_depth: number;
+  input_spec?: Record<string, unknown>;
+  output_spec?: Record<string, unknown>;
+  price: string;
+  currency: string;
+  budget_ceiling: string;
+  deadline: string;
+  expiration: string;
+  verification_policy?: string;
+  cancellation_policy?: string;
+  dispute_policy?: string;
+  payment_terms?: string;
+  payment_intent_id?: string;
+  quote_id?: string;
+  state: 'PROPOSED' | 'NEGOTIATING' | 'ACCEPTED' | 'FUNDED' | 'EXECUTING' | 'RESULT_SUBMITTED' | 'VERIFYING' | 'COMPLETED' | 'DISPUTED' | 'FAILED' | 'CANCELLED' | 'EXPIRED' | string;
+  result?: AgentResultPayload;
+  error_msg?: string;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+}
+
+export interface AgentResultPayload {
+  contract_id: string;
+  provider_agent_id: string;
+  output: Record<string, unknown>;
+  checksum_sha256: string;
+  claimed_cost: string;
+  claimed_duration_ms?: number;
+  timestamp: string;
+}
+
+export interface VerificationReport {
+  contract_id: string;
+  passed: boolean;
+  score_basis_points: number;
+  checksum_valid: boolean;
+  schema_valid: boolean;
+  cost_compliant: boolean;
+  deadline_met: boolean;
+  reason: string;
+  verified_at: string;
+}
+
+export interface DisputeRecord {
+  dispute_id: string;
+  contract_id: string;
+  organization_id: string;
+  initiator_agent_id: string;
+  respondent_agent_id: string;
+  reason: string;
+  evidence: string;
+  state: 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED_PROVIDER' | 'RESOLVED_REQUESTER' | 'PARTIAL_SETTLEMENT' | 'REFUND_REQUIRED' | 'CLOSED' | string;
+  resolution_notes?: string;
+  refund_amount: string;
+  created_at: string;
+  resolved_at?: string;
+}
+
+export interface NetworkGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
 
 

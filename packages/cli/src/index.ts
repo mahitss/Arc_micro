@@ -30,6 +30,11 @@ import {
   printSwarmTrace,
   printTransactionsList,
   printWebhooksList,
+  printAgentNetworkIdentity,
+  printDiscoveredAgents,
+  printServiceContract,
+  printDisputeRecord,
+  printNetworkGraph,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -746,6 +751,95 @@ async function main(): Promise<void> {
         const rep = await client.swarms.replan(targetId);
         if (isJson) printJson(rep);
         else printReplanProposal(rep);
+        return;
+      }
+    }
+
+    // 15. Open Agent Network commands
+    if (resource === 'network') {
+      const sub = action; // agents, contracts, disputes, graph
+      const op = targetId; // list, get, fund, etc.
+      const param = positional[3];
+
+      if (sub === 'agents') {
+        if (!op || op === 'list') {
+          const cap = flags['capability'] as string;
+          const minTrust = flags['min-trust'] ? Number(flags['min-trust']) : undefined;
+          const res = await client.agentNetwork.list({ capability: cap, min_trust_score: minTrust });
+          if (isJson) printJson(res);
+          else printDiscoveredAgents(res.agents);
+          return;
+        }
+        if (op === 'get') {
+          if (!param) {
+            console.error('Error: "network agents get" requires an <agent_id>');
+            process.exit(1);
+          }
+          const res = await client.agentNetwork.get(param);
+          if (isJson) printJson(res);
+          else printAgentNetworkIdentity(res.identity);
+          return;
+        }
+      }
+
+      if (sub === 'contracts') {
+        if (!op || op === 'list') {
+          const res = await client.agentNetwork.listContracts();
+          if (isJson) printJson(res);
+          else {
+            console.log(`Contracts (${res.count}):`);
+            for (const c of res.contracts) printServiceContract(c);
+          }
+          return;
+        }
+        if (op === 'get') {
+          if (!param) {
+            console.error('Error: "network contracts get" requires a <contract_id>');
+            process.exit(1);
+          }
+          const res = await client.agentNetwork.getContract(param);
+          if (isJson) printJson(res);
+          else printServiceContract(res);
+          return;
+        }
+        if (op === 'fund') {
+          if (!param) {
+            console.error('Error: "network contracts fund" requires a <contract_id>');
+            process.exit(1);
+          }
+          const res = await client.agentNetwork.fundContract(param);
+          if (isJson) printJson(res);
+          else console.log(`Contract ${res.contract_id} FUNDED! PaymentIntent: ${res.payment_intent_id}`);
+          return;
+        }
+      }
+
+      if (sub === 'disputes') {
+        if (!op || op === 'list') {
+          const res = await client.agentNetwork.listDisputes();
+          if (isJson) printJson(res);
+          else {
+            console.log(`Disputes (${res.count}):`);
+            for (const d of res.disputes) printDisputeRecord(d);
+          }
+          return;
+        }
+        if (op === 'get') {
+          if (!param) {
+            console.error('Error: "network disputes get" requires a <dispute_id>');
+            process.exit(1);
+          }
+          const res = await client.agentNetwork.getDispute(param);
+          if (isJson) printJson(res);
+          else printDisputeRecord(res);
+          return;
+        }
+      }
+
+      if (sub === 'graph') {
+        const res = await client.agentNetwork.getGraph();
+        if (isJson) printJson(res);
+        else printNetworkGraph(res);
         return;
       }
     }

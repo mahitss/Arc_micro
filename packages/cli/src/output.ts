@@ -24,6 +24,11 @@ import type {
   CounterfactualComparison,
   MonteCarloSummary,
   LiveExecutionPayload,
+  AgentNetworkIdentity,
+  DiscoveredAgent,
+  AgentServiceContract,
+  DisputeRecord,
+  NetworkGraph,
   Swarm,
   SwarmGraph,
   SwarmRiskScore,
@@ -631,6 +636,95 @@ export function printExecutePlanPayload(res: LiveExecutionPayload): void {
   console.log(`Live Policy Check:  ${res.payload.policy_decision}`);
   console.log(`Requires Approval:  ${res.payload.requires_approval}`);
   console.log(`Prepared At:        ${res.payload.prepared_at}`);
+  console.log('============================================================');
+}
+
+export function printAgentNetworkIdentity(agent: AgentNetworkIdentity): void {
+  console.log('============================================================');
+  console.log('AGENT NETWORK IDENTITY');
+  console.log('============================================================');
+  console.log(`Agent ID:       ${agent.agent_id}`);
+  console.log(`Name:           ${agent.display_name}`);
+  console.log(`Organization:   ${agent.organization_id}`);
+  console.log(`Status:         ${agent.status}`);
+  console.log(`Protocol:       ${agent.protocol_version}`);
+  console.log(`Capabilities:   ${agent.capabilities.join(', ')}`);
+  console.log(`Pricing Models: ${agent.pricing_models.join(', ')}`);
+  console.log(`Settlement:     ${agent.settlement_methods.join(', ')}`);
+  console.log(`Availability:   ${agent.availability}`);
+  console.log(`Updated At:     ${agent.updated_at}`);
+  console.log('============================================================');
+}
+
+export function printDiscoveredAgents(agents: DiscoveredAgent[]): void {
+  console.log('============================================================');
+  console.log(`DISCOVERED NETWORK AGENTS (${agents.length})`);
+  console.log('============================================================');
+  for (const a of agents) {
+    const score = a.trust_evaluation ? `${(a.trust_evaluation.trust_score / 100).toFixed(1)}%` : 'N/A';
+    const conf = a.trust_evaluation ? `${Math.round(a.trust_evaluation.confidence * 100)}%` : 'N/A';
+    console.log(`• ${a.identity.agent_id} (${a.identity.display_name})`);
+    console.log(`  Status: ${a.identity.status} | Trust Score: ${score} (Conf: ${conf})`);
+    console.log(`  Caps: ${a.identity.capabilities.join(', ')}`);
+    if (a.matched_pricing) {
+      console.log(`  Pricing: ${a.matched_pricing.model} (Base: ${formatUsdc(a.matched_pricing.base_price || '0')})`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printServiceContract(c: AgentServiceContract): void {
+  console.log('============================================================');
+  console.log('AGENT SERVICE CONTRACT');
+  console.log('============================================================');
+  console.log(`Contract ID:      ${c.contract_id}`);
+  console.log(`State:            ${c.state}`);
+  console.log(`Requester:        ${c.requester_agent_id}`);
+  console.log(`Provider:         ${c.provider_agent_id}`);
+  console.log(`Capability:       ${c.capability}`);
+  console.log(`Price:            ${formatUsdc(c.price)} (${c.currency})`);
+  console.log(`Budget Ceiling:   ${formatUsdc(c.budget_ceiling)}`);
+  console.log(`Delegation Depth: ${c.delegation_depth}`);
+  console.log(`Deadline:         ${c.deadline}`);
+  if (c.payment_intent_id) {
+    console.log(`Payment Intent:   ${c.payment_intent_id}`);
+  }
+  if (c.error_msg) {
+    console.log(`Error:            ${c.error_msg}`);
+  }
+  console.log('============================================================');
+}
+
+export function printDisputeRecord(d: DisputeRecord): void {
+  console.log('============================================================');
+  console.log('NETWORK DISPUTE RECORD');
+  console.log('============================================================');
+  console.log(`Dispute ID:       ${d.dispute_id}`);
+  console.log(`Contract ID:      ${d.contract_id}`);
+  console.log(`State:            ${d.state}`);
+  console.log(`Initiator:        ${d.initiator_agent_id}`);
+  console.log(`Respondent:       ${d.respondent_agent_id}`);
+  console.log(`Reason:           ${d.reason}`);
+  console.log(`Refund Amount:    ${formatUsdc(d.refund_amount)}`);
+  if (d.resolution_notes) {
+    console.log(`Resolution:       ${d.resolution_notes}`);
+  }
+  console.log('============================================================');
+}
+
+export function printNetworkGraph(g: NetworkGraph): void {
+  console.log('============================================================');
+  console.log(`OPEN AGENT NETWORK TOPOLOGY (${g.nodes.length} Nodes, ${g.edges.length} Edges)`);
+  console.log('============================================================');
+  console.log('NODES:');
+  for (const n of g.nodes) {
+    const status = (n as any).status || 'ACTIVE';
+    console.log(`  [${n.type}] ${n.id} — ${n.label} (${status})`);
+  }
+  console.log('EDGES:');
+  for (const e of g.edges) {
+    console.log(`  ${e.source} --(${e.type}: ${e.label || ''})--> ${e.target}`);
+  }
   console.log('============================================================');
 }
 

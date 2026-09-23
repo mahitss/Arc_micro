@@ -609,6 +609,134 @@ class SwarmsResource:
         res = self._client._request("POST", f"/v1/swarms/{swarm_id}/replan", json=payload or {})
         return res.get("proposal", res)
 
+class AgentNetworkResource:
+    """Open Agent Network resource for discovery, contracts, and peer settlement."""
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def register(self, manifest: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/agent-network/agents/register", json=manifest)
+
+    def list(
+        self,
+        capability: Optional[str] = None,
+        protocol_version: Optional[str] = None,
+        pricing_model: Optional[str] = None,
+        availability: Optional[str] = None,
+        min_trust_score: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        params = {}
+        if capability:
+            params["capability"] = capability
+        if protocol_version:
+            params["protocol_version"] = protocol_version
+        if pricing_model:
+            params["pricing_model"] = pricing_model
+        if availability:
+            params["availability"] = availability
+        if min_trust_score is not None:
+            params["min_trust_score"] = str(min_trust_score)
+        if limit is not None:
+            params["limit"] = str(limit)
+        return self._client._request("GET", "/v1/agent-network/agents", params=params)
+
+    def get(self, agent_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/agent-network/agents/{agent_id}")
+
+    def update_manifest(self, agent_id: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/agent-network/agents/{agent_id}/manifest", json=manifest)
+
+    def suspend(self, agent_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/agent-network/agents/{agent_id}/suspend", json={"reason": reason or ""})
+
+    def list_capabilities(self, category: Optional[str] = None) -> Dict[str, Any]:
+        params = {"category": category} if category else None
+        return self._client._request("GET", "/v1/agent-network/capabilities", params=params)
+
+    def route_plan(
+        self,
+        required_capability: str,
+        budget_base_units: str,
+        deadline: Optional[str] = None,
+        risk_tolerance: Optional[str] = None,
+        min_trust_score: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "required_capability": required_capability,
+            "budget_base_units": budget_base_units,
+        }
+        if deadline:
+            payload["deadline"] = deadline
+        if risk_tolerance:
+            payload["risk_tolerance"] = risk_tolerance
+        if min_trust_score is not None:
+            payload["min_trust_score"] = min_trust_score
+        return self._client._request("POST", "/v1/agent-network/routing/plan", json=payload)
+
+    def create_contract(self, contract: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/agent-network/contracts", json=contract)
+
+    def list_contracts(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/agent-network/contracts")
+
+    def get_contract(self, contract_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/agent-network/contracts/{contract_id}")
+
+    def accept_contract(self, contract_id: str, acceptor_agent_id: Optional[str] = None) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/agent-network/contracts/{contract_id}/accept", json={"acceptor_agent_id": acceptor_agent_id})
+
+    def fund_contract(self, contract_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/agent-network/contracts/{contract_id}/fund", json={})
+
+    def delegate_contract(
+        self,
+        contract_id: str,
+        subcontractor_agent_id: str,
+        capability: str,
+        price_base_units: str,
+        deadline: Optional[str] = None,
+        input_spec: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "subcontractor_agent_id": subcontractor_agent_id,
+            "capability": capability,
+            "price_base_units": price_base_units,
+            "input_spec": input_spec or {},
+        }
+        if deadline:
+            payload["deadline"] = deadline
+        return self._client._request("POST", f"/v1/agent-network/contracts/{contract_id}/delegate", json=payload)
+
+    def verify_result(self, contract_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/agent-network/contracts/{contract_id}/verify", json=payload)
+
+    def open_dispute(self, contract_id: str, initiator_agent_id: str, reason: str, evidence: str = "") -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/agent-network/contracts/{contract_id}/disputes", json={
+            "initiator_agent_id": initiator_agent_id,
+            "reason": reason,
+            "evidence": evidence,
+        })
+
+    def list_disputes(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/agent-network/disputes")
+
+    def get_dispute(self, dispute_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/agent-network/disputes/{dispute_id}")
+
+    def resolve_dispute(self, dispute_id: str, state: str, notes: str = "", refund_amount: str = "0") -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/agent-network/disputes/{dispute_id}/resolve", json={
+            "state": state,
+            "notes": notes,
+            "refund_amount": refund_amount,
+        })
+
+    def get_graph(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/agent-network/graph")
+
+    def get_trust(self, agent_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/agent-network/trust/{agent_id}")
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -636,6 +764,7 @@ class AgentPay:
         self.webhooks = WebhooksResource(self)
         self.simulations = SimulationsResource(self)
         self.swarms = SwarmsResource(self)
+        self.agent_network = AgentNetworkResource(self)
 
     def _request(
         self,

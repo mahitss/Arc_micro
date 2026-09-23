@@ -17,6 +17,7 @@ import { ApprovalsResource } from './resources/approvals.js';
 import { EventsResource } from './resources/events.js';
 import { HiresResource } from './resources/hires.js';
 import { MissionsResource } from './resources/missions.js';
+import { AgentNetworkResource } from './resources/agent-network.js';
 import { PaymentIntentsResource } from './resources/payment-intents.js';
 import { QuotesResource } from './resources/quotes.js';
 import { ServicesResource } from './resources/services.js';
@@ -60,6 +61,7 @@ export class AgentPay {
   public readonly events: EventsResource;
   public readonly simulations: SimulationsResource;
   public readonly swarms: SwarmsResource;
+  public readonly agentNetwork: AgentNetworkResource;
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
@@ -84,6 +86,7 @@ export class AgentPay {
     this.events = new EventsResource(this);
     this.simulations = new SimulationsResource(this);
     this.swarms = new SwarmsResource(this);
+    this.agentNetwork = new AgentNetworkResource(this);
   }
 
   /**

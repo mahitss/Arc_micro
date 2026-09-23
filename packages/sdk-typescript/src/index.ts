@@ -17,6 +17,7 @@ export {
   UnknownError,
   ValidationError,
 } from './errors.js';
+export { AgentNetworkResource } from './resources/agent-network.js';
 export { AgentsResource } from './resources/agents.js';
 export { ApprovalsResource } from './resources/approvals.js';
 export { EventsResource } from './resources/events.js';
@@ -132,4 +133,19 @@ export type {
   WaitForCompletionOptions,
   WebhookDelivery,
   WebhookEndpoint,
+  AgentManifest,
+  AgentManifestPricing,
+  AgentManifestEndpoints,
+  AgentNetworkIdentity,
+  TrustSignal,
+  TrustEvaluation,
+  DiscoveredAgent,
+  NetworkDiscoveryFilter,
+  CandidateRanking,
+  ExecutionPlanDraft,
+  AgentServiceContract,
+  AgentResultPayload,
+  VerificationReport,
+  DisputeRecord,
+  NetworkGraph,
 } from './types.js';

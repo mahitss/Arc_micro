@@ -508,7 +508,49 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         canc = client.swarms.cancel("swm_py_01")
         self.assertEqual(canc["status"], "CANCELLED")
 
+    @patch("requests.request")
+    def test_open_agent_network(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_test_key")
+
+        # 1. Register
+        mock_resp.json.return_value = {
+            "agent_id": "agent_auditor_01",
+            "display_name": "Sentinel Auditor",
+            "status": "ACTIVE",
+        }
+        registered = client.agent_network.register({
+            "protocol_version": "agentpay.network.v1",
+            "agent_id": "agent_auditor_01",
+            "name": "Sentinel Auditor",
+        })
+        self.assertEqual(registered["agent_id"], "agent_auditor_01")
+        self.assertEqual(registered["status"], "ACTIVE")
+
+        # 2. List Discovery
+        mock_resp.json.return_value = {
+            "agents": [{"identity": {"agent_id": "agent_auditor_01"}, "trust_evaluation": {"trust_score": 9200}}],
+            "count": 1,
+        }
+        res = client.agent_network.list(capability="security.audit@1.0")
+        self.assertEqual(res["count"], 1)
+        self.assertEqual(res["agents"][0]["identity"]["agent_id"], "agent_auditor_01")
+
+        # 3. Create & Fund Contract
+        mock_resp.json.return_value = {"contract_id": "c_py_01", "status": "FUNDED", "payment_intent_id": "pi_123"}
+        funded = client.agent_network.fund_contract("c_py_01")
+        self.assertEqual(funded["status"], "FUNDED")
+
+        # 4. Graph
+        mock_resp.json.return_value = {"nodes": [{"id": "agent_auditor_01", "type": "AGENT"}], "edges": []}
+        graph = client.agent_network.get_graph()
+        self.assertEqual(len(graph["nodes"]), 1)
+
 if __name__ == "__main__":
     unittest.main()
+
 
 

@@ -1342,5 +1342,83 @@ test('AgentPay SDK — Economic Simulator & Digital Twin Suite (Phases 0-33)', a
   assert.equal(exec.revalidated, true);
 });
 
+test('AgentPay SDK — Open Agent Network (Discovery, Contracts & Settlement)', async () => {
+  let capturedUrl = '';
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+
+    if (capturedUrl.includes('/v1/agent-network/agents/register')) {
+      return new Response(JSON.stringify({
+        agent_id: 'agent_auditor_01',
+        display_name: 'Sentinel Auditor',
+        protocol_version: 'agentpay.network.v1',
+        status: 'ACTIVE',
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (capturedUrl.includes('/v1/agent-network/agents')) {
+      return new Response(JSON.stringify({
+        agents: [{
+          identity: { agent_id: 'agent_auditor_01', display_name: 'Sentinel Auditor', status: 'ACTIVE' },
+          trust_evaluation: { trust_score: 9500, confidence: 0.98 },
+        }],
+        count: 1,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (capturedUrl.includes('/v1/agent-network/contracts/c_123/fund')) {
+      return new Response(JSON.stringify({
+        contract_id: 'c_123',
+        status: 'FUNDED',
+        payment_intent_id: 'intent_funded_99',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (capturedUrl.includes('/v1/agent-network/graph')) {
+      return new Response(JSON.stringify({
+        nodes: [{ id: 'agent_auditor_01', type: 'AGENT', label: 'Sentinel Auditor' }],
+        edges: [],
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  // 1. Register
+  const registered = await client.agentNetwork.register({
+    protocol_version: 'agentpay.network.v1',
+    agent_id: 'agent_auditor_01',
+    organization_id: 'org_default',
+    name: 'Sentinel Auditor',
+    description: 'Security auditing',
+    version: '1.0.0',
+    capabilities: ['security.audit@1.0'],
+    pricing: [{ capability: 'security.audit@1.0', model: 'FIXED', base_price: '500000', currency: 'USDC' }],
+    settlement: ['ARC_USDC'],
+    endpoints: { task_url: 'https://auditor.example.com/task' },
+  });
+  assert.equal(registered.agent_id, 'agent_auditor_01');
+  assert.equal(registered.status, 'ACTIVE');
+
+  // 2. Discover
+  const list = await client.agentNetwork.list({ capability: 'security.audit@1.0' });
+  assert.equal(list.count, 1);
+  assert.equal(list.agents[0].identity.agent_id, 'agent_auditor_01');
+  assert.equal(list.agents[0].trust_evaluation.trust_score, 9500);
+
+  // 3. Fund Contract
+  const funded = await client.agentNetwork.fundContract('c_123');
+  assert.equal(funded.contract_id, 'c_123');
+  assert.equal(funded.status, 'FUNDED');
+  assert.equal(funded.payment_intent_id, 'intent_funded_99');
+
+  // 4. Graph
+  const graph = await client.agentNetwork.getGraph();
+  assert.equal(graph.nodes.length, 1);
+  assert.equal(graph.nodes[0].id, 'agent_auditor_01');
+});
+
 
 
