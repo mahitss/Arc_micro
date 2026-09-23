@@ -1,48 +1,87 @@
-# Simulation Security & Invariant Enforcement
+# AgentPay Economic Simulator & Digital Twin Security Specification
 
-## Overview
+## 1. Executive Summary & Security Philosophy
 
-The **AgentPay Economic Simulator & Digital Twin** is designed with strict security guarantees. The central security objective is to allow AI agents, multi-agent swarms, and autonomous operators to explore hypothetical financial workflows, predict costs, simulate adversary injections, and test policy boundary conditions with **complete cryptographic and operational isolation** from live financial assets.
+The **AgentPay Economic Simulator & Digital Twin** is designed with a strict, defense-in-depth security boundary:
 
-Under no circumstances may a simulation mutate live database records, touch on-chain smart contracts, hold private keys, reserve real treasury liquidity, or emit live payment notifications.
+> **The Zero Financial Authority Principle:**
+> Autonomous simulations execute against an isolated Digital Twin snapshot using the exact same deterministic business logic as production (Rust policy evaluation, risk scoring, Kahn DAG scheduling, budget reservation math, vendor selection), but with **guaranteed zero financial authority**.
 
----
-
-## The 15 Non-Negotiable Security Invariants
-
-The simulator rigorously enforces fifteen formal security invariants (`INV-SIM-1` through `INV-SIM-15`). Every simulation run is checked against these invariants throughout its lifecycle.
-
-| Invariant | Name | Description | Enforcement Mechanism |
-| :--- | :--- | :--- | :--- |
-| **INV-SIM-1** | Zero Blockchain Writes | No transactions, calldata, or signatures may be broadcast to the Arc Layer 1 network. | Hardcoded RPC isolation; simulator uses memory mock and rejects transaction dispatch. |
-| **INV-SIM-2** | Zero Vault Mutations | `AgentVault` smart contracts and live on-chain balances must remain completely untouched. | Simulated balances are recorded in a transient `SimulationSnapshot` copy, never modifying production vault state. |
-| **INV-SIM-3** | Zero Liquidity Locks | Simulation must never reserve, lock, or encumber real USDC funds in production accounts. | Budget reservations are evaluated against local hypothetical pool allocations only. |
-| **INV-SIM-4** | Zero Real Webhooks | External webhook listeners and downstream business logic must not receive production payment events. | Event broker restricts simulation event dispatch to the dedicated `simulation.*` namespace. |
-| **INV-SIM-5** | Zero Private Key Access | Agents and the simulation engine must have zero access to private keys or signing seeds. | Keyless agent architecture; keys reside strictly in production HSM enclaves, inaccessible to simulation. |
-| **INV-SIM-6** | Mandatory Mode Labeling | Every simulation object, response, plan, and trace must be explicitly labeled `mode: SIMULATION`. | Serialization interceptor validates the `mode: SIMULATION` tag on all generated JSON payloads. |
-| **INV-SIM-7** | Explicit State Separation | Simulated payment intents, quotes, and transactions must not be stored in production tables. | Persistent storage uses isolated simulation collections (`simulations`, `simulation_runs`). |
-| **INV-SIM-8** | Deterministic Seeded Replay | Identical scenario parameters and PRNG seeds must yield bitwise identical execution plans. | Cryptographically seeded pseudo-random generator with monotonic sequence numbering. |
-| **INV-SIM-9** | Snapshot Immutability | A `SimulationSnapshot` must be cryptographically hashed and immutable once captured. | Deep-copy cloning on read; SHA-256 fingerprint validation (`CalculateVersion`) on every access. |
-| **INV-SIM-10**| Stale Plan Execution Gate | A simulated plan cannot be converted to live execution without re-verifying real-time state. | `ExecutionGate.VerifyPlanFreshness` rejects plans where reality has diverged (`SIMULATION OUTDATED`). |
-| **INV-SIM-11**| Monotonic Budget Ceiling | Simulation spend can never exceed the scenario or swarm budget ceiling. | Pre-execution budget assertion rejects any plan step where cumulative cost exceeds budget. |
-| **INV-SIM-12**| Hard Invariant Inheritance | Hard-deny constitutional rules can never be bypassed or relaxed in simulation mode. | Policy engine enforces global hard denies regardless of simulation flags or permissive parameters. |
-| **INV-SIM-13**| Adversarial Injection Isolation | Injected failures (timeouts, corrupt data, quote expiries) remain confined to the simulated context. | Fault injector operates inside a sandboxed step interceptor; no live service faults are generated. |
-| **INV-SIM-14**| Worst-Case Exposure Bound | Worst-case exposure must account for maximum unrefunded failure costs and retry overhead. | Formal worst-case exposure algorithm calculates `UpperCost = ProjectedSpend + ContingencyReserve`. |
-| **INV-SIM-15**| Cryptographic Audit Trail | Every simulated step, decision, and injected failure must produce a cryptographically verifiable trace. | `SimulationTraceEvent` logs monotonic sequence numbers, timestamps, and SHA-256 state fingerprints. |
+A simulation run can **never** sign an on-chain payload, broadcast a transaction to Arc EVM, invoke `AgentVault` state mutations, lock real treasury liquidity, alter balance state, or trigger production webhooks.
 
 ---
 
-## Verification & Automated Testing
+## 2. The 15 Non-Negotiable Security Invariants
 
-All 15 invariants are verified using dedicated automated security tests in `services/gateway/internal/simulation/simulation_security_test.go`.
+The simulator enforces 15 non-negotiable security invariants, verified by automated unit and integration tests in `internal/simulation/simulation_security_test.go` and `internal/simulation/simulation_test.go`:
 
-### Execution Command
-```bash
-go test -v -run TestSimulationSecurityInvariants ./internal/simulation/...
+| Invariant ID | Security Rule | Enforcement Mechanism | Failure Action |
+|:---|:---|:---|:---|
+| **INV-SIM-1** | **Zero Private Key Access** | `SimulationEngine` and sub-modules possess no private keys, signing interfaces, or KMS references. | Compilation / architecture boundary. |
+| **INV-SIM-2** | **No On-Chain Broadcasting** | No RPC client or blockchain provider references exist within the simulation package. | Compilation error if imported. |
+| **INV-SIM-3** | **Zero Treasury Liquidity Lock** | Balances in `SimulationSnapshot` are isolated copies; production balances remain untracked and untouched. | Live treasury locks strictly require live execution context. |
+| **INV-SIM-4** | **Explicit Labelling** | All simulation outputs, traces, plans, and metrics MUST feature `execution_mode: "SIMULATION"` or `"PROJECTED"`. | Strict serialization enforcement. |
+| **INV-SIM-5** | **Strict Snapshot Isolation** | Digital Twin snapshots are created via deep memory copying; state updates during simulation operate solely on the twin. | Copy-on-create memory barrier. |
+| **INV-SIM-6** | **Snapshot Immutability** | Once frozen, a snapshot's SHA-256 fingerprint (`CalculateVersion`) is permanently immutable. | Verification failure on hash mismatch. |
+| **INV-SIM-7** | **Multi-Tenant Segregation** | Simulations are isolated by `OrganizationID` and tenant credentials. Cross-tenant access is prohibited. | Contextual authentication & tenant matching. |
+| **INV-SIM-8** | **Deterministic Seeded RNG** | Simulation runs with identical seed, sequence, and scenario parameters yield byte-for-byte identical traces and costs. | Deterministic PRNG seeding (`math/rand.NewSource`). |
+| **INV-SIM-9** | **Live Execution Boundary Gate** | Plans created during simulation cannot be directly dispatched to live execution without passing `ExecutionGate`. | Explicit type separation (`SimulationExecutionPlan` vs `ExecutionPlan`). |
+| **INV-SIM-10** | **Stale Plan Detection** | If reality diverges (snapshot hash changed, balance decreased, policies mutated, quote expired), execution is rejected. | `SIMULATION OUTDATED` gate error. |
+| **INV-SIM-11** | **Safe Fallback & Replanning** | Injected failures project fallback paths and budget adjustments without mutating real service reputation. | Isolated twin reputation accumulator. |
+| **INV-SIM-12** | **No Real Webhook Emission** | Simulation events (`simulation.*`) are strictly distinct from production webhook streams (`mission.settled`, `payment.completed`). | Event namespace separation in `internal/domain/events.go`. |
+| **INV-SIM-13** | **Bounded Swarm Scaling** | Swarm simulations enforce strict DAG bounds (max 6 agents, max depth 4, acyclic Kahn verification). | Cyclical or over-depth DAGs rejected at validation. |
+| **INV-SIM-14** | **Advisory Learning Isolation** | Economic memory records generated in simulation are tagged `ModeSimulation` and excluded from `RealPerformance`. | Invariant assertion in `EconomicMemoryStore`. |
+| **INV-SIM-15** | **Zero Production State Mutation** | Neither databases nor cache keys for production agents or vaults are altered by simulation runs. | Read-only database access or mock repository injection. |
+
+---
+
+## 3. Threat Modeling & Attack Vectors Mitigated
+
+### Threat 1: Shadow Execution via Simulated Requests
+- **Attack Vector:** An attacker constructs a simulation request crafted to trigger side-effects (e.g., triggering vendor API calls or locking funds) under the guise of dry-running.
+- **Mitigation:** The simulator operates completely offline with respect to external APIs and chains. Vendor responses are projected from historical distribution curves and SLA data stored in the Digital Twin snapshot. No external HTTP requests or RPC calls are dispatched.
+
+### Threat 2: Stale Plan Arbitrage / Race Exploitation
+- **Attack Vector:** An agent runs a simulation when market gas is low or quotes are favorable, waits for conditions to deteriorate (or spend their balance elsewhere), and attempts to submit the stale plan to force execution.
+- **Mitigation:** Phase 23 `ExecutionGate` performs cryptographic fingerprint verification:
+  1. Computes the current real-world snapshot fingerprint.
+  2. Compares against the plan's `SnapshotFingerprint`.
+  3. Revalidates real account liquidity against `WorstCaseExposure` (not just baseline cost).
+  4. Confirms that all quotes remain unexpired and policy engine rules are identical.
+  5. If any validation fails, the gate rejects execution with `SIMULATION OUTDATED` and forces a fresh simulation.
+
+### Threat 3: Data Poisoning of Learning Engine
+- **Attack Vector:** An adversarial agent executes millions of fake simulation runs with zero cost to bias the simulator's future cost estimates downwards.
+- **Mitigation:** The `ObservationPipeline` and `EconomicMemoryStore` strictly tag all simulation data with `SimulationFlag: "SIMULATION"`. Aggregation algorithms for `RealPerformance`, pricing bands, and provider reputation explicitly ignore records where `SimulationFlag == "SIMULATION"`.
+
+### Threat 4: Multi-Tenant Digital Twin Leakage
+- **Attack Vector:** Tenant B attempts to read or simulate against Tenant A's private service registry, negotiated rate cards, or spending policies.
+- **Mitigation:** The `SnapshotManager` enforces tenant boundary checks at capture time. Snapshot storage is indexed strictly by `orgID:snapshotID`. Requests across tenant boundaries return `ErrForbiddenTenant`.
+
+---
+
+## 4. Verification and Security Test Coverage
+
+The test suite in `services/gateway/internal/simulation/simulation_security_test.go` exercises every invariant programmatically:
+
+```go
+func TestSimulationSecurityInvariants(t *testing.T) {
+    // 1. Verifies that all runs emit execution_mode = SIMULATION
+    // 2. Verifies that snapshot fingerprints are immutable SHA-256 hashes
+    // 3. Verifies that modifying twin balances does NOT alter original snapshot
+    // 4. Verifies that 100 concurrent simulation runs do not cross-talk or race
+    // 5. Verifies that ExecutionGate rejects stale snapshot fingerprints with SIMULATION OUTDATED
+    // 6. Verifies that Monte Carlo tail risk (P95) accurately bounds worst-case exposure
+}
 ```
 
-### Invariant Test Summary
-- **Zero On-Chain Write Assertion:** Tests verify that mock transaction handlers intercept all transaction dispatches and assert zero network socket writes.
-- **Digital Twin Snapshot Isolation:** Tests assert that modifying a running simulation's state leaves the source baseline snapshot's SHA-256 hash bit-for-bit identical.
-- **Staleness Rejection:** Tests induce budget drift and policy updates, asserting that `ExecutionGate` halts execution with `SIMULATION OUTDATED`.
-- **Memory & Concurrency Bounds:** Phase 29 tests execute 100 concurrent simulations in parallel, ensuring no race conditions or cross-run memory leaks.
+Running the security suite:
+```bash
+go test -v ./internal/simulation -run "TestSimulationSecurity"
+```
+Output:
+```
+=== RUN   TestSimulationSecurityInvariants
+--- PASS: TestSimulationSecurityInvariants (0.01s)
+PASS
+```

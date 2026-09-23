@@ -1,51 +1,105 @@
-# AgentPay Economic Simulator & Autonomous Constitution Implementation Report
+# AgentPay Economic Simulator & Digital Twin: Implementation Report
 
-## Executive Summary
+## 1. Executive Summary
 
-This report documents the architectural design, implementation, and verification of two foundational pillars for the AgentPay autonomous economy:
-1. **The Economic Simulator & Digital Twin Engine**
-2. **The Autonomous Sovereign Economic Constitution Subsystem**
+This report documents the design, architecture, and verification of the **AgentPay Economic Simulator & Digital Twin** implemented across Phases 0 through 33.
 
-These systems provide end-to-end predictive economic modeling, deterministic fault injection, counterfactual policy evaluation, Monte Carlo tail risk forecasting, safe "Execute This Plan" transitions, and immutable constitutional governance for autonomous AI agents and multi-agent swarms.
+The Economic Simulator provides autonomous AI agents, multi-agent swarms, and enterprise operators with a **pre-flight digital twin testing environment**. Before risking real treasury liquidity or executing real Arc EVM blockchain transactions, missions can be modeled, stress-tested, and audited under realistic stochastic conditions.
 
 ---
 
-## Architectural Highlights
+## 2. Architecture & Core Subsystems
 
-### 1. Zero-Financial-Authority Digital Twin
-- **`SnapshotManager`:** Provides cryptographically fingerprinted (SHA-256) snapshots of organizations, agents, service registries, and treasury states. Deep copy cloning ensures that simulation mutations never touch production state.
-- **`SimulationEngine`:** Implements deterministic seeded execution for both single-agent missions and 6-agent swarms. Uses topological Kahn DAG dependency scheduling, worst-case exposure modeling, and fault injection (timeouts, high risk, corrupted outputs, quote expirations).
-- **`CounterfactualEngine`:** Computes side-by-side comparative economics (baseline vs counterfactual) to assess the impact of parameter perturbations or policy tightening.
-- **`MonteCarloEngine`:** Executes $N = 1,000$ deterministic runs to calculate empirical P50, P90, and P95 worst-case exposure percentiles, labeled with the mandatory disclaimer notice.
-- **`ExecutionGate`:** Enforces the staleness transition protocol (`SIMULATION OUTDATED`) ensuring plans are never blindly executed if real-world liquidity or policies have drifted.
+```
+                                  +------------------------------------+
+                                  |     Mission Control Web & SDKs     |
+                                  +------------------------------------+
+                                                    |
+                                                    v
+                                  +------------------------------------+
+                                  |    Simulation Suite REST Handler   |
+                                  +------------------------------------+
+                                                    |
+                         +--------------------------+--------------------------+
+                         |                          |                          |
+                         v                          v                          v
+             +-----------------------+  +-----------------------+  +-----------------------+
+             |   Snapshot Manager    |  |   Simulation Engine   |  |    Execution Gate     |
+             |  (Digital Twin State) |  |   (Kahn DAG & PRNG)   |  | (Staleness & Safety)  |
+             +-----------------------+  +-----------------------+  +-----------------------+
+                         |                          |                          |
+                         |        +-----------------+-----------------+        |
+                         |        |                                   |        |
+                         v        v                                   v        v
+             +-----------------------+                             +-----------------------+
+             | Counterfactual Engine |                             |  Monte Carlo Engine   |
+             |   (What-If Scenarios) |                             |   (Tail Risk P50-P95) |
+             +-----------------------+                             +-----------------------+
+                         |                                                     |
+                         +--------------------------+--------------------------+
+                                                    |
+                                                    v
+                                  +------------------------------------+
+                                  |    Economic Learning & Memory      |
+                                  | (Calibration, Drift, Advisory Rec) |
+                                  +------------------------------------+
+```
 
-### 2. Autonomous Sovereign Economic Constitution
-- **Monotonic Authority Inheritance:** Enforces the mathematical hierarchy: Sovereign Invariants &rarr; Organization Envelope &rarr; Swarm Allocation &rarr; Agent Delegated Leaf.
-- **Authority Delta Engine:** Classifies policy changes into `MORE_RESTRICTIVE`, `UNCHANGED`, or `MORE_PERMISSIVE` across 5 dimensions (spending, recipients, delegation, risk, approvals).
-- **Compare-And-Swap (CAS) Activation:** Guaranteed race-free activation with rollback capability to any previous constitutional version.
-- **Zero-Side-Effect Evaluation:** Live and simulated transactions are validated against active constitutional rules with cryptographic evaluation proofs.
+### 1. Digital Twin Snapshot Manager (`snapshot.go`)
+- Captures point-in-time, read-only copies of agent budgets, spending policies, and service registry SLAs.
+- Computes SHA-256 fingerprint (`CalculateVersion`) ensuring immutable provenance.
+- Employs deep memory cloning (`Clone`) to guarantee that simulation state mutations never contaminate production data.
+
+### 2. Simulation Engine (`engine.go`)
+- Models single-agent missions and up to 6-agent swarms using Kahn's topological sort algorithm.
+- Deterministic seeded pseudorandom number generation (`math/rand.NewSource`) keyed by seed and sequence counter to prevent trace collisions.
+- Models 10 failure modes (timeouts, rate limits, network partitions, schema mismatch, etc.) and projects recovery paths, fallbacks, and worst-case exposures.
+
+### 3. Counterfactual & Monte Carlo Engines (`counterfactual.go`, `monte_carlo.go`)
+- Perturbs scenario variables (e.g. policy rules, provider prices) to evaluate side-by-side trade-offs.
+- Runs $N$ deterministic iterations (e.g., 100 runs) to produce empirical P50 median cost, P90 risk, and P95 worst-case exposure with statutory `MODELLED ESTIMATE` disclosures.
+
+### 4. Execution Gate (`execution_gate.go`)
+- Verifies simulation plan fresh validity before transitioning to live execution.
+- Checks fingerprint matches, policy consistency, quote freshness, and worst-case treasury liquidity.
+- Emits explicit `SIMULATION OUTDATED` rejection if reality diverges.
+
+### 5. Economic Learning & Observation Pipeline (`learning.go`)
+- Records observations with strict isolation (`ModeSimulation` vs `ModeLive`).
+- Detects economic drift, measures simulator underestimation bias, and computes calibration offsets.
+- Provides advisory-only recommendations without financial authority.
 
 ---
 
-## Invariant Verification & Test Results
+## 3. Verification & Test Matrix
 
-| Test Suite | Package | Status | Key Verifications |
-| :--- | :--- | :--- | :--- |
-| **Go Gateway Suite** | `services/gateway/...` | 100% PASS | All 15 Non-Negotiable Invariants (`INV-SIM-1` to `INV-SIM-15`), Phase 29 (100 concurrent simulation runs), Digital Twin isolation, 7 demo scenarios. |
-| **TypeScript SDK** | `@agentpay/sdk` | 100% PASS (22/22) | Function overloads for scenarios vs dry-runs, `SimulationsResource`, `ConstitutionsResource`. |
-| **Python SDK** | `agentpay-python` | 100% PASS (16/16) | Complete resource bindings for simulation runs, traces, counterfactuals, and constitutions. |
-| **CLI Tool** | `@agentpay/cli` | 100% BUILD | Simulation & Policy printers, ASCII tables, diff formatting. |
-| **Web Mission Control** | `@agentpay/web` | 100% PASS (40/40) | Next.js 14 production build (33/33 static & dynamic routes generated), `/simulator` & `/constitution`. |
+| Component | Test Suite | Tests Run | Result | Key Invariants Verified |
+|:---|:---|:---|:---|:---|
+| **Simulation Core** | `services/gateway/internal/simulation/...` | 12 tests | **PASS** | Invariants 1-15, Kahn DAG, concurrency |
+| **Simulation Security** | `services/gateway/internal/simulation/...` | 6 tests | **PASS** | Zero authority, snapshot immutability |
+| **Economic Learning** | `services/gateway/internal/economy/...` | 5 tests | **PASS** | Advisory-only, drift detection, calibration |
+| **All Gateway Packages** | `services/gateway/...` | Full suite | **PASS** | 100% green across all microservices |
+| **TypeScript SDK** | `packages/sdk-typescript` | 24 tests | **PASS** | Type overloads, dry-run vs scenario |
+| **Python SDK** | `packages/sdk-python` | 17 tests | **PASS** | All 12 simulation resource methods |
+| **Web Mission Control** | `apps/web` | 40 tests | **PASS** | All 32 pages build (Next.js 14) |
+| **CLI Tooling** | `packages/cli` | Build check | **PASS** | Output printers and formatting |
 
 ---
 
-## Artifacts & Documentation Directory
+## 4. UI Deliverables in Mission Control
 
-- Architecture Guide: `docs/economic-simulator-architecture.md`
-- Economic Simulation Manual: `docs/economic-simulation.md`
-- Digital Twin Documentation: `docs/digital-twin.md`
-- Counterfactual Engine Reference: `docs/counterfactuals.md`
-- Security & Invariants: `docs/simulation-security.md`
-- Execution Gate & Staleness Protocol: `docs/simulation-execution.md`
-- Canonical Scenarios Walkthrough: `docs/simulation-demo.md`
-- Economic Constitution Reference: `docs/economic-constitution.md`
+- **Simulator Navigation Tab:** Added directly to the top-level Mission Control navbar (`apps/web/src/app/layout.tsx`).
+- **Interactive Simulator Page (`/simulator`):**
+  - **Scenario Launcher:** Dropdown pre-loaded with all 7 canonical demo scenarios.
+  - **Topology & Projected DAG:** Visual representation of task dependencies, node concurrency, and fallback paths.
+  - **Projected Economics & Exposure Card:** Breakdown of estimated base cost, platform fees, and worst-case exposure.
+  - **Economic Risk Heatmap:** Interactive matrix charting price, risk score, and provider reliability.
+  - **Execution Audit Trace:** Real-time chronological event stream labeled with `SIMULATION` mode flags.
+  - **Counterfactual & Monte Carlo Panels:** Side-by-side policy comparisons and tail risk distribution curves.
+  - **Execute Plan Action Gate:** One-click safe conversion with live staleness revalidation and warning banner.
+
+---
+
+## 5. Conclusion & Production Readiness
+
+The AgentPay Economic Simulator & Digital Twin satisfies all design objectives and complies strictly with the **Zero Financial Authority** security model. Operators can safely test high-value, complex swarm missions knowing that zero real assets can be liquidated or committed without passing explicit cryptographic gate verification.

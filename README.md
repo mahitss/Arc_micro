@@ -122,6 +122,30 @@ It models execution using the **exact same decision logic as live production** (
 
 Mission Control Simulator is live at **`http://localhost:3000/simulator`**.
 
+### Simulator Quickstart (TypeScript SDK)
+```typescript
+import { AgentPay } from '@agentpay/sdk';
+
+const agentpay = new AgentPay({ apiKey: process.env.AGENTPAY_API_KEY });
+
+// 1. Run deterministic pre-flight scenario simulation
+const sim = await agentpay.simulations.create({
+  scenario_name: 'swarm_data_pipeline',
+  execution_mode: 'SIMULATION',
+  nodes: [
+    { step_id: 'fetch', agent_id: 'agent_lead', capability: 'data_extract', max_budget: '1500000' },
+    { step_id: 'index', agent_id: 'agent_worker', capability: 'code_index', dependencies: ['fetch'] }
+  ]
+});
+console.log(`Simulated Cost: ${sim.projected_economics.total_spend}, Exposure: ${sim.projected_economics.worst_case_exposure}`);
+
+// 2. Run counterfactual policy comparison
+const comparison = await agentpay.simulations.counterfactual({
+  baseline_scenario_id: sim.id,
+  perturbations: [{ parameter: 'daily_limit', new_value: '50000000' }]
+});
+```
+
 ---
 
 ## Autonomous Sovereign Economic Constitution

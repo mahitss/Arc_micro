@@ -374,25 +374,71 @@ const (
 	ObservationResultRejected   ObservationType = "RESULT_REJECTED"
 	ObservationMissionCompleted ObservationType = "MISSION_COMPLETED"
 	ObservationMissionFailed    ObservationType = "MISSION_FAILED"
+
+	// Canonical Event Types (Task 9)
+	ObservationDiscovery   ObservationType = "DISCOVERY"
+	ObservationQuote       ObservationType = "QUOTE"
+	ObservationSelection   ObservationType = "SELECTION"
+	ObservationContract    ObservationType = "CONTRACT"
+	ObservationExecution   ObservationType = "EXECUTION"
+	ObservationSuccess     ObservationType = "SUCCESS"
+	ObservationFailure     ObservationType = "FAILURE"
+	ObservationTimeout     ObservationType = "TIMEOUT"
+	ObservationRetry       ObservationType = "RETRY"
+	ObservationVerification ObservationType = "VERIFICATION"
+	ObservationPayment     ObservationType = "PAYMENT"
+	ObservationRefund      ObservationType = "REFUND"
+	ObservationDispute     ObservationType = "DISPUTE"
+	ObservationReplan      ObservationType = "REPLAN"
+	ObservationDelegation  ObservationType = "DELEGATION"
 )
 
 // OutcomeStatus defines the high-level evaluation of an economic action.
 type OutcomeStatus string
 
 const (
-	OutcomeSuccess        OutcomeStatus = "SUCCESS"
-	OutcomePartialSuccess OutcomeStatus = "PARTIAL_SUCCESS"
-	OutcomeFailure        OutcomeStatus = "FAILURE"
+	OutcomeSuccess            OutcomeStatus = "SUCCESS"
+	OutcomePartialSuccess     OutcomeStatus = "PARTIAL_SUCCESS"
+	OutcomeFailure            OutcomeStatus = "FAILURE"
+	OutcomeTimeout            OutcomeStatus = "TIMEOUT"
+	OutcomeCancelled          OutcomeStatus = "CANCELLED"
+	OutcomeDisputed           OutcomeStatus = "DISPUTED"
+	OutcomeRefunded           OutcomeStatus = "REFUNDED"
+	OutcomeVerificationFailed OutcomeStatus = "VERIFICATION_FAILED"
+)
+
+// SimulationMode defines whether an interaction was real or simulated.
+// MANDATORY INVARIANT: Simulated data must NEVER contaminate real reputation.
+type SimulationMode string
+
+const (
+	ModeReal       SimulationMode = "REAL"
+	ModeSimulation SimulationMode = "SIMULATION"
+)
+
+// ObservationScope defines tenant visibility boundaries.
+type ObservationScope string
+
+const (
+	ScopePrivate      ObservationScope = "PRIVATE"
+	ScopeOrganization ObservationScope = "ORGANIZATION"
+	ScopePublic       ObservationScope = "PUBLIC"
 )
 
 // ConfidenceLevel captures evidence availability for recommendations and evaluations.
 type ConfidenceLevel string
 
 const (
-	ConfidenceHigh    ConfidenceLevel = "HIGH"    // >= 10 observations
-	ConfidenceMedium  ConfidenceLevel = "MEDIUM"  // 3-9 observations
-	ConfidenceLow     ConfidenceLevel = "LOW"     // 1-2 observations
-	ConfidenceUnknown ConfidenceLevel = "UNKNOWN" // 0 observations
+	ConfidenceInsufficientData ConfidenceLevel = "INSUFFICIENT_DATA" // < 5 observations
+	ConfidenceLowConfidence    ConfidenceLevel = "LOW_CONFIDENCE"    // 5-20 observations
+	ConfidenceModerateConfidence ConfidenceLevel = "MODERATE_CONFIDENCE" // 20-100 observations
+	ConfidenceHigherConfidence   ConfidenceLevel = "HIGHER_CONFIDENCE"   // 100+ observations
+
+	// Compatibility aliases
+	ConfidenceHigh    ConfidenceLevel = "HIGH"
+	ConfidenceMedium  ConfidenceLevel = "MEDIUM"
+	ConfidenceLow     ConfidenceLevel = "LOW"
+	ConfidenceUnknown ConfidenceLevel = "UNKNOWN"
 )
 
 // FailureClass categorizes the root cause of an economic or execution failure.
@@ -406,6 +452,20 @@ const (
 	FailurePolicyFailure  FailureClass = "POLICY_FAILURE"
 	FailurePaymentFailure FailureClass = "PAYMENT_FAILURE"
 	FailureUnknown        FailureClass = "UNKNOWN"
+
+	// Canonical Failure Taxonomy (Task 9)
+	FailureProviderTimeout    FailureClass = "PROVIDER_TIMEOUT"
+	FailureInvalidResult      FailureClass = "INVALID_RESULT"
+	FailureSchemaMismatch     FailureClass = "SCHEMA_MISMATCH"
+	FailureVerificationFailed FailureClass = "VERIFICATION_FAILED"
+	FailureQuoteExpired       FailureClass = "QUOTE_EXPIRED"
+	FailurePolicyDenied       FailureClass = "POLICY_DENIED"
+	FailureRiskDenied         FailureClass = "RISK_DENIED"
+	FailureInsufficientBudget FailureClass = "INSUFFICIENT_BUDGET"
+	FailureTreasuryUnavailable FailureClass = "TREASURY_UNAVAILABLE"
+	FailureNetworkError       FailureClass = "NETWORK_ERROR"
+	FailureAgentUnavailable   FailureClass = "AGENT_UNAVAILABLE"
+	FailureDelegationFailure  FailureClass = "DELEGATION_FAILURE"
 )
 
 // RecoveryStrategy defines deterministic recovery paths upon service or execution failure.
@@ -427,29 +487,327 @@ const (
 	WindowLast10Jobs  PerformanceWindow = "last_10_jobs"
 	WindowLast24Hours PerformanceWindow = "last_24_hours"
 	WindowLast7Days   PerformanceWindow = "last_7_days"
+	WindowLast30Days  PerformanceWindow = "last_30_days"
+	WindowLast90Days  PerformanceWindow = "last_90_days"
 	WindowAllTime     PerformanceWindow = "all_time"
 )
 
 // EconomicObservation represents an immutable, append-only record of an economic interaction.
 type EconomicObservation struct {
-	ID             string                 `json:"id"`
-	OrganizationID string                 `json:"organization_id"`
-	MissionID      string                 `json:"mission_id"`
-	AgentID        string                 `json:"agent_id"`
-	ServiceID      string                 `json:"service_id"`
-	HireID         string                 `json:"hire_id,omitempty"`
-	PaymentID      string                 `json:"payment_id,omitempty"`
-	EventType      ObservationType        `json:"event_type"`
-	InputContext   map[string]interface{} `json:"input_context,omitempty"`
-	Outcome        OutcomeStatus          `json:"outcome"`
-	Price          string                 `json:"price"` // micro-USDC integer string
-	LatencyMs      int64                  `json:"latency_ms"`
-	QualityScore   int64                  `json:"quality_score"` // 0-10000 basis points
-	RiskScore      int64                  `json:"risk_score"`    // 0-10000 basis points
-	Success        bool                   `json:"success"`
-	FailureReason  string                 `json:"failure_reason,omitempty"`
-	Timestamp      time.Time              `json:"timestamp"`
-	CorrelationID  string                 `json:"correlation_id"`
+	ID                 string                 `json:"observation_id"`
+	OrganizationID     string                 `json:"organization_id"`
+	AgentID            string                 `json:"agent_id"`
+	MissionID          string                 `json:"mission_id,omitempty"`
+	SwarmID            string                 `json:"swarm_id,omitempty"`
+	ContractID         string                 `json:"contract_id,omitempty"`
+	Capability         string                 `json:"capability,omitempty"`
+	Provider           string                 `json:"provider,omitempty"`
+	ServiceID          string                 `json:"service_id,omitempty"` // Provider alias
+	HireID             string                 `json:"hire_id,omitempty"`
+	PaymentID          string                 `json:"payment_id,omitempty"`
+	EventType          ObservationType        `json:"event_type"`
+	Outcome            OutcomeStatus          `json:"outcome"`
+	Timestamp          time.Time              `json:"timestamp"`
+	QuotedCost         string                 `json:"quoted_cost,omitempty"`     // micro-USDC
+	AuthorizedCost     string                 `json:"authorized_cost,omitempty"` // micro-USDC
+	SettledCost        string                 `json:"settled_cost,omitempty"`    // micro-USDC
+	Price              string                 `json:"price,omitempty"`           // micro-USDC alias
+	ExecutionDuration  int64                  `json:"execution_duration"`        // ms
+	LatencyMs          int64                  `json:"latency_ms,omitempty"`      // alias
+	VerificationResult string                 `json:"verification_result,omitempty"`
+	PolicyResult       string                 `json:"policy_result,omitempty"`
+	RiskResult         string                 `json:"risk_result,omitempty"`
+	RetryCount         int                    `json:"retry_count"`
+	FailureReason      string                 `json:"failure_reason,omitempty"`
+	SimulationFlag     SimulationMode         `json:"simulation_flag"` // REAL or SIMULATION
+	Scope              ObservationScope       `json:"scope"`           // PRIVATE, ORGANIZATION, PUBLIC
+	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	SourceEventID      string                 `json:"source_event_id,omitempty"`
+	CorrelationID      string                 `json:"correlation_id,omitempty"`
+	Success            bool                   `json:"success"`
+	QualityScore       int64                  `json:"quality_score,omitempty"`
+	RiskScore          int64                  `json:"risk_score,omitempty"`
+	InputContext       map[string]interface{} `json:"input_context,omitempty"`
+}
+
+// GetProvider returns canonical provider identifier.
+func (o *EconomicObservation) GetProvider() string {
+	if o.Provider != "" {
+		return o.Provider
+	}
+	return o.ServiceID
+}
+
+// GetSettledCost returns canonical settled cost micro-USDC.
+func (o *EconomicObservation) GetSettledCost() string {
+	if o.SettledCost != "" {
+		return o.SettledCost
+	}
+	return o.Price
+}
+
+// GetDurationMs returns canonical duration in milliseconds.
+func (o *EconomicObservation) GetDurationMs() int64 {
+	if o.ExecutionDuration > 0 {
+		return o.ExecutionDuration
+	}
+	return o.LatencyMs
+}
+
+// QuoteAccuracyMetrics details systematic quote deviations.
+type QuoteAccuracyMetrics struct {
+	TotalQuotedCost        *big.Int `json:"total_quoted_cost"`
+	TotalSettledCost       *big.Int `json:"total_settled_cost"`
+	AbsoluteCostDiff       *big.Int `json:"absolute_cost_diff"`
+	CostErrorBps           int64    `json:"cost_error_bps"`
+	UnderquoteCostCount    uint64   `json:"underquote_cost_count"`
+	OverquoteCostCount     uint64   `json:"overquote_cost_count"`
+	TotalQuotedDurationMs  int64    `json:"total_quoted_duration_ms"`
+	TotalActualDurationMs  int64    `json:"total_actual_duration_ms"`
+	DurationErrorBps       int64    `json:"duration_error_bps"`
+	UnderquoteDurationCount uint64  `json:"underquote_duration_count"`
+	OverquoteDurationCount  uint64  `json:"overquote_duration_count"`
+	SampleCount            uint64   `json:"sample_count"`
+}
+
+// LatencyPercentiles records deterministic percentile distribution.
+type LatencyPercentiles struct {
+	P50Ms       int64  `json:"p50_ms"`
+	P75Ms       int64  `json:"p75_ms"`
+	P90Ms       int64  `json:"p90_ms"`
+	P95Ms       int64  `json:"p95_ms"`
+	P99Ms       int64  `json:"p99_ms"`
+	SampleCount uint64 `json:"sample_count"`
+}
+
+// EconomicCostModel details expected cost ranges and variances.
+type EconomicCostModel struct {
+	ExpectedCost    *big.Int `json:"expected_cost"` // micro-USDC
+	CostRangeMin    *big.Int `json:"cost_range_min"`
+	CostRangeMax    *big.Int `json:"cost_range_max"`
+	CostVariance    *big.Int `json:"cost_variance"`
+	FailureRetryCost *big.Int `json:"failure_retry_cost"`
+	VerificationCost *big.Int `json:"verification_cost"`
+	DelegationCost  *big.Int `json:"delegation_cost"`
+	SampleCount     uint64   `json:"sample_count"`
+}
+
+// RecoveryPattern records historical recovery behavior.
+type RecoveryPattern struct {
+	FailureType          string   `json:"failure_type"`
+	OriginalProvider     string   `json:"original_provider"`
+	ReplacementProvider  string   `json:"replacement_provider"`
+	Capability           string   `json:"capability"`
+	SuccessAfterRecovery bool     `json:"success_after_recovery"`
+	AdditionalCost       *big.Int `json:"additional_cost"` // micro-USDC
+	AdditionalLatencyMs  int64    `json:"additional_latency_ms"`
+	SampleCount          uint64   `json:"sample_count"`
+}
+
+// StrategyPerformance measures empirical performance by mission strategy.
+type StrategyPerformance struct {
+	Strategy             string   `json:"strategy"`
+	SuccessRateBps       int64    `json:"success_rate_bps"`
+	AverageCost          *big.Int `json:"average_cost"`
+	AverageLatencyMs     int64    `json:"average_latency_ms"`
+	ReliabilityBps       int64    `json:"reliability_bps"`
+	RecoverySuccessRateBps int64  `json:"recovery_success_rate_bps"`
+	SampleCount          uint64   `json:"sample_count"`
+}
+
+// EconomicPerformanceProfile represents deterministic multi-signal economic intelligence.
+type EconomicPerformanceProfile struct {
+	EntityID                 string                           `json:"entity_id"`
+	EntityType               string                           `json:"entity_type"` // "agent", "service", "capability"
+	OrganizationID           string                           `json:"organization_id"`
+	Window                   PerformanceWindow                `json:"window"`
+	SimulationMode           SimulationMode                   `json:"simulation_mode"`
+	SuccessRateBps           int64                            `json:"success_rate_bps"`
+	CompletionRateBps        int64                            `json:"completion_rate_bps"`
+	TimeoutRateBps           int64                            `json:"timeout_rate_bps"`
+	VerificationSuccessRateBps int64                          `json:"verification_success_rate_bps"`
+	DisputeRateBps           int64                            `json:"dispute_rate_bps"`
+	RefundRateBps            int64                            `json:"refund_rate_bps"`
+	AverageCost              *big.Int                         `json:"average_cost"`
+	CostVariance             *big.Int                         `json:"cost_variance"`
+	AverageLatencyMs         int64                            `json:"average_latency_ms"`
+	LatencyVariance          int64                            `json:"latency_variance"`
+	Percentiles              LatencyPercentiles               `json:"percentiles"`
+	QuoteAccuracy            QuoteAccuracyMetrics             `json:"quote_accuracy"`
+	CostModel                EconomicCostModel                `json:"cost_model"`
+	RetryFrequencyBps        int64                            `json:"retry_frequency_bps"`
+	RecoverySuccessRateBps   int64                            `json:"recovery_success_rate_bps"`
+	TotalJobs                uint64                           `json:"total_jobs"`
+	RealJobs                 uint64                           `json:"real_jobs"`
+	SimulatedJobs            uint64                           `json:"simulated_jobs"`
+	ContextualBreakdown      map[string]ContextualPerformance `json:"contextual_breakdown,omitempty"`
+	Confidence               ConfidenceLevel                  `json:"confidence"`
+	AggregationVersion       string                           `json:"aggregation_version"`
+	UpdatedAt                time.Time                        `json:"updated_at"`
+}
+
+// RealPerformance and SimulationPerformance wrapper.
+type DualPerformanceContainer struct {
+	Real       *EconomicPerformanceProfile `json:"real"`
+	Simulation *EconomicPerformanceProfile `json:"simulation"`
+}
+
+// PlanVsActual compares planned assumptions against reality.
+type PlanVsActual struct {
+	PlannedCost                   string  `json:"planned_cost"` // micro-USDC
+	ActualCost                    string  `json:"actual_cost"`  // micro-USDC
+	CostErrorPercent              float64 `json:"cost_error_percent"`
+	PlannedDurationMs             int64   `json:"planned_duration_ms"`
+	ActualDurationMs              int64   `json:"actual_duration_ms"`
+	DurationErrorPercent          float64 `json:"duration_error_percent"`
+	PlannedAgents                 []string `json:"planned_agents"`
+	ActualAgents                  []string `json:"actual_agents"`
+	AgentDifferences              []string `json:"agent_differences,omitempty"`
+	FailureDifferences            []string `json:"failure_differences,omitempty"`
+	SimulationPredictionErrorBps  int64    `json:"simulation_prediction_error_bps"`
+}
+
+// MissionOutcomeSummary encapsulates immutable evidence from a completed mission.
+type MissionOutcomeSummary struct {
+	MissionID            string                 `json:"mission_id"`
+	OrganizationID       string                 `json:"organization_id"`
+	Objective            string                 `json:"objective"`
+	Strategy             string                 `json:"strategy"`
+	AgentsUsed           []string               `json:"agents_used"`
+	CapabilitiesUsed     []string               `json:"capabilities_used"`
+	TotalCost            string                 `json:"total_cost"`
+	ExpectedCost         string                 `json:"expected_cost"`
+	DurationMs           int64                  `json:"duration_ms"`
+	RetriesCount         int                    `json:"retries_count"`
+	FailuresCount        int                    `json:"failures_count"`
+	RecoveryOccurred     bool                   `json:"recovery_occurred"`
+	VerificationPassed   bool                   `json:"verification_passed"`
+	FinalOutcome         OutcomeStatus          `json:"final_outcome"`
+	PolicyDecisionsCount int                    `json:"policy_decisions_count"`
+	PlanVsActual         PlanVsActual           `json:"plan_vs_actual"`
+	CompletedAt          time.Time              `json:"completed_at"`
+}
+
+// SwarmOutcomeSummary captures multi-agent swarm outcomes.
+type SwarmOutcomeSummary struct {
+	SwarmID              string                 `json:"swarm_id"`
+	OrganizationID       string                 `json:"organization_id"`
+	TaskCount            int                    `json:"task_count"`
+	AgentsUsed           []string               `json:"agents_used"`
+	ParallelismPlanned   int                    `json:"parallelism_planned"`
+	ParallelismActual    int                    `json:"parallelism_actual"`
+	TotalCost            string                 `json:"total_cost"`
+	DurationMs           int64                  `json:"duration_ms"`
+	TaskFailures         int                    `json:"task_failures"`
+	RecoveriesCount      int                    `json:"recoveries_count"`
+	ConsensusReached     bool                   `json:"consensus_reached"`
+	FinalQualityBps      int64                  `json:"final_quality_bps"`
+	PlanVsActual         PlanVsActual           `json:"plan_vs_actual"`
+	CompletedAt          time.Time              `json:"completed_at"`
+}
+
+// SimulatorCalibrationMetrics tracks prediction accuracy over time.
+type SimulatorCalibrationMetrics struct {
+	TotalRunsCompared              uint64  `json:"total_runs_compared"`
+	CostPredictionAccuracyBps      int64   `json:"cost_prediction_accuracy_bps"`
+	DurationPredictionAccuracyBps  int64   `json:"duration_prediction_accuracy_bps"`
+	FailurePredictionAccuracyBps   int64   `json:"failure_prediction_accuracy_bps"`
+	UnderestimationBiasBps         int64   `json:"underestimation_bias_bps"`
+	OverestimationBiasBps          int64   `json:"overestimation_bias_bps"`
+	LatencyBiasMs                  int64   `json:"latency_bias_ms"`
+	Confidence                     ConfidenceLevel `json:"confidence"`
+	UpdatedAt                      time.Time `json:"updated_at"`
+}
+
+// EconomicRecommendation encapsulates advisory guidance generated from historical learning.
+// INVARIANT: Recommendations are advisory only and possess ZERO financial authority.
+type EconomicRecommendation struct {
+	ID                     string                 `json:"recommendation_id"`
+	OrganizationID         string                 `json:"organization_id"`
+	RecommendationType     string                 `json:"recommendation_type"` // "PREFER_PROVIDER", "USE_FALLBACK", "INCREASE_VERIFICATION", "ADJUST_STRATEGY"
+	TargetEntityID         string                 `json:"target_entity_id"`
+	TargetEntityType       string                 `json:"target_entity_type"`
+	Reason                 string                 `json:"reason"`
+	Why                    string                 `json:"why"`
+	Evidence               []string               `json:"evidence"`
+	SupportingObservations []string               `json:"supporting_observations"`
+	Confidence             ConfidenceLevel        `json:"confidence"`
+	SampleCount            uint64                 `json:"sample_count"`
+	ExpectedImpact         string                 `json:"expected_impact"`
+	DownsideRisk           string                 `json:"downside_risk"`
+	AffectedAgents         []string               `json:"affected_agents,omitempty"`
+	AffectedMissions       []string               `json:"affected_missions,omitempty"`
+	Status                 string                 `json:"status"` // "NEW", "ACCEPTED", "REJECTED", "EXPIRED", "OUTCOME_AVAILABLE"
+	CreatedAt              time.Time              `json:"created_at"`
+}
+
+// RecommendationOutcome closes the feedback loop on whether recommendations helped.
+type RecommendationOutcome struct {
+	RecommendationID string    `json:"recommendation_id"`
+	Accepted         bool      `json:"accepted"`
+	Executed         bool      `json:"executed"`
+	Outcome          string    `json:"outcome"` // "SUCCESS", "FAILURE", "NEUTRAL"
+	CostDelta        string    `json:"cost_delta"` // micro-USDC
+	LatencyDeltaMs   int64     `json:"latency_delta_ms"`
+	QualityDeltaBps  int64     `json:"quality_delta_bps"`
+	FailureDelta     int       `json:"failure_delta"`
+	RecordedAt       time.Time `json:"recorded_at"`
+}
+
+// DriftSeverity defines the severity of behavioral or performance drift.
+type DriftSeverity string
+
+const (
+	DriftNormal       DriftSeverity = "NORMAL"
+	DriftWatch        DriftSeverity = "WATCH"
+	DriftDetected     DriftSeverity = "DRIFT"
+	DriftSevere       DriftSeverity = "SEVERE_DRIFT"
+)
+
+// EconomicDrift records detected statistical divergence.
+type EconomicDrift struct {
+	ID             string        `json:"id"`
+	OrganizationID string        `json:"organization_id"`
+	EntityID       string        `json:"entity_id"`
+	EntityType     string        `json:"entity_type"` // "provider", "agent", "capability"
+	Signal         string        `json:"signal"`      // "success_rate", "latency", "quote_accuracy", "cost_variance"
+	BaselineValue  string        `json:"baseline_value"`
+	RecentValue    string        `json:"recent_value"`
+	BaselineSample uint64        `json:"baseline_sample"`
+	RecentSample   uint64        `json:"recent_sample"`
+	DifferenceBps  int64         `json:"difference_bps"`
+	Confidence     ConfidenceLevel `json:"confidence"`
+	Severity       DriftSeverity `json:"severity"`
+	Details        string        `json:"details"`
+	DetectedAt     time.Time     `json:"detected_at"`
+}
+
+// PerformanceFeature represents a deterministic feature in the lightweight feature store.
+type PerformanceFeature struct {
+	FeatureKey         string    `json:"feature_key"`
+	EntityID           string    `json:"entity_id"`
+	OrganizationID     string    `json:"organization_id"`
+	Value              string    `json:"value"`
+	NumericValue       float64   `json:"numeric_value"`
+	Source             string    `json:"source"`
+	TimeWindow         string    `json:"time_window"`
+	SampleCount        uint64    `json:"sample_count"`
+	ComputationVersion string    `json:"computation_version"`
+	GeneratedAt        time.Time `json:"generated_at"`
+}
+
+// EconomicForecast provides deterministic range-based expectations.
+type EconomicForecast struct {
+	OrganizationID       string          `json:"organization_id"`
+	ObjectiveOrCapability string         `json:"objective_or_capability"`
+	ExpectedCostMin      string          `json:"expected_cost_min"` // micro-USDC
+	ExpectedCostMax      string          `json:"expected_cost_max"`
+	ExpectedDurationMinMs int64          `json:"expected_duration_min_ms"`
+	ExpectedDurationMaxMs int64          `json:"expected_duration_max_ms"`
+	FailureProbabilityBps int64          `json:"failure_probability_bps"`
+	Confidence           ConfidenceLevel `json:"confidence"`
+	SampleSize           uint64          `json:"sample_size"`
+	GeneratedAt          time.Time       `json:"generated_at"`
 }
 
 // ContextualPerformance records capability-specific performance metrics for a service.

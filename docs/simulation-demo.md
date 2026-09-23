@@ -1,104 +1,180 @@
-# Canonical Simulation Scenarios & Demonstration Guide
+# AgentPay Economic Simulator: 7 Canonical Demo Scenarios
 
-This guide walks through the **7 Canonical Simulation Scenarios** implemented in the AgentPay Economic Simulator & Digital Twin. Each scenario demonstrates specific capabilities: autonomous DAG execution, adversary resilience, policy what-if comparisons, Monte Carlo risk analysis, and safe live conversion.
+This document provides step-by-step instructions, JSON payloads, and expected outcomes for each of the **7 Canonical Demo Scenarios** built into AgentPay Mission Control, SDKs, and CLI.
 
 ---
 
-## Scenario 1: Multi-Step Agent Research Mission (Happy Path)
+## Scenario 1: Happy Path Single Agent
 
-- **Objective:** Execute a standard 3-step research mission (Web Search &rarr; Document Synthesis &rarr; Executive Summary Generation).
-- **Projected Spend:** $1.50 USDC
-- **Worst-Case Exposure:** $1.65 USDC (includes 10% network volatility reserve)
-- **Key Verification:** All 3 steps execute in topological order (Step 1 &rarr; Step 2 &rarr; Step 3). Zero failures injected. All policy rules pass with `ALLOW`.
+### Overview
+A single autonomous research agent discovers, negotiates, and hires a data extraction service. Both policy and risk checks pass cleanly, and the projected task settles within budget.
 
-### CLI Execution
+### CLI Command
 ```bash
-agentpay simulate --scenario research_happy_path --seed 42
+agentpay-cli simulation run --scenario happy-path
 ```
 
----
-
-## Scenario 2: Service Outage with Automatic Fallback
-
-- **Objective:** Verify autonomous economic recovery when a primary service provider fails.
-- **Setup:** A `SERVICE_FAILURE` fault is injected into Step 2 (Primary Vision/OCR Service).
-- **Observed Behavior:**
-  1. Primary OCR service returns HTTP 500 equivalent.
-  2. Simulator engages autonomous replanning logic.
-  3. Simulator queries registry for secondary OCR provider meeting quality and price thresholds.
-  4. Step 2 re-routes to `fallback-ocr-v2` at +$0.15 USDC price differential.
-  5. Mission successfully reaches `COMPLETED` state.
-- **Trace Event:** `simulation.recovery_projected` recorded with fallback service ID.
-
-### CLI Execution
-```bash
-agentpay simulate --scenario ocr_fallback --inject-failure "step_2:SERVICE_FAILURE"
+### Scenario Payload
+```json
+{
+  "scenario_name": "happy_path_single_agent",
+  "organization_id": "org_demo",
+  "initiator_agent_id": "agent_researcher_1",
+  "execution_mode": "SIMULATION",
+  "nodes": [
+    {
+      "step_id": "step_extract",
+      "agent_id": "agent_researcher_1",
+      "capability": "data_extract",
+      "max_budget": "2000000",
+      "timeout_ms": 3000
+    }
+  ]
+}
 ```
 
+### Expected Output
+- **Status:** `COMPLETED`
+- **Total Projected Cost:** `1.50 USDC`
+- **Platform Fee:** `0.015 USDC` (100 bps)
+- **Worst Case Exposure:** `1.50 USDC`
+- **Trace Highlights:**
+  - `simulation.started`
+  - `simulation.policy_evaluated`: `ALLOWED`
+  - `simulation.risk_evaluated`: `LOW_RISK` (score: 5)
+  - `simulation.step_projected`: Selected `svc_fast_extract` (1.50 USDC, latency: 180ms)
+  - `simulation.completed`
+
 ---
 
-## Scenario 3: Malicious Price Hike Detection & Rejection
+## Scenario 2: Multi-Agent Swarm with Branching & Parallel Execution
 
-- **Objective:** Protect agent treasury against sudden adversarial price spikes.
-- **Setup:** A rogue service provider attempts to increase its price 5x above historical moving average.
-- **Observed Behavior:**
-  1. Economic selection engine flags anomaly score: `98/100` (PRICE_SPIKE_ANOMALY).
-  2. Policy engine triggers `HARD_DENY` on the step quote.
-  3. Alternative reputable provider is selected without agent operator intervention.
-  4. Final execution cost remains within initial budget bounds ($2.10 USDC).
+### Overview
+A 6-agent research & analysis swarm executes a topological DAG:
+- Node 1: Lead Orchestrator parses requirements.
+- Nodes 2 & 3: Parallel web search & code repository indexing.
+- Node 4: Synthesis agent merges parallel findings.
+- Node 5: Critic agent evaluates accuracy.
+- Node 6: Executive summarizer drafts final presentation.
 
----
-
-## Scenario 4: Counterfactual Policy Comparison
-
-- **Objective:** Compare the financial outcome of a mission under two different constitutional policies:
-  - **Baseline:** Permissive Policy ($25.00 single payment ceiling, no external agent approval).
-  - **Counterfactual:** Conservative Policy ($1.00 single payment ceiling, human approval required for external agents).
-- **Result:**
-  - Baseline: Completes autonomously with 0 approval pauses.
-  - Counterfactual: Flags 2 steps requiring human-in-the-loop approval, projects +45 minute delay in completion time, prevents unauthorized external spend.
-
-### CLI Execution
-```bash
-agentpay simulate counterfactual --baseline baseline_policy.json --candidate conservative_policy.json
+### Scenario Payload
+```json
+{
+  "scenario_name": "swarm_parallel_branching",
+  "organization_id": "org_demo",
+  "execution_mode": "SIMULATION",
+  "nodes": [
+    { "step_id": "step_parse", "agent_id": "agent_lead", "capability": "intent_parse", "dependencies": [] },
+    { "step_id": "step_search", "agent_id": "agent_searcher", "capability": "web_search", "dependencies": ["step_parse"] },
+    { "step_id": "step_code", "agent_id": "agent_coder", "capability": "code_index", "dependencies": ["step_parse"] },
+    { "step_id": "step_synth", "agent_id": "agent_synth", "capability": "data_synthesis", "dependencies": ["step_search", "step_code"] },
+    { "step_id": "step_critique", "agent_id": "agent_critic", "capability": "critique", "dependencies": ["step_synth"] },
+    { "step_id": "step_publish", "agent_id": "agent_lead", "capability": "publish", "dependencies": ["step_critique"] }
+  ]
+}
 ```
 
----
-
-## Scenario 5: Monte Carlo Latency & Price Volatility
-
-- **Objective:** Run $N = 1,000$ deterministic seeded simulations across variable network latencies, quote drift, and probabilistic failure rates.
-- **Output:**
-  - **P50 Cost:** $1.42 USDC
-  - **P90 Cost:** $1.78 USDC
-  - **P95 Tail Exposure:** $1.94 USDC
-  - **Completion Rate:** 99.4%
-  - **Notice:** Explicitly marked `MODELLED ESTIMATE - NOT FINANCIAL ADVICE`.
+### Expected Output
+- **Topology:** Validated DAG via Kahn's algorithm (depth: 4, concurrency: 2 in tier 2).
+- **Concurrency Speedup:** 35% latency reduction compared to serial execution.
+- **Projected Spend:** `4.85 USDC`.
 
 ---
 
-## Scenario 6: Stale Simulation Revalidation Failure
+## Scenario 3: Mid-Flight Failure & Dynamic Replanning
 
-- **Objective:** Demonstrate safety guarantees when live reality diverges from simulated snapshot.
-- **Setup:**
-  1. Simulation is executed against Digital Twin snapshot with $100.00 USDC treasury balance.
-  2. An external transaction spends $95.00 USDC from the live vault.
-  3. Operator attempts to trigger `ExecutePlan` for a $10.00 USDC mission plan.
-- **Observed Behavior:**
-  - `ExecutionGate` performs real-time reality check.
-  - Detects that live balance ($5.00 USDC) is insufficient for worst-case exposure ($11.00 USDC).
-  - Rejects execution with `409 Conflict: SIMULATION OUTDATED`.
-  - Zero on-chain transactions or partial state changes occur.
+### Overview
+A primary provider (`svc_nlp_fast`) suffers a simulated connection timeout (`PROVIDER_TIMEOUT`). The simulator automatically engages the configured fallback provider (`svc_nlp_reliable`) and models the additional latency and cost.
+
+### Failure Injection Configuration
+```json
+{
+  "failure_injections": [
+    {
+      "step_id": "step_summarize",
+      "failure_type": "PROVIDER_TIMEOUT",
+      "probability": 1.0,
+      "delay_ms": 3000
+    }
+  ]
+}
+```
+
+### Expected Output
+- **Status:** `COMPLETED_WITH_FALLBACK`
+- **Trace Highlights:**
+  - `simulation.step_projected`: Primary provider `svc_nlp_fast` initiated.
+  - `simulation.failure_injected`: `PROVIDER_TIMEOUT` triggered after 3000ms.
+  - `simulation.recovery_projected`: Fallback engaged (`svc_nlp_reliable`, +$0.40 cost, +250ms latency).
+  - `simulation.completed`: Total spend `1.90 USDC`.
+- **Worst-Case Exposure:** Computed as Primary Cost + Fallback Cost = `3.40 USDC`.
 
 ---
 
-## Scenario 7: Full 6-Agent Swarm Orchestration
+## Scenario 4: Cascading Failure Across Swarm
 
-- **Objective:** Model the entire Kahn DAG lifecycle for a 6-agent collaborative swarm:
-  1. **Coordinator:** Decomposes objective and reserves task budgets.
-  2. **Researcher:** Collects market data from external APIs.
-  3. **Auditor:** Verifies computational integrity and price quotes.
-  4. **Synthesizer:** Merges sub-agent outputs into unified deliverable.
-  5. **Verifier:** Runs adversarial checks and invariant evaluations.
-  6. **Publisher:** Prepares final artifact for on-chain settlement.
-- **Projected Metrics:** Total spend $4.85 USDC, duration 1.4s (simulated), 6 concurrent nodes, zero deadlocks.
+### Overview
+An upstream data indexing agent fails permanently due to a schema mismatch (`SCHEMA_MISMATCH`). Downstream synthesis and critic agents detect that prerequisite data is missing and trigger compensation logic to avoid burning further budget.
+
+### Expected Output
+- **Status:** `FAILED_PARTIALLY_RECOVERED`
+- **Budget Conserved:** `68%` of total mission budget saved by halting downstream tasks before payment dispatch.
+- **Trace Highlight:** `simulation.compensation_triggered` on downstream nodes.
+
+---
+
+## Scenario 5: Policy Boundary Denial
+
+### Overview
+An autonomous agent attempts to execute a batch task with an estimated cost of `$25.00 USDC`, exceeding its configured per-transaction budget limit of `$10.00 USDC`.
+
+### Expected Output
+- **Status:** `DENIED_BY_POLICY`
+- **HTTP Code:** `403 Forbidden` (in simulation context, returns `status: DENIED`)
+- **Policy Violation:** `EXCEEDS_SINGLE_TRANSACTION_LIMIT (10000000 micro-USDC)`.
+- **Financial Spend:** `$0.00 USDC` (zero risk exposure).
+
+---
+
+## Scenario 6: Counterfactual Policy Comparison
+
+### Overview
+Compares two simulation policies against the exact same swarm scenario:
+- **Baseline:** Strict policy requiring secondary human approval for tasks over $2.00 USDC.
+- **Counterfactual:** Relaxed policy with $5.00 USDC auto-approval limit and relaxed latency tolerance.
+
+### API Call
+`POST /api/v1/simulations/counterfactual`
+
+### Expected Output
+- **Comparison Summary:**
+  - Execution Time: Baseline 45.2s (with approval hold) vs Counterfactual 1.8s (-96%).
+  - Completion Rate: Baseline 100% vs Counterfactual 98%.
+  - Cost Difference: Counterfactual saved $0.35 USDC by selecting slightly slower spot providers.
+  - Recommendation: Safe to apply counterfactual policy to production.
+
+---
+
+## Scenario 7: Deterministic Monte Carlo Tail Risk
+
+### Overview
+Executes 100 deterministic seeded simulation runs across stochastic provider latency and failure distributions to construct the tail risk exposure curve.
+
+### API Call
+`POST /api/v1/simulations/monte-carlo`
+```json
+{
+  "scenario_name": "swarm_tail_risk",
+  "iterations": 100,
+  "seed": 1337
+}
+```
+
+### Expected Output
+- **Notice:** `MODELLED ESTIMATE - NOT FINANCIAL ADVICE`
+- **Iterations Completed:** 100
+- **Success Rate:** `94.0%`
+- **P50 Cost (Median):** `3.20 USDC`
+- **P90 Cost:** `4.15 USDC`
+- **P95 Tail Risk (Worst-Case):** `5.80 USDC`
+- **Safe Budget Recommendation:** Allocate `6.00 USDC` to ensure 99.9% mission completion probability.
