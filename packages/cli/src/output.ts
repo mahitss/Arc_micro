@@ -728,5 +728,89 @@ export function printNetworkGraph(g: NetworkGraph): void {
   console.log('============================================================');
 }
 
+export function printConstitution(c: any, modeLabel = 'REAL CONSTITUTION'): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC CONSTITUTION [${modeLabel}]`);
+  console.log('============================================================');
+  console.log(`Constitution ID:  ${c.constitution_id}`);
+  console.log(`Organization ID:  ${c.organization_id}`);
+  console.log(`Name:             ${c.name}`);
+  console.log(`Version:          v${c.version}`);
+  console.log(`Status:           ${c.status}`);
+  console.log(`Policy Hash:      ${c.policy_hash}`);
+  console.log(`Effective At:     ${c.effective_at || 'IMMEDIATE'}`);
+  console.log(`Previous Version: v${c.previous_version}`);
+  console.log(`Rules Count:      ${c.rules?.length || 0}`);
+  console.log('RULES SUMMARY:');
+  for (const r of (c.rules || [])) {
+    const priority = r.priority ?? 0;
+    const isHard = r.hard_deny ? '[HARD DENY]' : '';
+    console.log(`  - [P${priority}] ${r.rule_id} (${r.type}) ${isHard}: ${r.description}`);
+  }
+  console.log('============================================================');
+}
+
+export function printConstitutionsList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC CONSTITUTIONS (${list.length} Versions)`);
+  console.log('============================================================');
+  for (const c of list) {
+    const activeBadge = c.status === 'ACTIVE' ? ' ★ ACTIVE' : '';
+    console.log(`v${c.version} [${c.status}${activeBadge}] — ${c.name} (Hash: ${c.policy_hash?.slice(0, 12)}...)`);
+  }
+  console.log('============================================================');
+}
+
+export function printConstitutionDecision(d: any): void {
+  console.log('============================================================');
+  console.log('CONSTITUTIONAL POLICY DECISION');
+  console.log('============================================================');
+  console.log(`Decision:         ${d.decision}`);
+  console.log(`Reason Code:      ${d.reason_code}`);
+  console.log(`Explanation:      ${d.explanation}`);
+  console.log(`Constitution ID:  ${d.constitution_id} (v${d.version})`);
+  console.log(`Evaluation Hash:  ${d.evaluation_hash}`);
+  if (d.matched_rules?.length) {
+    console.log(`Matched Rules:    ${d.matched_rules.join(', ')}`);
+  }
+  if (d.denied_rules?.length) {
+    console.log(`Denied Rules:     ${d.denied_rules.join(', ')}`);
+  }
+  if (d.approval_rules?.length) {
+    console.log(`Approval Rules:   ${d.approval_rules.join(', ')}`);
+  }
+  console.log('============================================================');
+}
+
+export function printPolicyDiff(diff: any): void {
+  console.log('============================================================');
+  console.log(`POLICY DIFF: v${diff.old_version} -> v${diff.new_version}`);
+  console.log('============================================================');
+  console.log(`Classification:   ${diff.authority_delta?.classification}`);
+  console.log(`Explanation:      ${diff.authority_delta?.explanation}`);
+  console.log(`Added Rules:      ${diff.added_rules?.length || 0}`);
+  console.log(`Removed Rules:    ${diff.removed_rules?.length || 0}`);
+  console.log(`Modified Rules:   ${diff.modified_rules?.length || 0}`);
+  if (diff.modified_rules?.length) {
+    console.log('MODIFICATIONS:');
+    for (const m of diff.modified_rules) {
+      console.log(`  - ${m.rule_id} [${m.change_type}]: ${m.old_details} -> ${m.new_details}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printPolicyChangeRequestsList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`POLICY CHANGE REQUESTS (${list.length})`);
+  console.log('============================================================');
+  for (const cr of list) {
+    console.log(`[${cr.status}] ${cr.request_id}: v${cr.current_version} -> v${cr.proposed_version} (Proposer: ${cr.proposer})`);
+    console.log(`  Classification: ${cr.authority_delta?.classification || 'N/A'}`);
+    console.log(`  Risk Summary:   ${cr.risk_summary || 'N/A'}`);
+  }
+  console.log('============================================================');
+}
+
 
 

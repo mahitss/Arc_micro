@@ -737,6 +737,43 @@ class AgentNetworkResource:
     def get_trust(self, agent_id: str) -> Dict[str, Any]:
         return self._client._request("GET", f"/v1/agent-network/trust/{agent_id}")
 
+class ConstitutionsResource:
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def get_active(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/constitutions/active")
+
+    def list(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/constitutions")
+
+    def get(self, version: int) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/constitutions/{version}")
+
+    def propose(self, candidate: Dict[str, Any], proposer: str = "operator") -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/constitutions", json={"candidate": candidate, "proposer": proposer})
+
+    def evaluate(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/constitutions/evaluate", json=context)
+
+    def diff(self, old_version: int, new_version: int) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/constitutions/diff", json={"old_version": old_version, "new_version": new_version})
+
+    def test(self, version: int, test_cases: List[Dict[str, Any]]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/constitutions/test", json={"version": version, "test_cases": test_cases})
+
+    def activate(self, change_request_id: str, approver: str = "security_lead") -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/constitutions/activate", json={"change_request_id": change_request_id, "approver": approver})
+
+    def rollback(self, target_version: int, actor: str = "security_admin") -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/constitutions/rollback", json={"target_version": target_version, "actor": actor})
+
+    def list_changes(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/constitutions/changes")
+
+    def review_change(self, change_request_id: str, approve: bool, reviewer: str = "governance_reviewer", notes: str = "") -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/constitutions/changes/{change_request_id}/review", json={"approve": approve, "reviewer": reviewer, "notes": notes})
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -765,6 +802,8 @@ class AgentPay:
         self.simulations = SimulationsResource(self)
         self.swarms = SwarmsResource(self)
         self.agent_network = AgentNetworkResource(self)
+        self.constitutions = ConstitutionsResource(self)
+        self.constitution = self.constitutions
 
     def _request(
         self,

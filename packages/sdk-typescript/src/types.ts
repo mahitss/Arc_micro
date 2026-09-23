@@ -1478,5 +1478,192 @@ export interface NetworkGraph {
   edges: GraphEdge[];
 }
 
+/**
+ * Economic Constitution Subsystem Types
+ */
+export type ConstitutionStatus = 'DRAFT' | 'SIMULATED' | 'UNDER_REVIEW' | 'APPROVED' | 'ACTIVE' | 'SUPERSEDED' | 'REVOKED';
+
+export type RuleType = 
+  | 'SPENDING_LIMIT'
+  | 'RECIPIENT_RULE'
+  | 'ASSET_RULE'
+  | 'TIME_RULE'
+  | 'RISK_RULE'
+  | 'APPROVAL_RULE'
+  | 'DELEGATION_RULE'
+  | 'MISSION_RULE'
+  | 'SWARM_RULE'
+  | 'HARD_DENY';
+
+export interface SpendingLimitRule {
+  max_single_payment?: string;
+  daily_budget_limit?: string;
+  hourly_velocity_limit?: string;
+  max_mission_spend?: string;
+  max_swarm_spend?: string;
+  max_agent_daily_spend?: string;
+  currency: string;
+}
+
+export interface RecipientRule {
+  allowed_services?: string[];
+  blocked_services?: string[];
+  allowed_organizations?: string[];
+  blocked_organizations?: string[];
+  allowed_capabilities?: string[];
+  blocked_capabilities?: string[];
+  allowed_agents?: string[];
+  blocked_agents?: string[];
+}
+
+export interface AssetRule {
+  allowed_assets: string[];
+  default_asset: string;
+}
+
+export interface ApprovalRule {
+  amount_threshold?: string;
+  require_on_new_recipient?: boolean;
+  require_on_external_agent?: boolean;
+  require_on_high_risk_capability?: boolean;
+}
+
+export interface DelegationRule {
+  max_delegation_depth: number;
+  max_inherited_budget_pct?: number;
+  allowed_subcontract_caps?: string[];
+  prohibit_unverified_provider?: boolean;
+}
+
+export interface RiskRule {
+  max_risk_score: number;
+  max_risk_level: string;
+  max_anomaly_score?: number;
+  min_trust_score_bps?: number;
+  max_external_agent_risk?: string;
+}
+
+export interface HardDenyRule {
+  rule_id: string;
+  description: string;
+  match_condition: string;
+  reason_code: string;
+}
+
+export interface ConstitutionRule {
+  rule_id: string;
+  type: RuleType;
+  scope: string;
+  description: string;
+  hard_deny: boolean;
+  priority: number;
+  spending_limit?: SpendingLimitRule;
+  recipient_rule?: RecipientRule;
+  asset_rule?: AssetRule;
+  risk_rule?: RiskRule;
+  approval_rule?: ApprovalRule;
+  delegation_rule?: DelegationRule;
+  hard_deny_rule?: HardDenyRule;
+}
+
+export interface EconomicConstitution {
+  constitution_id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  version: number;
+  status: ConstitutionStatus;
+  effective_at?: string;
+  created_at: string;
+  created_by: string;
+  previous_version: number;
+  policy_hash: string;
+  rules: ConstitutionRule[];
+  hard_deny_rules?: HardDenyRule[];
+  metadata?: Record<string, string>;
+}
+
+export interface ConstitutionDecision {
+  constitution_id: string;
+  version: number;
+  decision: 'ALLOW' | 'DENY' | 'APPROVAL_REQUIRED' | string;
+  reason_code: string;
+  reason: string;
+  matched_rules: string[];
+  denied_rules: string[];
+  approval_rules: string[];
+  explanation: string;
+  evaluation_hash: string;
+  evaluated_at: string;
+}
+
+export interface AuthorityDelta {
+  spending_delta: string;
+  recipient_delta: string;
+  delegation_delta: string;
+  risk_tolerance_delta: string;
+  approval_delta: string;
+  classification: 'MORE_RESTRICTIVE' | 'UNCHANGED' | 'MORE_PERMISSIVE' | string;
+  explanation: string;
+}
+
+export interface RuleModification {
+  rule_id: string;
+  type: RuleType;
+  description: string;
+  old_details: string;
+  new_details: string;
+  change_type: string;
+}
+
+export interface PolicyDiff {
+  old_version: number;
+  new_version: number;
+  added_rules: ConstitutionRule[];
+  removed_rules: ConstitutionRule[];
+  modified_rules: RuleModification[];
+  unchanged_rules: ConstitutionRule[];
+  authority_delta: AuthorityDelta;
+}
+
+export interface PolicyChangeRequest {
+  request_id: string;
+  organization_id: string;
+  current_version: number;
+  proposed_version: number;
+  proposed_constitution: EconomicConstitution;
+  authority_delta: AuthorityDelta;
+  risk_summary: string;
+  proposer: string;
+  reviewer?: string;
+  approver?: string;
+  status: string;
+  created_at: string;
+  reviewed_at?: string;
+  approved_at?: string;
+  activated_at?: string;
+}
+
+export interface PolicyTestCase {
+  name: string;
+  description?: string;
+  context: Record<string, unknown>;
+  expected_decision: string;
+  expected_reason_code?: string;
+  expected_rules?: string[];
+}
+
+export interface PolicyTestReport {
+  constitution_id: string;
+  version: number;
+  passed: boolean;
+  total_tests: number;
+  passed_tests: number;
+  failed_tests: number;
+  failures?: string[];
+  duration_ms: number;
+  executed_at: string;
+}
+
 
 

@@ -29,6 +29,7 @@ export { ServicesResource } from './resources/services.js';
 export { SimulationsResource } from './resources/simulations.js';
 export { SwarmsResource } from './resources/swarms.js';
 export { TransactionsResource } from './resources/transactions.js';
+export { ConstitutionsResource } from './resources/constitutions.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
   Agent,

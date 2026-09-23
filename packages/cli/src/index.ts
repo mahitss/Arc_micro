@@ -35,6 +35,11 @@ import {
   printServiceContract,
   printDisputeRecord,
   printNetworkGraph,
+  printConstitution,
+  printConstitutionsList,
+  printConstitutionDecision,
+  printPolicyDiff,
+  printPolicyChangeRequestsList,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -840,6 +845,96 @@ async function main(): Promise<void> {
         const res = await client.agentNetwork.getGraph();
         if (isJson) printJson(res);
         else printNetworkGraph(res);
+        return;
+      }
+    }
+
+    // 14. Economic Constitution Subsystem Commands
+    if (resource === 'policy' || resource === 'constitution') {
+      const sub = positional[1];
+      const param = positional[2];
+      const param2 = positional[3];
+
+      if (!sub || sub === 'active') {
+        const res = await client.constitutions.getActive();
+        if (isJson) printJson(res);
+        else printConstitution(res.constitution, 'ACTIVE REAL CONSTITUTION');
+        return;
+      }
+
+      if (sub === 'list') {
+        const res = await client.constitutions.list();
+        if (isJson) printJson(res);
+        else printConstitutionsList(res.constitutions);
+        return;
+      }
+
+      if (sub === 'get' || sub === 'inspect') {
+        if (!param) {
+          console.error('Usage: agentpay policy get <version>');
+          process.exit(1);
+        }
+        const res = await client.constitutions.get(parseInt(param, 10));
+        if (isJson) printJson(res);
+        else printConstitution(res.constitution, `v${param} CONSTITUTION`);
+        return;
+      }
+
+      if (sub === 'evaluate') {
+        if (!param) {
+          console.error('Usage: agentpay policy evaluate \'<jsonContext>\'');
+          process.exit(1);
+        }
+        let parsed = {};
+        try {
+          parsed = JSON.parse(param);
+        } catch {
+          console.error('Invalid JSON context');
+          process.exit(1);
+        }
+        const res = await client.constitutions.evaluate(parsed);
+        if (isJson) printJson(res);
+        else printConstitutionDecision(res.decision);
+        return;
+      }
+
+      if (sub === 'diff') {
+        if (!param || !param2) {
+          console.error('Usage: agentpay policy diff <oldVersion> <newVersion>');
+          process.exit(1);
+        }
+        const res = await client.constitutions.diff(parseInt(param, 10), parseInt(param2, 10));
+        if (isJson) printJson(res);
+        else printPolicyDiff(res.diff);
+        return;
+      }
+
+      if (sub === 'activate') {
+        if (!param) {
+          console.error('Usage: agentpay policy activate <changeRequestId>');
+          process.exit(1);
+        }
+        const res = await client.constitutions.activate(param);
+        if (isJson) printJson(res);
+        else printConstitution(res.constitution, 'ACTIVATED CONSTITUTION');
+        return;
+      }
+
+      if (sub === 'rollback') {
+        if (!param) {
+          console.error('Usage: agentpay policy rollback <targetVersion>');
+          process.exit(1);
+        }
+        const res = await client.constitutions.rollback(parseInt(param, 10));
+        if (isJson) printJson(res);
+        else printConstitution(res.constitution, 'ROLLED BACK CONSTITUTION');
+        return;
+      }
+
+      if (sub === 'changes') {
+        const res = await client.constitutions.listChanges();
+        if (isJson) printJson(res);
+        else printPolicyChangeRequestsList(res.change_requests);
         return;
       }
     }

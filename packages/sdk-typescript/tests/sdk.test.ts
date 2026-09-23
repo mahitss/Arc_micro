@@ -1420,5 +1420,65 @@ test('AgentPay SDK — Open Agent Network (Discovery, Contracts & Settlement)', 
   assert.equal(graph.nodes[0].id, 'agent_auditor_01');
 });
 
+test('AgentPay SDK — Economic Constitution Resource', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+
+    if (capturedUrl.includes('/v1/constitutions/active')) {
+      return new Response(
+        JSON.stringify({
+          constitution: {
+            constitution_id: 'const_org_01',
+            organization_id: 'org_01',
+            version: 1,
+            status: 'ACTIVE',
+            policy_hash: 'hash_abc',
+            rules: [],
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/constitutions/evaluate')) {
+      return new Response(
+        JSON.stringify({
+          decision: {
+            constitution_id: 'const_org_01',
+            version: 1,
+            decision: 'ALLOW',
+            reason_code: 'APPROVED',
+            explanation: 'Conforms to constitutional limits',
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_test_123', fetch: mockFetch });
+
+  // 1. Get Active
+  const active = await client.constitutions.getActive();
+  assert.equal(active.constitution.constitution_id, 'const_org_01');
+  assert.equal(active.constitution.version, 1);
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/constitutions/active');
+
+  // 2. Evaluate
+  const evaluated = await client.constitutions.evaluate({
+    amount: '1000000',
+    currency: 'USDC',
+  });
+  assert.equal(evaluated.decision.decision, 'ALLOW');
+  assert.equal(capturedMethod, 'POST');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/constitutions/evaluate');
+});
+
 
 
