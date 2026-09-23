@@ -14,6 +14,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/metrics"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/network"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/service"
@@ -253,6 +254,56 @@ func NewRouter(
 		securityLabHandler := handlers.NewSecurityLabHandler(nil)
 		mux.HandleFunc("GET /v1/security-lab/report", securityLabHandler.HandleGetReport)
 		mux.HandleFunc("POST /v1/security-lab/run", securityLabHandler.HandleRunSuite)
+
+		// 13. Open Agent Network Subsystem
+		allowLocalhostNet := cfg != nil && cfg.AllowLocalhostWebhooks
+		manifestValidator := network.NewAgentManifestValidator(allowLocalhostNet)
+		trustEvaluator := network.NewTrustEvaluator()
+		capRegistry := network.NewCapabilityRegistry()
+		discoveryService := network.NewAgentDiscoveryService(repo, manifestValidator, trustEvaluator, capRegistry)
+		selectionEngine := network.NewAgentSelectionEngine()
+		economicRouter := network.NewEconomicRouter(discoveryService, selectionEngine)
+		contractManager := network.NewContractManager(repo)
+		paymentBridge := network.NewPaymentBridge(repo, intentService, policyClient, reg)
+		resultVerifier := network.NewAgentResultVerifier(repo)
+		delegationManager := network.NewDelegationManager(repo)
+		disputeManager := network.NewDisputeManager(repo)
+		graphService := network.NewNetworkGraphService(repo)
+
+		netHandler := handlers.NewAgentNetworkHandler(
+			discoveryService,
+			capRegistry,
+			economicRouter,
+			contractManager,
+			paymentBridge,
+			resultVerifier,
+			delegationManager,
+			disputeManager,
+			graphService,
+			trustEvaluator,
+			repo,
+		)
+
+		mux.HandleFunc("POST /v1/agent-network/agents/register", netHandler.HandleRegisterAgent)
+		mux.HandleFunc("GET /v1/agent-network/agents", netHandler.HandleListAgents)
+		mux.HandleFunc("GET /v1/agent-network/agents/{id}", netHandler.HandleGetAgent)
+		mux.HandleFunc("POST /v1/agent-network/agents/{id}/manifest", netHandler.HandleUpdateManifest)
+		mux.HandleFunc("POST /v1/agent-network/agents/{id}/suspend", netHandler.HandleSuspendAgent)
+		mux.HandleFunc("GET /v1/agent-network/capabilities", netHandler.HandleListCapabilities)
+		mux.HandleFunc("POST /v1/agent-network/routing/plan", netHandler.HandleRoutePlan)
+		mux.HandleFunc("POST /v1/agent-network/contracts", netHandler.HandleCreateContract)
+		mux.HandleFunc("GET /v1/agent-network/contracts", netHandler.HandleListContracts)
+		mux.HandleFunc("GET /v1/agent-network/contracts/{id}", netHandler.HandleGetContract)
+		mux.HandleFunc("POST /v1/agent-network/contracts/{id}/accept", netHandler.HandleAcceptContract)
+		mux.HandleFunc("POST /v1/agent-network/contracts/{id}/fund", netHandler.HandleFundContract)
+		mux.HandleFunc("POST /v1/agent-network/contracts/{id}/delegate", netHandler.HandleDelegateContract)
+		mux.HandleFunc("POST /v1/agent-network/contracts/{id}/verify", netHandler.HandleVerifyResult)
+		mux.HandleFunc("POST /v1/agent-network/contracts/{id}/disputes", netHandler.HandleOpenDispute)
+		mux.HandleFunc("GET /v1/agent-network/disputes", netHandler.HandleListDisputes)
+		mux.HandleFunc("GET /v1/agent-network/disputes/{id}", netHandler.HandleGetDispute)
+		mux.HandleFunc("POST /v1/agent-network/disputes/{id}/resolve", netHandler.HandleResolveDispute)
+		mux.HandleFunc("GET /v1/agent-network/graph", netHandler.HandleGetGraph)
+		mux.HandleFunc("GET /v1/agent-network/trust/{id}", netHandler.HandleGetTrust)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {
