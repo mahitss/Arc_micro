@@ -124,6 +124,38 @@ Mission Control Simulator is live at **`http://localhost:3000/simulator`**.
 
 ---
 
+## Autonomous Sovereign Economic Constitution
+
+The **Autonomous Sovereign Economic Constitution** establishes immutable, mathematically verified governance boundaries for all economic activities across agents, swarms, and human operators.
+
+```
+                    SOVEREIGN ROOT INVARIANTS (Level 1)
+                     (Global Hard Deny, Arc USDC Only)
+                                    │
+                                    ▼
+                     ORGANIZATION ENVELOPE (Level 2)
+                   (Treasury Cap, Velocity, Multi-Sig)
+                                    │
+                                    ▼
+                    SWARM & MISSION ALLOCATION (Level 3)
+                   (Swarm Budgets, Kahn DAG Concurrency)
+                                    │
+                                    ▼
+                    AGENT DELEGATED LEAF (Level 4)
+                  (Subcontracting Depth ≤ 2, Hops ≤ 50%)
+```
+
+### Key Capabilities
+1. **Monotonic Authority Inheritance:** Authority flows strictly downward. Subordinates may add restrictions; they can never expand parent limits.
+2. **Authority Delta Engine:** Evaluates policy candidates across 5 dimensions and classifies changes into `MORE_RESTRICTIVE`, `UNCHANGED`, or `MORE_PERMISSIVE`.
+3. **Compare-And-Swap (CAS) Atomic Activation:** Revisions activate atomically without downtime; rollback to any historical version is supported in sub-second time.
+4. **Cryptographic Flight Recorder:** Every policy evaluation produces a verifiable evaluation hash anchored to the SHA-256 digest of the active constitution.
+5. **Zero Private Key Access:** Agents evaluate transactions against the constitution keylessly; private keys remain secured in production HSM enclaves.
+
+Mission Control Constitution Interface is live at **`http://localhost:3000/constitution`**.
+
+---
+
 ## How It Works
 
 ```
@@ -352,6 +384,7 @@ AgentPay features a decentralized, zero-trust **Open Agent Network (OAN)** based
 - **Simulation Execution & Staleness Gate:** [`docs/simulation-execution.md`](docs/simulation-execution.md)
 - **Canonical Demo Scenarios Walkthrough:** [`docs/simulation-demo.md`](docs/simulation-demo.md)
 - **Simulation Implementation Report (Phases 0–33):** [`docs/simulation-implementation-report.md`](docs/simulation-implementation-report.md)
+- **Economic Constitution Reference:** [`docs/economic-constitution.md`](docs/economic-constitution.md)
 - **Multi-Agent Swarm Architecture:** [`docs/swarm-orchestration-architecture.md`](docs/swarm-orchestration-architecture.md)
 - **Swarm Security Boundaries (INV-S1 to INV-S8):** [`docs/swarm-security-boundaries.md`](docs/swarm-security-boundaries.md)
 - **Swarm Economic Model & Reservations:** [`docs/swarm-economic-model.md`](docs/swarm-economic-model.md)
