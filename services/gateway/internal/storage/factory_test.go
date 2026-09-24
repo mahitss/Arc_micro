@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -89,6 +90,89 @@ func TestInitializeRepository_Selection(t *testing.T) {
 		}
 		if !strings.Contains(err.Error(), "DATABASE_URL is required in production mode") {
 			t.Errorf("unexpected error message: %v", err)
+		}
+	})
+
+	t.Run("Production mode with STORAGE_MODE=memory is strictly forbidden", func(t *testing.T) {
+		cfg := &config.Config{
+			Environment: "production",
+			StorageMode: "memory",
+			DatabaseURL: "",
+		}
+		repo, db, err := InitializeRepository(ctx, cfg)
+		if err == nil {
+			t.Fatal("expected error in production mode with STORAGE_MODE=memory, got nil")
+		}
+		if db != nil {
+			defer db.Close()
+		}
+		if repo != nil {
+			t.Fatalf("CRITICAL: in-memory repo initialized in production! Got: %T", repo)
+		}
+		if err != ErrMemoryStorageForbiddenInProduction {
+			t.Errorf("expected ErrMemoryStorageForbiddenInProduction, got: %v", err)
+		}
+	})
+
+	t.Run("Live execution with STORAGE_MODE=memory is strictly forbidden", func(t *testing.T) {
+		cfg := &config.Config{
+			Environment:         "development",
+			EnableLiveExecution: true,
+			StorageMode:         "memory",
+		}
+		repo, db, err := InitializeRepository(ctx, cfg)
+		if err == nil {
+			t.Fatal("expected error when EnableLiveExecution is true with STORAGE_MODE=memory, got nil")
+		}
+		if db != nil {
+			defer db.Close()
+		}
+		if repo != nil {
+			t.Fatalf("CRITICAL: in-memory repo initialized with live execution! Got: %T", repo)
+		}
+		if err != ErrMemoryStorageForbiddenInProduction {
+			t.Errorf("expected ErrMemoryStorageForbiddenInProduction, got: %v", err)
+		}
+	})
+
+	t.Run("Explicit STORAGE_MODE=postgres requires DATABASE_URL", func(t *testing.T) {
+		cfg := &config.Config{
+			Environment: "development",
+			StorageMode: "postgres",
+			DatabaseURL: "",
+		}
+		repo, db, err := InitializeRepository(ctx, cfg)
+		if err == nil {
+			t.Fatal("expected error when STORAGE_MODE=postgres but DATABASE_URL is empty")
+		}
+		if db != nil {
+			defer db.Close()
+		}
+		if repo != nil {
+			t.Fatalf("expected nil repo, got: %T", repo)
+		}
+		if err != ErrDatabaseURLRequired {
+			t.Errorf("expected ErrDatabaseURLRequired, got: %v", err)
+		}
+	})
+
+	t.Run("Unsupported STORAGE_MODE fails closed", func(t *testing.T) {
+		cfg := &config.Config{
+			Environment: "development",
+			StorageMode: "redis",
+		}
+		repo, db, err := InitializeRepository(ctx, cfg)
+		if err == nil {
+			t.Fatal("expected error for unsupported STORAGE_MODE=redis")
+		}
+		if db != nil {
+			defer db.Close()
+		}
+		if repo != nil {
+			t.Fatalf("expected nil repo, got: %T", repo)
+		}
+		if !errors.Is(err, ErrUnsupportedStorageMode) {
+			t.Errorf("expected ErrUnsupportedStorageMode, got: %v", err)
 		}
 	})
 

@@ -25,6 +25,7 @@ type Config struct {
 
 	// Task 6: AI Agent & Storage Configuration
 	DatabaseURL            string
+	StorageMode            string // "memory" or "postgres"
 	Environment            string
 	DBMaxOpenConns         int
 	DBMaxIdleConns         int
@@ -189,6 +190,17 @@ func Load() *Config {
 		}
 	}
 
+	storageMode := strings.ToLower(strings.TrimSpace(os.Getenv("STORAGE_MODE")))
+	if storageMode == "" {
+		if strings.TrimSpace(os.Getenv("DATABASE_URL")) != "" {
+			storageMode = "postgres"
+		} else if strings.EqualFold(env, "production") || enableLiveExecution {
+			storageMode = "postgres"
+		} else {
+			storageMode = "memory"
+		}
+	}
+
 	return &Config{
 		Port:                   port,
 		PolicyEngineURL:        policyEngineURL,
@@ -205,6 +217,7 @@ func Load() *Config {
 		ArcConfirmationTimeout: time.Duration(confirmationTimeoutMs) * time.Millisecond,
 
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
+		StorageMode:            storageMode,
 		Environment:            env,
 		DBMaxOpenConns:         maxOpenConns,
 		DBMaxIdleConns:         maxIdleConns,
