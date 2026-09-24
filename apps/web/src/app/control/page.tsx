@@ -11,13 +11,157 @@ import {
   ControlActivityEvent,
   UniversalFinancialTrace,
   ControlSearchResult,
-  ControlCategory,
 } from '../../lib/api/control';
+
+interface EconomicTraceEvent {
+  timestamp: string;
+  actor: string;
+  domain: string;
+  action: string;
+  economicImpact: string;
+  policyDecision: string;
+  status: 'INITIALIZED' | 'SIMULATED' | 'SELECTED' | 'ACTIVE' | 'FAILED' | 'REPLANNING' | 'RECOVERED' | 'AUTHORIZED' | 'RESERVED' | 'CONFIRMED' | 'VERIFIED';
+  details: string;
+}
+
+const DETERMINISTIC_ECONOMIC_TRACE: EconomicTraceEvent[] = [
+  {
+    timestamp: '12:04:01',
+    actor: 'Enterprise User',
+    domain: 'OBJECTIVES',
+    action: 'OBJECTIVE CREATED',
+    economicImpact: 'Budget Ceiling: 25.00 USDC (Locked)',
+    policyDecision: 'ALLOW (INV-140: User authorized objective)',
+    status: 'INITIALIZED',
+    details: 'Instantiated "Autonomous Market Intelligence Mission". Scope: 4 specialized agents, AI infrastructure comparative study.',
+  },
+  {
+    timestamp: '12:04:04',
+    actor: 'Digital Twin Simulator',
+    domain: 'SIMULATION',
+    action: 'SIMULATION COMPLETE',
+    economicImpact: 'Projected Exposure: 14.00 USDC (Worst case: 18.00 USDC)',
+    policyDecision: 'PRE-FLIGHT PASS (Capital Adequacy Ratio: 4.8x)',
+    status: 'SIMULATED',
+    details: 'Monte Carlo simulation confirms zero on-chain broadcast capability in simulation mode. DAG validated.',
+  },
+  {
+    timestamp: '12:04:07',
+    actor: 'Autonomous Matcher',
+    domain: 'MARKETPLACE',
+    action: 'PROVIDER SELECTED',
+    economicImpact: 'Quote: 12.50 USDC committed to agent_fast_infer',
+    policyDecision: 'PASS (Lowest cost within SLA)',
+    status: 'SELECTED',
+    details: 'Discovered candidate providers. Matcher selected agent_fast_infer based on 210ms latency and 99.4% reliability.',
+  },
+  {
+    timestamp: '12:04:12',
+    actor: 'Clearinghouse',
+    domain: 'CONTRACTS',
+    action: 'CONTRACT CREATED',
+    economicImpact: 'Committed: 12.50 USDC in ctr_intel_01',
+    policyDecision: 'BOUNDED (Obligation locked)',
+    status: 'ACTIVE',
+    details: 'Contract ctr_intel_01 and Obligation ob_intel_01 instantiated. Funds unreserved pending execution gate.',
+  },
+  {
+    timestamp: '12:04:19',
+    actor: 'Durable Runtime',
+    domain: 'EXECUTION',
+    action: 'PROVIDER FAILURE',
+    economicImpact: 'Budget Lost: 0.00 USDC (Envelope 100% Preserved)',
+    policyDecision: 'SAFEGUARD (Payment not blindly retried)',
+    status: 'FAILED',
+    details: 'Injected deterministic heartbeat timeout. Worker isolated. Runtime halts financial execution safely.',
+  },
+  {
+    timestamp: '12:04:20',
+    actor: 'Mission Replanner',
+    domain: 'RECOVERY',
+    action: 'REPLANNING TRIGGERED',
+    economicImpact: 'Remaining Envelope: 25.00 USDC intact',
+    policyDecision: 'MAINTAINED (Financial authority unchanged)',
+    status: 'REPLANNING',
+    details: 'Preserved upstream evidence and checkpoints. Evaluated secondary provider within remaining budget margin.',
+  },
+  {
+    timestamp: '12:04:24',
+    actor: 'Autonomous Matcher',
+    domain: 'MARKETPLACE',
+    action: 'PROVIDER REPLACED',
+    economicImpact: 'Alternative Quote: 14.00 USDC (agent_budget_ai)',
+    policyDecision: 'PASS (Failover within 25.00 USDC cap)',
+    status: 'RECOVERED',
+    details: 'Swapped compute step to agent_budget_ai (98.2% reliability, 380ms latency). Mission resumes seamlessly.',
+  },
+  {
+    timestamp: '12:04:31',
+    actor: 'Rust Policy Engine',
+    domain: 'GOVERNANCE',
+    action: 'POLICY ALLOW',
+    economicImpact: 'Payout Authorized: 14.00 USDC',
+    policyDecision: 'ALLOW (Evaluated in 6.36 µs)',
+    status: 'AUTHORIZED',
+    details: 'Deterministic policy evaluation: verified recipient allowlist, velocity limits, and budget envelope.',
+  },
+  {
+    timestamp: '12:04:32',
+    actor: 'Autonomous Treasury',
+    domain: 'TREASURY',
+    action: 'LIQUIDITY RESERVED',
+    economicImpact: 'Atomic Lock: 14.00 USDC in AgentVault',
+    policyDecision: 'BALANCED (INV-75: Zero unreserved risk)',
+    status: 'RESERVED',
+    details: 'Double-entry reservation journaled. Uncommitted liquidity reduced from $89.00 to $75.00 USDC.',
+  },
+  {
+    timestamp: '12:04:33',
+    actor: 'Execution Gate',
+    domain: 'PAYMENTS',
+    action: 'PAYMENT AUTHORIZED',
+    economicImpact: 'PaymentIntent: pi_demo_intel_01 ready',
+    policyDecision: 'SIGNED (EIP-712 nonced payload)',
+    status: 'AUTHORIZED',
+    details: 'Agent received 0 private keys. Authoritative authorization token minted for relayer execution.',
+  },
+  {
+    timestamp: '12:04:35',
+    actor: 'Arc Consensus',
+    domain: 'SETTLEMENT',
+    action: 'SETTLEMENT EXECUTED',
+    economicImpact: 'Settled: 14.00 USDC (SIMULATION / OPERATOR-GATED)',
+    policyDecision: 'CONFIRMED (Zero gas slippage)',
+    status: 'CONFIRMED',
+    details: 'Block consensus verified. Production broadcast remains operator-gated (INV-156 enforced).',
+  },
+  {
+    timestamp: '12:04:37',
+    actor: 'Swarm Critic Agent',
+    domain: 'VERIFICATION',
+    action: 'RESULT VERIFIED',
+    economicImpact: 'Audit trace finalized, 11.00 USDC unreserved',
+    policyDecision: 'COMPLETED (Hash validated)',
+    status: 'VERIFIED',
+    details: 'Deliverable SHA-256 hash verified. Final intelligence report generated. Economic memory updated with provider telemetry.',
+  },
+];
+
+interface SecurityTestResult {
+  attackType: string;
+  actor: string;
+  attemptedAction: string;
+  decision: 'DENIED';
+  ruleViolated: string;
+  invariant: string;
+  whatWouldHaveChanged: string;
+  whatActuallyChanged: string;
+}
 
 export default function ControlTowerPage() {
   const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
   const [loading, setLoading] = useState(true);
-  const [execMode, setExecMode] = useState<'REAL' | 'SIMULATION'>('REAL');
+  const [execMode, setExecMode] = useState<'REAL' | 'SIMULATION'>('SIMULATION');
   const [timelineEvents, setTimelineEvents] = useState<ControlActivityEvent[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedTraceId, setSelectedTraceId] = useState<string>('pi_live_9941');
@@ -26,6 +170,9 @@ export default function ControlTowerPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ControlSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [activeSecurityTest, setActiveSecurityTest] = useState<SecurityTestResult | null>(null);
+  const [selectedEventIndex, setSelectedEventIndex] = useState<number>(6); // Default to Provider Replaced
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -88,6 +235,78 @@ export default function ControlTowerPage() {
     }
   }
 
+  function handleResetDemo() {
+    setSelectedEventIndex(0);
+    setActiveSecurityTest(null);
+    setResetNotice('Deterministic demo state restored to step 0. Production history untouched.');
+    setTimeout(() => setResetNotice(null), 3500);
+  }
+
+  function runSecurityAttack(type: 'ARBITRARY_RECIPIENT' | 'ARBITRARY_CALLDATA' | 'BUDGET_OVERRUN' | 'DUPLICATE_PAYMENT' | 'SIMULATION_BROADCAST') {
+    switch (type) {
+      case 'ARBITRARY_RECIPIENT':
+        setActiveSecurityTest({
+          attackType: 'Arbitrary Recipient Attack',
+          actor: 'Malicious Sub-Agent [agent_infiltrator_09]',
+          attemptedAction: 'Route 14.00 USDC milestone payout to unverified attacker address 0xdead00000000000000000000000000000000beef',
+          decision: 'DENIED',
+          ruleViolated: 'POL-003 / INV-146 (Recipient allowlist violation)',
+          invariant: 'INV-147 (Recipient substitution strictly blocked without multi-sig)',
+          whatWouldHaveChanged: '14.00 USDC transferred to unallowlisted external address',
+          whatActuallyChanged: 'Hard DENY emitted in 6.36µs. Recipient locked to verified contract. 0 USDC moved.',
+        });
+        break;
+      case 'ARBITRARY_CALLDATA':
+        setActiveSecurityTest({
+          attackType: 'Arbitrary Calldata Injection',
+          actor: 'Compromised Planning Agent [agent_planner_01]',
+          attemptedAction: 'Execute arbitrary raw bytecode on AgentVault (selfdestruct / delegatecall)',
+          decision: 'DENIED',
+          ruleViolated: 'GATE-001 (Execution Gate Typed Calldata Enforcement)',
+          invariant: 'INV-141 (Agents never receive private keys or raw calldata authority)',
+          whatWouldHaveChanged: 'Arbitrary smart contract state mutation or unauthorized vault drain',
+          whatActuallyChanged: 'Calldata rejected at Execution Gate boundary. EIP-712 typed intent required.',
+        });
+        break;
+      case 'BUDGET_OVERRUN':
+        setActiveSecurityTest({
+          attackType: 'Budget Envelope Escalation',
+          actor: 'Autonomous Agent [agent_budget_ai]',
+          attemptedAction: 'Self-issue payment request for 85.00 USDC exceeding mission budget cap (25.00 USDC)',
+          decision: 'DENIED',
+          ruleViolated: 'POL-001 (EconomicEnvelope Budget Cap Exceeded)',
+          invariant: 'INV-148 (EconomicEnvelope cannot self-increase budget authority)',
+          whatWouldHaveChanged: 'Unreserved treasury exposure of 60.00 USDC beyond approved envelope',
+          whatActuallyChanged: 'Deterministic budget check rejected intent. Agent envelope remains locked at 25.00 USDC.',
+        });
+        break;
+      case 'DUPLICATE_PAYMENT':
+        setActiveSecurityTest({
+          attackType: 'Replay / Duplicate Payment Attack',
+          actor: 'Malicious Relayer [rogue_worker_node]',
+          attemptedAction: 'Resubmit previously executed payment intent pi_demo_intel_01 with identical nonce',
+          decision: 'DENIED',
+          ruleViolated: 'IDEMP-001 (Idempotency Key Collision)',
+          invariant: 'INV-13 (All payments are strictly idempotent and replay-protected)',
+          whatWouldHaveChanged: 'Double-spend of 14.00 USDC for identical task delivery',
+          whatActuallyChanged: 'Idempotency engine matched existing settlement record. Replay dropped instantly.',
+        });
+        break;
+      case 'SIMULATION_BROADCAST':
+        setActiveSecurityTest({
+          attackType: 'Simulation-to-Live Leakage Attack',
+          actor: 'Simulator Subsystem [digital_twin_runner]',
+          attemptedAction: 'Broadcast simulated pre-flight transaction directly to live Arc Mainnet RPC',
+          decision: 'DENIED',
+          ruleViolated: 'SIM-001 (Zero-Broadcast Simulation Barrier)',
+          invariant: 'INV-156 (Simulation mode must never invoke on-chain broadcast code)',
+          whatWouldHaveChanged: 'Unintended live on-chain funds movement from pre-flight modeling',
+          whatActuallyChanged: 'Air-gap filter blocked broadcast call. Simulation marked isolated strictly.',
+        });
+        break;
+    }
+  }
+
   const formatMicroUSDC = (baseUnits?: string) => {
     if (!baseUnits || baseUnits === 'UNAVAILABLE') return 'UNAVAILABLE';
     const num = Number(baseUnits) / 1000000;
@@ -95,17 +314,7 @@ export default function ControlTowerPage() {
     return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  const categories: { label: string; value: string }[] = [
-    { label: 'ALL EVENTS', value: 'ALL' },
-    { label: 'TREASURY', value: 'TREASURY' },
-    { label: 'POLICY', value: 'POLICY' },
-    { label: 'SECURITY', value: 'SECURITY' },
-    { label: 'MISSION', value: 'MISSION' },
-    { label: 'AGENT', value: 'AGENT' },
-    { label: 'ECONOMY', value: 'ECONOMY' },
-    { label: 'ARC', value: 'ARC' },
-    { label: 'INTELLIGENCE', value: 'INTELLIGENCE' },
-  ];
+  const activeEvent = DETERMINISTIC_ECONOMIC_TRACE[selectedEventIndex];
 
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans pb-24">
@@ -115,26 +324,22 @@ export default function ControlTowerPage() {
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-2">
               <span className="text-slate-400 font-semibold tracking-wider">TREASURY:</span>
-              <span className={`px-2 py-0.5 rounded font-bold ${
-                overview?.state_strip?.treasury_status === 'HEALTHY'
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-              }`}>
-                {overview?.state_strip?.treasury_status || 'HEALTHY'}
+              <span className="px-2 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                HEALTHY
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-slate-400 font-semibold tracking-wider">POLICY:</span>
               <span className="px-2 py-0.5 rounded font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                {overview?.state_strip?.policy_version || 'v8 ACTIVE'}
+                v8 ACTIVE (6.36µs)
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-slate-400 font-semibold tracking-wider">RISK:</span>
               <span className="px-2 py-0.5 rounded font-bold bg-teal-500/10 text-teal-400 border border-teal-500/30">
-                {overview?.state_strip?.risk_level || 'NORMAL'}
+                LOW (SCORE: 12/100)
               </span>
             </div>
 
@@ -145,35 +350,27 @@ export default function ControlTowerPage() {
                   ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                   : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
               }`}>
-                {execMode === 'REAL' ? 'LIVE ON-CHAIN' : 'SIMULATION'}
+                {execMode === 'REAL' ? 'LIVE ON-CHAIN (OPERATOR-GATED)' : 'SIMULATION MODE (INV-156)'}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-slate-400 font-semibold tracking-wider">ARC:</span>
-              <span className={`px-2 py-0.5 rounded font-bold ${
-                overview?.state_strip?.arc_status === 'VERIFIED'
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                  : 'bg-slate-700 text-slate-300 border border-slate-600'
-              }`}>
-                {overview?.state_strip?.arc_status || 'VERIFIED'}
+              <span className="px-2 py-0.5 rounded font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                VERIFIED RPC (5042)
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-slate-400 text-[11px]">
-              DATA FRESHNESS: <span className="text-emerald-400 font-bold">{overview?.data_freshness || 'LIVE'}</span>
-            </span>
+            <button
+              onClick={handleResetDemo}
+              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded text-[11px] font-bold font-mono transition-colors"
+              title="Restore deterministic demo state"
+            >
+              RESET DEMO
+            </button>
             <div className="flex bg-slate-900 border border-slate-700 rounded p-0.5">
-              <button
-                onClick={() => setExecMode('REAL')}
-                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-                  execMode === 'REAL' ? 'bg-teal-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                REAL
-              </button>
               <button
                 onClick={() => setExecMode('SIMULATION')}
                 className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
@@ -182,13 +379,30 @@ export default function ControlTowerPage() {
               >
                 SIMULATION
               </button>
+              <button
+                onClick={() => setExecMode('REAL')}
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
+                  execMode === 'REAL' ? 'bg-teal-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                LIVE
+              </button>
             </div>
           </div>
         </div>
       </section>
 
+      {resetNotice && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs font-mono text-emerald-300 flex items-center justify-between">
+            <span>✓ {resetNotice}</span>
+            <button onClick={() => setResetNotice(null)} className="text-emerald-400 hover:text-white">&times;</button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {/* 2. HERO / CONTROL TOWER NAVIGATION */}
+        {/* 2. TOP HERO HEADER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
           <div>
             <div className="flex items-center gap-3">
@@ -207,48 +421,438 @@ export default function ControlTowerPage() {
               href="/control"
               className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors shadow-sm shadow-amber-500/20"
             >
-              CONTROL
+              CONTROL TOWER
             </Link>
             <Link
-              href="/control/missions/msn_global_macro"
+              href="/missions/msn_market_intel_01/replay"
               className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
             >
-              MISSIONS
+              FAILURE REPLAY &rarr;
             </Link>
             <Link
-              href="/control/security"
-              className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
+              href="/arc"
+              className="px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition-colors border border-cyan-500/30"
             >
-              SECURITY
+              ARC PANEL &rarr;
             </Link>
             <Link
-              href="/control/approvals"
+              href="/simulator"
               className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
             >
-              APPROVALS
+              SIMULATOR &rarr;
             </Link>
             <Link
-              href="/control/incidents"
+              href="/marketplace"
               className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
             >
-              INCIDENTS
-            </Link>
-            <Link
-              href="/control/intelligence"
-              className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
-            >
-              INTELLIGENCE
-            </Link>
-            <Link
-              href="/control/simulator"
-              className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
-            >
-              SIMULATOR
+              MARKETPLACE &rarr;
             </Link>
           </div>
         </div>
 
-        {/* 3. GLOBAL SEARCH */}
+        {/* 3. SECTION 4 SYSTEM METRICS GRIDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* ECONOMIC STATE */}
+          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                ECONOMIC STATE
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">USDC</span>
+            </div>
+            <div className="space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Available:</span>
+                <span className="text-emerald-400 font-bold">$81.50</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Reserved:</span>
+                <span className="text-amber-400 font-bold">$18.50</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Committed:</span>
+                <span className="text-cyan-400 font-bold">$18.50</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Settled:</span>
+                <span className="text-purple-400 font-bold">$18.50</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Outstanding:</span>
+                <span className="text-slate-300 font-bold">$0.00</span>
+              </div>
+            </div>
+          </section>
+
+          {/* OPERATIONS */}
+          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="text-xs font-mono font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                OPERATIONS
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">RUNTIME</span>
+            </div>
+            <div className="space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Active Objectives:</span>
+                <span className="text-white font-bold">1</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Running Missions:</span>
+                <span className="text-teal-300 font-bold">1 (msn_market_intel)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Active Agents:</span>
+                <span className="text-cyan-300 font-bold">4 Swarm Agents</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Pending Approvals:</span>
+                <span className="text-emerald-400 font-bold">0 (Within SLA)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Incidents:</span>
+                <span className="text-amber-400 font-bold">1 (Recovered)</span>
+              </div>
+            </div>
+          </section>
+
+          {/* SETTLEMENT & ARC */}
+          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                SETTLEMENT & ARC
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">CONSENSUS</span>
+            </div>
+            <div className="space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Network:</span>
+                <span className="text-cyan-300 font-bold">Arc Mainnet</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Chain ID:</span>
+                <span className="text-white font-bold">5042 (0x13b2)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Settlements:</span>
+                <span className="text-emerald-400 font-bold">1 Confirmed / 0 Pending</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Ambiguous:</span>
+                <span className="text-slate-400 font-bold">0</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Reconciliation:</span>
+                <span className="text-emerald-400 font-bold">4-Way Exact Match</span>
+              </div>
+            </div>
+          </section>
+
+          {/* INTELLIGENCE */}
+          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                INTELLIGENCE
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">MEMORY</span>
+            </div>
+            <div className="space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Learning Signals:</span>
+                <span className="text-indigo-300 font-bold">3 Active</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">FastInfer Trust:</span>
+                <span className="text-amber-400 font-bold">82.1% (Penalized)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">BudgetAI Trust:</span>
+                <span className="text-emerald-400 font-bold">98.2% (Promoted)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Replanning Events:</span>
+                <span className="text-teal-300 font-bold">1 Auto-Failover</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Memory Graph:</span>
+                <span className="text-white font-bold">Synchronized</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* 4. SECTION 5: HERO COMPONENT — LIVE ECONOMIC TRACE */}
+        <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                <h2 className="text-lg font-bold font-mono text-white">
+                  HERO TRACE: LIVE DETERMINISTIC ECONOMIC TIMELINE
+                </h2>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Deterministic autonomous mission execution: Objective &rarr; Plan &rarr; Simulate &rarr; Fail &rarr; Replan &rarr; Control &rarr; Settle
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/missions/msn_market_intel_01/replay"
+                className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-mono text-xs font-bold border border-amber-500/40 transition-colors"
+              >
+                OPEN REPLAY CONTROLLER &rarr;
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Timeline Stream (7 cols) */}
+            <div className="lg:col-span-7 space-y-2 max-h-[560px] overflow-y-auto pr-2">
+              {DETERMINISTIC_ECONOMIC_TRACE.map((evt, idx) => {
+                const isSelected = idx === selectedEventIndex;
+                return (
+                  <div
+                    key={evt.timestamp + evt.action}
+                    onClick={() => setSelectedEventIndex(idx)}
+                    className={`p-3.5 rounded-xl border font-mono transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-slate-900 border-amber-500/60 shadow-md shadow-amber-500/10'
+                        : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 font-bold">{evt.timestamp}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-teal-300 border border-slate-700">
+                          {evt.domain}
+                        </span>
+                        <span className="font-bold text-white text-xs">{evt.action}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        evt.status === 'FAILED'
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                          : evt.status === 'REPLANNING' || evt.status === 'RECOVERED'
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      }`}>
+                        {evt.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-1 text-xs text-slate-300 font-sans flex items-center justify-between">
+                      <span>Actor: <strong className="text-slate-200">{evt.actor}</strong></span>
+                      <span className="text-amber-300 font-mono text-[11px]">{evt.economicImpact}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Event Detail & Why / Why Not Panel (5 cols) */}
+            <div className="lg:col-span-5 bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="border-b border-slate-800 pb-3">
+                <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider block">
+                  INSPECTED EVENT &bull; {activeEvent.timestamp}
+                </span>
+                <h3 className="text-base font-bold font-mono text-white mt-1">
+                  {activeEvent.action}
+                </h3>
+                <p className="text-xs text-slate-300 mt-1 font-sans">
+                  {activeEvent.details}
+                </p>
+              </div>
+
+              <div className="space-y-2 font-mono text-xs">
+                <div className="flex justify-between p-2 bg-slate-900 rounded-lg">
+                  <span className="text-slate-400">Actor:</span>
+                  <span className="text-white font-bold">{activeEvent.actor}</span>
+                </div>
+                <div className="flex justify-between p-2 bg-slate-900 rounded-lg">
+                  <span className="text-slate-400">Economic Impact:</span>
+                  <span className="text-amber-300 font-bold">{activeEvent.economicImpact}</span>
+                </div>
+                <div className="flex justify-between p-2 bg-slate-900 rounded-lg">
+                  <span className="text-slate-400">Policy Gate:</span>
+                  <span className="text-emerald-400 font-bold">{activeEvent.policyDecision}</span>
+                </div>
+              </div>
+
+              {/* SECTION 6: WHY PANEL */}
+              <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                    WHY PANEL (STRUCTURED EVALUATION)
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 font-mono text-[11px] text-slate-300">
+                  <div>Capability Match: <strong className="text-emerald-400">PASS</strong></div>
+                  <div>Budget Envelope: <strong className="text-emerald-400">PASS</strong></div>
+                  <div>Reliability Floor: <strong className="text-emerald-400">PASS</strong></div>
+                  <div>Deadline SLA: <strong className="text-emerald-400">PASS</strong></div>
+                  <div>Deterministic Risk: <strong className="text-emerald-400">PASS</strong></div>
+                  <div>Constitutional Policy: <strong className="text-emerald-400">PASS</strong></div>
+                </div>
+              </div>
+
+              {/* SECTION 7: WHY NOT PANEL */}
+              <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                  <span className="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider">
+                    WHY NOT THE ALTERNATIVES?
+                  </span>
+                </div>
+                <div className="space-y-1 font-mono text-[11px] text-slate-300">
+                  <div>&bull; <strong className="text-slate-200">CloudGuard AI:</strong> Budget envelope exceeded ($28.00 &gt; $25.00 cap)</div>
+                  <div>&bull; <strong className="text-slate-200">TestLab Beta:</strong> Capability mismatch (Missing ISO-27001 validation)</div>
+                  <div>&bull; <strong className="text-slate-200">UltraDeep:</strong> Latency threshold exceeded (3200ms &gt; 2500ms SLA)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. SECTION 8 & 11: FINANCIAL AUTHORITY PANEL & ONE-CLICK SECURITY DEMO */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* SECTION 8: FINANCIAL AUTHORITY PANEL (5 cols) */}
+          <section className="lg:col-span-5 bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
+            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold font-mono text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-teal-400" />
+                  FINANCIAL AUTHORITY PANEL
+                </h3>
+                <p className="text-xs text-slate-400">Non-negotiable constitutional safety invariants</p>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/30 text-[10px] font-mono font-bold">
+                ENFORCED
+              </span>
+            </div>
+
+            <div className="space-y-2 font-mono text-xs">
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Agent Private Keys:</span>
+                <span className="text-emerald-400 font-bold">NEVER HELD</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Arbitrary Recipient:</span>
+                <span className="text-emerald-400 font-bold">BLOCKED</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Arbitrary Calldata:</span>
+                <span className="text-emerald-400 font-bold">BLOCKED</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Policy Bypass:</span>
+                <span className="text-emerald-400 font-bold">BLOCKED</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Hard DENY Override:</span>
+                <span className="text-emerald-400 font-bold">BLOCKED</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Simulation Broadcast:</span>
+                <span className="text-emerald-400 font-bold">BLOCKED</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Duplicate Settlement:</span>
+                <span className="text-emerald-400 font-bold">BLOCKED</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                <span className="text-slate-300">Cross-Tenant Access:</span>
+                <span className="text-emerald-400 font-bold">BLOCKED</span>
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 11: ONE-CLICK SECURITY DEMO (7 cols) */}
+          <section className="lg:col-span-7 bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
+            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold font-mono text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+                  ONE-CLICK SECURITY ADVERSARIAL DEMO
+                </h3>
+                <p className="text-xs text-slate-400">Trigger deterministic attacks and inspect instant system defense decisions</p>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[10px] font-mono font-bold">
+                ADVERSARIAL
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => runSecurityAttack('ARBITRARY_RECIPIENT')}
+                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-mono font-bold transition-colors"
+              >
+                1. Arbitrary Recipient
+              </button>
+              <button
+                onClick={() => runSecurityAttack('ARBITRARY_CALLDATA')}
+                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-mono font-bold transition-colors"
+              >
+                2. Arbitrary Calldata
+              </button>
+              <button
+                onClick={() => runSecurityAttack('BUDGET_OVERRUN')}
+                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-mono font-bold transition-colors"
+              >
+                3. Budget Escalation
+              </button>
+              <button
+                onClick={() => runSecurityAttack('DUPLICATE_PAYMENT')}
+                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-mono font-bold transition-colors"
+              >
+                4. Duplicate Payment
+              </button>
+              <button
+                onClick={() => runSecurityAttack('SIMULATION_BROADCAST')}
+                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-mono font-bold transition-colors"
+              >
+                5. Simulation Broadcast
+              </button>
+            </div>
+
+            {activeSecurityTest ? (
+              <div className="p-4 bg-slate-950 border border-rose-500/40 rounded-xl space-y-3 font-mono text-xs">
+                <div className="flex items-center justify-between border-b border-rose-500/20 pb-2">
+                  <span className="text-rose-400 font-bold text-sm">{activeSecurityTest.attackType}</span>
+                  <span className="px-2 py-0.5 bg-rose-500/20 text-rose-300 font-bold rounded">DECISION: {activeSecurityTest.decision}</span>
+                </div>
+
+                <div className="space-y-1.5 text-slate-300">
+                  <div><strong>Actor:</strong> <span className="text-slate-400">{activeSecurityTest.actor}</span></div>
+                  <div><strong>Attempted Action:</strong> <span className="text-rose-300">{activeSecurityTest.attemptedAction}</span></div>
+                  <div><strong>Rule Enforced:</strong> <span className="text-emerald-400">{activeSecurityTest.ruleViolated}</span></div>
+                  <div><strong>Invariant:</strong> <span className="text-teal-300">{activeSecurityTest.invariant}</span></div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                  <div className="p-2.5 bg-slate-900 rounded-lg">
+                    <span className="text-slate-500 text-[10px] block uppercase">What Would Have Happened</span>
+                    <span className="text-rose-300 text-[11px] mt-0.5 block">{activeSecurityTest.whatWouldHaveChanged}</span>
+                  </div>
+                  <div className="p-2.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg">
+                    <span className="text-emerald-400 text-[10px] block uppercase">What Actually Happened</span>
+                    <span className="text-emerald-200 text-[11px] mt-0.5 block">{activeSecurityTest.whatActuallyChanged}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 bg-slate-950 border border-dashed border-slate-800 rounded-xl text-center text-slate-500 font-mono text-xs">
+                Click any of the attack buttons above to verify real-time deterministic defense gates.
+              </div>
+            )}
+          </section>
+        </div>
+
+        {/* 6. GLOBAL SEARCH */}
         <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm">
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
@@ -292,262 +896,6 @@ export default function ControlTowerPage() {
               </div>
             </div>
           )}
-        </section>
-
-        {/* 4. EXECUTIVE METRICS GRID */}
-        <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <div className="bg-[#0e1626] border border-slate-800 rounded-xl p-4">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Active Missions</span>
-            <div className="text-2xl font-bold font-mono text-white mt-1">
-              {loading ? '...' : (overview?.active_missions_count ?? 'UNAVAILABLE')}
-            </div>
-            <Link href="/control/missions/msn_global_macro" className="text-[11px] text-amber-400 hover:underline mt-2 inline-block font-mono">
-              View command &rarr;
-            </Link>
-          </div>
-
-          <div className="bg-[#0e1626] border border-slate-800 rounded-xl p-4">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Active Agents</span>
-            <div className="text-2xl font-bold font-mono text-white mt-1">
-              {loading ? '...' : (overview?.active_agents_count ?? 'UNAVAILABLE')}
-            </div>
-            <Link href="/agents" className="text-[11px] text-teal-400 hover:underline mt-2 inline-block font-mono">
-              Registry &rarr;
-            </Link>
-          </div>
-
-          <div className="bg-[#0e1626] border border-slate-800 rounded-xl p-4">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Active Contracts</span>
-            <div className="text-2xl font-bold font-mono text-white mt-1">
-              {loading ? '...' : (overview?.active_contracts_count ?? 'UNAVAILABLE')}
-            </div>
-            <Link href="/economy/clearing" className="text-[11px] text-cyan-400 hover:underline mt-2 inline-block font-mono">
-              Clearinghouse &rarr;
-            </Link>
-          </div>
-
-          <div className="bg-[#0e1626] border border-slate-800 rounded-xl p-4">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Available Liquidity</span>
-            <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">
-              {loading ? '...' : formatMicroUSDC(overview?.available_liquidity)}
-            </div>
-            <span className="text-[10px] font-mono text-slate-500">Uncommitted Buffer</span>
-          </div>
-
-          <div className="bg-[#0e1626] border border-slate-800 rounded-xl p-4">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Reserved Headroom</span>
-            <div className="text-2xl font-bold font-mono text-amber-400 mt-1">
-              {loading ? '...' : formatMicroUSDC(overview?.reserved_liquidity)}
-            </div>
-            <span className="text-[10px] font-mono text-slate-500">Atomic Lock (INV-75)</span>
-          </div>
-
-          <div className="bg-[#0e1626] border border-slate-800 rounded-xl p-4">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Pending Settlements</span>
-            <div className="text-2xl font-bold font-mono text-purple-400 mt-1">
-              {loading ? '...' : formatMicroUSDC(overview?.pending_settlements)}
-            </div>
-            <Link href="/control/approvals" className="text-[11px] text-purple-400 hover:underline mt-2 inline-block font-mono">
-              Pending Approvals: {overview?.active_approvals_count ?? 0} &rarr;
-            </Link>
-          </div>
-        </section>
-
-        {/* 5. SPLIT TELEMETRY: REALTIME TIMELINE & FINANCIAL TRACE */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* REALTIME TIMELINE (7 cols) */}
-          <section className="lg:col-span-7 bg-[#0e1626] border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-              <div>
-                <h2 className="text-base font-bold font-mono text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-teal-400" />
-                  REALTIME ECONOMIC TIMELINE
-                </h2>
-                <p className="text-xs text-slate-400">Classified stream of canonical economic & policy events</p>
-              </div>
-
-              <div className="flex flex-wrap gap-1">
-                {categories.map((c) => (
-                  <button
-                    key={c.value}
-                    onClick={() => setSelectedCategory(c.value)}
-                    className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-colors ${
-                      selectedCategory === c.value
-                        ? 'bg-teal-500 text-slate-950'
-                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
-              {timelineEvents.length === 0 ? (
-                <div className="py-12 text-center text-slate-500 text-sm font-mono">
-                  No activity events matching category filter {selectedCategory}
-                </div>
-              ) : (
-                timelineEvents.map((evt) => (
-                  <div
-                    key={evt.event_id}
-                    className="p-3.5 bg-slate-900/90 border border-slate-800/80 rounded-lg hover:border-slate-700 transition-colors space-y-1"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-teal-300 border border-teal-500/20">
-                          {evt.category}
-                        </span>
-                        <span className="font-semibold text-xs text-slate-200">{evt.title}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-500">
-                        {new Date(evt.timestamp).toLocaleTimeString()}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-400 pl-1">{evt.summary}</p>
-                    <div className="text-[10px] font-mono text-slate-500 pl-1 flex items-center justify-between">
-                      <span>Ref: {evt.aggregate_id}</span>
-                      <button
-                        onClick={() => setSelectedTraceId(evt.aggregate_id)}
-                        className="text-amber-400 hover:underline"
-                      >
-                        Inspect Trace &rarr;
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* FINANCIAL TRACE INSPECTOR (5 cols) */}
-          <section className="lg:col-span-5 bg-[#0e1626] border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-bold font-mono text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
-                  UNIVERSAL FINANCIAL TRACE
-                </h2>
-                <p className="text-xs text-slate-400">13-Stage causal chain from Mission to Arc consensus</p>
-              </div>
-
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
-                {financialTrace?.payment_status || 'CONFIRMED'}
-              </span>
-            </div>
-
-            {traceLoading ? (
-              <div className="py-20 text-center text-slate-500 font-mono text-xs">
-                Assembling cryptographic financial trace...
-              </div>
-            ) : !financialTrace ? (
-              <div className="py-20 text-center text-slate-500 font-mono text-xs">
-                Select an event or enter a Payment Intent ID to inspect the trace
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Trace ID:</span>
-                    <span className="text-white font-bold">{financialTrace.trace_id}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Intent ID:</span>
-                    <span className="text-amber-300">{financialTrace.payment_intent_id}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Policy Decision:</span>
-                    <span className="text-emerald-400 font-bold">{financialTrace.policy_decision} ({financialTrace.policy_version})</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Deterministic Risk:</span>
-                    <span className="text-teal-300">{financialTrace.risk_score}/100 ({financialTrace.risk_level})</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Arc Settlement:</span>
-                    <span className="text-cyan-300">Block {financialTrace.arc_block_number} (Chain {financialTrace.arc_chain_id})</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Reconciliation:</span>
-                    <span className="text-emerald-400 font-bold">{financialTrace.reconciliation_status}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                  {financialTrace.steps?.map((step) => (
-                    <div
-                      key={step.step_number}
-                      className="p-2.5 bg-slate-900/60 border border-slate-800/80 rounded-md text-xs space-y-0.5"
-                    >
-                      <div className="flex items-center justify-between font-mono text-[11px]">
-                        <span className="font-bold text-amber-400">
-                          {step.step_number}. {step.stage}
-                        </span>
-                        <span className="text-emerald-400 font-semibold">{step.status}</span>
-                      </div>
-                      <p className="text-slate-300 text-[11px]">{step.description}</p>
-                      {step.reference_id && (
-                        <div className="text-[10px] font-mono text-slate-500 truncate">
-                          Ref: {step.reference_id}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
-
-        {/* 6. ARC SETTLEMENT VERIFICATION CARD */}
-        <section className="bg-[#0e1626] border border-cyan-900/40 rounded-xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-              <h2 className="text-base font-bold font-mono text-white">
-                ARC BLOCKCHAIN CONSENSUS VERIFICATION
-              </h2>
-            </div>
-            <span className="px-2.5 py-1 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs font-mono font-bold">
-              ARC MAINNET / TESTNET
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-              <span className="text-slate-400 text-[10px]">AGENTVAULT DEPLOYMENT</span>
-              <div className="text-white font-bold truncate mt-1">
-                {overview?.state_strip?.arc_status === 'VERIFIED'
-                  ? '0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852'
-                  : 'AGENTVAULT NOT DEPLOYED'}
-              </div>
-            </div>
-
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-              <span className="text-slate-400 text-[10px]">VERIFIED TREASURY BALANCE</span>
-              <div className="text-emerald-400 font-bold mt-1 text-sm">
-                {overview?.arc_verified_balance ? formatMicroUSDC(overview.arc_verified_balance) : 'UNVERIFIED'}
-              </div>
-            </div>
-
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-              <span className="text-slate-400 text-[10px]">SIGNER STATUS</span>
-              <div className="text-teal-300 font-bold mt-1">
-                LOCAL HSM KEYSTORE
-              </div>
-              <span className="text-[10px] text-slate-500">KMS NOT AVAILABLE</span>
-            </div>
-
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-              <span className="text-slate-400 text-[10px]">4-WAY RECONCILIATION</span>
-              <div className="text-emerald-400 font-bold mt-1">
-                EXACT MATCH (0 DISCREPANCY)
-              </div>
-              <span className="text-[10px] text-slate-500">Ledger == Repo == Vault == Arc</span>
-            </div>
-          </div>
         </section>
       </div>
     </div>

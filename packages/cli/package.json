@@ -4,7 +4,7 @@
   "description": "Developer CLI for AgentPay financial control plane",
   "type": "module",
   "bin": {
-    "agentpay": "./dist/index.js"
+    "agentpay": "./dist/src/index.js"
   },
   "scripts": {
     "build": "tsc",

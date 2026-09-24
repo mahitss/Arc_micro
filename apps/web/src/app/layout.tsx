@@ -64,6 +64,13 @@ export default function RootLayout({
                   CONTROL TOWER
                 </Link>
                 <Link
+                  href="/arc"
+                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-cyan-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  ARC
+                </Link>
+                <Link
                   href="/control/runtime"
                   className="px-3 py-1.5 rounded-lg text-indigo-300 font-bold bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-indigo-500/10"
                 >
@@ -192,6 +199,12 @@ export default function RootLayout({
 
           {/* Mobile sub-nav */}
           <div className="lg:hidden flex items-center space-x-1 px-4 py-2 border-t border-slate-800/60 overflow-x-auto text-xs font-mono">
+            <Link href="/control" className="px-2.5 py-1 rounded text-amber-300 font-bold bg-amber-500/10 whitespace-nowrap">
+              Control
+            </Link>
+            <Link href="/arc" className="px-2.5 py-1 rounded text-cyan-300 font-bold bg-cyan-500/10 whitespace-nowrap">
+              Arc
+            </Link>
             <Link href="/overview" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
               Overview
             </Link>
