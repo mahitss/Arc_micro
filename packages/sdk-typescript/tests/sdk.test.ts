@@ -2219,6 +2219,216 @@ test('AgentPay SDK — Autonomous Operations & Durable Runtime (Task 13)', async
   assert.equal(metrics.recovery_rate_bps, 9800);
 });
 
+test('AgentPay SDK — Task 14 Autonomous Operations OS API', async () => {
+  const mockFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const url = input.toString();
+
+    if (url.includes('/v1/operations/snapshot')) {
+      return new Response(
+        JSON.stringify({
+          snapshot_id: 'snap_001',
+          tenant_id: 'tenant_test',
+          snapshot_version: 1,
+          freshness: 'FRESH',
+          active_workflows: 8,
+          queued_workflows: 12,
+          blocked_workflows: 0,
+          failed_workflows: 0,
+          recovering_workflows: 1,
+          active_agents: 5,
+          available_workers: 10,
+          treasury_state: 'HEALTHY',
+          liquidity_state: 'AVAILABLE',
+          clearing_state: 'ACTIVE',
+          security_state: 'HEALTHY',
+          policy_state: 'ENFORCING',
+          arc_state: 'NOT VERIFIED / NOT DEPLOYED',
+          incident_count: 1,
+          generated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/health')) {
+      return new Response(
+        JSON.stringify({
+          overall_state: 'HEALTHY',
+          components: {
+            Database: { name: 'Database', state: 'HEALTHY', message: 'Responsive', last_probe_at: new Date().toISOString() },
+            PolicyEngine: { name: 'PolicyEngine', state: 'HEALTHY', message: 'Responding', last_probe_at: new Date().toISOString() },
+          },
+          arc: {
+            rpc_connected: true,
+            vault_deployed: false,
+            live_execution_enabled: false,
+            recent_settlement_verified: false,
+            status_text: 'NOT VERIFIED / NOT DEPLOYED',
+            last_checked_at: new Date().toISOString(),
+          },
+          generated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/workers')) {
+      return new Response(
+        JSON.stringify({
+          workers: [{ worker_id: 'worker_ops_1', worker_type: 'STANDARD', status: 'HEALTHY', last_seen: new Date().toISOString(), capabilities: ['MISSION'] }],
+          total: 1,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/queues')) {
+      return new Response(
+        JSON.stringify({
+          queue_depths: { mission: 2, task: 5, recovery: 1 },
+          dead_letters: [],
+          total_dead: 0,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/incidents') && init?.method === 'POST') {
+      return new Response(
+        JSON.stringify({
+          incident_id: 'inc_test_1',
+          action: 'RESTART_WORKER',
+          status: 'MITIGATING',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/incidents')) {
+      return new Response(
+        JSON.stringify({
+          incidents: [
+            {
+              incident_id: 'inc_test_1',
+              tenant_id: 'tenant_test',
+              severity: 'MEDIUM',
+              category: 'WORKER_TIMEOUT',
+              state: 'DETECTED',
+              detected_at: new Date().toISOString(),
+            },
+          ],
+          total: 1,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/replay/')) {
+      return new Response(
+        JSON.stringify({
+          workflow_id: 'wf_test_1',
+          tenant_id: 'tenant_test',
+          total_steps: 2,
+          final_state: 'COMPLETED',
+          entries: [
+            { sequence: 1, step_id: 's1', step_type: 'RESEARCH', state: 'SUCCEEDED', timestamp: new Date().toISOString(), financial_barrier_ok: true },
+          ],
+          replayed_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/graph')) {
+      return new Response(
+        JSON.stringify({
+          nodes: [{ id: 'wf_1', type: 'WORKFLOW', label: 'Workflow 1', state: 'RUNNING', age_seconds: 120 }],
+          edges: [],
+          generated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/why/')) {
+      return new Response(
+        JSON.stringify({
+          current_state: 'BLOCKED',
+          trigger: 'approval_expired',
+          evidence: 'Approval timed out after 300s',
+          decision: 'ESCALATE',
+          next_action: 'Request fresh human approval',
+          financial_authority: 'UNCHANGED',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/v1/operations/next/')) {
+      return new Response(
+        JSON.stringify({
+          action: 'RUN',
+          reason: 'Dependencies ready',
+          estimated_delay_seconds: 2,
+          requires_human: false,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_ops_test', fetch: mockFetch });
+
+  // 1. Snapshot
+  const snap = await client.operations.getOperationsSnapshot();
+  assert.equal(snap.snapshot_id, 'snap_001');
+  assert.equal(snap.freshness, 'FRESH');
+  assert.equal(snap.active_workflows, 8);
+
+  // 2. Health & Arc truth
+  const health = await client.operations.getOperationsHealth();
+  assert.equal(health.overall_state, 'HEALTHY');
+  assert.equal(health.arc.status_text, 'NOT VERIFIED / NOT DEPLOYED');
+
+  // 3. Workers
+  const workers = await client.operations.getWorkers();
+  assert.equal(workers.total, 1);
+  assert.equal(workers.workers[0].worker_id, 'worker_ops_1');
+
+  // 4. Queues
+  const qData = await client.operations.getQueues();
+  assert.equal(qData.queue_depths.task, 5);
+
+  // 5. Incidents & Mitigation
+  const incs = await client.operations.getIncidents();
+  assert.equal(incs.total, 1);
+  const mit = await client.operations.mitigateIncident('inc_test_1', 'RESTART_WORKER');
+  assert.equal(mit.status, 'MITIGATING');
+
+  // 6. Replay
+  const replay = await client.operations.getWorkflowReplay('wf_test_1');
+  assert.equal(replay.workflow_id, 'wf_test_1');
+  assert.equal(replay.total_steps, 2);
+
+  // 7. Graph
+  const graph = await client.operations.getOperationalGraph();
+  assert.equal(graph.nodes.length, 1);
+
+  // 8. Why Inspector
+  const why = await client.operations.explainEvent('evt_123');
+  assert.equal(why.decision, 'ESCALATE');
+  assert.equal(why.financial_authority, 'UNCHANGED');
+
+  // 9. Next Action
+  const next = await client.operations.getNextAction('wf_test_1');
+  assert.equal(next.action, 'RUN');
+});
+
 
 
 

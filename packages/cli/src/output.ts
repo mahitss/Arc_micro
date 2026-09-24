@@ -1366,6 +1366,155 @@ export function printRuntimeDangerousAction(
   console.log('============================================================');
 }
 
+export function printOpsStatus(s: any): void {
+  console.log('============================================================');
+  console.log(`AUTONOMOUS OPERATIONS OS STATUS [${s.freshness || 'FRESH'}]`);
+  console.log('============================================================');
+  console.log(`Snapshot ID:         ${s.snapshot_id}`);
+  console.log(`Active Workflows:    ${s.active_workflows}`);
+  console.log(`Queued Workflows:    ${s.queued_workflows}`);
+  console.log(`Blocked Workflows:   ${s.blocked_workflows}`);
+  console.log(`Failed Workflows:    ${s.failed_workflows}`);
+  console.log(`Recovering Workflows:${s.recovering_workflows}`);
+  console.log('------------------------------------------------------------');
+  console.log(`Available Workers:   ${s.available_workers}`);
+  console.log(`Active Agents:       ${s.active_agents}`);
+  console.log(`Active Incidents:    ${s.incident_count}`);
+  console.log('------------------------------------------------------------');
+  console.log(`Treasury State:      ${s.treasury_state}`);
+  console.log(`Liquidity State:     ${s.liquidity_state}`);
+  console.log(`Clearing State:      ${s.clearing_state}`);
+  console.log(`Security State:      ${s.security_state}`);
+  console.log(`Policy State:        ${s.policy_state}`);
+  console.log(`Arc Settlement:      ${s.arc_state}`);
+  console.log(`Generated At:        ${s.generated_at}`);
+  console.log('============================================================');
+}
+
+export function printOpsHealth(h: any): void {
+  console.log('============================================================');
+  console.log(`OPERATIONS SYSTEM HEALTH [${h.overall_state}]`);
+  console.log('============================================================');
+  console.log(`Arc Settlement:      ${h.arc?.status_text || 'UNVERIFIED'}`);
+  console.log(`  RPC Connected:     ${h.arc?.rpc_connected ? 'YES' : 'NO'}`);
+  console.log(`  Vault Deployed:    ${h.arc?.vault_deployed ? 'YES' : 'NO'}`);
+  console.log(`  Live Enabled:      ${h.arc?.live_execution_enabled ? 'YES' : 'NO'}`);
+  console.log('------------------------------------------------------------');
+  console.log('SUBSYSTEM COMPONENTS:');
+  for (const [name, comp] of Object.entries(h.components || {})) {
+    const c = comp as any;
+    console.log(`  [${c.state}] ${name}: ${c.message}`);
+  }
+  console.log('============================================================');
+}
+
+export function printOpsWorkers(workers: any[]): void {
+  console.log('============================================================');
+  console.log(`SUPERVISED WORKER FLEET (${workers.length} workers)`);
+  console.log('============================================================');
+  for (const w of workers) {
+    console.log(`[${w.status}] ${w.worker_id} (${w.worker_type}) | Last Seen: ${w.last_seen}`);
+    if (w.capabilities) console.log(`  Capabilities: ${Array.isArray(w.capabilities) ? w.capabilities.join(', ') : JSON.stringify(w.capabilities)}`);
+  }
+  console.log('============================================================');
+}
+
+export function printOpsQueues(q: any): void {
+  console.log('============================================================');
+  console.log('DURABLE OPERATIONS QUEUES');
+  console.log('============================================================');
+  console.log('QUEUE DEPTHS:');
+  for (const [name, depth] of Object.entries(q.queue_depths || {})) {
+    console.log(`  ${name.padEnd(16)}: ${depth}`);
+  }
+  console.log('------------------------------------------------------------');
+  console.log(`Total Dead Letters:  ${q.total_dead ?? 0}`);
+  for (const dl of (q.dead_letters || [])) {
+    console.log(`  [${dl.dead_letter_id}] Queue: ${dl.queue_name} | Reason: ${dl.reason}`);
+  }
+  console.log('============================================================');
+}
+
+export function printOpsIncidents(incidents: any[]): void {
+  console.log('============================================================');
+  console.log(`CORRELATED INCIDENTS (${incidents.length} active)`);
+  console.log('============================================================');
+  for (const inc of incidents) {
+    console.log(`[${inc.severity}] ${inc.incident_id} | ${inc.category} | State: ${inc.state}`);
+    if (inc.root_cause) console.log(`  Root Cause: ${inc.root_cause}`);
+    if (inc.affected_workflows?.length) console.log(`  Affected Workflows: ${inc.affected_workflows.join(', ')}`);
+  }
+  console.log('============================================================');
+}
+
+export function printOpsTopology(topo: any): void {
+  console.log('============================================================');
+  console.log('OPERATIONAL RUNTIME TOPOLOGY');
+  console.log('============================================================');
+  console.log(`Arc RPC:             ${topo.arc?.rpc_connected ? 'AVAILABLE' : 'DOWN'}`);
+  console.log(`AgentVault:          ${topo.arc?.vault_deployed ? 'VERIFIED' : 'NOT VERIFIED / NOT DEPLOYED'}`);
+  console.log(`Workers Active:      ${topo.workers?.length ?? 0}`);
+  console.log('------------------------------------------------------------');
+  for (const [name, comp] of Object.entries(topo.components || {})) {
+    const c = comp as any;
+    console.log(`  Component [${c.state}] ${name}: ${c.message}`);
+  }
+  console.log('============================================================');
+}
+
+export function printOpsReplay(replay: any): void {
+  console.log('============================================================');
+  console.log(`WORKFLOW HISTORICAL REPLAY — ID: ${replay.workflow_id}`);
+  console.log('============================================================');
+  console.log(`Total Steps:         ${replay.total_steps}`);
+  console.log(`Final State:         ${replay.final_state}`);
+  console.log('------------------------------------------------------------');
+  for (const e of (replay.entries || [])) {
+    console.log(`  [Seq ${e.sequence}] Step: ${e.step_id} (${e.step_type}) -> State: ${e.state}`);
+    console.log(`    Worker: ${e.worker_id || 'N/A'} | Timestamp: ${e.timestamp}`);
+    if (e.evidence) console.log(`    Evidence: ${e.evidence}`);
+  }
+  console.log('============================================================');
+}
+
+export function printOpsWhy(why: any): void {
+  console.log('============================================================');
+  console.log('WHY INSPECTOR — STRUCTURED CAUSAL REASONING');
+  console.log('============================================================');
+  console.log(`Current State:       ${why.current_state}`);
+  if (why.previous_state) console.log(`Previous State:      ${why.previous_state}`);
+  console.log(`Trigger:             ${why.trigger}`);
+  console.log(`Evidence:            ${why.evidence}`);
+  if (why.policy) console.log(`Policy:              ${why.policy}`);
+  if (why.risk) console.log(`Risk:                ${why.risk}`);
+  console.log(`Decision:            ${why.decision}`);
+  console.log(`Next Action:         ${why.next_action}`);
+  console.log(`Financial Authority: ${why.financial_authority} (INV-121)`);
+  console.log('============================================================');
+}
+
+export function printOpsNext(next: any): void {
+  console.log('============================================================');
+  console.log('WHAT HAPPENS NEXT — OPERATIONAL PREDICTION');
+  console.log('============================================================');
+  console.log(`Predicted Action:    ${next.action}`);
+  console.log(`Reason:              ${next.reason}`);
+  console.log(`Estimated Delay:     ${next.estimated_delay_seconds}s`);
+  console.log(`Requires Human:      ${next.requires_human ? 'YES' : 'NO'}`);
+  console.log('============================================================');
+}
+
+export function printOpsStateAt(state: any): void {
+  console.log('============================================================');
+  console.log(`TIME-TRAVEL RECONSTRUCTED STATE AT ${state.timestamp}`);
+  console.log('============================================================');
+  console.log(`Source:              ${state.reconstructed_from}`);
+  console.log(`Tenant:              ${state.tenant_id}`);
+  console.log(`Active Workflows:    ${state.active_workflows}`);
+  console.log(`Financial Frozen:    ${state.financial_state_frozen ? 'YES (READ-ONLY, INV-130)' : 'NO'}`);
+  console.log('============================================================');
+}
+
 
 
 

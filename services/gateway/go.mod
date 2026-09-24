@@ -2,7 +2,11 @@ module github.com/arc-agentpay/agentpay/services/gateway
 
 go 1.22
 
-require github.com/ethereum/go-ethereum v1.14.8
+require (
+	github.com/ethereum/go-ethereum v1.14.8
+	github.com/google/uuid v1.3.0
+	github.com/lib/pq v1.12.3
+)
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -18,7 +22,6 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/uint256 v1.3.1 // indirect
-	github.com/lib/pq v1.12.3 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/supranational/blst v0.3.11 // indirect

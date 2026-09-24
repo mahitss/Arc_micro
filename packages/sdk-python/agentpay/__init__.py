@@ -19,6 +19,7 @@ from .client import (
     TreasuryReservationsResource,
     ControlTowerResource,
     RuntimeResource,
+    OperationsResource,
 )
 from .errors import (
     AgentPayError,
@@ -54,6 +55,7 @@ __all__ = [
     "TreasuryReservationsResource",
     "ControlTowerResource",
     "RuntimeResource",
+    "OperationsResource",
     "AgentPayError",
     "ApprovalRequiredError",
     "AuthenticationError",

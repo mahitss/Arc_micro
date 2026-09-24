@@ -73,6 +73,16 @@ import {
   printRuntimeWorkers,
   printRuntimeRecoveryQueue,
   printRuntimeDangerousAction,
+  printOpsStatus,
+  printOpsHealth,
+  printOpsWorkers,
+  printOpsQueues,
+  printOpsIncidents,
+  printOpsTopology,
+  printOpsReplay,
+  printOpsWhy,
+  printOpsNext,
+  printOpsStateAt,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -1553,6 +1563,108 @@ async function main(): Promise<void> {
             result: res,
           });
         }
+        return;
+      }
+    }
+
+    if (resource === 'ops' || resource === 'operations') {
+      const sub = positional[1] || 'status';
+      const arg = positional[2];
+
+      if (sub === 'status') {
+        const snap = await client.operations.getOperationsSnapshot();
+        if (isJson) printJson(snap);
+        else printOpsStatus(snap);
+        return;
+      }
+
+      if (sub === 'health') {
+        const health = await client.operations.getOperationsHealth();
+        if (isJson) printJson(health);
+        else printOpsHealth(health);
+        return;
+      }
+
+      if (sub === 'workers') {
+        const res = await client.operations.getWorkers();
+        if (isJson) printJson(res);
+        else printOpsWorkers(res.workers);
+        return;
+      }
+
+      if (sub === 'queues') {
+        const queues = await client.operations.getQueues();
+        if (isJson) printJson(queues);
+        else printOpsQueues(queues);
+        return;
+      }
+
+      if (sub === 'incidents') {
+        const res = await client.operations.getIncidents();
+        if (isJson) printJson(res);
+        else printOpsIncidents(res.incidents);
+        return;
+      }
+
+      if (sub === 'topology') {
+        const topo = await client.operations.getTopology();
+        if (isJson) printJson(topo);
+        else printOpsTopology(topo);
+        return;
+      }
+
+      if (sub === 'workflow') {
+        if (!arg) {
+          console.error('Error: "ops workflow" requires a <workflow_id>');
+          process.exit(1);
+        }
+        const wf = await client.runtime.getWorkflow(arg);
+        if (isJson) printJson(wf);
+        else printRuntimeWorkflowDetail(wf);
+        return;
+      }
+
+      if (sub === 'replay') {
+        if (!arg) {
+          console.error('Error: "ops replay" requires a <workflow_id>');
+          process.exit(1);
+        }
+        const replay = await client.operations.getWorkflowReplay(arg);
+        if (isJson) printJson(replay);
+        else printOpsReplay(replay);
+        return;
+      }
+
+      if (sub === 'why') {
+        if (!arg) {
+          console.error('Error: "ops why" requires an <event_id>');
+          process.exit(1);
+        }
+        const why = await client.operations.explainEvent(arg);
+        if (isJson) printJson(why);
+        else printOpsWhy(why);
+        return;
+      }
+
+      if (sub === 'next') {
+        if (!arg) {
+          console.error('Error: "ops next" requires a <workflow_id>');
+          process.exit(1);
+        }
+        const next = await client.operations.getNextAction(arg);
+        if (isJson) printJson(next);
+        else printOpsNext(next);
+        return;
+      }
+
+      if (sub === 'state-at') {
+        if (!arg) {
+          console.error('Error: "ops state-at" requires a <timestamp>');
+          process.exit(1);
+        }
+        const state = await client.operations.getStateAt(arg);
+        if (isJson) printJson(state);
+        else printOpsStateAt(state);
         return;
       }
     }

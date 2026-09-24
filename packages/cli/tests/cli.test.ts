@@ -50,6 +50,16 @@ import {
   printRuntimeWorkers,
   printRuntimeRecoveryQueue,
   printRuntimeDangerousAction,
+  printOpsStatus,
+  printOpsHealth,
+  printOpsWorkers,
+  printOpsQueues,
+  printOpsIncidents,
+  printOpsTopology,
+  printOpsReplay,
+  printOpsWhy,
+  printOpsNext,
+  printOpsStateAt,
 } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
@@ -756,6 +766,108 @@ test('AgentPay CLI Output — Task 13 Autonomous Operations & Durable Runtime Fo
       idempotencyKey: 'idem_cli_wf',
       result: { state: 'PAUSED', version: 3 },
     });
+  });
+});
+
+test('AgentPay CLI Operations OS — Output Formatting Test', () => {
+  const mockSnapshot = {
+    snapshot_id: 'snap_cli_01',
+    freshness: 'FRESH',
+    active_workflows: 8,
+    queued_workflows: 14,
+    blocked_workflows: 0,
+    failed_workflows: 0,
+    recovering_workflows: 1,
+    available_workers: 10,
+    active_agents: 6,
+    incident_count: 1,
+    treasury_state: 'HEALTHY',
+    liquidity_state: 'AVAILABLE',
+    clearing_state: 'ACTIVE',
+    security_state: 'HEALTHY',
+    policy_state: 'ENFORCING',
+    arc_state: 'NOT VERIFIED / NOT DEPLOYED',
+    generated_at: new Date().toISOString(),
+  };
+
+  const mockHealth = {
+    overall_state: 'HEALTHY',
+    components: {
+      Database: { name: 'Database', state: 'HEALTHY', message: 'Operational' },
+      PolicyEngine: { name: 'PolicyEngine', state: 'HEALTHY', message: 'Responding' },
+    },
+    arc: {
+      rpc_connected: true,
+      vault_deployed: false,
+      live_execution_enabled: false,
+      status_text: 'NOT VERIFIED / NOT DEPLOYED',
+    },
+  };
+
+  const mockWorkers = [
+    { worker_id: 'w_cli_01', worker_type: 'STANDARD', status: 'HEALTHY', last_seen: new Date().toISOString(), capabilities: ['MISSION'] },
+  ];
+
+  const mockQueues = {
+    queue_depths: { mission: 4, task: 10 },
+    dead_letters: [{ dead_letter_id: 'dl_01', queue_name: 'task', reason: 'timeout' }],
+    total_dead: 1,
+  };
+
+  const mockIncidents = [
+    { incident_id: 'inc_cli_01', severity: 'MEDIUM', category: 'WORKER_TIMEOUT', state: 'DETECTED', root_cause: 'Node reboot' },
+  ];
+
+  const mockTopology = {
+    arc: { rpc_connected: true, vault_deployed: false },
+    workers: mockWorkers,
+    components: mockHealth.components,
+  };
+
+  const mockReplay = {
+    workflow_id: 'wf_cli_01',
+    total_steps: 2,
+    final_state: 'COMPLETED',
+    entries: [
+      { sequence: 1, step_id: 's1', step_type: 'RESEARCH', state: 'SUCCEEDED', timestamp: new Date().toISOString() },
+    ],
+  };
+
+  const mockWhy = {
+    current_state: 'BLOCKED',
+    trigger: 'approval_expired',
+    evidence: 'Approval timed out',
+    decision: 'ESCALATE',
+    next_action: 'New approval',
+    financial_authority: 'UNCHANGED',
+  };
+
+  const mockNext = {
+    action: 'RUN',
+    reason: 'Ready to execute',
+    estimated_delay_seconds: 5,
+    requires_human: false,
+  };
+
+  const mockStateAt = {
+    timestamp: '2026-09-24T12:00:00Z',
+    reconstructed_from: 'EVENTS_AND_CHECKPOINTS',
+    tenant_id: 'tenant_default',
+    active_workflows: 5,
+    financial_state_frozen: true,
+  };
+
+  assert.doesNotThrow(() => {
+    printOpsStatus(mockSnapshot);
+    printOpsHealth(mockHealth);
+    printOpsWorkers(mockWorkers);
+    printOpsQueues(mockQueues);
+    printOpsIncidents(mockIncidents);
+    printOpsTopology(mockTopology);
+    printOpsReplay(mockReplay);
+    printOpsWhy(mockWhy);
+    printOpsNext(mockNext);
+    printOpsStateAt(mockStateAt);
   });
 });
 

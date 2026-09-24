@@ -867,6 +867,103 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         self.assertEqual(metrics["active_workflows"], 4)
         self.assertEqual(metrics["recovery_rate_bps"], 9900)
 
+    @patch("requests.request")
+    def test_operations_os(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test")
+        self.assertEqual(client.ops, client.operations)
+
+        # 1. Snapshot
+        mock_resp.json.return_value = {
+            "snapshot_id": "snap_py_01",
+            "freshness": "FRESH",
+            "active_workflows": 6,
+            "treasury_state": "HEALTHY",
+            "arc_state": "NOT VERIFIED / NOT DEPLOYED",
+        }
+        snap = client.operations.get_operations_snapshot()
+        self.assertEqual(snap["snapshot_id"], "snap_py_01")
+        self.assertEqual(snap["freshness"], "FRESH")
+
+        # 2. Health
+        mock_resp.json.return_value = {
+            "overall_state": "HEALTHY",
+            "arc": {"status_text": "NOT VERIFIED / NOT DEPLOYED"},
+        }
+        health = client.operations.get_operations_health()
+        self.assertEqual(health["overall_state"], "HEALTHY")
+        self.assertEqual(health["arc"]["status_text"], "NOT VERIFIED / NOT DEPLOYED")
+
+        # 3. Workers
+        mock_resp.json.return_value = {
+            "workers": [{"worker_id": "w_ops_1", "status": "HEALTHY"}],
+            "total": 1,
+        }
+        workers = client.operations.get_workers()
+        self.assertEqual(workers["total"], 1)
+
+        # 4. Queues
+        mock_resp.json.return_value = {
+            "queue_depths": {"mission": 2, "task": 3},
+            "dead_letters": [],
+            "total_dead": 0,
+        }
+        queues = client.operations.get_queues()
+        self.assertEqual(queues["queue_depths"]["task"], 3)
+
+        # 5. Incidents & Mitigation
+        mock_resp.json.return_value = {
+            "incidents": [{"incident_id": "inc_01", "severity": "MEDIUM"}],
+            "total": 1,
+        }
+        incs = client.operations.get_incidents()
+        self.assertEqual(incs["total"], 1)
+
+        mock_resp.json.return_value = {
+            "incident_id": "inc_01",
+            "action": "RESTART_WORKER",
+            "status": "MITIGATING",
+        }
+        mit = client.operations.mitigate_incident("inc_01", "RESTART_WORKER")
+        self.assertEqual(mit["status"], "MITIGATING")
+
+        # 6. Replay
+        mock_resp.json.return_value = {
+            "workflow_id": "wf_1",
+            "total_steps": 3,
+            "final_state": "COMPLETED",
+        }
+        replay = client.operations.get_workflow_replay("wf_1")
+        self.assertEqual(replay["total_steps"], 3)
+
+        # 7. Graph
+        mock_resp.json.return_value = {
+            "nodes": [{"id": "wf_1", "type": "WORKFLOW"}],
+            "edges": [],
+        }
+        graph = client.operations.get_operational_graph()
+        self.assertEqual(len(graph["nodes"]), 1)
+
+        # 8. Why Inspector
+        mock_resp.json.return_value = {
+            "current_state": "BLOCKED",
+            "decision": "WAIT",
+            "financial_authority": "UNCHANGED",
+        }
+        why = client.operations.explain_event("evt_1")
+        self.assertEqual(why["financial_authority"], "UNCHANGED")
+
+        # 9. Next Action
+        mock_resp.json.return_value = {
+            "action": "RUN",
+            "reason": "Ready to execute",
+        }
+        next_act = client.operations.get_next_action("wf_1")
+        self.assertEqual(next_act["action"], "RUN")
+
 
 if __name__ == "__main__":
     unittest.main()

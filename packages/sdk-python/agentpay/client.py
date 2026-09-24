@@ -1263,6 +1263,55 @@ class RuntimeResource:
         return self._client._request("GET", "/v1/runtime/metrics")
 
 
+class OperationsResource:
+    """
+    Supervisory observability and operational control plane for the Operations OS.
+    Strictly adheres to machine-checked invariants INV-121 through INV-140.
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def get_operations_snapshot(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/operations/snapshot")
+
+    def get_operations_health(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/operations/health")
+
+    def get_workers(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/operations/workers")
+
+    def get_queues(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/operations/queues")
+
+    def get_incidents(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/operations/incidents")
+
+    def mitigate_incident(self, incident_id: str, action: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/operations/incidents/{incident_id}/mitigate", json={"action": action})
+
+    def get_workflow_replay(self, workflow_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/operations/replay/{workflow_id}")
+
+    def get_operational_graph(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/operations/graph")
+
+    def explain_event(self, event_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/operations/why/{event_id}")
+
+    def get_next_action(self, workflow_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/operations/next/{workflow_id}")
+
+    def get_state_at(self, timestamp: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/operations/state-at/{timestamp}")
+
+    def get_timeline(self, limit: Optional[int] = None) -> Dict[str, Any]:
+        params = {"limit": str(limit)} if limit else None
+        return self._client._request("GET", "/v1/operations/timeline", params=params)
+
+    def get_topology(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/operations/topology")
+
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -1298,6 +1347,8 @@ class AgentPay:
         self.treasury = TreasuryResource(self)
         self.control = ControlTowerResource(self)
         self.runtime = RuntimeResource(self)
+        self.operations = OperationsResource(self)
+        self.ops = self.operations
 
     def _request(
         self,

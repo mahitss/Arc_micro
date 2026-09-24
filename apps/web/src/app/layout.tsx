@@ -50,6 +50,13 @@ export default function RootLayout({
                   RUNTIME
                 </Link>
                 <Link
+                  href="/control/operations"
+                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-cyan-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  OPERATIONS
+                </Link>
+                <Link
                   href="/overview"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >

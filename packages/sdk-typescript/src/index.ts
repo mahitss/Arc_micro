@@ -34,8 +34,19 @@ export { ClearinghouseResource } from './resources/clearinghouse.js';
 export { TreasuryResource, TreasuryReservationsResource } from './resources/treasury.js';
 export { ControlTowerResource } from './resources/control.js';
 export { RuntimeResource } from './resources/runtime.js';
+export { OperationsResource } from './resources/operations.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
+  OperationsSnapshot,
+  OperationsHealth,
+  OperationsWorker,
+  OperationsQueuesData,
+  OperationsIncident,
+  OperationalReplay,
+  OperationalGraph,
+  OperationsExplanation,
+  OperationsNextAction,
+  SystemStateAtSnapshot,
   WorkflowState,
   StepState,
   WorkerStatus,

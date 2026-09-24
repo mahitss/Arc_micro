@@ -719,6 +719,108 @@ RECONCILIATION / ECONOMIC MEMORY (Deterministic Feedback & Learning)
 
 ---
 
+## Autonomous Operations OS (Task 14)
+
+AgentPay features a comprehensive Autonomous Operations Operating System that coordinates the entire distributed execution fleet—spanning workflows, missions, swarms, agents, services, treasury, clearing, and recovery—as a single deterministic, observable, and self-healing economy.
+
+### Core Operations Principle
+> **THE OPERATIONS OS MAY ORCHESTRATE COMPLEXITY. IT MUST NEVER ORCHESTRATE AROUND FINANCIAL CONTROLS.**  
+>
+> **SUPERVISOR OUTPUT IS OPERATIONAL DECISION — NOT FINANCIAL AUTHORIZATION.**  
+> **RUNTIME STATE IS NOT FINANCIAL AUTHORITY.**  
+> **NO AI OR AGENT RECEIVES SIGNER ACCESS, PRIVATE KEYS, OR POLICY MUTATION AUTHORITY.**
+
+```
+                CONTROL TOWER
+                      │
+             OPERATIONS OS
+                      │
+       ┌──────────────┼──────────────┐
+       ↓              ↓              ↓
+   WORKFLOWS       MISSIONS        SWARMS
+       ↓              ↓              ↓
+     AGENTS         TASKS         AGENTS
+       └──────────────┼──────────────┘
+                      ↓
+               ECONOMIC SYSTEM
+                      ↓
+          POLICY / RISK / TREASURY
+                      ↓
+              PAYMENT PIPELINE
+                      ↓
+                   ARC
+```
+
+### Key Capabilities
+1. **Deterministic Operations Supervisor & Decision Engine**: Evaluates workflows continuously, outputting deterministic decisions (`RUN`, `WAIT`, `RETRY`, `RECOVER`, `REPLAN`, `ESCALATE`, `PAUSE`, `CANCEL`, `RECONCILE`) with structured reason codes and cryptographic inputs hashes. Financial authority is strictly `UNCHANGED` (`INV-121`).
+2. **Multi-Factor Priority Engine & Bounded Tenant Fairness**: Prioritizes queues by deadline proximity, dependency criticality, workflow age, failure recovery, and tenant SLA tier. Tenant isolation quotas strictly prevent a tenant with 10,000 tasks from starving a tenant with 10 tasks (`INV-122`, `INV-126`).
+3. **8 Durable Specialized Queues & Auditable Dead-Letter System**: Leased queues (`mission`, `swarm`, `task`, `recovery`, `reconciliation`, `callback`, `scheduled`, `incident`) with visibility timeouts. Exhausted retries routes to `operations_dead_letters` recording full attempt history and evidence (`INV-128`, `INV-138`).
+4. **Incident Correlation & Controlled Self-Healing**: Groups cascading downstream failures into a unified incident lifecycle (`DETECTED` → `CLOSED`). Allows operational healing (worker restart, lease reclamation, circuit tripping) while strictly forbidding financial bypasses (`INV-132`).
+5. **Universal "Why?" Inspector & Causal Tracing**: Traces causal lineages with parent event IDs (`caused_by_event_id`). Reconstructs exact explanations without fabricating evidence (`INV-136`).
+6. **Immutable Operational Replay & Time-Travel Debugger**: Read-only timeline reconstruction at any timestamp $T$ with frozen financial states. Side-effects and state mutations during replay or time-travel are physically impossible (`INV-129`, `INV-130`).
+7. **Strict Blockchain Truth & Zero Fabrication**: Arc RPC connectivity is reported as `AVAILABLE`, while unverified smart contracts are explicitly displayed as `NOT VERIFIED / NOT DEPLOYED` (`INV-135`).
+8. **Command Center Observability**: Interactive operations cockpit at `/control/operations`, `/control/operations/timeline`, `/control/operations/topology`, and `/control/operations/replay/[workflowId]`.
+
+### Machine-Checked Security Invariants (INV-121 – INV-140)
+- **INV-121**: Operations supervisor cannot authorize financial execution.
+- **INV-122**: Operational priority cannot override policy.
+- **INV-123**: Operational recovery cannot bypass approval.
+- **INV-124**: Operational recovery cannot bypass treasury.
+- **INV-125**: Operational recovery cannot bypass hard DENY.
+- **INV-126**: Tenant queues remain isolated.
+- **INV-127**: Tenant worker capacity cannot expose another tenant's data.
+- **INV-128**: Dead-letter processing is auditable.
+- **INV-129**: Operational replay is read-only.
+- **INV-130**: Time-travel reconstruction cannot mutate state.
+- **INV-131**: Operational decisions cannot modify policy.
+- **INV-132**: Circuit breakers cannot create financial authority.
+- **INV-133**: Load shedding cannot disable audit/security/reconciliation.
+- **INV-134**: Stale operational projections are visibly marked.
+- **INV-135**: Unverified Arc state cannot be presented as verified.
+- **INV-136**: Causal traces cannot fabricate evidence.
+- **INV-137**: Operator commands require authorization.
+- **INV-138**: Retry storms are bounded.
+- **INV-139**: Infinite recovery loops are impossible.
+- **INV-140**: Operational budgets cannot increase financial budgets.
+
+### Operations CLI (`agentpay ops`)
+```bash
+# Check Operations OS aggregated status and freshness
+agentpay ops status
+
+# Inspect deterministic subsystem health and Arc verification truth
+agentpay ops health
+
+# Inspect active workers and capabilities
+agentpay ops workers
+
+# View 8 durable queue depths and dead-letter statistics
+agentpay ops queues
+
+# View correlated operational incidents
+agentpay ops incidents
+
+# Inspect physical & logical runtime topology
+agentpay ops topology
+
+# Inspect specific workflow state
+agentpay ops workflow <workflow_id>
+
+# Run read-only step-by-step workflow replay (INV-129)
+agentpay ops replay <workflow_id>
+
+# Universal "Why?" Inspector for causal event explanation (INV-136)
+agentpay ops why <event_id>
+
+# Resolve deterministic next scheduled action
+agentpay ops next <workflow_id>
+
+# Inspect historical system state at timestamp T (INV-130)
+agentpay ops state-at <iso_timestamp>
+```
+
+---
+
 
 ## Development & Test Commands
 

@@ -18,6 +18,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/metrics"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/network"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/operations"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/runtime"
@@ -512,6 +513,43 @@ func NewRouter(
 		mux.HandleFunc("POST /api/runtime/incidents/{id}/reconcile", runtimeHandler.HandleReconcileIncident)
 		mux.HandleFunc("GET /v1/runtime/metrics", runtimeHandler.HandleGetMetrics)
 		mux.HandleFunc("GET /api/runtime/metrics", runtimeHandler.HandleGetMetrics)
+
+		// 18. Task 14: Autonomous Operations OS APIs
+		opsStore := storage.NewMemoryOperationsStore()
+		opsHealthProber := operations.NewHealthProber(nil, nil, nil, "", false)
+		opsService := operations.NewOperationsService(opsStore, nil, opsHealthProber)
+		opsHandler := handlers.NewOperationsHandler(opsService)
+
+		mux.HandleFunc("GET /v1/operations", opsHandler.HandleGetStatus)
+		mux.HandleFunc("GET /api/operations", opsHandler.HandleGetStatus)
+		mux.HandleFunc("GET /v1/operations/health", opsHandler.HandleGetHealth)
+		mux.HandleFunc("GET /api/operations/health", opsHandler.HandleGetHealth)
+		mux.HandleFunc("GET /v1/operations/snapshot", opsHandler.HandleGetSnapshot)
+		mux.HandleFunc("GET /api/operations/snapshot", opsHandler.HandleGetSnapshot)
+		mux.HandleFunc("GET /v1/operations/workflows", opsHandler.HandleListWorkflows)
+		mux.HandleFunc("GET /api/operations/workflows", opsHandler.HandleListWorkflows)
+		mux.HandleFunc("GET /v1/operations/workers", opsHandler.HandleListWorkers)
+		mux.HandleFunc("GET /api/operations/workers", opsHandler.HandleListWorkers)
+		mux.HandleFunc("GET /v1/operations/queues", opsHandler.HandleGetQueues)
+		mux.HandleFunc("GET /api/operations/queues", opsHandler.HandleGetQueues)
+		mux.HandleFunc("GET /v1/operations/incidents", opsHandler.HandleListIncidents)
+		mux.HandleFunc("GET /api/operations/incidents", opsHandler.HandleListIncidents)
+		mux.HandleFunc("POST /v1/operations/incidents/{id}/mitigate", opsHandler.HandleMitigateIncident)
+		mux.HandleFunc("POST /api/operations/incidents/{id}/mitigate", opsHandler.HandleMitigateIncident)
+		mux.HandleFunc("GET /v1/operations/topology", opsHandler.HandleGetTopology)
+		mux.HandleFunc("GET /api/operations/topology", opsHandler.HandleGetTopology)
+		mux.HandleFunc("GET /v1/operations/timeline", opsHandler.HandleGetTimeline)
+		mux.HandleFunc("GET /api/operations/timeline", opsHandler.HandleGetTimeline)
+		mux.HandleFunc("GET /v1/operations/graph", opsHandler.HandleGetGraph)
+		mux.HandleFunc("GET /api/operations/graph", opsHandler.HandleGetGraph)
+		mux.HandleFunc("GET /v1/operations/replay/{workflowId}", opsHandler.HandleGetReplay)
+		mux.HandleFunc("GET /api/operations/replay/{workflowId}", opsHandler.HandleGetReplay)
+		mux.HandleFunc("GET /v1/operations/state-at/{timestamp}", opsHandler.HandleGetStateAt)
+		mux.HandleFunc("GET /api/operations/state-at/{timestamp}", opsHandler.HandleGetStateAt)
+		mux.HandleFunc("GET /v1/operations/why/{eventId}", opsHandler.HandleExplainEvent)
+		mux.HandleFunc("GET /api/operations/why/{eventId}", opsHandler.HandleExplainEvent)
+		mux.HandleFunc("GET /v1/operations/next/{workflowId}", opsHandler.HandleGetNextAction)
+		mux.HandleFunc("GET /api/operations/next/{workflowId}", opsHandler.HandleGetNextAction)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {
