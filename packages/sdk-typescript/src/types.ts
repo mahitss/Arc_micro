@@ -2944,6 +2944,243 @@ export interface DryRunResult {
   policy_impact: string;
 }
 
+// =============================================================================
+// AUTONOMOUS ECONOMIC PROTOCOL V1 TYPES (TASK 16)
+// =============================================================================
+
+export interface ProtocolMessage<T = unknown> {
+  protocol_version: '1.0';
+  message_type: string;
+  message_id: string;
+  timestamp: string;
+  sender_id: string;
+  recipient_id: string;
+  correlation_id: string;
+  causation_id?: string;
+  idempotency_key?: string;
+  nonce?: string;
+  signature?: string;
+  tenant_id?: string;
+  payload: T;
+}
+
+export interface CapabilityDescriptor {
+  capability_id: string;
+  name: string;
+  version: string;
+  description: string;
+  input_schema?: Record<string, unknown>;
+  output_schema?: Record<string, unknown>;
+  constraints?: Record<string, unknown>;
+  estimated_latency_ms?: number;
+  pricing_model: 'FIXED' | 'VARIABLE' | 'QUOTE_REQUIRED';
+  supported_assets: string[];
+  required_trust_level?: 'UNVERIFIED' | 'IDENTIFIED' | 'VERIFIED' | 'TRUSTED';
+  verification_requirements?: string;
+}
+
+export interface ManifestPricing {
+  capability: string;
+  model: string;
+  base_price: string;
+  max_price?: string;
+  currency?: string;
+}
+
+export interface ReputationMetrics {
+  agent_id: string;
+  completion_rate: number;
+  avg_latency_ms: number;
+  quality_score: number;
+  dispute_rate: number;
+  quote_accuracy: number;
+  reliability_score: number;
+  cancellation_rate: number;
+  sample_size: number;
+  confidence: number;
+  observation_period: string;
+}
+
+export interface ProtocolAgentManifest {
+  protocol_version: '1.0';
+  agent_id: string;
+  organization_id: string;
+  display_name: string;
+  capabilities: CapabilityDescriptor[];
+  endpoints: Record<string, string>;
+  supported_protocols: string[];
+  pricing: ManifestPricing[];
+  availability: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
+  service_regions?: string[];
+  authentication: Record<string, string>;
+  result_formats: string[];
+  reputation_reference?: ReputationMetrics;
+  security_requirements?: string[];
+}
+
+export type AgentManifestV1 = ProtocolAgentManifest;
+
+export interface ServiceRequest {
+  request_id: string;
+  requester_id: string;
+  capability: string;
+  input_data?: Record<string, unknown>;
+  constraints?: Record<string, unknown>;
+  deadline: string;
+  budget_cap: string;
+  quality_requirements?: Record<string, unknown>;
+  risk_requirements?: Record<string, unknown>;
+  result_requirements?: Record<string, unknown>;
+}
+
+export interface ProtocolQuote {
+  quote_id: string;
+  provider_id: string;
+  request_id: string;
+  amount: string;
+  currency: string;
+  expiration: string;
+  expected_duration_seconds: number;
+  deliverables: string[];
+  assumptions?: string[];
+  cancellation_terms?: string;
+  verification_requirements?: string;
+  policy_snapshot_hash?: string;
+}
+
+export interface NegotiationPayload {
+  negotiation_id: string;
+  contract_id?: string;
+  round: number;
+  sender_id: string;
+  proposed_price: string;
+  proposed_deadline?: string;
+  deliverables?: string[];
+  terms?: Record<string, string>;
+  expires_at: string;
+}
+
+export interface ContractMilestone {
+  milestone_id: string;
+  title: string;
+  deliverable_spec: string;
+  amount: string;
+  verification_method: string;
+  due_at: string;
+  status: 'PENDING' | 'SUBMITTED' | 'VERIFIED' | 'PAID';
+}
+
+export interface ProtocolContract {
+  contract_id: string;
+  tenant_id: string;
+  requester_id: string;
+  provider_id: string;
+  capability: string;
+  deliverables: string[];
+  milestones?: ContractMilestone[];
+  total_amount: string;
+  currency: string;
+  deadline: string;
+  verification_policy?: string;
+  dispute_terms?: string;
+  policy_snapshot_hash: string;
+  state:
+    | 'PROPOSED'
+    | 'NEGOTIATING'
+    | 'ACCEPTED'
+    | 'ACTIVE'
+    | 'MILESTONE_PENDING'
+    | 'COMPLETED'
+    | 'DISPUTED'
+    | 'CANCELLED'
+    | 'EXPIRED'
+    | 'REJECTED'
+    | 'FAILED';
+  created_at: string;
+  accepted_at?: string;
+  expires_at: string;
+}
+
+export interface ResultSubmittedPayload {
+  result_id: string;
+  contract_id: string;
+  task_id: string;
+  milestone_id?: string;
+  schema_version: string;
+  result_hash: string;
+  deliverable_data: Record<string, unknown>;
+  evidence?: Record<string, unknown>;
+  quality_metadata?: Record<string, unknown>;
+  submitted_at: string;
+}
+
+export interface PaymentRequestPayload {
+  contract_id: string;
+  milestone_id: string;
+  amount: string;
+  currency: string;
+  recipient_service_id: string;
+  result_reference: string;
+  evidence_reference?: string;
+  proposed_justification?: string;
+}
+
+export interface PaymentDecision {
+  decision: 'AUTHORIZED' | 'DENIED' | 'PENDING' | 'REQUIRED_APPROVAL';
+  payment_intent_id?: string;
+  reason_code?: string;
+  policy_reference?: string;
+  risk_reference?: string;
+  approval_state?: string;
+  retryable: boolean;
+  recommended_safe_action?: string;
+  details?: string[];
+}
+
+export interface ProtocolTrafficEntry {
+  traffic_id: string;
+  timestamp: string;
+  message_type: string;
+  sender_id: string;
+  recipient_id: string;
+  status: string;
+  correlation_id: string;
+  latency_ms: number;
+  error?: string;
+  tenant_id: string;
+}
+
+export interface ProtocolSimulationRequest {
+  service_request: ServiceRequest;
+  provider_id?: string;
+  negotiated_price?: string;
+}
+
+export interface ProtocolSimulationResponse {
+  policy_decision: 'ALLOW' | 'DENY' | 'REQUIRES_APPROVAL';
+  risk_score: number;
+  estimated_cost_usdc: string;
+  required_approvals: string[];
+  treasury_status: string;
+  execution_path: string;
+  safe_to_execute: boolean;
+  warnings?: string[];
+}
+
+export interface PrecheckRequest {
+  agent_id: string;
+  capability: string;
+  estimated_amount: string;
+  currency: string;
+}
+
+export interface PrecheckResponse {
+  eligibility: 'ELIGIBLE' | 'INELIGIBLE' | 'REQUIRES_APPROVAL' | 'REQUIRES_MORE_INFORMATION';
+  reasons: string[];
+  max_allowable_budget: string;
+}
+
+
 
 
 

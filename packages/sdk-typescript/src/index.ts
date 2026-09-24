@@ -36,8 +36,28 @@ export { ControlTowerResource } from './resources/control.js';
 export { RuntimeResource } from './resources/runtime.js';
 export { OperationsResource } from './resources/operations.js';
 export { FabricResource } from './resources/fabric.js';
+export { ProtocolClient, ProtocolResource } from './resources/protocol.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
+  ProtocolMessage,
+  ProtocolAgentManifest,
+  AgentManifestV1,
+  CapabilityDescriptor,
+  ManifestPricing,
+  ReputationMetrics,
+  ServiceRequest,
+  ProtocolQuote,
+  NegotiationPayload,
+  ContractMilestone,
+  ProtocolContract,
+  ResultSubmittedPayload,
+  PaymentRequestPayload,
+  PaymentDecision,
+  ProtocolTrafficEntry,
+  ProtocolSimulationRequest,
+  ProtocolSimulationResponse,
+  PrecheckRequest,
+  PrecheckResponse,
   EconomicObjective,
   ExecutionBlueprint,
   BlueprintVersion,

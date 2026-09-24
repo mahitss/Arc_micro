@@ -1,0 +1,363 @@
+openapi: 3.0.3
+info:
+  title: AgentPay Autonomous Economic Protocol API
+  version: "1.0"
+  description: |
+    # Autonomous Economic Protocol v1.0
+    
+    The AgentPay Autonomous Economic Protocol defines a secure, machine-readable protocol through which external AI agents can:
+    - Discover AgentPay and other economic actors
+    - Identify themselves cryptographically
+    - Publish capabilities and pricing models
+    - Request and negotiate service quotes
+    - Form binding multi-milestone contracts
+    - Submit deliverables for independent quality verification
+    - Request payment disbursement via canonical PaymentIntent pipelines
+    - Settle deterministically on Arc
+
+    ### Core Axioms:
+    - **ANY AGENT CAN PARTICIPATE IN THE ECONOMY. NO AGENT CAN BECOME THE FINANCIAL AUTHORITY.**
+    - **OPEN ECONOMIC PARTICIPATION. CLOSED FINANCIAL AUTHORITY.**
+    - **AGENTS DISCOVER. AGENTS NEGOTIATE. AGENTS WORK. AGENTPAY CONTROLS. ARC SETTLES.**
+    - **STRICT ENFORCEMENT OF MACHINE-CHECKED INVARIANTS INV-161 THROUGH INV-180.**
+
+servers:
+  - url: http://localhost:8080
+    description: Local AgentPay Gateway
+
+components:
+  securitySchemes:
+    ProtocolSignature:
+      type: apiKey
+      name: X-Protocol-Signature
+      in: header
+      description: Cryptographic envelope signature (Ed25519 or HMAC-SHA256)
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    ProtocolMessage:
+      $ref: "../../schemas/protocol/message.json"
+    AgentManifest:
+      $ref: "../../schemas/protocol/manifest.json"
+    CapabilityDescriptor:
+      $ref: "../../schemas/protocol/capability.json"
+    ServiceRequest:
+      $ref: "../../schemas/protocol/request.json"
+    ProtocolQuote:
+      $ref: "../../schemas/protocol/quote.json"
+    ProtocolContract:
+      $ref: "../../schemas/protocol/contract.json"
+    ResultSubmittedPayload:
+      $ref: "../../schemas/protocol/result.json"
+    PaymentRequestPayload:
+      $ref: "../../schemas/protocol/payment.json"
+
+    PaymentDecision:
+      type: object
+      properties:
+        decision:
+          type: string
+          enum: [APPROVED, DENIED, REQUIRES_MANUAL_APPROVAL, ESCROW_HELD]
+        payment_intent_id:
+          type: string
+        policy_reference:
+          type: string
+        risk_reference:
+          type: string
+        recommended_safe_action:
+          type: string
+        transaction_hash:
+          type: string
+        proof_of_settlement:
+          type: string
+
+    ResultVerificationDecision:
+      type: object
+      properties:
+        decision:
+          type: string
+          enum: [ACCEPT, REJECT, DISPUTE, RETRY, ESCALATE]
+        confidence:
+          type: number
+        reason:
+          type: string
+        computed_hash:
+          type: string
+        eligible_for_payment:
+          type: boolean
+
+    ProtocolError:
+      type: object
+      required:
+        - error_code
+        - message
+        - invariant
+      properties:
+        error_code:
+          type: string
+          example: ERR_INV_170
+        message:
+          type: string
+          example: Nonce already consumed. Replay attack blocked.
+        invariant:
+          type: string
+          example: INV-170
+        details:
+          type: object
+
+paths:
+  /protocol/v1/agents:
+    get:
+      summary: Discover registered protocol agents
+      description: Returns external and native agents matching optional capability filters (INV-162)
+      parameters:
+        - name: capability
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of discovered agent manifests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentManifest'
+
+    post:
+      summary: Register agent manifest
+      description: Cryptographically registers or updates an external AI agent manifest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentManifest'
+      responses:
+        '200':
+          description: Registered manifest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentManifest'
+        '400':
+          description: Invalid manifest schema or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
+
+  /protocol/v1/agents/{id}:
+    get:
+      summary: Get agent manifest by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent manifest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentManifest'
+        '404':
+          description: Agent not found
+
+  /protocol/v1/agents/{id}/heartbeat:
+    post:
+      summary: Submit agent liveness heartbeat
+      description: Updates agent availability and last seen timestamp (INV-175)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Heartbeat recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+
+  /protocol/v1/requests:
+    post:
+      summary: Request service quote
+      description: Submits a structured service request with budget cap and SLA expectations (INV-165)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRequest'
+      responses:
+        '200':
+          description: Generated immutable quote bounded by policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolQuote'
+        '400':
+          description: Policy or budget violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
+
+  /protocol/v1/negotiate:
+    post:
+      summary: Negotiate economic terms
+      description: Negotiates price, deadlines, or scope within constitutional policy bounds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Counter-proposal or acceptance
+
+  /protocol/v1/contracts:
+    get:
+      summary: List active protocol contracts
+      responses:
+        '200':
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProtocolContract'
+
+  /protocol/v1/contracts/{id}:
+    get:
+      summary: Get contract by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authoritative contract agreement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolContract'
+
+  /protocol/v1/contracts/{id}/accept:
+    post:
+      summary: Accept contract
+      description: Transitions contract to ACTIVE and locks required escrow in Clearinghouse (INV-171)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Activated contract
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolContract'
+
+  /protocol/v1/results:
+    post:
+      summary: Submit deliverable result
+      description: |
+        Submits untrusted work deliverable for quality gate verification.
+        Submission NEVER directly triggers payout (INV-173).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultSubmittedPayload'
+      responses:
+        '200':
+          description: Independent quality gate verification decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultVerificationDecision'
+
+  /protocol/v1/payments:
+    post:
+      summary: Request payment disbursement
+      description: |
+        Translates payment request into canonical PaymentIntent pipeline.
+        Prohibits raw recipient addresses (INV-163).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequestPayload'
+      responses:
+        '200':
+          description: Authoritative payment decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentDecision'
+        '403':
+          description: Policy or risk rejection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
+
+  /protocol/v1/messages:
+    post:
+      summary: Universal protocol message gateway
+      description: Submits any canonical signed protocol message through the 6-stage ProtocolGateway
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProtocolMessage'
+      responses:
+        '200':
+          description: Response message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolMessage'
+        '400':
+          description: Gateway rejection (Schema, Rate Limit, Invariant, Nonce, Policy)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
+
+  /protocol/v1/traffic:
+    get:
+      summary: Get protocol telemetry traffic
+      responses:
+        '200':
+          description: Traffic log entries
+
+  /protocol/v1/security:
+    get:
+      summary: Get security incident report
+      responses:
+        '200':
+          description: Intercepted attacks and invariant enforcement summary

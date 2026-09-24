@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResultSubmittedPayload",
+  "description": "Deliverable result submitted for Quality Gate verification (INV-173)",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "milestone_id",
+    "worker_agent_id",
+    "deliverable_hash",
+    "deliverable_payload"
+  ],
+  "properties": {
+    "contract_id": {
+      "type": "string"
+    },
+    "milestone_id": {
+      "type": "string"
+    },
+    "worker_agent_id": {
+      "type": "string"
+    },
+    "deliverable_hash": {
+      "type": "string",
+      "description": "Cryptographic SHA-256 deliverable seal"
+    },
+    "deliverable_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "deliverable_payload": {
+      "type": "object",
+      "description": "Deliverable payload contents"
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1420,6 +1420,76 @@ class FabricResource:
     getObjectiveState = get_objective_state
 
 
+class AgentPayProtocolClient:
+    """
+    AgentPay Autonomous Economic Protocol v1 Client (Task 16).
+    Enforces deterministic protocol invariants INV-161 through INV-180.
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def discover_agents(self, capability: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"capability": capability} if capability else None
+        return self._client._request("GET", "/protocol/v1/agents", params=params)
+
+    def discover_capabilities(self, capability: Optional[str] = None) -> List[Dict[str, Any]]:
+        return self.discover_agents(capability)
+
+    def request_service(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/protocol/v1/requests", json=params)
+
+    def request_quote(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        return self.request_service(params)
+
+    def negotiate(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/protocol/v1/negotiate", json=params)
+
+    def accept_contract(self, contract_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/protocol/v1/contracts/{contract_id}/accept")
+
+    def submit_result(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/protocol/v1/results", json=params)
+
+    def get_contract(self, contract_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/protocol/v1/contracts/{contract_id}")
+
+    def request_payment(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/protocol/v1/payments", json=params)
+
+    def get_payment_status(self, payment_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/protocol/v1/payments/{payment_id}")
+
+    def simulate(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/protocol/v1/simulate", json=params)
+
+    def precheck(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/protocol/v1/precheck", json=params)
+
+    def send_message(self, msg: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/protocol/v1/messages", json=msg)
+
+    def get_traffic(self) -> List[Dict[str, Any]]:
+        return self._client._request("GET", "/protocol/v1/traffic")
+
+    def get_security(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/protocol/v1/security")
+
+    # CamelCase aliases per Section 39 / 48
+    discoverAgents = discover_agents
+    discoverCapabilities = discover_capabilities
+    requestService = request_service
+    requestQuote = request_quote
+    acceptContract = accept_contract
+    submitResult = submit_result
+    getContract = get_contract
+    requestPayment = request_payment
+    getPaymentStatus = get_payment_status
+    sendMessage = send_message
+
+
+ProtocolResource = AgentPayProtocolClient
+
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -1459,6 +1529,7 @@ class AgentPay:
         self.ops = self.operations
         self.fabric = FabricResource(self)
         self.objectives = self.fabric
+        self.protocol = AgentPayProtocolClient(self)
 
     def _request(
         self,

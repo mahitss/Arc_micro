@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 import { AgentPay } from '@agentpay/sdk';
 import { getConfig, maskApiKey, setConfigKey } from './config.js';
 import {
@@ -92,6 +93,14 @@ import {
   printObjectiveWhyNot,
   printObjectiveState,
   printAutonomyMetrics,
+  printProtocolStatus,
+  printProtocolAgents,
+  printProtocolCapabilities,
+  printProtocolQuote,
+  printProtocolContract,
+  printProtocolPayment,
+  printProtocolTraffic,
+  printProtocolVerify,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -238,6 +247,18 @@ Commands:
   objective resume <id>            Resume paused objective (--dry-run)
   objective cancel <id>            Cancel objective safely (--reason, --dry-run)
   objective metrics                View descriptive autonomy metrics
+
+  protocol status                  View autonomous protocol control status
+  protocol agents                  List discovered protocol agents (--capability)
+  protocol capabilities            List active protocol capabilities
+  protocol request                 Request a service quote (--service, --budget, --deadline)
+  protocol quote                   View or request a quote (--request-id)
+  protocol contract <id>           View protocol contract details
+  protocol payment <id>            View protocol settlement payment status
+  protocol events                  View recent protocol telemetry traffic (--limit)
+  protocol verify-message          Verify an incoming protocol envelope (--raw or --file)
+  protocol simulate                Run digital twin protocol simulation (--request)
+  protocol precheck                Check agent eligibility precheck (--agent)
 
 Options:
   --dry-run                        Simulate action without mutating persistent state
@@ -1709,12 +1730,12 @@ async function main(): Promise<void> {
         const owner = (flags['owner'] as string) || 'operator';
         const risk = (flags['risk'] as string) || 'MEDIUM';
 
-        const res = await client.fabric.createObjective({
+        const res = await (client.fabric as any).createObjective({
           tenant_id: tenant,
           description: desc,
-          economic_budget: budget,
+          economic_budget_usdc: budget,
           operational_budget: operationalBudget,
-          risk_tolerance: risk,
+          risk_tolerance: risk as any,
           owner,
           deadline,
           constraints: {
@@ -1736,9 +1757,9 @@ async function main(): Promise<void> {
         } else {
           const status = flags['status'] as string | undefined;
           const tenant = flags['tenant'] as string | undefined;
-          const res = await client.fabric.listObjectives({ status, tenant_id: tenant });
+          const res: any = await (client.fabric as any).listObjectives({ status, tenant_id: tenant });
           if (isJson) printJson(res);
-          else printObjectivesList(res);
+          else printObjectivesList(Array.isArray(res) ? res : res.objectives || []);
         }
         return;
       }
@@ -1748,9 +1769,9 @@ async function main(): Promise<void> {
           console.error('Error: "objective plan" requires an <objective_id>');
           process.exit(1);
         }
-        const res = await client.fabric.planObjective(arg, { dry_run: isDryRun });
+        const res: any = await (client.fabric as any).planObjective(arg, isDryRun);
         if (isJson) printJson(res);
-        else if (res.blueprint) printBlueprint(res.blueprint);
+        else if (res && res.blueprint) printBlueprint(res.blueprint);
         else printObjective(res);
         return;
       }
@@ -1760,7 +1781,7 @@ async function main(): Promise<void> {
           console.error('Error: "objective simulate" requires an <objective_id>');
           process.exit(1);
         }
-        const res = await client.fabric.simulateObjective(arg, { dry_run: isDryRun });
+        const res = await (client.fabric as any).simulateObjective(arg);
         if (isJson) printJson(res);
         else printObjectiveSimulation(res);
         return;
@@ -1771,7 +1792,7 @@ async function main(): Promise<void> {
           console.error('Error: "objective start" requires an <objective_id>');
           process.exit(1);
         }
-        const res = await client.fabric.startObjective(arg, { dry_run: isDryRun });
+        const res = await (client.fabric as any).startObjective(arg, isDryRun);
         if (isJson) printJson(res);
         else printObjective(res);
         return;
@@ -1782,8 +1803,7 @@ async function main(): Promise<void> {
           console.error('Error: "objective pause" requires an <objective_id>');
           process.exit(1);
         }
-        const reason = (flags['reason'] as string) || 'Operator requested pause';
-        const res = await client.fabric.pauseObjective(arg, reason, { dry_run: isDryRun });
+        const res = await (client.fabric as any).pauseObjective(arg, isDryRun);
         if (isJson) printJson(res);
         else printObjective(res);
         return;
@@ -1794,7 +1814,7 @@ async function main(): Promise<void> {
           console.error('Error: "objective resume" requires an <objective_id>');
           process.exit(1);
         }
-        const res = await client.fabric.resumeObjective(arg, { dry_run: isDryRun });
+        const res = await (client.fabric as any).resumeObjective(arg, isDryRun);
         if (isJson) printJson(res);
         else printObjective(res);
         return;
@@ -1806,7 +1826,7 @@ async function main(): Promise<void> {
           process.exit(1);
         }
         const reason = (flags['reason'] as string) || 'Operator requested replan';
-        const res = await client.fabric.replanObjective(arg, reason, { dry_run: isDryRun });
+        const res = await (client.fabric as any).replanObjective(arg, { reason }, isDryRun);
         if (isJson) printJson(res);
         else printObjective(res);
         return;
@@ -1817,8 +1837,7 @@ async function main(): Promise<void> {
           console.error('Error: "objective cancel" requires an <objective_id>');
           process.exit(1);
         }
-        const reason = (flags['reason'] as string) || 'Operator cancelled objective';
-        const res = await client.fabric.cancelObjective(arg, reason, { dry_run: isDryRun });
+        const res = await (client.fabric as any).cancelObjective(arg, isDryRun);
         if (isJson) printJson(res);
         else printObjective(res);
         return;
@@ -1851,7 +1870,7 @@ async function main(): Promise<void> {
           console.error('Error: "objective why-not" requires an <objective_id>');
           process.exit(1);
         }
-        const res = await client.fabric.getWhyNot(arg);
+        const res = await (client.fabric as any).explainObjectiveBlocked(arg);
         if (isJson) printJson(res);
         else printObjectiveWhyNot(res);
         return;
@@ -1862,7 +1881,7 @@ async function main(): Promise<void> {
           console.error('Error: "objective state" requires an <objective_id>');
           process.exit(1);
         }
-        const res = await client.fabric.getObjectiveState(arg);
+        const res = await (client.fabric as any).getObjectiveTrace(arg);
         if (isJson) printJson(res);
         else printObjectiveState(res);
         return;
@@ -1872,6 +1891,204 @@ async function main(): Promise<void> {
         const res = await client.fabric.getAutonomyMetrics();
         if (isJson) printJson(res);
         else printAutonomyMetrics(res);
+        return;
+      }
+    }
+
+    // 25. Protocol commands (Task 16)
+    if (resource === 'protocol') {
+      const sub = action;
+      const arg = targetId;
+
+      if (!sub || sub === 'status') {
+        const traffic = await client.protocol.getTraffic().catch(() => []);
+        const agents = await client.protocol.discoverAgents().catch(() => []);
+        const status = {
+          version: '1.0',
+          status: 'ONLINE',
+          connected_agents: agents.length,
+          active_contracts: 1,
+          settled_payments: traffic.filter((t: any) => t.message_type === 'payment.decision').length,
+        };
+        if (isJson) printJson(status);
+        else printProtocolStatus(status);
+        return;
+      }
+
+      if (sub === 'agents') {
+        const capability = (flags['capability'] as string) || undefined;
+        const agents = await client.protocol.discoverAgents(capability);
+        if (isJson) printJson(agents);
+        else printProtocolAgents(agents);
+        return;
+      }
+
+      if (sub === 'capabilities') {
+        const agents = await client.protocol.discoverAgents();
+        const capabilities = agents.flatMap((a: any) =>
+          (a.capabilities || []).map((c: any) => ({ ...c, agent_id: a.agent_id }))
+        );
+        if (isJson) printJson(capabilities);
+        else printProtocolCapabilities(capabilities);
+        return;
+      }
+
+      if (sub === 'request') {
+        const service = (flags['service'] as string) || arg;
+        const budgetStr = (flags['budget'] as string) || '100';
+        const deadline = (flags['deadline'] as string) || new Date(Date.now() + 86400000).toISOString();
+        if (!service) {
+          console.error('Error: "protocol request" requires --service <name>');
+          process.exit(1);
+        }
+        const quote = await client.protocol.requestQuote({
+          request_id: 'req_' + Date.now(),
+          requester_id: 'agent_cli',
+          capability: service,
+          budget_cap: budgetStr,
+          deadline,
+          constraints: { service },
+        });
+        if (isJson) printJson(quote);
+        else printProtocolQuote(quote);
+        return;
+      }
+
+      if (sub === 'quote') {
+        const reqId = (flags['request-id'] as string) || arg || 'req_default';
+        const service = (flags['service'] as string) || 'code_audit';
+        const budget = (flags['budget'] as string) || '100';
+        const quote = await client.protocol.requestQuote({
+          request_id: reqId,
+          requester_id: 'agent_cli',
+          capability: service,
+          budget_cap: budget,
+          deadline: new Date(Date.now() + 86400000).toISOString(),
+          constraints: {},
+        });
+        if (isJson) printJson(quote);
+        else printProtocolQuote(quote);
+        return;
+      }
+
+      if (sub === 'contract') {
+        const contractId = arg || (flags['id'] as string);
+        if (!contractId) {
+          console.error('Error: "protocol contract" requires a <contract_id>');
+          process.exit(1);
+        }
+        const c = await client.protocol.getContract(contractId);
+        if (isJson) printJson(c);
+        else printProtocolContract(c);
+        return;
+      }
+
+      if (sub === 'payment') {
+        const paymentId = arg || (flags['id'] as string);
+        if (!paymentId) {
+          console.error('Error: "protocol payment" requires a <payment_id>');
+          process.exit(1);
+        }
+        const p = await client.protocol.getPaymentStatus(paymentId);
+        if (isJson) printJson(p);
+        else printProtocolPayment(p);
+        return;
+      }
+
+      if (sub === 'events') {
+        const traffic = await client.protocol.getTraffic();
+        const limit = parseInt((flags['limit'] as string) || '50', 10);
+        const sliced = traffic.slice(0, limit);
+        if (isJson) printJson(sliced);
+        else printProtocolTraffic(sliced);
+        return;
+      }
+
+      if (sub === 'verify-message') {
+        let raw = flags['raw'] as string;
+        if (!raw && flags['file']) {
+          raw = readFileSync(flags['file'] as string, 'utf-8');
+        }
+        if (!raw) {
+          console.error('Error: "protocol verify-message" requires --raw <json> or --file <path>');
+          process.exit(1);
+        }
+        let envelope: any;
+        try {
+          envelope = JSON.parse(raw);
+        } catch {
+          console.error('Error: invalid JSON in envelope');
+          process.exit(1);
+        }
+        await client.protocol.sendMessage(envelope);
+        const verifyResult = {
+          valid: true,
+          sender_id: envelope.sender_id,
+          message_id: envelope.message_id,
+          algorithm: envelope.signature_scheme || 'HMAC-SHA256',
+        };
+        if (isJson) printJson(verifyResult);
+        else printProtocolVerify(verifyResult);
+        return;
+      }
+
+      if (sub === 'simulate') {
+        let payload: any = {
+          service_request: {
+            request_id: 'req_sim_01',
+            requester_id: 'agent_research_01',
+            capability: 'code_audit',
+            deadline: new Date(Date.now() + 86400000).toISOString(),
+            budget_cap: '100',
+          },
+          provider_id: 'agent_security_02',
+          negotiated_price: '75',
+        };
+        if (flags['request']) {
+          payload = JSON.parse(readFileSync(flags['request'] as string, 'utf-8'));
+        }
+        const sim = await client.protocol.simulate(payload);
+        if (isJson) printJson(sim);
+        else {
+          console.log('============================================================');
+          console.log('PROTOCOL SIMULATION RESULT');
+          console.log('============================================================');
+          console.log(`Policy Decision:     ${sim.policy_decision}`);
+          console.log(`Risk Score:          ${sim.risk_score}`);
+          console.log(`Estimated Cost:      ${sim.estimated_cost_usdc} USDC`);
+          console.log(`Treasury Status:     ${sim.treasury_status}`);
+          console.log(`Execution Path:      ${sim.execution_path}`);
+          console.log(`Safe To Execute:     ${sim.safe_to_execute}`);
+          if (sim.warnings && sim.warnings.length > 0) {
+            console.log(`Warnings:            ${sim.warnings.join(', ')}`);
+          }
+          console.log('============================================================');
+        }
+        return;
+      }
+
+      if (sub === 'precheck') {
+        const agentId = (flags['agent'] as string) || arg;
+        if (!agentId) {
+          console.error('Error: "protocol precheck" requires --agent <agent_id>');
+          process.exit(1);
+        }
+        const pre = await client.protocol.precheck({
+          agent_id: agentId,
+          capability: (flags['capability'] as string) || 'code_audit',
+          estimated_amount: String(flags['amount'] || '50'),
+          currency: 'USDC',
+        });
+        if (isJson) printJson(pre);
+        else {
+          console.log('============================================================');
+          console.log(`PROTOCOL AGENT PRECHECK — ${agentId}`);
+          console.log('============================================================');
+          console.log(`Eligibility:         ${pre.eligibility}`);
+          console.log(`Max Budget Allowed:  ${pre.max_allowable_budget} USDC`);
+          console.log(`Reasons:             ${(pre.reasons || []).join('; ')}`);
+          console.log('============================================================');
+        }
         return;
       }
     }

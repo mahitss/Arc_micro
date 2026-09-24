@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PaymentRequestPayload",
+  "description": "Milestone disbursement payment request payload (INV-163, INV-173)",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "milestone_id",
+    "recipient_service_id",
+    "amount",
+    "currency",
+    "quality_verification_hash"
+  ],
+  "properties": {
+    "contract_id": {
+      "type": "string"
+    },
+    "milestone_id": {
+      "type": "string"
+    },
+    "recipient_service_id": {
+      "type": "string",
+      "description": "Directory-registered recipient service ID. Raw hex 0x... addresses prohibited (INV-163)"
+    },
+    "amount": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["USDC"]
+    },
+    "quality_verification_hash": {
+      "type": "string",
+      "description": "SHA-256 seal issued by ResultQualityGate"
+    }
+  },
+  "additionalProperties": false
+}

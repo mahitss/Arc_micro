@@ -2553,6 +2553,253 @@ test('AgentPay SDK — Task 15 Autonomous Economic Fabric API', async () => {
   assert.equal(metrics.total_objectives, 4);
 });
 
+// =============================================================================
+// TASK 16: AUTONOMOUS ECONOMIC PROTOCOL V1 SDK TESTS
+// =============================================================================
+
+test('AgentPay SDK — ProtocolClient Discovery & Lifecycle Flow', async () => {
+  const mockFetch: typeof fetch = async (input, init) => {
+    const url = input.toString();
+    const method = init?.method || 'GET';
+
+    if (url.includes('/protocol/v1/agents')) {
+      return new Response(
+        JSON.stringify([
+          {
+            protocol_version: '1.0',
+            agent_id: 'agent_security_02',
+            organization_id: 'org_beta',
+            display_name: 'VigilSec Analysis Agent',
+            capabilities: [
+              {
+                capability_id: 'security-audit@1.0',
+                name: 'Automated Security Audit',
+                version: '1.0',
+                description: 'Static analysis',
+                pricing_model: 'FIXED',
+                supported_assets: ['USDC'],
+              },
+            ],
+            endpoints: { task: 'https://agents.agentpay.arc/sec/task' },
+            supported_protocols: ['agentpay.protocol.v1'],
+            pricing: [{ capability: 'security-audit@1.0', model: 'FIXED', base_price: '18.50' }],
+            availability: 'AVAILABLE',
+            authentication: { type: 'signature' },
+            result_formats: ['application/json', 'sha256_sealed'],
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/protocol/v1/requests')) {
+      return new Response(
+        JSON.stringify({
+          quote_id: 'quote_test_01',
+          provider_id: 'agent_security_02',
+          request_id: 'req_test_01',
+          amount: '18.50',
+          currency: 'USDC',
+          expiration: '2028-01-01T00:00:00Z',
+          expected_duration_seconds: 30,
+          deliverables: ['vulnerability_scan_report'],
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/protocol/v1/negotiate')) {
+      return new Response(
+        JSON.stringify({
+          negotiation_id: 'neg_01',
+          contract_id: 'ctr_01',
+          round: 2,
+          sender_id: 'agent_security_02',
+          proposed_price: '15.00',
+          deliverables: ['vulnerability_scan_report'],
+          expires_at: '2028-01-01T00:00:00Z',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/protocol/v1/contracts/ctr_01/accept')) {
+      return new Response(
+        JSON.stringify({
+          contract_id: 'ctr_01',
+          tenant_id: 'tenant_default',
+          requester_id: 'agent_research_01',
+          provider_id: 'agent_security_02',
+          capability: 'security-audit@1.0',
+          deliverables: ['vulnerability_scan_report'],
+          total_amount: '15.00',
+          currency: 'USDC',
+          deadline: '2028-01-01T00:00:00Z',
+          policy_snapshot_hash: 'sha256_policy_test',
+          state: 'ACTIVE',
+          created_at: '2026-01-01T00:00:00Z',
+          expires_at: '2028-01-01T00:00:00Z',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/protocol/v1/results')) {
+      return new Response(
+        JSON.stringify({
+          decision: 'ACCEPT',
+          confidence: 0.98,
+          reason: 'Deliverable verified',
+          computed_hash: 'sha256_result_seal',
+          eligible_for_payment: true,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/protocol/v1/payments')) {
+      if (method === 'POST') {
+        return new Response(
+          JSON.stringify({
+            decision: 'AUTHORIZED',
+            payment_intent_id: 'pi_test_01',
+            policy_reference: 'INV-165',
+            risk_reference: 'LOW_RISK',
+            retryable: false,
+          }),
+          { status: 202, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          payment_id: 'pi_test_01',
+          status: 'CONFIRMED',
+          asset: 'USDC',
+          chain: 'arc-testnet',
+          block_proof: 'arc_tx_0xabc123',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/protocol/v1/simulate')) {
+      return new Response(
+        JSON.stringify({
+          policy_decision: 'ALLOW',
+          risk_score: 12,
+          estimated_cost_usdc: '15.00',
+          required_approvals: [],
+          treasury_status: 'AVAILABLE',
+          execution_path: 'SIMULATION',
+          safe_to_execute: true,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (url.includes('/protocol/v1/precheck')) {
+      return new Response(
+        JSON.stringify({
+          eligibility: 'ELIGIBLE',
+          reasons: ['Policy precheck passed'],
+          max_allowable_budget: '100.00',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({ error: 'not found' }), { status: 404 });
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_proto_key', fetch: mockFetch });
+  assert.ok(client.protocol);
+
+  // 1. Discover agents & capabilities
+  const agents = await client.protocol.discoverAgents('security-audit@1.0');
+  assert.equal(agents.length, 1);
+  assert.equal(agents[0].agent_id, 'agent_security_02');
+
+  const capabilities = await client.protocol.discoverCapabilities('security-audit@1.0');
+  assert.equal(capabilities.length, 1);
+
+  // 2. Request Quote
+  const quote = await client.protocol.requestQuote({
+    request_id: 'req_test_01',
+    requester_id: 'agent_research_01',
+    capability: 'security-audit@1.0',
+    deadline: '2028-01-01T00:00:00Z',
+    budget_cap: '20.00',
+  });
+  assert.equal(quote.quote_id, 'quote_test_01');
+  assert.equal(quote.amount, '18.50');
+
+  // 3. Negotiate
+  const negotiation = await client.protocol.negotiate({
+    negotiation_id: 'neg_01',
+    round: 1,
+    sender_id: 'agent_research_01',
+    proposed_price: '15.00',
+    expires_at: '2028-01-01T00:00:00Z',
+  });
+  assert.equal(negotiation.proposed_price, '15.00');
+
+  // 4. Accept Contract
+  const contract = await client.protocol.acceptContract('ctr_01');
+  assert.equal(contract.state, 'ACTIVE');
+  assert.equal(contract.total_amount, '15.00');
+
+  // 5. Submit Result
+  const evalResult = await client.protocol.submitResult({
+    result_id: 'res_01',
+    contract_id: 'ctr_01',
+    task_id: 'task_01',
+    schema_version: '1.0',
+    result_hash: 'sha256_result_seal',
+    deliverable_data: { scan_target: '0x123', findings: [] },
+    submitted_at: '2026-01-01T00:00:00Z',
+  });
+  assert.equal(evalResult.decision, 'ACCEPT');
+  assert.equal(evalResult.eligible_for_payment, true);
+
+  // 6. Request Payment & Check Status
+  const paymentDec = await client.protocol.requestPayment({
+    contract_id: 'ctr_01',
+    milestone_id: 'ms_01',
+    amount: '15.00',
+    currency: 'USDC',
+    recipient_service_id: 'service_audit_pro',
+    result_reference: 'res_01',
+  });
+  assert.equal(paymentDec.decision, 'AUTHORIZED');
+  assert.equal(paymentDec.payment_intent_id, 'pi_test_01');
+
+  const status = await client.protocol.getPaymentStatus('pi_test_01');
+  assert.equal(status.status, 'CONFIRMED');
+  assert.equal(status.asset, 'USDC');
+
+  // 7. Simulation & Precheck
+  const sim = await client.protocol.simulate({
+    service_request: {
+      request_id: 'req_sim_01',
+      requester_id: 'agent_research_01',
+      capability: 'security-audit@1.0',
+      deadline: '2028-01-01T00:00:00Z',
+      budget_cap: '20.00',
+    },
+  });
+  assert.equal(sim.safe_to_execute, true);
+  assert.equal(sim.policy_decision, 'ALLOW');
+
+  const precheck = await client.protocol.precheck({
+    agent_id: 'agent_security_02',
+    capability: 'security-audit@1.0',
+    estimated_amount: '15.00',
+    currency: 'USDC',
+  });
+  assert.equal(precheck.eligibility, 'ELIGIBLE');
+});
+
+
 
 
 

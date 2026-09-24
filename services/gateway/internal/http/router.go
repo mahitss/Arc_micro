@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
@@ -21,6 +22,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/network"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/operations"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/protocol"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/runtime"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/service"
@@ -585,6 +587,39 @@ func NewRouter(
 		mux.HandleFunc("GET /api/fabric/objectives/{id}/why-not", fabricHandler.HandleExplainWhyNot)
 		mux.HandleFunc("GET /v1/fabric/metrics", fabricHandler.HandleGetAutonomyMetrics)
 		mux.HandleFunc("GET /api/fabric/metrics", fabricHandler.HandleGetAutonomyMetrics)
+
+		// Section 20: Task 16 Autonomous Economic Protocol v1
+		protoStore := protocol.NewMemoryProtocolStore()
+		protoVal := protocol.NewMessageValidator()
+		protoSigner := protocol.NewProtocolSigner(nil)
+		protoAuth := protocol.NewMemoryAuthenticator()
+		protoRL := protocol.NewRateLimiter(200, time.Minute)
+		protoBoundary := protocol.NewPaymentBoundary(nil, intentService)
+		protoSvc := protocol.NewProtocolService(protoStore, protoVal, nil, protoBoundary, nil)
+		protoGW := protocol.NewProtocolGateway(protoVal, protoSigner, protoAuth, protoRL, protoStore, protoSvc)
+		protoHandler := handlers.NewProtocolHandler(protoGW, protoSvc, protoStore)
+
+		mux.HandleFunc("POST /protocol/v1/messages", protoHandler.HandleProcessMessage)
+		mux.HandleFunc("GET /protocol/v1/agents", protoHandler.HandleAgents)
+		mux.HandleFunc("GET /protocol/v1/agents/{id}", protoHandler.HandleAgents)
+		mux.HandleFunc("GET /protocol/v1/capabilities", protoHandler.HandleCapabilities)
+		mux.HandleFunc("GET /protocol/v1/capabilities/{id}", protoHandler.HandleCapabilities)
+		mux.HandleFunc("POST /protocol/v1/capabilities/query", protoHandler.HandleCapabilities)
+		mux.HandleFunc("POST /protocol/v1/requests", protoHandler.HandleServiceRequest)
+		mux.HandleFunc("POST /protocol/v1/quotes", protoHandler.HandleQuotes)
+		mux.HandleFunc("GET /protocol/v1/quotes/{id}", protoHandler.HandleQuotes)
+		mux.HandleFunc("POST /protocol/v1/negotiate", protoHandler.HandleNegotiate)
+		mux.HandleFunc("POST /protocol/v1/contracts", protoHandler.HandleContracts)
+		mux.HandleFunc("POST /protocol/v1/contracts/{id}/accept", protoHandler.HandleContracts)
+		mux.HandleFunc("GET /protocol/v1/contracts/{id}", protoHandler.HandleContracts)
+		mux.HandleFunc("POST /protocol/v1/results", protoHandler.HandleResults)
+		mux.HandleFunc("POST /protocol/v1/payments", protoHandler.HandlePayments)
+		mux.HandleFunc("GET /protocol/v1/payments/{id}", protoHandler.HandlePayments)
+		mux.HandleFunc("POST /protocol/v1/heartbeat", protoHandler.HandleHeartbeat)
+		mux.HandleFunc("POST /protocol/v1/simulate", protoHandler.HandleSimulate)
+		mux.HandleFunc("POST /protocol/v1/precheck", protoHandler.HandlePrecheck)
+		mux.HandleFunc("GET /protocol/v1/traffic", protoHandler.HandleTraffic)
+		mux.HandleFunc("GET /protocol/v1/security", protoHandler.HandleSecurity)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {

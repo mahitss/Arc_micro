@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentManifestV1",
+  "description": "AgentPay Autonomous Economic Protocol Agent Manifest v1.0 (INV-162)",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "agent_id",
+    "organization_id",
+    "display_name",
+    "public_key",
+    "supported_protocols",
+    "capabilities",
+    "endpoint_url",
+    "availability",
+    "registered_at"
+  ],
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^agent_[a-zA-Z0-9_-]+$"
+    },
+    "organization_id": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "public_key": {
+      "type": "string",
+      "description": "Ed25519 public key in format ed25519:<hex> or hex"
+    },
+    "supported_protocols": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "capabilities": {
+      "type": "array",
+      "items": { "$ref": "capability.json" },
+      "minItems": 1
+    },
+    "endpoint_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "reputation_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "availability": {
+      "type": "string",
+      "enum": ["AVAILABLE", "BUSY", "OFFLINE"]
+    },
+    "registered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_heartbeat_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "policy_compliance": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

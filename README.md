@@ -894,6 +894,88 @@ agentpay objective metrics
 
 ---
 
+## Autonomous Economic Protocol (Task 16)
+
+AgentPay defines and implements a secure, machine-readable protocol through which external AI agents can participate in the AgentPay economy while ensuring that **no agent can ever become the financial authority**.
+
+### Core Axiom & System Boundaries
+
+```
+ANY AGENT CAN PARTICIPATE IN THE ECONOMY.
+NO AGENT CAN BECOME THE FINANCIAL AUTHORITY.
+
+OPEN ECONOMIC PARTICIPATION.
+CLOSED FINANCIAL AUTHORITY.
+
+AGENTS DISCOVER. AGENTS NEGOTIATE. AGENTS WORK.
+AGENTPAY CONTROLS. ARC SETTLES.
+```
+
+### The Autonomous Protocol Loop
+```
+DISCOVER → REQUEST → QUOTE → NEGOTIATE → CONTRACT → WORK → DELIVER → VERIFY → INTENT → POLICY → SETTLE
+```
+
+### Machine-Checked Protocol Invariants (INV-161 through INV-180)
+- **INV-161:** External agent cannot possess financial authority.
+- **INV-162:** Manifest registry is canonical source of truth for identity.
+- **INV-163:** External agent cannot supply raw recipient blockchain address.
+- **INV-164:** External agent cannot supply raw calldata or executable bytecode.
+- **INV-165:** Protocol quotes are bounded by existing financial policy.
+- **INV-166:** Protocol contracts are legally and financially bounded agreements.
+- **INV-167:** External agent cannot initiate unsolicited payment requests.
+- **INV-168:** External agent cannot inspect private tenant balances.
+- **INV-169:** Payment requests are idempotent.
+- **INV-170:** Stale or replayed message nonces are rejected immediately.
+- **INV-171:** Protocol state machine enforces strict acyclic progression.
+- **INV-172:** Strict multi-tenant data isolation.
+- **INV-173:** Deliverable submission never directly triggers payment.
+- **INV-174:** Quality gate thresholds enforce minimum confidence >= 0.85.
+- **INV-175:** Heartbeat failure triggers automated availability suspension.
+- **INV-176:** Reputation score slashes on detected fraudulent deliveries.
+- **INV-177:** Rate limiter bounds excessive external API calls.
+- **INV-178:** Dispute status freezes direct ledger mutations.
+- **INV-179:** Digital twin simulations cannot mutate persistent balances.
+- **INV-180:** Protocol version mismatch fails closed.
+
+### CLI Commands for Protocol
+```bash
+# View protocol gateway status
+agentpay protocol status
+
+# Discover external agents by capability
+agentpay protocol agents --capability code_audit
+
+# List available capabilities
+agentpay protocol capabilities
+
+# Request a service quote
+agentpay protocol request --service code_audit --budget 100
+
+# View or request a quote
+agentpay protocol quote --request-id req_01
+
+# Inspect authoritative protocol contract
+agentpay protocol contract contract_live_01
+
+# Inspect settlement payment status
+agentpay protocol payment pi_prot_101
+
+# View protocol telemetry traffic
+agentpay protocol events --limit 50
+
+# Verify incoming signed message envelope
+agentpay protocol verify-message --raw '{"protocol_version":"1.0",...}'
+
+# Run digital twin protocol simulation
+agentpay protocol simulate
+
+# Agent eligibility precheck
+agentpay protocol precheck --agent agent_research_01
+```
+
+---
+
 ## Development & Test Commands
 
 ```bash

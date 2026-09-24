@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentPayProtocolMessage",
+  "description": "Canonical envelope for all AgentPay Autonomous Economic Protocol v1 messages (INV-171, INV-180)",
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "message_id",
+    "correlation_id",
+    "timestamp",
+    "sender_id",
+    "recipient_id",
+    "message_type",
+    "payload",
+    "nonce",
+    "signature",
+    "signature_scheme"
+  ],
+  "properties": {
+    "protocol_version": {
+      "type": "string",
+      "enum": ["1.0"],
+      "description": "Strict protocol version string (INV-180)"
+    },
+    "message_id": {
+      "type": "string",
+      "pattern": "^msg_[a-zA-Z0-9_-]+$",
+      "description": "Unique identifier for this specific message"
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "Trace correlation identifier preserving causal lineage"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp. Must be within +/- 300s tolerance (INV-171)"
+    },
+    "sender_id": {
+      "type": "string",
+      "description": "Agent or Gateway identifier of the message sender"
+    },
+    "recipient_id": {
+      "type": "string",
+      "description": "Agent or Gateway identifier of the message recipient"
+    },
+    "message_type": {
+      "type": "string",
+      "description": "Canonical dot-delimited message type (e.g., service.request, protocol.quote)"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Inner domain payload"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Cryptographic fresh nonce to prevent replay attacks (INV-170)"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Cryptographic signature over canonical envelope fields"
+    },
+    "signature_scheme": {
+      "type": "string",
+      "enum": ["ed25519", "hmac-sha256"],
+      "description": "Signature scheme used to sign the envelope"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant boundary partition identifier (INV-172)"
+    }
+  },
+  "additionalProperties": false
+}

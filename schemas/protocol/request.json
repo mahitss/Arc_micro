@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ServiceRequest",
+  "description": "Structured service request payload submitted by external agents (INV-165)",
+  "type": "object",
+  "required": [
+    "request_id",
+    "requester_id",
+    "capability",
+    "deadline",
+    "budget_cap"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string"
+    },
+    "requester_id": {
+      "type": "string"
+    },
+    "capability": {
+      "type": "string"
+    },
+    "input_data": {
+      "type": "object"
+    },
+    "constraints": {
+      "type": "object"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "budget_cap": {
+      "type": "string",
+      "description": "Maximum budget in USDC requester is willing to authorize"
+    },
+    "quality_requirements": {
+      "type": "object"
+    },
+    "risk_requirements": {
+      "type": "object"
+    },
+    "result_requirements": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProtocolQuote",
+  "description": "Structured quote proposal returned by provider agents (INV-165)",
+  "type": "object",
+  "required": [
+    "quote_id",
+    "provider_id",
+    "request_id",
+    "amount",
+    "currency",
+    "expiration",
+    "expected_duration_seconds",
+    "deliverables"
+  ],
+  "properties": {
+    "quote_id": {
+      "type": "string"
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "string",
+      "description": "Quote price in specified currency"
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["USDC"]
+    },
+    "expiration": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expected_duration_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deliverables": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "cancellation_terms": {
+      "type": "string"
+    },
+    "verification_requirements": {
+      "type": "string"
+    },
+    "policy_snapshot_hash": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

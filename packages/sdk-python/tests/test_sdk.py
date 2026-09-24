@@ -1091,6 +1091,120 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         self.assertFalse(hasattr(client.fabric, "private_key"))
         self.assertFalse(hasattr(client, "private_key"))
 
+    @patch("requests.request")
+    def test_task_16_protocol_client(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.status_code = 200
+        mock_resp.headers = {"x-request-id": "req_proto_test"}
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_proto_key")
+        self.assertTrue(hasattr(client, "protocol"))
+
+        # 1. Discover agents
+        mock_resp.json.return_value = [
+            {
+                "protocol_version": "1.0",
+                "agent_id": "agent_security_02",
+                "display_name": "VigilSec",
+                "capabilities": [{"capability_id": "security-audit@1.0"}],
+            }
+        ]
+        agents = client.protocol.discover_agents("security-audit@1.0")
+        self.assertEqual(len(agents), 1)
+        self.assertEqual(agents[0]["agent_id"], "agent_security_02")
+
+        # 2. Request Quote
+        mock_resp.json.return_value = {
+            "quote_id": "quote_py_01",
+            "provider_id": "agent_security_02",
+            "amount": "18.50",
+            "currency": "USDC",
+        }
+        quote = client.protocol.request_quote({
+            "request_id": "req_py_01",
+            "capability": "security-audit@1.0",
+            "budget_cap": "20.00",
+            "deadline": "2028-01-01T00:00:00Z",
+        })
+        self.assertEqual(quote["quote_id"], "quote_py_01")
+        self.assertEqual(quote["amount"], "18.50")
+
+        # 3. Negotiate
+        mock_resp.json.return_value = {
+            "negotiation_id": "neg_py_01",
+            "round": 2,
+            "proposed_price": "15.00",
+        }
+        neg = client.protocol.negotiate({
+            "negotiation_id": "neg_py_01",
+            "round": 1,
+            "proposed_price": "15.00",
+        })
+        self.assertEqual(neg["proposed_price"], "15.00")
+
+        # 4. Accept Contract
+        mock_resp.json.return_value = {
+            "contract_id": "ctr_py_01",
+            "state": "ACTIVE",
+            "total_amount": "15.00",
+        }
+        ctr = client.protocol.accept_contract("ctr_py_01")
+        self.assertEqual(ctr["state"], "ACTIVE")
+
+        # 5. Submit Result
+        mock_resp.json.return_value = {
+            "decision": "ACCEPT",
+            "confidence": 0.99,
+            "eligible_for_payment": True,
+        }
+        res = client.protocol.submit_result({
+            "result_id": "res_py_01",
+            "contract_id": "ctr_py_01",
+            "result_hash": "hash_py_seal",
+            "deliverable_data": {"findings": []},
+        })
+        self.assertEqual(res["decision"], "ACCEPT")
+        self.assertTrue(res["eligible_for_payment"])
+
+        # 6. Request Payment
+        mock_resp.json.return_value = {
+            "decision": "AUTHORIZED",
+            "payment_intent_id": "pi_proto_py_01",
+        }
+        pay = client.protocol.request_payment({
+            "contract_id": "ctr_py_01",
+            "milestone_id": "ms_01",
+            "amount": "15.00",
+            "currency": "USDC",
+            "recipient_service_id": "service_audit_pro",
+            "result_reference": "res_py_01",
+        })
+        self.assertEqual(pay["decision"], "AUTHORIZED")
+
+        # 7. Simulation & Precheck
+        mock_resp.json.return_value = {
+            "policy_decision": "ALLOW",
+            "risk_score": 10,
+            "safe_to_execute": True,
+        }
+        sim = client.protocol.simulate({"service_request": {"request_id": "req_1"}})
+        self.assertTrue(sim["safe_to_execute"])
+
+        mock_resp.json.return_value = {"eligibility": "ELIGIBLE"}
+        pre = client.protocol.precheck({"agent_id": "agent_01", "capability": "sec"})
+        self.assertEqual(pre["eligibility"], "ELIGIBLE")
+
+        # 8. Security / Traffic
+        mock_resp.json.return_value = [{"traffic_id": "trf_01", "status": "PROCESSED"}]
+        traffic = client.protocol.get_traffic()
+        self.assertEqual(len(traffic), 1)
+
+        # 9. Invariant: External agent cannot sign financial transactions (INV-162)
+        self.assertFalse(hasattr(client.protocol, "private_key"))
+        self.assertFalse(hasattr(client.protocol, "sign_transaction"))
+
 
 if __name__ == "__main__":
     unittest.main()

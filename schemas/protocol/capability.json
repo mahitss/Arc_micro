@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CapabilityDescriptor",
+  "description": "Structured capability descriptor published by external agents (INV-162)",
+  "type": "object",
+  "required": [
+    "capability_id",
+    "name",
+    "description",
+    "version",
+    "pricing_model",
+    "verification_method"
+  ],
+  "properties": {
+    "capability_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "object"
+    },
+    "pricing_model": {
+      "type": "string",
+      "enum": ["FIXED", "PER_UNIT", "AUCTION", "OUTCOME_BASED"]
+    },
+    "base_price_usdc": {
+      "type": "string"
+    },
+    "sla_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verification_method": {
+      "type": "string"
+    },
+    "reputation_minimum": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "additionalProperties": false
+}

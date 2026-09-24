@@ -69,6 +69,14 @@ import {
   printObjectiveWhyNot,
   printObjectiveState,
   printAutonomyMetrics,
+  printProtocolStatus,
+  printProtocolAgents,
+  printProtocolCapabilities,
+  printProtocolQuote,
+  printProtocolContract,
+  printProtocolPayment,
+  printProtocolTraffic,
+  printProtocolVerify,
 } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
@@ -981,6 +989,98 @@ test('AgentPay CLI Output — Task 15 Autonomous Economic Fabric Formatters', ()
     printObjectiveWhyNot(mockWhyNot);
     printObjectiveState(mockState);
     printAutonomyMetrics(mockMetrics);
+  });
+});
+
+test('AgentPay CLI Output — Task 16 Protocol Printers', () => {
+  const mockStatus = {
+    version: '1.0',
+    status: 'ONLINE',
+    connected_agents: 4,
+    active_contracts: 2,
+    settled_payments: 12,
+  };
+
+  const mockAgent = {
+    agent_id: 'agent_research_01',
+    display_name: 'Deep Research Agent',
+    organization_id: 'org_acme',
+    availability: 'AVAILABLE',
+    supported_protocols: ['agentpay/1.0'],
+    capabilities: [
+      { capability_id: 'market_research', name: 'Market Research', pricing_model: 'FIXED' },
+    ],
+  };
+
+  const mockCap = {
+    capability_id: 'security_audit',
+    agent_id: 'agent_security_02',
+    pricing_model: 'FIXED',
+    base_price: '50.00',
+  };
+
+  const mockQuote = {
+    quote_id: 'quote_123',
+    provider_id: 'agent_security_02',
+    request_id: 'req_123',
+    amount: '45.00',
+    currency: 'USDC',
+    expected_duration_seconds: 300,
+    expiration: '2026-09-24T18:00:00Z',
+    deliverables: ['audit_report.pdf'],
+    policy_snapshot_hash: 'sha256_mock_hash',
+  };
+
+  const mockContract = {
+    contract_id: 'contract_789',
+    requester_id: 'agent_research_01',
+    provider_id: 'agent_security_02',
+    capability: 'security_audit',
+    state: 'ACTIVE',
+    total_amount: '45.00',
+    currency: 'USDC',
+    deadline: '2026-09-25T12:00:00Z',
+    policy_snapshot_hash: 'sha256_mock_hash',
+    milestones: [{ milestone_id: 'm1' }],
+  };
+
+  const mockPayment = {
+    decision: 'APPROVED',
+    payment_intent_id: 'pi_prot_456',
+    policy_reference: 'RULE_BUDGET_VERIFIED',
+    risk_reference: 'LOW_RISK',
+    recommended_safe_action: 'SETTLE_ARC_NETTED',
+  };
+
+  const mockTraffic = [
+    {
+      traffic_id: 'tr_1',
+      timestamp: '2026-09-24T12:00:00Z',
+      message_type: 'service.request',
+      sender_id: 'agent_research_01',
+      recipient_id: 'agentpay_gateway',
+      status: 'PROCESSED',
+      correlation_id: 'cor_1',
+      latency_ms: 5,
+    },
+  ];
+
+  const mockVerify = {
+    valid: true,
+    sender_id: 'agent_research_01',
+    message_id: 'msg_999',
+    algorithm: 'HMAC-SHA256',
+  };
+
+  assert.doesNotThrow(() => {
+    printProtocolStatus(mockStatus);
+    printProtocolAgents([mockAgent]);
+    printProtocolCapabilities([mockCap]);
+    printProtocolQuote(mockQuote);
+    printProtocolContract(mockContract);
+    printProtocolPayment(mockPayment);
+    printProtocolTraffic(mockTraffic);
+    printProtocolVerify(mockVerify);
   });
 });
 
