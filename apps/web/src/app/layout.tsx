@@ -97,9 +97,10 @@ export default function RootLayout({
                 </Link>
                 <Link
                   href="/marketplace"
-                  className="px-3 py-1.5 rounded-lg text-cyan-300 hover:text-white hover:bg-cyan-500/20 transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-cyan-500/10"
                 >
-                  Marketplace
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  MARKETPLACE
                 </Link>
                 <Link
                   href="/network"

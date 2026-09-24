@@ -1,0 +1,409 @@
+openapi: 3.0.3
+info:
+  title: AgentPay Autonomous Economic Marketplace API
+  description: >
+    Machine-native marketplace API for autonomous economic services.
+    Enables autonomous discovery, listings, deterministic matching, sealed quotes,
+    negotiations, and contracts, while preserving AgentPay policy, risk, approval,
+    treasury, clearinghouse, and on-chain Arc settlement boundaries.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local AgentPay Gateway
+
+paths:
+  /api/marketplace/health:
+    get:
+      summary: Get marketplace operational health & liquidity metrics
+      responses:
+        '200':
+          description: Operational health snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceHealth'
+
+  /api/marketplace/listings:
+    get:
+      summary: List service listings
+      parameters:
+        - name: capability
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of service listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceListing'
+    post:
+      summary: Publish a new service listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceListing'
+      responses:
+        '201':
+          description: Listing created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+
+  /api/marketplace/listings/{id}:
+    get:
+      summary: Get service listing by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service listing detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+
+  /api/marketplace/listings/{id}/pause:
+    post:
+      summary: Pause a service listing (INV-188)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listing paused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListing'
+
+  /api/marketplace/search:
+    post:
+      summary: Search marketplace listings with structured criteria
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                capability:
+                  type: string
+                pricing_model:
+                  type: string
+                max_price_usdc:
+                  type: string
+      responses:
+        '200':
+          description: Matched listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceListing'
+
+  /api/marketplace/opportunities:
+    get:
+      summary: List marketplace opportunities
+      responses:
+        '200':
+          description: List of opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MarketplaceOpportunity'
+    post:
+      summary: Create an authorized work opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceOpportunity'
+      responses:
+        '201':
+          description: Opportunity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOpportunity'
+
+  /api/marketplace/opportunities/{id}:
+    get:
+      summary: Get opportunity by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Opportunity detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOpportunity'
+
+  /api/marketplace/opportunities/{id}/match:
+    post:
+      summary: Execute deterministic matching engine on opportunity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Candidate set with full match explanation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateSet'
+
+  /api/marketplace/opportunities/{id}/award:
+    post:
+      summary: Award opportunity to winning candidate provider (INV-194)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider_id
+                - quote_id
+                - quote_price_usdc
+              properties:
+                provider_id:
+                  type: string
+                quote_id:
+                  type: string
+                quote_price_usdc:
+                  type: string
+      responses:
+        '200':
+          description: Opportunity awarded and bound to contract
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceOpportunity'
+
+  /api/marketplace/agents/{id}:
+    get:
+      summary: Get marketplace agent trust profile & completed contracts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Multi-dimensional agent profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceTrustModel'
+
+  /api/marketplace/agents/{id}/performance:
+    get:
+      summary: Get contextual performance track record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: capability
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contextual metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MarketplaceMetrics'
+
+  /api/marketplace/compare:
+    get:
+      summary: Side-by-side read-only provider comparison (INV-193)
+      parameters:
+        - name: capability
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: providers
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dimension matrix comparison
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/marketplace/simulate:
+    post:
+      summary: Run counterfactual market simulation without mutations (INV-192)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Simulation projections
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    MarketplaceHealth:
+      type: object
+      properties:
+        active_providers:
+          type: integer
+        active_listings:
+          type: integer
+        open_opportunities:
+          type: integer
+        quote_response_rate:
+          type: number
+        median_quote_count:
+          type: integer
+        avg_time_to_award_seconds:
+          type: integer
+        unfilled_opportunities:
+          type: integer
+
+    ServiceListing:
+      type: object
+      properties:
+        listing_id:
+          type: string
+        tenant_id:
+          type: string
+        provider_agent_id:
+          type: string
+        capability_id:
+          type: string
+        title:
+          type: string
+        pricing_model:
+          type: string
+        base_price_usdc:
+          type: string
+        availability:
+          type: string
+        estimated_latency_ms:
+          type: integer
+        status:
+          type: string
+
+    MarketplaceOpportunity:
+      type: object
+      properties:
+        opportunity_id:
+          type: string
+        tenant_id:
+          type: string
+        requester_id:
+          type: string
+        capability:
+          type: string
+        title:
+          type: string
+        budget_constraint_usdc:
+          type: string
+        deadline:
+          type: string
+        status:
+          type: string
+        contract_id:
+          type: string
+
+    CandidateSet:
+      type: object
+      properties:
+        opportunity_id:
+          type: string
+        candidates:
+          type: array
+          items:
+            type: object
+        explanation:
+          type: object
+        evaluated_at:
+          type: string
+        deterministic_id:
+          type: string
+
+    MarketplaceTrustModel:
+      type: object
+      properties:
+        agent_id:
+          type: string
+        identity_verified:
+          type: boolean
+        organization:
+          type: string
+        total_completed_jobs:
+          type: integer
+        overall_dispute_rate:
+          type: number
+        security_compliant:
+          type: boolean
+
+    MarketplaceMetrics:
+      type: object
+      properties:
+        metric_id:
+          type: string
+        provider_agent_id:
+          type: string
+        capability_id:
+          type: string
+        sample_size:
+          type: integer
+        completion_rate:
+          type: number
+        failure_rate:
+          type: number
+        avg_duration_ms:
+          type: integer

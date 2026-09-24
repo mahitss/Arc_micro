@@ -3180,6 +3180,238 @@ export interface PrecheckResponse {
   max_allowable_budget: string;
 }
 
+// ----------------------------------------------------------------------------
+// TASK 17: Autonomous Economic Marketplace Types
+// ----------------------------------------------------------------------------
+
+export type PricingModel =
+  | 'FIXED'
+  | 'PER_TASK'
+  | 'PER_UNIT'
+  | 'MILESTONE'
+  | 'TIME_BASED'
+  | 'USAGE_BASED'
+  | 'NEGOTIATED';
+
+export type ListingStatus = 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'SUSPENDED' | 'RETIRED';
+
+export type AvailabilityStatus = 'AVAILABLE' | 'LIMITED' | 'BUSY' | 'OFFLINE' | 'MAINTENANCE';
+
+export type OpportunityStatus =
+  | 'OPEN'
+  | 'MATCHING'
+  | 'QUOTING'
+  | 'NEGOTIATING'
+  | 'AWARDED'
+  | 'EXECUTING'
+  | 'VERIFYING'
+  | 'SETTLING'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'DISPUTED'
+  | 'EXPIRED'
+  | 'FAILED';
+
+export interface ServiceListing {
+  listing_id: string;
+  tenant_id: string;
+  provider_agent_id: string;
+  capability_id: string;
+  title: string;
+  description?: string;
+  input_schema?: Record<string, unknown>;
+  output_schema?: Record<string, unknown>;
+  pricing_model: PricingModel;
+  base_price_usdc: string;
+  availability: AvailabilityStatus;
+  estimated_latency_ms: number;
+  quality_requirements?: Record<string, unknown>;
+  supported_protocol_versions: string[];
+  verification_method: string;
+  status: ListingStatus;
+  max_concurrent_jobs?: number;
+  rate_limit_per_minute?: number;
+  created_at: string;
+  updated_at: string;
+  version: number;
+}
+
+export interface MarketplaceOpportunity {
+  opportunity_id: string;
+  tenant_id: string;
+  requester_id: string;
+  capability: string;
+  title: string;
+  requirements?: Record<string, unknown>;
+  deadline: string;
+  budget_constraint_usdc: string;
+  quality_requirement?: Record<string, unknown>;
+  risk_requirement?: Record<string, unknown>;
+  constraints?: Record<string, unknown>;
+  status: OpportunityStatus;
+  awarded_provider_id?: string;
+  awarded_quote_id?: string;
+  contract_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CandidateMatch {
+  provider_id: string;
+  listing_id: string;
+  capability_match: boolean;
+  availability: AvailabilityStatus;
+  estimated_cost_usdc: string;
+  estimated_latency_ms: number;
+  historical_success_rate: number;
+  contextual_score: number;
+  risk_score: number;
+  policy_compatible: boolean;
+  confidence: number;
+  sample_size: number;
+  rank: number;
+  score: number;
+  match_reasons: string[];
+  disqualification?: string;
+}
+
+export interface MatchExplanation {
+  opportunity_id: string;
+  selected_provider_id: string;
+  selected_listing_id: string;
+  capability_match: string;
+  deadline_feasibility: string;
+  policy_status: string;
+  risk_status: string;
+  availability_status: string;
+  quote_amount_usdc: string;
+  historical_success: string;
+  sample_size: number;
+  tie_break_reason: string;
+  alternatives_rejected?: Record<string, string>;
+}
+
+export interface CandidateSet {
+  opportunity_id: string;
+  candidates: CandidateMatch[];
+  selected_match?: CandidateMatch;
+  explanation: MatchExplanation;
+  evaluated_at: string;
+  deterministic_id: string;
+}
+
+export interface MarketplaceMetrics {
+  metric_id: string;
+  tenant_id: string;
+  provider_agent_id: string;
+  capability_id: string;
+  sample_size: number;
+  completion_rate: number;
+  failure_rate: number;
+  timeout_rate: number;
+  avg_duration_ms: number;
+  p50_duration_ms: number;
+  p95_duration_ms: number;
+  quote_accuracy: number;
+  result_acceptance_rate: number;
+  dispute_rate: number;
+  cancellation_rate: number;
+  updated_at: string;
+}
+
+export interface MarketplaceAnomaly {
+  anomaly_id: string;
+  tenant_id: string;
+  provider_agent_id: string;
+  anomaly_type: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  evidence?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface MarketplaceTrustModel {
+  agent_id: string;
+  identity_verified: boolean;
+  organization: string;
+  total_completed_jobs: number;
+  overall_dispute_rate: number;
+  security_compliant: boolean;
+  contextual_performance: MarketplaceMetrics[];
+  concentration_warning: boolean;
+  active_anomalies: string[];
+}
+
+export interface MarketplaceHealth {
+  active_providers: number;
+  active_listings: number;
+  open_opportunities: number;
+  quote_response_rate: number;
+  median_quote_count: number;
+  avg_time_to_award_seconds: number;
+  unfilled_opportunities: number;
+}
+
+export interface CreateListingRequest {
+  provider_agent_id: string;
+  capability_id: string;
+  title: string;
+  description?: string;
+  pricing_model: PricingModel;
+  base_price_usdc: string;
+  availability?: AvailabilityStatus;
+  estimated_latency_ms?: number;
+  supported_protocol_versions?: string[];
+  verification_method?: string;
+  max_concurrent_jobs?: number;
+}
+
+export interface CreateOpportunityRequest {
+  requester_id: string;
+  capability: string;
+  title: string;
+  requirements?: Record<string, unknown>;
+  deadline?: string;
+  budget_constraint_usdc?: string;
+}
+
+export interface MarketplaceSearchQuery {
+  capability?: string;
+  pricing_model?: PricingModel;
+  max_price_usdc?: string;
+  min_completion_rate?: number;
+  protocol_version?: string;
+  availability?: AvailabilityStatus;
+}
+
+export interface AwardOpportunityRequest {
+  provider_id: string;
+  quote_id: string;
+  quote_price_usdc: string;
+  quote_expires_at?: string;
+}
+
+export interface MarketplaceSimulationRequest {
+  scenario_type: string;
+  opportunity_context: MarketplaceOpportunity;
+  provider_outage_ids?: string[];
+  price_increase_percent?: number;
+  reduced_deadline_hours?: number;
+}
+
+export interface MarketplaceSimulationResult {
+  scenario_type: string;
+  feasible: boolean;
+  projected_winner_id: string;
+  projected_cost_usdc: string;
+  projected_duration_ms: number;
+  remaining_candidate_count: number;
+  worst_case_exposure_usdc: string;
+  policy_clearance: string;
+  simulation_only_label: string;
+}
+
+
 
 
 

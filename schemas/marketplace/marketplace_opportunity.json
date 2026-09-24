@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MarketplaceOpportunity",
+  "description": "Specification for an authorized unit of requested work in the AgentPay Marketplace",
+  "type": "object",
+  "required": [
+    "opportunity_id",
+    "tenant_id",
+    "requester_id",
+    "capability",
+    "title",
+    "deadline",
+    "budget_constraint_usdc",
+    "status"
+  ],
+  "properties": {
+    "opportunity_id": {
+      "type": "string",
+      "pattern": "^opp_[a-zA-Z0-9_-]+$"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "requester_id": {
+      "type": "string",
+      "pattern": "^(agent_|user_|tenant_)[a-zA-Z0-9_-]+$"
+    },
+    "capability": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 256
+    },
+    "requirements": {
+      "type": "object"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "budget_constraint_usdc": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]{1,6})?$"
+    },
+    "quality_requirement": {
+      "type": "object"
+    },
+    "risk_requirement": {
+      "type": "object"
+    },
+    "constraints": {
+      "type": "object"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "MATCHING",
+        "QUOTING",
+        "NEGOTIATING",
+        "AWARDED",
+        "EXECUTING",
+        "VERIFYING",
+        "SETTLING",
+        "COMPLETED",
+        "CANCELLED",
+        "DISPUTED",
+        "EXPIRED",
+        "FAILED"
+      ]
+    },
+    "awarded_provider_id": {
+      "type": "string"
+    },
+    "awarded_quote_id": {
+      "type": "string"
+    },
+    "contract_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1205,9 +1205,138 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         self.assertFalse(hasattr(client.protocol, "private_key"))
         self.assertFalse(hasattr(client.protocol, "sign_transaction"))
 
+    @patch("requests.request")
+    def test_marketplace_client_lifecycle(self, mock_req):
+        client = AgentPay(api_key="ap_test_key", base_url="https://api.agentpay.arc")
+        self.assertIsNotNone(client.marketplace)
+
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_req.return_value = mock_resp
+
+        # 1. Create Listing
+        mock_resp.json.return_value = {
+            "listing_id": "list_sec_py_01",
+            "provider_agent_id": "agent_auditor_01",
+            "capability_id": "sec.audit",
+            "title": "Smart Contract Auditor",
+            "pricing_model": "PER_TASK",
+            "base_price_usdc": "40.00",
+            "status": "ACTIVE",
+        }
+        listing = client.marketplace.create_listing({
+            "provider_agent_id": "agent_auditor_01",
+            "capability_id": "sec.audit",
+            "title": "Smart Contract Auditor",
+            "pricing_model": "PER_TASK",
+            "base_price_usdc": "40.00",
+        })
+        self.assertEqual(listing["listing_id"], "list_sec_py_01")
+        self.assertEqual(listing["status"], "ACTIVE")
+
+        # 2. Pause Listing (INV-188)
+        mock_resp.json.return_value = {"listing_id": "list_sec_py_01", "status": "PAUSED"}
+        paused = client.marketplace.pause_listing("list_sec_py_01")
+        self.assertEqual(paused["status"], "PAUSED")
+
+        # 3. Search
+        mock_resp.json.return_value = [
+            {"listing_id": "list_sec_py_01", "provider_agent_id": "agent_auditor_01"}
+        ]
+        results = client.marketplace.search({"capability": "sec.audit"})
+        self.assertEqual(len(results), 1)
+
+        # 4. Create Opportunity
+        mock_resp.json.return_value = {
+            "opportunity_id": "opp_sec_py_10k",
+            "requester_id": "agent_ciso",
+            "capability": "sec.audit",
+            "budget_constraint_usdc": "50.00",
+            "status": "OPEN",
+        }
+        opp = client.marketplace.create_opportunity({
+            "requester_id": "agent_ciso",
+            "capability": "sec.audit",
+            "title": "Audit 10k events",
+            "budget_constraint_usdc": "50.00",
+        })
+        self.assertEqual(opp["opportunity_id"], "opp_sec_py_10k")
+
+        # 5. Match Providers
+        mock_resp.json.return_value = {
+            "opportunity_id": "opp_sec_py_10k",
+            "candidates": [
+                {"provider_id": "agent_auditor_01", "rank": 1, "estimated_cost_usdc": "40.00"}
+            ],
+            "explanation": {
+                "selected_provider_id": "agent_auditor_01",
+                "capability_match": "MATCH",
+            },
+        }
+        cand_set = client.marketplace.match_providers("opp_sec_py_10k")
+        self.assertEqual(len(cand_set["candidates"]), 1)
+        self.assertEqual(cand_set["explanation"]["selected_provider_id"], "agent_auditor_01")
+
+        # 6. Award Provider
+        mock_resp.json.return_value = {
+            "opportunity_id": "opp_sec_py_10k",
+            "status": "AWARDED",
+            "awarded_provider_id": "agent_auditor_01",
+            "contract_id": "contract_mkt_py_01",
+        }
+        awarded = client.marketplace.award_provider("opp_sec_py_10k", {
+            "provider_id": "agent_auditor_01",
+            "quote_id": "quote_01",
+            "quote_price_usdc": "40.00",
+        })
+        self.assertEqual(awarded["status"], "AWARDED")
+        self.assertEqual(awarded["contract_id"], "contract_mkt_py_01")
+
+        # 7. Agent profile & Compare
+        mock_resp.json.return_value = {
+            "agent_id": "agent_auditor_01",
+            "identity_verified": True,
+            "total_completed_jobs": 142,
+        }
+        profile = client.marketplace.get_agent_profile("agent_auditor_01")
+        self.assertTrue(profile["identity_verified"])
+
+        mock_resp.json.return_value = [
+            {"provider_id": "agent_auditor_01", "base_price_usdc": "40.00"},
+            {"provider_id": "agent_auditor_02", "base_price_usdc": "45.00"},
+        ]
+        compare = client.marketplace.compare_providers("sec.audit", ["agent_auditor_01", "agent_auditor_02"])
+        self.assertEqual(len(compare), 2)
+
+        # 8. Health & Simulation
+        mock_resp.json.return_value = {
+            "active_providers": 24,
+            "active_listings": 68,
+            "open_opportunities": 5,
+        }
+        health = client.marketplace.get_health()
+        self.assertEqual(health["active_providers"], 24)
+
+        mock_resp.json.return_value = {
+            "scenario_type": "PROVIDER_OUTAGE",
+            "feasible": True,
+            "projected_cost_usdc": "45.00",
+            "simulation_only_label": "SIMULATION ONLY: NO MONEY MOVED (INV-192)",
+        }
+        sim = client.marketplace.simulate({
+            "scenario_type": "PROVIDER_OUTAGE",
+            "opportunity_context": opp,
+        })
+        self.assertTrue(sim["feasible"])
+
+        # 9. Invariant: Marketplace cannot hold private keys or bypass financial authority (INV-181)
+        self.assertFalse(hasattr(client.marketplace, "private_key"))
+        self.assertFalse(hasattr(client.marketplace, "authorize_payment"))
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

@@ -23,6 +23,7 @@ from .client import (
     FabricResource,
     AgentPayProtocolClient,
     ProtocolResource,
+    MarketplaceClient,
 )
 from .errors import (
     AgentPayError,
@@ -62,6 +63,7 @@ __all__ = [
     "FabricResource",
     "AgentPayProtocolClient",
     "ProtocolResource",
+    "MarketplaceClient",
     "AgentPayError",
     "ApprovalRequiredError",
     "AuthenticationError",

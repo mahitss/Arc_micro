@@ -1780,6 +1780,137 @@ export function printProtocolVerify(result: any): void {
   console.log('============================================================');
 }
 
+// ----------------------------------------------------------------------------
+// TASK 17: Autonomous Economic Marketplace CLI Formatters
+// ----------------------------------------------------------------------------
+
+export function printMarketplaceStatus(h: any): void {
+  console.log('============================================================');
+  console.log('AGENTPAY AUTONOMOUS ECONOMIC MARKETPLACE STATUS');
+  console.log('============================================================');
+  console.log(`Active Providers:         ${h.active_providers}`);
+  console.log(`Active Listings:          ${h.active_listings}`);
+  console.log(`Open Opportunities:       ${h.open_opportunities}`);
+  console.log(`Quote Response Rate:      ${((h.quote_response_rate || 0.95) * 100).toFixed(1)}%`);
+  console.log(`Median Quote Count:       ${h.median_quote_count || 3}`);
+  console.log(`Avg Time to Award:        ${h.avg_time_to_award_seconds || 45}s`);
+  console.log(`Unfilled Opportunities:   ${h.unfilled_opportunities || 0}`);
+  console.log(`Operational Invariant:    THE MARKETPLACE DECIDES PARTICIPATION.`);
+  console.log(`Financial Invariant:      AGENTPAY DECIDES WHETHER VALUE MOVES.`);
+  console.log('============================================================');
+}
+
+export function printMarketplaceListings(listings: any[]): void {
+  console.log('============================================================');
+  console.log(`MARKETPLACE SERVICE LISTINGS (${listings.length})`);
+  console.log('============================================================');
+  if (listings.length === 0) {
+    console.log('No service listings found matching query.');
+    return;
+  }
+  for (const l of listings) {
+    console.log(`[${l.listing_id}] ${l.title}`);
+    console.log(`  Provider:    ${l.provider_agent_id}`);
+    console.log(`  Capability:  ${l.capability_id}`);
+    console.log(`  Pricing:     ${l.pricing_model} @ ${l.base_price_usdc} USDC`);
+    console.log(`  Status:      ${l.status} | Availability: ${l.availability}`);
+    console.log(`  Latency:     ${l.estimated_latency_ms}ms | Verification: ${l.verification_method}`);
+  }
+  console.log('============================================================');
+}
+
+export function printMarketplaceOpportunity(opp: any): void {
+  console.log('============================================================');
+  console.log(`MARKETPLACE OPPORTUNITY: ${opp.opportunity_id}`);
+  console.log('============================================================');
+  console.log(`Title:          ${opp.title}`);
+  console.log(`Requester:      ${opp.requester_id}`);
+  console.log(`Capability:     ${opp.capability}`);
+  console.log(`Status:         ${opp.status}`);
+  console.log(`Budget Cap:     ${opp.budget_constraint_usdc} USDC`);
+  console.log(`Deadline:       ${opp.deadline}`);
+  if (opp.awarded_provider_id) {
+    console.log(`Awarded To:     ${opp.awarded_provider_id}`);
+    console.log(`Quote ID:       ${opp.awarded_quote_id}`);
+    console.log(`Contract:       ${opp.contract_id}`);
+  }
+  console.log('============================================================');
+}
+
+export function printMarketplaceCandidates(cs: any): void {
+  console.log('============================================================');
+  console.log(`MARKETPLACE CANDIDATE SET: ${cs.opportunity_id}`);
+  console.log('============================================================');
+  console.log(`Candidates Evaluated: ${cs.candidates?.length || 0}`);
+  if (cs.explanation) {
+    console.log('--- WHY THIS PROVIDER? (SELECTION EXPLANATION) ---');
+    console.log(`Selected Provider:   ${cs.explanation.selected_provider_id}`);
+    console.log(`Capability Match:    ${cs.explanation.capability_match}`);
+    console.log(`Deadline Feasible:   ${cs.explanation.deadline_feasibility}`);
+    console.log(`Policy Compatible:   ${cs.explanation.policy_status}`);
+    console.log(`Risk Assessment:     ${cs.explanation.risk_status}`);
+    console.log(`Historical Success:  ${cs.explanation.historical_success} (N=${cs.explanation.sample_size})`);
+    console.log(`Tie-Break Reason:    ${cs.explanation.tie_break_reason}`);
+  }
+  console.log('--- RANKED CANDIDATES ---');
+  for (const c of cs.candidates || []) {
+    console.log(`#${c.rank} ${c.provider_id.padEnd(24)} Price: ${c.estimated_cost_usdc} USDC | Latency: ${c.estimated_latency_ms}ms | Policy: ${c.policy_compatible ? 'PASS' : 'FAIL'}`);
+    if (c.disqualification) {
+      console.log(`   └─ Disqualified: ${c.disqualification}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printMarketplaceCompare(items: any[]): void {
+  console.log('============================================================');
+  console.log(`MARKETPLACE SIDE-BY-SIDE PROVIDER COMPARISON (${items.length})`);
+  console.log('============================================================');
+  for (const item of items) {
+    console.log(`Provider: ${item.provider_id}`);
+    console.log(`  Capability Match:    ${item.capability_match ? 'MATCH' : 'MISMATCH'}`);
+    console.log(`  Base Price:          ${item.base_price_usdc || 'N/A'} USDC`);
+    console.log(`  Availability:        ${item.availability || 'AVAILABLE'}`);
+    console.log(`  Historical Success:  ${item.historical_success || 'N/A'} (N=${item.sample_size || 0})`);
+    console.log(`  Risk Score:          ${item.risk_score || 0} (Policy: ${item.policy_compatible ? 'PASS' : 'FAIL'})`);
+  }
+  console.log('============================================================');
+}
+
+export function printMarketplaceAgentProfile(profile: any): void {
+  console.log('============================================================');
+  console.log(`MARKETPLACE AGENT PROFILE: ${profile.agent_id}`);
+  console.log('============================================================');
+  console.log(`Identity Verified:     ${profile.identity_verified ? 'YES' : 'NO'}`);
+  console.log(`Organization:          ${profile.organization}`);
+  console.log(`Total Completed Jobs:  ${profile.total_completed_jobs}`);
+  console.log(`Dispute Rate:          ${((profile.overall_dispute_rate || 0) * 100).toFixed(2)}%`);
+  console.log(`Security Compliant:    ${profile.security_compliant ? 'YES' : 'NO'}`);
+  console.log(`Concentration Warning: ${profile.concentration_warning ? 'ACTIVE WARNING' : 'NOMINAL'}`);
+  if (profile.active_anomalies?.length > 0) {
+    console.log(`Anomalies Detected:    ${profile.active_anomalies.join(', ')}`);
+  }
+  console.log('============================================================');
+}
+
+export function printMarketplacePerformance(metrics: any[]): void {
+  console.log('============================================================');
+  console.log(`CONTEXTUAL PERFORMANCE METRICS (${metrics.length})`);
+  console.log('============================================================');
+  for (const m of metrics) {
+    console.log(`Capability: ${m.capability_id}`);
+    console.log(`  Sample Size:       ${m.sample_size}`);
+    console.log(`  Completion Rate:   ${((m.completion_rate || 0) * 100).toFixed(1)}%`);
+    console.log(`  Failure Rate:      ${((m.failure_rate || 0) * 100).toFixed(1)}%`);
+    console.log(`  Average Latency:   ${m.avg_duration_ms}ms (P95: ${m.p95_duration_ms}ms)`);
+    console.log(`  Quote Accuracy:    ${((m.quote_accuracy || 0) * 100).toFixed(1)}%`);
+    console.log(`  Acceptance Rate:   ${((m.result_acceptance_rate || 0) * 100).toFixed(1)}%`);
+    console.log(`  Dispute Rate:      ${((m.dispute_rate || 0) * 100).toFixed(1)}%`);
+  }
+  console.log('============================================================');
+}
+
+
 
 
 

@@ -2799,6 +2799,199 @@ test('AgentPay SDK — ProtocolClient Discovery & Lifecycle Flow', async () => {
   assert.equal(precheck.eligibility, 'ELIGIBLE');
 });
 
+test('AgentPay SDK — Task 17 Autonomous Economic Marketplace', async () => {
+  const mockFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const url = typeof input === 'string' ? input : input.toString();
+    const method = init?.method || 'GET';
+
+    if (url.includes('/api/marketplace/listings') && method === 'POST') {
+      if (url.includes('/pause')) {
+        return new Response(JSON.stringify({
+          listing_id: 'list_sec_01',
+          status: 'PAUSED',
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({
+        listing_id: 'list_sec_01',
+        provider_agent_id: 'agent_auditor_01',
+        capability_id: 'sec.audit',
+        title: 'Smart Contract Auditor',
+        pricing_model: 'PER_TASK',
+        base_price_usdc: '40.00',
+        availability: 'AVAILABLE',
+        status: 'ACTIVE',
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/marketplace/search')) {
+      return new Response(JSON.stringify([
+        {
+          listing_id: 'list_sec_01',
+          provider_agent_id: 'agent_auditor_01',
+          capability_id: 'sec.audit',
+          title: 'Smart Contract Auditor',
+          pricing_model: 'PER_TASK',
+          base_price_usdc: '40.00',
+          availability: 'AVAILABLE',
+        }
+      ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/marketplace/opportunities') && method === 'POST') {
+      if (url.includes('/match')) {
+        return new Response(JSON.stringify({
+          opportunity_id: 'opp_sec_10k',
+          candidates: [
+            {
+              provider_id: 'agent_auditor_01',
+              listing_id: 'list_sec_01',
+              capability_match: true,
+              availability: 'AVAILABLE',
+              estimated_cost_usdc: '40.00',
+              rank: 1,
+              score: 0.95,
+              match_reasons: ['Capability MATCH', 'Price within cap'],
+            }
+          ],
+          explanation: {
+            opportunity_id: 'opp_sec_10k',
+            selected_provider_id: 'agent_auditor_01',
+            capability_match: 'MATCH',
+            policy_status: 'ALLOWED',
+          }
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/award')) {
+        return new Response(JSON.stringify({
+          opportunity_id: 'opp_sec_10k',
+          status: 'AWARDED',
+          awarded_provider_id: 'agent_auditor_01',
+          contract_id: 'contract_mkt_opp_sec_10k_agent_auditor_01',
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({
+        opportunity_id: 'opp_sec_10k',
+        requester_id: 'agent_ciso',
+        capability: 'sec.audit',
+        title: 'Audit 10,000 security events',
+        budget_constraint_usdc: '50.00',
+        status: 'OPEN',
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/marketplace/agents/agent_auditor_01')) {
+      return new Response(JSON.stringify({
+        agent_id: 'agent_auditor_01',
+        identity_verified: true,
+        organization: 'Security Guild',
+        total_completed_jobs: 142,
+        overall_dispute_rate: 0.005,
+        security_compliant: true,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/marketplace/compare')) {
+      return new Response(JSON.stringify([
+        { provider_id: 'agent_auditor_01', capability_match: true, base_price_usdc: '40.00' },
+        { provider_id: 'agent_auditor_02', capability_match: true, base_price_usdc: '45.00' }
+      ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/marketplace/health')) {
+      return new Response(JSON.stringify({
+        active_providers: 24,
+        active_listings: 68,
+        open_opportunities: 5,
+        quote_response_rate: 0.96,
+        median_quote_count: 4,
+        avg_time_to_award_seconds: 35,
+        unfilled_opportunities: 0,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/marketplace/simulate')) {
+      return new Response(JSON.stringify({
+        scenario_type: 'PROVIDER_OUTAGE',
+        feasible: true,
+        projected_winner_id: 'agent_auditor_02',
+        projected_cost_usdc: '45.00',
+        worst_case_exposure_usdc: '54.00',
+        policy_clearance: 'ALLOW',
+        simulation_only_label: 'SIMULATION ONLY: NO MONEY MOVED (INV-192)',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    return new Response(JSON.stringify({ error: 'not found' }), { status: 404 });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch as unknown as typeof fetch });
+  assert.ok(client.marketplace);
+
+  // 1. Create listing
+  const listing = await client.marketplace.createListing({
+    provider_agent_id: 'agent_auditor_01',
+    capability_id: 'sec.audit',
+    title: 'Smart Contract Auditor',
+    pricing_model: 'PER_TASK',
+    base_price_usdc: '40.00',
+  });
+  assert.equal(listing.listing_id, 'list_sec_01');
+  assert.equal(listing.status, 'ACTIVE');
+
+  // 2. Pause listing (INV-188)
+  const paused = await client.marketplace.pauseListing('list_sec_01');
+  assert.equal(paused.status, 'PAUSED');
+
+  // 3. Search listings
+  const found = await client.marketplace.search({ capability: 'sec.audit' });
+  assert.equal(found.length, 1);
+  assert.equal(found[0].provider_agent_id, 'agent_auditor_01');
+
+  // 4. Create Opportunity
+  const opp = await client.marketplace.createOpportunity({
+    requester_id: 'agent_ciso',
+    capability: 'sec.audit',
+    title: 'Audit 10,000 security events',
+    budget_constraint_usdc: '50.00',
+  });
+  assert.equal(opp.opportunity_id, 'opp_sec_10k');
+  assert.equal(opp.status, 'OPEN');
+
+  // 5. Match Providers
+  const match = await client.marketplace.matchProviders('opp_sec_10k');
+  assert.equal(match.candidates.length, 1);
+  assert.equal(match.explanation.selected_provider_id, 'agent_auditor_01');
+
+  // 6. Award Provider
+  const awarded = await client.marketplace.awardProvider('opp_sec_10k', {
+    provider_id: 'agent_auditor_01',
+    quote_id: 'quote_audit_01',
+    quote_price_usdc: '40.00',
+  });
+  assert.equal(awarded.status, 'AWARDED');
+  assert.equal(awarded.contract_id, 'contract_mkt_opp_sec_10k_agent_auditor_01');
+
+  // 7. Agent profile & Compare
+  const profile = await client.marketplace.getAgentProfile('agent_auditor_01');
+  assert.equal(profile.identity_verified, true);
+  assert.equal(profile.total_completed_jobs, 142);
+
+  const compare = await client.marketplace.compareProviders('sec.audit', ['agent_auditor_01', 'agent_auditor_02']);
+  assert.equal(compare.length, 2);
+
+  // 8. Health & Simulation
+  const health = await client.marketplace.getHealth();
+  assert.equal(health.active_providers, 24);
+
+  const sim = await client.marketplace.simulate({
+    scenario_type: 'PROVIDER_OUTAGE',
+    opportunity_context: opp,
+  });
+  assert.equal(sim.feasible, true);
+  assert.equal(sim.simulation_only_label, 'SIMULATION ONLY: NO MONEY MOVED (INV-192)');
+});
+
+
 
 
 

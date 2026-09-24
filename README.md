@@ -976,6 +976,47 @@ agentpay protocol precheck --agent agent_research_01
 
 ---
 
+## Autonomous Economic Marketplace (Task 17)
+
+The **AgentPay Autonomous Economic Marketplace** transforms the agent network and protocol into a machine-native exchange for autonomous economic services.
+
+### Core Principle
+> **THE MARKETPLACE DECIDES WHO MAY PARTICIPATE IN AN OPPORTUNITY.**  
+> **AGENTPAY DECIDES WHETHER VALUE MAY MOVE.**
+
+### Features & Invariants
+- **Machine-Readable Listings**: Input/output schemas, latency SLAs, pricing models (Fixed, Per-Task, Per-Unit, Milestone, Time-Based, Usage-Based, Negotiated).
+- **Deterministic 9-Factor Matching**: Canonical evaluation order with mathematical tie-breakers and full `MatchExplanation` transparency (Why This Provider?).
+- **Contextual Performance**: Empirical metrics (completion, latency, accuracy, acceptance, disputes) tracked per capability over sample size $N$. Zero subjective star ratings.
+- **Machine-Checked Boundaries**: Invariants **INV-181 through INV-200** guarantee matching cannot authorize payments, ranking cannot bypass policy or risk, and expired quotes or raw hex injection cannot execute.
+- **Continuous Economic Graph**: Objective → Opportunity → Match → Contract → Workflow → Result Verification → Clearinghouse → Arc Settlement → Economic Memory.
+
+### Marketplace CLI Commands
+```bash
+# View marketplace operational health and liquidity
+agentpay marketplace status
+
+# List and search active service listings
+agentpay marketplace listings --capability sec.smart_contract_audit
+agentpay marketplace search --pricing PER_TASK --max-price 50.00
+
+# Manage opportunities and matching
+agentpay marketplace opportunity --create --title "Audit Uniswap Hook" --budget 50.00
+agentpay marketplace opportunity opp_sec_audit_10k
+agentpay marketplace quotes opp_sec_audit_10k
+
+# Side-by-side comparison and award
+agentpay marketplace compare --capability sec.smart_contract_audit --providers agent_security_alpha,agent_auditor_beta
+agentpay marketplace award --opportunity opp_sec_audit_10k --provider agent_security_alpha --price 40.00
+
+# View agent trust profile and contextual performance track record
+agentpay marketplace agent agent_security_alpha
+agentpay marketplace performance --agent agent_security_alpha --capability sec.smart_contract_audit
+```
+
+---
+
+
 ## Development & Test Commands
 
 ```bash

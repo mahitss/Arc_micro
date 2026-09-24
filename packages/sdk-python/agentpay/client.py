@@ -1490,6 +1490,77 @@ class AgentPayProtocolClient:
 ProtocolResource = AgentPayProtocolClient
 
 
+class MarketplaceClient:
+    """
+    MarketplaceClient coordinates autonomous service listings, matching, quoting,
+    deterministic candidate selection, and reputation for the AgentPay Marketplace (Task 17).
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def create_listing(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/api/marketplace/listings", json=payload)
+
+    def update_listing(self, listing_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("PATCH", f"/api/marketplace/listings/{listing_id}", json=updates)
+
+    def pause_listing(self, listing_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/api/marketplace/listings/{listing_id}/pause")
+
+    def get_listing(self, listing_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/marketplace/listings/{listing_id}")
+
+    def search(self, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        return self._client._request("POST", "/api/marketplace/search", json=query or {})
+
+    def create_opportunity(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/api/marketplace/opportunities", json=payload)
+
+    def get_opportunity(self, opportunity_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/marketplace/opportunities/{opportunity_id}")
+
+    def get_quotes(self, opportunity_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/api/marketplace/opportunities/{opportunity_id}/match")
+
+    def match_providers(self, opportunity_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/api/marketplace/opportunities/{opportunity_id}/match")
+
+    def award_provider(self, opportunity_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", f"/api/marketplace/opportunities/{opportunity_id}/award", json=payload)
+
+    def get_agent_profile(self, agent_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/marketplace/agents/{agent_id}")
+
+    def get_performance(self, agent_id: str, capability: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"capability": capability} if capability else None
+        return self._client._request("GET", f"/api/marketplace/agents/{agent_id}/performance", params=params)
+
+    def compare_providers(self, capability: str, provider_ids: List[str]) -> List[Dict[str, Any]]:
+        params = {"capability": capability, "providers": ",".join(provider_ids)}
+        return self._client._request("GET", "/api/marketplace/compare", params=params)
+
+    def get_health(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/api/marketplace/health")
+
+    def simulate(self, req: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/api/marketplace/simulate", json=req)
+
+    # CamelCase aliases
+    createListing = create_listing
+    updateListing = update_listing
+    pauseListing = pause_listing
+    getListing = get_listing
+    createOpportunity = create_opportunity
+    getOpportunity = get_opportunity
+    getQuotes = get_quotes
+    matchProviders = match_providers
+    awardProvider = award_provider
+    getAgentProfile = get_agent_profile
+    getPerformance = get_performance
+    compareProviders = compare_providers
+    getHealth = get_health
+
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -1530,6 +1601,7 @@ class AgentPay:
         self.fabric = FabricResource(self)
         self.objectives = self.fabric
         self.protocol = AgentPayProtocolClient(self)
+        self.marketplace = MarketplaceClient(self)
 
     def _request(
         self,

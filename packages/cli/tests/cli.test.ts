@@ -77,6 +77,13 @@ import {
   printProtocolPayment,
   printProtocolTraffic,
   printProtocolVerify,
+  printMarketplaceStatus,
+  printMarketplaceListings,
+  printMarketplaceOpportunity,
+  printMarketplaceCandidates,
+  printMarketplaceCompare,
+  printMarketplaceAgentProfile,
+  printMarketplacePerformance,
 } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
@@ -1083,4 +1090,114 @@ test('AgentPay CLI Output — Task 16 Protocol Printers', () => {
     printProtocolVerify(mockVerify);
   });
 });
+
+test('AgentPay CLI — Task 17 Autonomous Economic Marketplace Formatters', () => {
+  const mockHealth = {
+    active_providers: 12,
+    active_listings: 34,
+    open_opportunities: 3,
+    quote_response_rate: 0.98,
+    median_quote_count: 4,
+    avg_time_to_award_seconds: 28,
+    unfilled_opportunities: 0,
+  };
+
+  const mockListing = {
+    listing_id: 'list_cli_01',
+    provider_agent_id: 'agent_auditor_01',
+    capability_id: 'sec.audit',
+    title: 'Smart Contract Auditor',
+    pricing_model: 'PER_TASK',
+    base_price_usdc: '40.00',
+    status: 'ACTIVE',
+    availability: 'AVAILABLE',
+    estimated_latency_ms: 3600000,
+    verification_method: 'hash_check',
+  };
+
+  const mockOpp = {
+    opportunity_id: 'opp_cli_01',
+    title: 'Audit Uniswap Hook',
+    requester_id: 'agent_ciso',
+    capability: 'sec.audit',
+    status: 'OPEN',
+    budget_constraint_usdc: '50.00',
+    deadline: '2026-09-30T00:00:00Z',
+    awarded_provider_id: 'agent_auditor_01',
+    awarded_quote_id: 'quote_1',
+    contract_id: 'contract_1',
+  };
+
+  const mockCandSet = {
+    opportunity_id: 'opp_cli_01',
+    candidates: [
+      {
+        provider_id: 'agent_auditor_01',
+        rank: 1,
+        estimated_cost_usdc: '40.00',
+        estimated_latency_ms: 1200,
+        policy_compatible: true,
+      }
+    ],
+    explanation: {
+      selected_provider_id: 'agent_auditor_01',
+      capability_match: 'MATCH',
+      deadline_feasibility: 'FEASIBLE',
+      policy_status: 'ALLOWED',
+      risk_status: 'WITHIN_LIMIT',
+      historical_success: '98.5%',
+      sample_size: 40,
+      tie_break_reason: 'Lowest price within risk cap',
+    }
+  };
+
+  const mockCompare = [
+    {
+      provider_id: 'agent_auditor_01',
+      capability_match: true,
+      base_price_usdc: '40.00',
+      availability: 'AVAILABLE',
+      historical_success: '98.5%',
+      sample_size: 40,
+      risk_score: 10,
+      policy_compatible: true,
+    }
+  ];
+
+  const mockProfile = {
+    agent_id: 'agent_auditor_01',
+    identity_verified: true,
+    organization: 'Audit DAO',
+    total_completed_jobs: 140,
+    overall_dispute_rate: 0.005,
+    security_compliant: true,
+    concentration_warning: false,
+    active_anomalies: [],
+  };
+
+  const mockPerformance = [
+    {
+      capability_id: 'sec.audit',
+      sample_size: 40,
+      completion_rate: 0.98,
+      failure_rate: 0.02,
+      avg_duration_ms: 1200,
+      p95_duration_ms: 1800,
+      quote_accuracy: 0.99,
+      result_acceptance_rate: 0.99,
+      dispute_rate: 0.005,
+    }
+  ];
+
+  assert.doesNotThrow(() => {
+    printMarketplaceStatus(mockHealth);
+    printMarketplaceListings([mockListing]);
+    printMarketplaceOpportunity(mockOpp);
+    printMarketplaceCandidates(mockCandSet);
+    printMarketplaceCompare(mockCompare);
+    printMarketplaceAgentProfile(mockProfile);
+    printMarketplacePerformance(mockPerformance);
+  });
+});
+
 

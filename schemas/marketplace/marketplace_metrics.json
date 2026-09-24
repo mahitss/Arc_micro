@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MarketplaceMetrics",
+  "description": "Multi-dimensional, sample-aware contextual performance metrics for marketplace providers",
+  "type": "object",
+  "required": [
+    "metric_id",
+    "tenant_id",
+    "provider_agent_id",
+    "capability_id",
+    "sample_size",
+    "completion_rate",
+    "failure_rate",
+    "avg_duration_ms",
+    "p95_duration_ms",
+    "quote_accuracy",
+    "result_acceptance_rate",
+    "dispute_rate",
+    "updated_at"
+  ],
+  "properties": {
+    "metric_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "provider_agent_id": { "type": "string" },
+    "capability_id": { "type": "string" },
+    "sample_size": { "type": "integer", "minimum": 0 },
+    "completion_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "failure_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "timeout_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "avg_duration_ms": { "type": "integer", "minimum": 0 },
+    "p50_duration_ms": { "type": "integer", "minimum": 0 },
+    "p95_duration_ms": { "type": "integer", "minimum": 0 },
+    "quote_accuracy": { "type": "number", "minimum": 0, "maximum": 1 },
+    "result_acceptance_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "dispute_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "cancellation_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

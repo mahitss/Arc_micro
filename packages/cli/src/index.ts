@@ -101,6 +101,13 @@ import {
   printProtocolPayment,
   printProtocolTraffic,
   printProtocolVerify,
+  printMarketplaceStatus,
+  printMarketplaceListings,
+  printMarketplaceOpportunity,
+  printMarketplaceCandidates,
+  printMarketplaceCompare,
+  printMarketplaceAgentProfile,
+  printMarketplacePerformance,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -259,6 +266,16 @@ Commands:
   protocol verify-message          Verify an incoming protocol envelope (--raw or --file)
   protocol simulate                Run digital twin protocol simulation (--request)
   protocol precheck                Check agent eligibility precheck (--agent)
+
+  marketplace status               View marketplace operational health & liquidity
+  marketplace listings             List service listings (--capability)
+  marketplace search               Search listings with filters (--capability, --pricing, --max-price)
+  marketplace opportunity [id]     Get opportunity details or create (--create, --title, --capability, --budget)
+  marketplace quotes <id>          Get quotes and deterministic candidate matches for opportunity
+  marketplace compare              Compare providers side-by-side (--capability, --providers)
+  marketplace award                Award opportunity to provider (--opportunity, --provider, --quote, --price)
+  marketplace agent <id>           View marketplace agent trust profile & completed jobs
+  marketplace performance          View contextual performance metrics (--agent, --capability)
 
 Options:
   --dry-run                        Simulate action without mutating persistent state
@@ -2089,6 +2106,133 @@ async function main(): Promise<void> {
           console.log(`Reasons:             ${(pre.reasons || []).join('; ')}`);
           console.log('============================================================');
         }
+        return;
+      }
+    }
+
+    if (resource === 'marketplace') {
+      const sub = action || 'status';
+      const arg = targetId || (positional[3] as string | undefined);
+
+      if (sub === 'status' || sub === 'health') {
+        const health = await client.marketplace.getHealth();
+        if (isJson) printJson(health);
+        else printMarketplaceStatus(health);
+        return;
+      }
+
+      if (sub === 'listings') {
+        const cap = flags['capability'] as string | undefined;
+        const listings = await client.marketplace.search(cap ? { capability: cap } : {});
+        if (isJson) printJson(listings);
+        else printMarketplaceListings(listings);
+        return;
+      }
+
+      if (sub === 'search') {
+        const q: any = {};
+        if (flags['capability']) q.capability = flags['capability'] as string;
+        if (flags['pricing']) q.pricing_model = flags['pricing'] as any;
+        if (flags['max-price']) q.max_price_usdc = flags['max-price'] as string;
+        const results = await client.marketplace.search(q);
+        if (isJson) printJson(results);
+        else printMarketplaceListings(results);
+        return;
+      }
+
+      if (sub === 'opportunity') {
+        if (flags['create'] || flags['title']) {
+          const title = (flags['title'] as string) || 'Autonomous Opportunity';
+          const cap = (flags['capability'] as string) || 'sec.smart_contract_audit';
+          const budget = (flags['budget'] as string) || '50.00';
+          const reqId = (flags['requester'] as string) || 'agent_cli_user';
+          const opp = await client.marketplace.createOpportunity({
+            requester_id: reqId,
+            capability: cap,
+            title,
+            budget_constraint_usdc: budget,
+          });
+          if (isJson) printJson(opp);
+          else printMarketplaceOpportunity(opp);
+          return;
+        }
+
+        const oppId = (flags['id'] as string) || arg;
+        if (!oppId) {
+          console.error('Error: "marketplace opportunity" requires <opportunity_id> or --create');
+          process.exit(1);
+        }
+        const opp = await client.marketplace.getOpportunity(oppId);
+        if (isJson) printJson(opp);
+        else printMarketplaceOpportunity(opp);
+        return;
+      }
+
+      if (sub === 'quotes' || sub === 'match') {
+        const oppId = (flags['opportunity'] as string) || arg;
+        if (!oppId) {
+          console.error('Error: "marketplace quotes" requires <opportunity_id> or --opportunity <id>');
+          process.exit(1);
+        }
+        const candSet = await client.marketplace.matchProviders(oppId);
+        if (isJson) printJson(candSet);
+        else printMarketplaceCandidates(candSet);
+        return;
+      }
+
+      if (sub === 'compare') {
+        const cap = (flags['capability'] as string) || 'sec.smart_contract_audit';
+        const providersRaw = (flags['providers'] as string) || '';
+        const providers = providersRaw ? providersRaw.split(',') : ['agent_auditor_01', 'agent_auditor_02'];
+        const items = await client.marketplace.compareProviders(cap, providers);
+        if (isJson) printJson(items);
+        else printMarketplaceCompare(items);
+        return;
+      }
+
+      if (sub === 'award') {
+        const oppId = (flags['opportunity'] as string) || arg;
+        const providerId = flags['provider'] as string;
+        const quoteId = (flags['quote'] as string) || 'quote_auto_01';
+        const price = (flags['price'] as string) || '40.00';
+
+        if (!oppId || !providerId) {
+          console.error('Error: "marketplace award" requires --opportunity <id> and --provider <agent_id>');
+          process.exit(1);
+        }
+
+        const awarded = await client.marketplace.awardProvider(oppId, {
+          provider_id: providerId,
+          quote_id: quoteId,
+          quote_price_usdc: price,
+        });
+        if (isJson) printJson(awarded);
+        else printMarketplaceOpportunity(awarded);
+        return;
+      }
+
+      if (sub === 'agent') {
+        const agentId = (flags['id'] as string) || arg;
+        if (!agentId) {
+          console.error('Error: "marketplace agent" requires <agent_id> or --id <agent_id>');
+          process.exit(1);
+        }
+        const profile = await client.marketplace.getAgentProfile(agentId);
+        if (isJson) printJson(profile);
+        else printMarketplaceAgentProfile(profile);
+        return;
+      }
+
+      if (sub === 'performance') {
+        const agentId = (flags['agent'] as string) || arg;
+        if (!agentId) {
+          console.error('Error: "marketplace performance" requires --agent <agent_id>');
+          process.exit(1);
+        }
+        const cap = flags['capability'] as string | undefined;
+        const perf = await client.marketplace.getPerformance(agentId, cap);
+        if (isJson) printJson(perf);
+        else printMarketplacePerformance(perf);
         return;
       }
     }

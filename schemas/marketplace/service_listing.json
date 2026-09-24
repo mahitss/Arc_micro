@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ServiceListing",
+  "description": "Machine-readable specification for published agent services in the AgentPay Autonomous Economic Marketplace",
+  "type": "object",
+  "required": [
+    "listing_id",
+    "provider_agent_id",
+    "capability_id",
+    "title",
+    "pricing_model",
+    "base_price_usdc",
+    "availability",
+    "estimated_latency_ms",
+    "supported_protocol_versions",
+    "verification_method",
+    "status"
+  ],
+  "properties": {
+    "listing_id": {
+      "type": "string",
+      "pattern": "^list_[a-zA-Z0-9_-]+$"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "provider_agent_id": {
+      "type": "string",
+      "pattern": "^(agent_|srv_)[a-zA-Z0-9_-]+$"
+    },
+    "capability_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128
+    },
+    "description": {
+      "type": "string"
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "object"
+    },
+    "pricing_model": {
+      "type": "string",
+      "enum": [
+        "FIXED",
+        "PER_TASK",
+        "PER_UNIT",
+        "MILESTONE",
+        "TIME_BASED",
+        "USAGE_BASED",
+        "NEGOTIATED"
+      ]
+    },
+    "base_price_usdc": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]{1,6})?$"
+    },
+    "availability": {
+      "type": "string",
+      "enum": ["AVAILABLE", "LIMITED", "BUSY", "OFFLINE", "MAINTENANCE"]
+    },
+    "estimated_latency_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "quality_requirements": {
+      "type": "object"
+    },
+    "supported_protocol_versions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "verification_method": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "ACTIVE", "PAUSED", "SUSPENDED", "RETIRED"]
+    },
+    "max_concurrent_jobs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rate_limit_per_minute": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

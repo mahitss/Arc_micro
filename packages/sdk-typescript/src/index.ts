@@ -37,6 +37,7 @@ export { RuntimeResource } from './resources/runtime.js';
 export { OperationsResource } from './resources/operations.js';
 export { FabricResource } from './resources/fabric.js';
 export { ProtocolClient, ProtocolResource } from './resources/protocol.js';
+export { MarketplaceClient } from './resources/marketplace.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
   ProtocolMessage,
@@ -273,4 +274,23 @@ export type {
   VerificationReport,
   DisputeRecord,
   NetworkGraph,
+  PricingModel,
+  ListingStatus,
+  AvailabilityStatus,
+  OpportunityStatus,
+  ServiceListing,
+  MarketplaceOpportunity,
+  CandidateMatch,
+  MatchExplanation,
+  CandidateSet,
+  MarketplaceMetrics,
+  MarketplaceAnomaly,
+  MarketplaceTrustModel,
+  MarketplaceHealth,
+  CreateListingRequest,
+  CreateOpportunityRequest,
+  MarketplaceSearchQuery,
+  AwardOpportunityRequest,
+  MarketplaceSimulationRequest,
+  MarketplaceSimulationResult,
 } from './types.js';

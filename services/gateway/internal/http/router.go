@@ -18,6 +18,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/handlers"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/marketplace"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/metrics"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/network"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/operations"
@@ -620,6 +621,27 @@ func NewRouter(
 		mux.HandleFunc("POST /protocol/v1/precheck", protoHandler.HandlePrecheck)
 		mux.HandleFunc("GET /protocol/v1/traffic", protoHandler.HandleTraffic)
 		mux.HandleFunc("GET /protocol/v1/security", protoHandler.HandleSecurity)
+
+		// Section 21: Task 17 Autonomous Economic Marketplace
+		mktStore := marketplace.NewMemoryMarketplaceStore()
+		mktSvc := marketplace.NewMarketplaceService(mktStore)
+		mktHandler := handlers.NewMarketplaceHandler(mktSvc)
+
+		mux.HandleFunc("GET /api/marketplace/listings", mktHandler.HandleListings)
+		mux.HandleFunc("POST /api/marketplace/listings", mktHandler.HandleListings)
+		mux.HandleFunc("GET /api/marketplace/listings/{id}", mktHandler.HandleListingDetail)
+		mux.HandleFunc("POST /api/marketplace/listings/{id}", mktHandler.HandleListingDetail)
+		mux.HandleFunc("POST /api/marketplace/search", mktHandler.HandleSearchListings)
+		mux.HandleFunc("GET /api/marketplace/opportunities", mktHandler.HandleOpportunities)
+		mux.HandleFunc("POST /api/marketplace/opportunities", mktHandler.HandleOpportunities)
+		mux.HandleFunc("GET /api/marketplace/opportunities/{id}", mktHandler.HandleOpportunityDetail)
+		mux.HandleFunc("POST /api/marketplace/opportunities/{id}/match", mktHandler.HandleOpportunityDetail)
+		mux.HandleFunc("POST /api/marketplace/opportunities/{id}/award", mktHandler.HandleOpportunityDetail)
+		mux.HandleFunc("GET /api/marketplace/agents/{id}", mktHandler.HandleAgentProfile)
+		mux.HandleFunc("GET /api/marketplace/agents/{id}/performance", mktHandler.HandleAgentProfile)
+		mux.HandleFunc("GET /api/marketplace/compare", mktHandler.HandleCompare)
+		mux.HandleFunc("GET /api/marketplace/health", mktHandler.HandleHealth)
+		mux.HandleFunc("POST /api/marketplace/simulate", mktHandler.HandleSimulate)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {

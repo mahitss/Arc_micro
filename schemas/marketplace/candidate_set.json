@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CandidateSet",
+  "description": "Deterministic ranking output and candidate set for an opportunity",
+  "type": "object",
+  "required": [
+    "opportunity_id",
+    "candidates",
+    "explanation",
+    "evaluated_at",
+    "deterministic_id"
+  ],
+  "properties": {
+    "opportunity_id": {
+      "type": "string"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "provider_id",
+          "listing_id",
+          "capability_match",
+          "availability",
+          "estimated_cost_usdc",
+          "estimated_latency_ms",
+          "rank",
+          "policy_compatible"
+        ],
+        "properties": {
+          "provider_id": { "type": "string" },
+          "listing_id": { "type": "string" },
+          "capability_match": { "type": "boolean" },
+          "availability": { "type": "string" },
+          "estimated_cost_usdc": { "type": "string" },
+          "estimated_latency_ms": { "type": "integer" },
+          "historical_success_rate": { "type": "number" },
+          "contextual_score": { "type": "number" },
+          "risk_score": { "type": "integer" },
+          "policy_compatible": { "type": "boolean" },
+          "confidence": { "type": "number" },
+          "sample_size": { "type": "integer" },
+          "rank": { "type": "integer" },
+          "score": { "type": "number" },
+          "match_reasons": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "disqualification": { "type": "string" }
+        }
+      }
+    },
+    "selected_match": {
+      "type": "object"
+    },
+    "explanation": {
+      "type": "object",
+      "required": [
+        "opportunity_id",
+        "selected_provider_id",
+        "capability_match",
+        "deadline_feasibility",
+        "policy_status",
+        "risk_status",
+        "quote_amount_usdc",
+        "tie_break_reason"
+      ],
+      "properties": {
+        "opportunity_id": { "type": "string" },
+        "selected_provider_id": { "type": "string" },
+        "selected_listing_id": { "type": "string" },
+        "capability_match": { "type": "string" },
+        "deadline_feasibility": { "type": "string" },
+        "policy_status": { "type": "string" },
+        "risk_status": { "type": "string" },
+        "availability_status": { "type": "string" },
+        "quote_amount_usdc": { "type": "string" },
+        "historical_success": { "type": "string" },
+        "sample_size": { "type": "integer" },
+        "tie_break_reason": { "type": "string" },
+        "alternatives_rejected": { "type": "object" }
+      }
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "deterministic_id": {
+      "type": "string"
+    }
+  }
+}
