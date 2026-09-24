@@ -1480,5 +1480,593 @@ test('AgentPay SDK — Economic Constitution Resource', async () => {
   assert.equal(capturedUrl, 'http://localhost:8080/v1/constitutions/evaluate');
 });
 
+test('AgentPay SDK — Autonomous Economic Clearinghouse Resource (Task 10)', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+
+    if (capturedUrl.includes('/v1/economy/obligations')) {
+      if (capturedMethod === 'POST') {
+        return new Response(
+          JSON.stringify({
+            obligation_id: 'ob_sdk_01',
+            payer_agent_id: 'agent_a',
+            payee_agent_id: 'agent_b',
+            amount: '30000000',
+            currency: 'USDC',
+            status: 'AUTHORIZED',
+            execution_mode: 'REAL',
+          }),
+          { status: 201, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      return new Response(JSON.stringify([{ obligation_id: 'ob_sdk_01' }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (capturedUrl.includes('/v1/economy/milestones') && capturedUrl.includes('/verify')) {
+      return new Response(
+        JSON.stringify({
+          outcome: 'VERIFIED',
+          reason: 'Cryptographic deliverable checksum verified.',
+          verified_hash: '0xhash123',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/economy/exposure')) {
+      return new Response(
+        JSON.stringify({
+          organization_id: 'org_test',
+          current_exposure: '30000000',
+          max_possible_exposure: '50000000',
+          counterparties: [],
+          execution_mode: 'REAL',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/economy/health')) {
+      return new Response(
+        JSON.stringify({
+          organization_id: 'org_test',
+          on_chain_available: '100000000',
+          health_status: 'HEALTHY',
+          solvency_ratio: 3.33,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({ status: 'ok' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_test_clearing', fetch: mockFetch });
+
+  // 1. Client properties
+  assert.ok(client.clearinghouse);
+  assert.ok(client.economy);
+  assert.equal(client.clearinghouse, client.economy);
+
+  // 2. Create obligation
+  const ob = await client.economy.createObligation({
+    payer_agent_id: 'agent_a',
+    payee_agent_id: 'agent_b',
+    amount: '30000000',
+    currency: 'USDC',
+  });
+  assert.equal(ob.obligation_id, 'ob_sdk_01');
+  assert.equal(ob.status, 'AUTHORIZED');
+  assert.equal(capturedMethod, 'POST');
+  assert.equal(capturedUrl, 'http://localhost:8080/v1/economy/obligations');
+
+  // 3. Verify milestone
+  const vRes = await client.economy.verifyMilestone('ms_100');
+  assert.equal(vRes.outcome, 'VERIFIED');
+  assert.ok(capturedUrl.includes('/v1/economy/milestones/ms_100/verify'));
+
+  // 4. Get Exposure
+  const exp = await client.economy.getExposure('org_test', 'REAL');
+  assert.equal(exp.current_exposure, '30000000');
+  assert.ok(capturedUrl.includes('/v1/economy/exposure?org_id=org_test&mode=REAL'));
+
+  // 5. Get Health
+  const health = await client.economy.getHealth('org_test', 'REAL', '100000000');
+  assert.equal(health.health_status, 'HEALTHY');
+  assert.ok(capturedUrl.includes('/v1/economy/health?org_id=org_test&mode=REAL&balance=100000000'));
+});
+
+test('AgentPay SDK — Autonomous Treasury & Liquidity Orchestrator Resource (Task 11)', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+
+    // Route mocks
+    if (capturedUrl.includes('/v1/treasury/state')) {
+      return new Response(
+        JSON.stringify({
+          treasury_id: 'tr_test_01',
+          organization_id: 'org_test',
+          vault_address: '0x3600000000000000000000000000000000000001',
+          currency: 'USDC',
+          mode: 'REAL',
+          total_balance: '1000000000',
+          available_balance: '800000000',
+          reserved_balance: '100000000',
+          committed_balance: '50000000',
+          pending_settlement: '0',
+          disputed_balance: '0',
+          minimum_buffer: '50000000',
+          maximum_exposure: '500000000',
+          operational_mode: 'NORMAL',
+          source_version: 1,
+          updated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/treasury/balance')) {
+      return new Response(
+        JSON.stringify({
+          organization_id: 'org_test',
+          vault_address: '0x3600000000000000000000000000000000000001',
+          on_chain_balance: '1000000000',
+          reserved_amount: '100000000',
+          available_amount: '900000000',
+          asset: 'USDC',
+          decimals: 6,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/release')) {
+      return new Response(
+        JSON.stringify({ status: 'RELEASED', reservation_id: 'res_test_01' }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/treasury/reservations') && capturedMethod === 'POST') {
+      return new Response(
+        JSON.stringify({
+          reservation_id: 'res_test_01',
+          organization_id: 'org_test',
+          source: 'MISSION',
+          amount: '10000000',
+          currency: 'USDC',
+          mode: 'REAL',
+          status: 'RESERVED',
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 3600000).toISOString(),
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/treasury/exposure')) {
+      return new Response(
+        JSON.stringify({
+          scope: 'ORGANIZATION',
+          scope_id: 'org_test',
+          currency: 'USDC',
+          total_funds: '1000000000',
+          current_available: '800000000',
+          reserved_funds: '100000000',
+          committed_funds: '50000000',
+          potential_exposure: '150000000',
+          minimum_buffer: '50000000',
+          current_capacity: '800000000',
+          safe_commitment_capacity: '700000000',
+          calculated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/treasury/forecast')) {
+      return new Response(
+        JSON.stringify({
+          forecast_id: 'fc_test_01',
+          organization_id: 'org_test',
+          horizon: '24h',
+          scenario: 'BASELINE',
+          current_balance: '800000000',
+          points: [
+            {
+              timestamp: new Date().toISOString(),
+              available_liquidity: '800000000',
+              committed_liquidity: '50000000',
+              expected_outflow: '5000000',
+              expected_inflow: '0',
+              buffer: '50000000',
+              safe_capacity: '700000000',
+            },
+          ],
+          confidence: 0.95,
+          assumptions: ['Deterministic limits enforced'],
+          sample_size: 1420,
+          generated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/treasury/stress')) {
+      return new Response(
+        JSON.stringify({
+          scenario_name: 'SETTLEMENT_CLUSTER',
+          starting_liquidity: '800000000',
+          total_projected_outflow: '150000000',
+          minimum_resulting_liquidity: '650000000',
+          buffer_breached: false,
+          emergency_buffer_breached: false,
+          worst_case_exposure: '950000000',
+          survival_state: 'SAFE',
+          recommended_actions: ['Adequate capital available'],
+          simulated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/treasury/reconciliation')) {
+      return new Response(
+        JSON.stringify({
+          report_id: 'rec_test_01',
+          organization_id: 'org_test',
+          status: 'MATCHED',
+          internal_ledger_balance: '1000000000',
+          repository_balance: '100000000',
+          vault_balance: '1000000000',
+          blockchain_balance: '1000000000',
+          discrepancy_amount: '0',
+          chain_id: '5042011',
+          vault_address: '0x3600000000000000000000000000000000000001',
+          token_address: '0x3600000000000000000000000000000000000002',
+          vault_paused: false,
+          vault_owner: '0x0000000000000000000000000000000000000000',
+          verified_at: new Date().toISOString(),
+          evidence: 'Verified against Arc',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/treasury/health')) {
+      return new Response(
+        JSON.stringify({
+          organization_id: 'org_test',
+          mode: 'REAL',
+          total_balance: '1000000000',
+          available_balance: '800000000',
+          reserved_balance: '100000000',
+          committed_balance: '50000000',
+          pending_settlement: '0',
+          disputed_balance: '0',
+          minimum_buffer: '50000000',
+          safe_capacity: '700000000',
+          worst_case_exposure: '150000000',
+          solvency_ratio: 6.67,
+          operational_mode: 'NORMAL',
+          reconciliation_status: 'MATCHED',
+          last_verified_on_chain_balance: '1000000000',
+          verification_timestamp: new Date().toISOString(),
+          active_reservations_count: 1,
+          active_anomalies_count: 0,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({}), { status: 200 });
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_test_treasury', fetch: mockFetch });
+
+  // 1. Verify client.treasury exists
+  assert.ok(client.treasury);
+  assert.ok(client.treasury.reservations);
+
+  // 2. Fetch State
+  const state = await client.treasury.state({ orgId: 'org_test', mode: 'REAL' });
+  assert.equal(state.treasury_id, 'tr_test_01');
+  assert.equal(state.operational_mode, 'NORMAL');
+  assert.ok(capturedUrl.includes('/v1/treasury/state?organization_id=org_test&mode=REAL'));
+
+  // 3. Fetch Balance
+  const bal = await client.treasury.balance({ orgId: 'org_test' });
+  assert.equal(bal.on_chain_balance, '1000000000');
+  assert.equal(bal.available_amount, '900000000');
+
+  // 4. Create and Release Reservation
+  const res = await client.treasury.reservations.create({
+    organization_id: 'org_test',
+    source: 'MISSION',
+    amount_base: '10000000',
+    currency: 'USDC',
+  });
+  assert.equal(res.reservation_id, 'res_test_01');
+  assert.equal(res.status, 'RESERVED');
+  assert.equal(capturedMethod, 'POST');
+
+  const rel = await client.treasury.reservations.release('res_test_01');
+  assert.equal(rel.status, 'RELEASED');
+
+  // 5. Exposure
+  const exp = await client.treasury.exposure({ orgId: 'org_test' });
+  assert.equal(exp.safe_commitment_capacity, '700000000');
+
+  // 6. Forecast
+  const fc = await client.treasury.forecast({ orgId: 'org_test', horizon: '24h', scenario: 'BASELINE' });
+  assert.equal(fc.forecast_id, 'fc_test_01');
+  assert.equal(fc.confidence, 0.95);
+
+  // 7. Stress Testing
+  const st = await client.treasury.stress({ scenario_name: 'SETTLEMENT_CLUSTER' });
+  assert.equal(st.survival_state, 'SAFE');
+  assert.equal(st.buffer_breached, false);
+
+  // 8. Reconciliation
+  const recon = await client.treasury.reconciliation({ orgId: 'org_test' });
+  assert.equal(recon.status, 'MATCHED');
+
+  // 9. Health
+  const health = await client.treasury.health({ orgId: 'org_test' });
+  assert.equal(health.operational_mode, 'NORMAL');
+  assert.equal(health.solvency_ratio, 6.67);
+});
+
+test('AgentPay SDK — Task 12: Autonomous Economic Control Tower Surface', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+
+    if (capturedUrl.includes('/v1/control/state')) {
+      return new Response(
+        JSON.stringify({
+          treasury_status: 'HEALTHY',
+          policy_version: 'v8 ACTIVE',
+          risk_level: 'NORMAL',
+          execution_mode: 'LIVE',
+          arc_status: 'VERIFIED',
+          last_updated: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/control/overview')) {
+      return new Response(
+        JSON.stringify({
+          organization_id: 'org_test',
+          execution_mode: 'REAL',
+          active_missions_count: 3,
+          active_agents_count: 12,
+          active_contracts_count: 5,
+          available_liquidity: '82500000000',
+          reserved_liquidity: '25000000000',
+          outstanding_obligations: '15000000000',
+          pending_settlements: '5000000000',
+          active_approvals_count: 1,
+          current_policy_version: 'v8 ACTIVE',
+          current_treasury_mode: 'NORMAL',
+          security_status: 'NORMAL',
+          arc_verified_balance: '125000000000',
+          data_freshness: 'LIVE',
+          state_strip: {
+            treasury_status: 'HEALTHY',
+            policy_version: 'v8 ACTIVE',
+            risk_level: 'NORMAL',
+            execution_mode: 'LIVE',
+            arc_status: 'VERIFIED',
+            last_updated: new Date().toISOString(),
+          },
+          timestamp: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/control/activity')) {
+      return new Response(
+        JSON.stringify({
+          events: [
+            {
+              event_id: 'evt_01',
+              type: 'treasury.reconciled',
+              category: 'TREASURY',
+              organization_id: 'org_test',
+              aggregate_id: 'treasury_default',
+              severity: 'SUCCESS',
+              title: 'Reconciliation Verified',
+              summary: 'Zero discrepancies',
+              timestamp: new Date().toISOString(),
+            },
+          ],
+          count: 1,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/control/financial-trace/')) {
+      return new Response(
+        JSON.stringify({
+          trace_id: 'trc_pi_live_01',
+          organization_id: 'org_test',
+          payment_intent_id: 'pi_live_01',
+          policy_version: 'v8',
+          policy_hash: '0x4f8a...',
+          policy_decision: 'ALLOW',
+          risk_score: 12,
+          risk_level: 'LOW',
+          payment_status: 'CONFIRMED',
+          steps: [
+            { step_number: 1, stage: 'MISSION', status: 'COMPLETED', reference_id: 'msn_01', description: 'Mission init', timestamp: new Date().toISOString() },
+            { step_number: 13, stage: 'LEARNING', status: 'RECORDED', reference_id: 'obs_01', description: 'Learning complete', timestamp: new Date().toISOString() },
+          ],
+          created_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/control/missions/')) {
+      return new Response(
+        JSON.stringify({
+          mission_id: 'msn_01',
+          title: 'Macro Research',
+          objective: 'Analyze orderbooks',
+          status: 'EXECUTING',
+          budget_total: '50000000',
+          budget_reserved: '15000000',
+          budget_settled: '10000000',
+          budget_remaining: '25000000',
+          potential_exposure: '15000000',
+          current_action: {
+            action: 'Waiting for verification',
+            why: 'Task completed',
+            evidence: 'Hash matched',
+            next_possible_action: 'Settlement',
+          },
+          next_expected_action: 'RUNNING_VERIFICATION',
+          policy_summary: {
+            constitution_version: 'v8',
+            policy_hash: '0x4f8a...',
+            effective_rules: {},
+            explainability_notes: 'Authority narrows downward',
+          },
+          selected_agents: [
+            {
+              agent_id: 'agent_analyst',
+              display_name: 'Lead Analyst',
+              capability: 'modeling',
+              quoted_price: '10000000',
+              selection_reason: 'Lowest latency',
+              verification_rate: 0.994,
+              risk_level: 'LOW',
+              rejected_alternatives: [
+                {
+                  agent_id: 'agent_alt_1',
+                  quoted_price: '15000000',
+                  rejection_reason: 'Higher cost',
+                  score_difference: '-14%',
+                },
+              ],
+            },
+          ],
+          task_graph: { max_depth: 2, nodes: [], edges: [] },
+          obligations: [],
+          timeline: [],
+          updated_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/control/arc')) {
+      return new Response(
+        JSON.stringify({
+          chain_id: '5042',
+          rpc_url: 'https://rpc.arc.network',
+          rpc_reachable: true,
+          latest_block_number: 1492041,
+          agent_vault_address: '0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852',
+          agent_vault_deployed: true,
+          agent_vault_paused: false,
+          usdc_address: '0x0000...',
+          verified_treasury_balance: '125000000000',
+          live_execution_enabled: true,
+          last_checked_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/control/search')) {
+      return new Response(
+        JSON.stringify({
+          query: 'macro',
+          results: [
+            {
+              type: 'MISSION',
+              id: 'msn_01',
+              title: 'Macro Research',
+              subtitle: 'Executing',
+              status: 'EXECUTING',
+              deep_link_url: '/control/missions/msn_01',
+            },
+          ],
+          count: 1,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  // 1. State Strip
+  const strip = await client.control.getStateStrip({ orgId: 'org_test', mode: 'REAL' });
+  assert.equal(strip.treasury_status, 'HEALTHY');
+  assert.equal(strip.policy_version, 'v8 ACTIVE');
+  assert.equal(strip.arc_status, 'VERIFIED');
+  assert.equal(capturedMethod, 'GET');
+
+  // 2. Executive Overview
+  const ov = await client.control.getOverview({ orgId: 'org_test' });
+  assert.equal(ov.active_missions_count, 3);
+  assert.equal(ov.data_freshness, 'LIVE');
+
+  // 3. Activity Timeline
+  const act = await client.control.getActivityTimeline({ orgId: 'org_test', category: 'TREASURY' });
+  assert.equal(act.count, 1);
+  assert.equal(act.events[0].category, 'TREASURY');
+
+  // 4. Financial Trace
+  const trace = await client.control.getFinancialTrace('pi_live_01', { orgId: 'org_test' });
+  assert.equal(trace.payment_intent_id, 'pi_live_01');
+  assert.equal(trace.steps.length, 2);
+
+  // 5. Mission Command Center
+  const mcc = await client.control.getMissionCommandCenter('msn_01', { orgId: 'org_test' });
+  assert.equal(mcc.mission_id, 'msn_01');
+  assert.equal(mcc.selected_agents[0].agent_id, 'agent_analyst');
+  assert.equal(mcc.selected_agents[0].rejected_alternatives?.[0].agent_id, 'agent_alt_1');
+
+  // 6. Arc Status
+  const arc = await client.control.getArcStatus();
+  assert.equal(arc.chain_id, '5042');
+  assert.equal(arc.rpc_reachable, true);
+
+  // 7. Search
+  const srch = await client.control.search('macro', { orgId: 'org_test' });
+  assert.equal(srch.count, 1);
+  assert.equal(srch.results[0].type, 'MISSION');
+});
+
+
+
+
 
 

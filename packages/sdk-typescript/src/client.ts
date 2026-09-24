@@ -26,6 +26,9 @@ import { SwarmsResource } from './resources/swarms.js';
 import { TransactionsResource } from './resources/transactions.js';
 import { WebhooksResource } from './resources/webhooks.js';
 import { ConstitutionsResource } from './resources/constitutions.js';
+import { ClearinghouseResource } from './resources/clearinghouse.js';
+import { TreasuryResource } from './resources/treasury.js';
+import { ControlTowerResource } from './resources/control.js';
 import type { ClientOptions, RequestOptions } from './types.js';
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
@@ -65,6 +68,10 @@ export class AgentPay {
   public readonly agentNetwork: AgentNetworkResource;
   public readonly constitutions: ConstitutionsResource;
   public readonly constitution: ConstitutionsResource;
+  public readonly clearinghouse: ClearinghouseResource;
+  public readonly economy: ClearinghouseResource;
+  public readonly treasury: TreasuryResource;
+  public readonly control: ControlTowerResource;
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
@@ -92,6 +99,10 @@ export class AgentPay {
     this.agentNetwork = new AgentNetworkResource(this);
     this.constitutions = new ConstitutionsResource(this);
     this.constitution = this.constitutions;
+    this.clearinghouse = new ClearinghouseResource(this);
+    this.economy = this.clearinghouse;
+    this.treasury = new TreasuryResource(this);
+    this.control = new ControlTowerResource(this);
   }
 
   /**

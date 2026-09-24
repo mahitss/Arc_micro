@@ -5,8 +5,10 @@ import (
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/clearinghouse"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/constitution"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/control"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
@@ -223,9 +225,42 @@ func NewRouter(
 		mux.HandleFunc("POST /v1/system/resume", emHandler.HandleResumeGlobal)
 		mux.HandleFunc("GET /v1/system/status", emHandler.HandleSystemStatus)
 
-		// 9. Day 3: Treasury Model & Reservations
+		// 9. Day 3 & Task 11: Autonomous Treasury & Liquidity Orchestrator
 		treasuryHandler := handlers.NewTreasuryHandler(ts)
 		mux.HandleFunc("GET /v1/treasury/summary", treasuryHandler.HandleSummary)
+		mux.HandleFunc("GET /v1/treasury/state", treasuryHandler.HandleState)
+		mux.HandleFunc("GET /v1/treasury/balance", treasuryHandler.HandleBalance)
+		mux.HandleFunc("GET /v1/treasury/reservations", treasuryHandler.HandleListReservations)
+		mux.HandleFunc("POST /v1/treasury/reservations", treasuryHandler.HandleCreateReservation)
+		mux.HandleFunc("POST /v1/treasury/reservations/{id}/release", treasuryHandler.HandleReleaseReservation)
+		mux.HandleFunc("GET /v1/treasury/commitments", treasuryHandler.HandleCommitments)
+		mux.HandleFunc("POST /v1/treasury/commitments", treasuryHandler.HandleCommitments)
+		mux.HandleFunc("GET /v1/treasury/exposure", treasuryHandler.HandleExposure)
+		mux.HandleFunc("GET /v1/treasury/forecast", treasuryHandler.HandleForecast)
+		mux.HandleFunc("POST /v1/treasury/stress", treasuryHandler.HandleStress)
+		mux.HandleFunc("GET /v1/treasury/reconciliation", treasuryHandler.HandleReconciliation)
+		mux.HandleFunc("GET /v1/treasury/anomalies", treasuryHandler.HandleAnomalies)
+		mux.HandleFunc("GET /v1/treasury/health", treasuryHandler.HandleHealth)
+		mux.HandleFunc("GET /v1/treasury/inflows", treasuryHandler.HandleInflows)
+		mux.HandleFunc("POST /v1/treasury/inflows", treasuryHandler.HandleInflows)
+
+		// Also mount under /api/treasury for frontend compatibility
+		mux.HandleFunc("GET /api/treasury/summary", treasuryHandler.HandleSummary)
+		mux.HandleFunc("GET /api/treasury/state", treasuryHandler.HandleState)
+		mux.HandleFunc("GET /api/treasury/balance", treasuryHandler.HandleBalance)
+		mux.HandleFunc("GET /api/treasury/reservations", treasuryHandler.HandleListReservations)
+		mux.HandleFunc("POST /api/treasury/reservations", treasuryHandler.HandleCreateReservation)
+		mux.HandleFunc("POST /api/treasury/reservations/{id}/release", treasuryHandler.HandleReleaseReservation)
+		mux.HandleFunc("GET /api/treasury/commitments", treasuryHandler.HandleCommitments)
+		mux.HandleFunc("POST /api/treasury/commitments", treasuryHandler.HandleCommitments)
+		mux.HandleFunc("GET /api/treasury/exposure", treasuryHandler.HandleExposure)
+		mux.HandleFunc("GET /api/treasury/forecast", treasuryHandler.HandleForecast)
+		mux.HandleFunc("POST /api/treasury/stress", treasuryHandler.HandleStress)
+		mux.HandleFunc("GET /api/treasury/reconciliation", treasuryHandler.HandleReconciliation)
+		mux.HandleFunc("GET /api/treasury/anomalies", treasuryHandler.HandleAnomalies)
+		mux.HandleFunc("GET /api/treasury/health", treasuryHandler.HandleHealth)
+		mux.HandleFunc("GET /api/treasury/inflows", treasuryHandler.HandleInflows)
+		mux.HandleFunc("POST /api/treasury/inflows", treasuryHandler.HandleInflows)
 
 		// 10. Day 5: Developer API Key Management
 		apiKeyHandler := handlers.NewAPIKeyHandler(repo)
@@ -320,6 +355,126 @@ func NewRouter(
 		mux.HandleFunc("POST /v1/constitutions/rollback", constHandler.HandleRollback)
 		mux.HandleFunc("GET /v1/constitutions/changes", constHandler.HandleListChanges)
 		mux.HandleFunc("POST /v1/constitutions/changes/{id}/review", constHandler.HandleReviewChange)
+
+		// 15. Autonomous Economic Clearinghouse Subsystem (Task 10)
+		targetVault := "0x1111111111111111111111111111111111111111"
+		chainIDStr := "5042"
+		if cfg != nil {
+			if cfg.AgentVaultAddress != "" {
+				targetVault = cfg.AgentVaultAddress
+			}
+			if cfg.ArcChainID != "" {
+				chainIDStr = cfg.ArcChainID
+			}
+		}
+		clearingReconciler := clearinghouse.NewClearingReconciliationEngine(bc, chainIDStr, targetVault)
+		settlementRouter := clearinghouse.NewSettlementRouter(intentService, reg, targetVault)
+		clearingSvc := clearinghouse.NewClearinghouseService(settlementRouter, ts, clearingReconciler, reg, dispatcher)
+		clearingHandler := handlers.NewClearinghouseHandler(clearingSvc)
+
+		// Obligations
+		mux.HandleFunc("POST /v1/economy/obligations", clearingHandler.HandleCreateObligation)
+		mux.HandleFunc("GET /v1/economy/obligations", clearingHandler.HandleListObligations)
+		mux.HandleFunc("GET /v1/economy/obligations/{id}", clearingHandler.HandleGetObligation)
+		mux.HandleFunc("POST /v1/economy/obligations/{id}/cancel", clearingHandler.HandleCancelObligation)
+		mux.HandleFunc("POST /api/economy/obligations", clearingHandler.HandleCreateObligation)
+		mux.HandleFunc("GET /api/economy/obligations", clearingHandler.HandleListObligations)
+		mux.HandleFunc("GET /api/economy/obligations/{id}", clearingHandler.HandleGetObligation)
+		mux.HandleFunc("POST /api/economy/obligations/{id}/cancel", clearingHandler.HandleCancelObligation)
+
+		// Invoices
+		mux.HandleFunc("POST /v1/economy/invoices", clearingHandler.HandleCreateInvoice)
+		mux.HandleFunc("GET /v1/economy/invoices", clearingHandler.HandleListInvoices)
+		mux.HandleFunc("GET /v1/economy/invoices/{id}", clearingHandler.HandleGetInvoice)
+		mux.HandleFunc("POST /v1/economy/invoices/{id}/accept", clearingHandler.HandleAcceptInvoice)
+		mux.HandleFunc("POST /v1/economy/invoices/{id}/dispute", clearingHandler.HandleDisputeInvoice)
+		mux.HandleFunc("POST /api/economy/invoices", clearingHandler.HandleCreateInvoice)
+		mux.HandleFunc("GET /api/economy/invoices", clearingHandler.HandleListInvoices)
+		mux.HandleFunc("GET /api/economy/invoices/{id}", clearingHandler.HandleGetInvoice)
+		mux.HandleFunc("POST /api/economy/invoices/{id}/accept", clearingHandler.HandleAcceptInvoice)
+		mux.HandleFunc("POST /api/economy/invoices/{id}/dispute", clearingHandler.HandleDisputeInvoice)
+
+		// Escrows
+		mux.HandleFunc("POST /v1/economy/escrows", clearingHandler.HandleCreateEscrow)
+		mux.HandleFunc("GET /v1/economy/escrows", clearingHandler.HandleListEscrows)
+		mux.HandleFunc("GET /v1/economy/escrows/{id}", clearingHandler.HandleGetEscrow)
+		mux.HandleFunc("POST /v1/economy/escrows/{id}/release", clearingHandler.HandleReleaseEscrow)
+		mux.HandleFunc("POST /v1/economy/escrows/{id}/refund", clearingHandler.HandleRefundEscrow)
+		mux.HandleFunc("POST /api/economy/escrows", clearingHandler.HandleCreateEscrow)
+		mux.HandleFunc("GET /api/economy/escrows", clearingHandler.HandleListEscrows)
+		mux.HandleFunc("GET /api/economy/escrows/{id}", clearingHandler.HandleGetEscrow)
+
+		// Milestones
+		mux.HandleFunc("POST /v1/economy/milestones", clearingHandler.HandleCreateMilestone)
+		mux.HandleFunc("GET /v1/economy/milestones", clearingHandler.HandleListMilestones)
+		mux.HandleFunc("POST /v1/economy/milestones/{id}/submit", clearingHandler.HandleSubmitMilestone)
+		mux.HandleFunc("POST /v1/economy/milestones/{id}/verify", clearingHandler.HandleVerifyMilestone)
+		mux.HandleFunc("POST /v1/economy/milestones/{id}/settle", clearingHandler.HandleSettleMilestone)
+		mux.HandleFunc("POST /api/economy/milestones", clearingHandler.HandleCreateMilestone)
+		mux.HandleFunc("POST /api/economy/milestones/{id}/verify", clearingHandler.HandleVerifyMilestone)
+
+		// Netting
+		mux.HandleFunc("POST /v1/economy/netting/proposals", clearingHandler.HandleProposeNetting)
+		mux.HandleFunc("GET /v1/economy/netting/proposals", clearingHandler.HandleListNetting)
+		mux.HandleFunc("POST /v1/economy/netting/{id}/approve", clearingHandler.HandleApproveNetting)
+		mux.HandleFunc("POST /v1/economy/netting/{id}/execute", clearingHandler.HandleExecuteNetting)
+		mux.HandleFunc("POST /api/economy/netting/proposals", clearingHandler.HandleProposeNetting)
+		mux.HandleFunc("POST /api/economy/netting/{id}/approve", clearingHandler.HandleApproveNetting)
+
+		// Batches
+		mux.HandleFunc("POST /v1/economy/batches", clearingHandler.HandleCreateBatch)
+		mux.HandleFunc("GET /v1/economy/batches", clearingHandler.HandleListBatches)
+		mux.HandleFunc("GET /v1/economy/batches/{id}", clearingHandler.HandleGetBatch)
+		mux.HandleFunc("POST /v1/economy/batches/{id}/execute", clearingHandler.HandleExecuteBatch)
+		mux.HandleFunc("POST /api/economy/batches", clearingHandler.HandleCreateBatch)
+		mux.HandleFunc("POST /api/economy/batches/{id}/execute", clearingHandler.HandleExecuteBatch)
+
+		// Refunds
+		mux.HandleFunc("POST /v1/economy/refunds", clearingHandler.HandleRequestRefund)
+		mux.HandleFunc("GET /v1/economy/refunds", clearingHandler.HandleListRefunds)
+		mux.HandleFunc("POST /v1/economy/refunds/{id}/approve", clearingHandler.HandleApproveRefund)
+		mux.HandleFunc("POST /v1/economy/refunds/{id}/execute", clearingHandler.HandleExecuteRefund)
+		mux.HandleFunc("POST /api/economy/refunds", clearingHandler.HandleRequestRefund)
+
+		// Reconciliation
+		mux.HandleFunc("GET /v1/economy/reconciliation", clearingHandler.HandleListReconciliation)
+		mux.HandleFunc("POST /v1/economy/reconciliation/{id}", clearingHandler.HandleReconcileObligation)
+		mux.HandleFunc("GET /api/economy/reconciliation", clearingHandler.HandleListReconciliation)
+
+		// Exposure, Health & Ledger
+		mux.HandleFunc("GET /v1/economy/exposure", clearingHandler.HandleGetExposure)
+		mux.HandleFunc("GET /v1/economy/health", clearingHandler.HandleGetHealth)
+		mux.HandleFunc("GET /v1/economy/clearing/ledger", clearingHandler.HandleGetLedger)
+		mux.HandleFunc("GET /api/economy/exposure", clearingHandler.HandleGetExposure)
+		mux.HandleFunc("GET /api/economy/health", clearingHandler.HandleGetHealth)
+
+		// 16. Task 12: Autonomous Economic Control Tower APIs
+		controlService := control.NewService(repo, ts, policyClient, bc, reg, cfg)
+		controlService.SetClearinghouse(clearingSvc)
+		controlHandler := handlers.NewControlHandler(controlService)
+
+		mux.HandleFunc("GET /v1/control/overview", controlHandler.HandleOverview)
+		mux.HandleFunc("GET /api/control/overview", controlHandler.HandleOverview)
+		mux.HandleFunc("GET /v1/control/state", controlHandler.HandleStateStrip)
+		mux.HandleFunc("GET /api/control/state", controlHandler.HandleStateStrip)
+		mux.HandleFunc("GET /v1/control/activity", controlHandler.HandleActivity)
+		mux.HandleFunc("GET /api/control/activity", controlHandler.HandleActivity)
+		mux.HandleFunc("GET /v1/control/financial-trace/{id}", controlHandler.HandleFinancialTrace)
+		mux.HandleFunc("GET /api/control/financial-trace/{id}", controlHandler.HandleFinancialTrace)
+		mux.HandleFunc("GET /v1/control/missions/{id}", controlHandler.HandleMissionCommandCenter)
+		mux.HandleFunc("GET /api/control/missions/{id}", controlHandler.HandleMissionCommandCenter)
+		mux.HandleFunc("GET /v1/control/security", controlHandler.HandleSecurity)
+		mux.HandleFunc("GET /api/control/security", controlHandler.HandleSecurity)
+		mux.HandleFunc("GET /v1/control/treasury", controlHandler.HandleTreasury)
+		mux.HandleFunc("GET /api/control/treasury", controlHandler.HandleTreasury)
+		mux.HandleFunc("GET /v1/control/arc", controlHandler.HandleArcStatus)
+		mux.HandleFunc("GET /api/control/arc", controlHandler.HandleArcStatus)
+		mux.HandleFunc("GET /v1/control/incidents", controlHandler.HandleIncidents)
+		mux.HandleFunc("GET /api/control/incidents", controlHandler.HandleIncidents)
+		mux.HandleFunc("GET /v1/control/intelligence", controlHandler.HandleIntelligence)
+		mux.HandleFunc("GET /api/control/intelligence", controlHandler.HandleIntelligence)
+		mux.HandleFunc("GET /v1/control/search", controlHandler.HandleSearch)
+		mux.HandleFunc("GET /api/control/search", controlHandler.HandleSearch)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {

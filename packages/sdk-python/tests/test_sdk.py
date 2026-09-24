@@ -549,6 +549,260 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         graph = client.agent_network.get_graph()
         self.assertEqual(len(graph["nodes"]), 1)
 
+    @patch("requests.request")
+    def test_autonomous_clearinghouse(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test123")
+        self.assertIsNotNone(client.clearinghouse)
+        self.assertIsNotNone(client.economy)
+        self.assertEqual(client.clearinghouse, client.economy)
+
+        # 1. Create obligation
+        mock_resp.json.return_value = {
+            "obligation_id": "ob_py_01",
+            "payer_agent_id": "agent_payer",
+            "payee_agent_id": "agent_payee",
+            "amount": "25000000",
+            "currency": "USDC",
+            "status": "AUTHORIZED",
+            "execution_mode": "REAL",
+        }
+        ob = client.economy.create_obligation({
+            "payer_agent_id": "agent_payer",
+            "payee_agent_id": "agent_payee",
+            "amount": "25000000",
+            "currency": "USDC",
+        })
+        self.assertEqual(ob["obligation_id"], "ob_py_01")
+        self.assertEqual(ob["status"], "AUTHORIZED")
+
+        # 2. Verify milestone
+        mock_resp.json.return_value = {
+            "outcome": "VERIFIED",
+            "reason": "Cryptographic deliverable checksum verified.",
+            "verified_hash": "0xabc",
+        }
+        v_res = client.economy.verify_milestone("ms_py_01")
+        self.assertEqual(v_res["outcome"], "VERIFIED")
+
+        # 3. Get Exposure & Health
+        mock_resp.json.return_value = {
+            "organization_id": "org_default",
+            "current_exposure": "25000000",
+            "max_possible_exposure": "50000000",
+            "execution_mode": "REAL",
+        }
+        exp = client.economy.get_exposure("org_default", "REAL")
+        self.assertEqual(exp["current_exposure"], "25000000")
+
+        mock_resp.json.return_value = {
+            "organization_id": "org_default",
+            "on_chain_available": "100000000",
+            "health_status": "HEALTHY",
+            "solvency_ratio": 4.0,
+        }
+        health = client.economy.get_health("org_default", "REAL", "100000000")
+        self.assertEqual(health["health_status"], "HEALTHY")
+
+    @patch("requests.request")
+    def test_autonomous_treasury(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test123")
+        self.assertIsNotNone(client.treasury)
+        self.assertIsNotNone(client.treasury.reservations)
+
+        # 1. State
+        mock_resp.json.return_value = {
+            "organization_id": "org_test",
+            "mode": "REAL",
+            "total_balance": "100000000",
+            "reserved_balance": "20000000",
+            "available_balance": "80000000",
+            "minimum_buffer": "10000000",
+            "safe_capacity": "70000000",
+            "operational_mode": "LIQUIDITY_AVAILABLE",
+        }
+        st = client.treasury.state("org_test", "REAL")
+        self.assertEqual(st["operational_mode"], "LIQUIDITY_AVAILABLE")
+        self.assertEqual(st["available_balance"], "80000000")
+
+        # 2. Balance
+        mock_resp.json.return_value = {
+            "organization_id": "org_test",
+            "vault_address": "0xVault123",
+            "on_chain_balance": "100000000",
+            "reserved_amount": "20000000",
+            "available_amount": "80000000",
+            "asset": "USDC",
+            "decimals": 6,
+        }
+        bal = client.treasury.balance("org_test", "0xVault123")
+        self.assertEqual(bal["on_chain_balance"], "100000000")
+
+        # 3. Create Reservation
+        mock_resp.json.return_value = {
+            "reservation_id": "res_py_01",
+            "amount": "15000000",
+            "status": "ACTIVE",
+            "mode": "REAL",
+            "purpose": "SWARM_MISSION",
+        }
+        res = client.treasury.reservations.create({
+            "organization_id": "org_test",
+            "amount": "15000000",
+            "purpose": "SWARM_MISSION",
+            "mode": "REAL",
+        })
+        self.assertEqual(res["reservation_id"], "res_py_01")
+        self.assertEqual(res["status"], "ACTIVE")
+
+        # 4. Release Reservation
+        mock_resp.json.return_value = {
+            "reservation_id": "res_py_01",
+            "status": "RELEASED",
+            "release_reason": "Task complete",
+        }
+        rel = client.treasury.reservations.release("res_py_01", "Task complete")
+        self.assertEqual(rel["status"], "RELEASED")
+
+        # 5. Forecast
+        mock_resp.json.return_value = {
+            "organization_id": "org_test",
+            "horizon": "24h",
+            "starting_balance": "100000000",
+            "projected_closing_balance": "95000000",
+            "survival_state": "SAFE",
+        }
+        fc = client.treasury.forecast("24h", org_id="org_test")
+        self.assertEqual(fc["survival_state"], "SAFE")
+
+        # 6. Stress Test
+        mock_resp.json.return_value = {
+            "scenario": "OUTFLOW_SPIKE",
+            "survival_state": "SAFE",
+            "post_stress_buffer_headroom": "35000000",
+        }
+        stress = client.treasury.stress(scenario="OUTFLOW_SPIKE", org_id="org_test")
+        self.assertEqual(stress["survival_state"], "SAFE")
+
+        # 7. Reconciliation
+        mock_resp.json.return_value = {
+            "reconciliation_status": "MATCHED",
+            "ledger_balance": "100000000",
+            "blockchain_balance": "100000000",
+            "discrepancy_amount": "0",
+        }
+        rec = client.treasury.reconcile("org_test", "REAL")
+        self.assertEqual(rec["reconciliation_status"], "MATCHED")
+
+        # 8. Health
+        mock_resp.json.return_value = {
+            "organization_id": "org_test",
+            "operational_mode": "LIQUIDITY_AVAILABLE",
+            "reconciliation_status": "MATCHED",
+            "solvency_ratio": 5.0,
+        }
+        hlth = client.treasury.health("org_test", "REAL")
+        self.assertEqual(hlth["operational_mode"], "LIQUIDITY_AVAILABLE")
+
+    @patch("requests.request")
+    def test_control_tower(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test123")
+        self.assertIsNotNone(client.control)
+
+        # 1. State Strip
+        mock_resp.json.return_value = {
+            "treasury_status": "HEALTHY",
+            "policy_version": "v8 ACTIVE",
+            "risk_level": "NORMAL",
+            "execution_mode": "LIVE",
+            "arc_status": "VERIFIED",
+        }
+        strip = client.control.state_strip("org_test", "REAL")
+        self.assertEqual(strip["treasury_status"], "HEALTHY")
+        self.assertEqual(strip["arc_status"], "VERIFIED")
+
+        # 2. Overview
+        mock_resp.json.return_value = {
+            "organization_id": "org_test",
+            "active_missions_count": 2,
+            "active_agents_count": 8,
+            "available_liquidity": "82500000000",
+            "data_freshness": "LIVE",
+        }
+        ov = client.control.overview("org_test", "REAL")
+        self.assertEqual(ov["active_missions_count"], 2)
+        self.assertEqual(ov["data_freshness"], "LIVE")
+
+        # 3. Activity Timeline
+        mock_resp.json.return_value = {
+            "events": [
+                {
+                    "event_id": "evt_py_01",
+                    "type": "treasury.reconciled",
+                    "category": "TREASURY",
+                }
+            ],
+            "count": 1,
+        }
+        act = client.control.activity("org_test", category="TREASURY")
+        self.assertEqual(act["count"], 1)
+
+        # 4. Financial Trace
+        mock_resp.json.return_value = {
+            "trace_id": "trc_pi_01",
+            "payment_intent_id": "pi_01",
+            "policy_version": "v8",
+            "steps": [{"step_number": 1, "stage": "MISSION"}],
+        }
+        trc = client.control.financial_trace("pi_01", "org_test")
+        self.assertEqual(trc["trace_id"], "trc_pi_01")
+        self.assertEqual(len(trc["steps"]), 1)
+
+        # 5. Mission Command Center
+        mock_resp.json.return_value = {
+            "mission_id": "msn_01",
+            "title": "Autonomous Research",
+            "status": "EXECUTING",
+            "budget_total": "50000000",
+            "selected_agents": [{"agent_id": "agent_analyst"}],
+        }
+        msn = client.control.mission("msn_01", "org_test")
+        self.assertEqual(msn["mission_id"], "msn_01")
+        self.assertEqual(msn["status"], "EXECUTING")
+
+        # 6. Arc Status
+        mock_resp.json.return_value = {
+            "chain_id": "5042",
+            "rpc_reachable": True,
+            "agent_vault_deployed": True,
+            "verified_treasury_balance": "125000000000",
+        }
+        arc = client.control.arc()
+        self.assertEqual(arc["chain_id"], "5042")
+        self.assertTrue(arc["rpc_reachable"])
+
+        # 7. Search
+        mock_resp.json.return_value = {
+            "query": "macro",
+            "results": [{"type": "MISSION", "id": "msn_01"}],
+            "count": 1,
+        }
+        srch = client.control.search("macro", "org_test")
+        self.assertEqual(srch["count"], 1)
+        self.assertEqual(srch["results"][0]["type"], "MISSION")
+
+
 if __name__ == "__main__":
     unittest.main()
 

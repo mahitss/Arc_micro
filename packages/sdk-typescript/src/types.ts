@@ -1665,5 +1665,763 @@ export interface PolicyTestReport {
   executed_at: string;
 }
 
+// =============================================================================
+// AUTONOMOUS ECONOMIC CLEARINGHOUSE TYPES (TASK 10)
+// =============================================================================
+
+export type ClearingExecutionMode = 'REAL' | 'SIMULATION';
+
+export type ObligationStatus =
+  | 'PROPOSED'
+  | 'AUTHORIZED'
+  | 'RESERVED'
+  | 'DUE'
+  | 'SUBMITTED'
+  | 'VERIFIED'
+  | 'SETTLEMENT_PENDING'
+  | 'SETTLED'
+  | 'PARTIALLY_SETTLED'
+  | 'DISPUTED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'REFUNDED';
+
+export type EscrowStatus =
+  | 'CREATED'
+  | 'RESERVED'
+  | 'PARTIALLY_RELEASED'
+  | 'RELEASED'
+  | 'DISPUTED'
+  | 'REFUNDED'
+  | 'CANCELLED';
+
+export type MilestoneStatus =
+  | 'PENDING'
+  | 'SUBMITTED'
+  | 'VERIFIED'
+  | 'REJECTED'
+  | 'SETTLED'
+  | 'DISPUTED';
+
+export type InvoiceStatus =
+  | 'DRAFT'
+  | 'ISSUED'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'DISPUTED'
+  | 'DUE'
+  | 'SETTLED'
+  | 'PARTIALLY_SETTLED'
+  | 'VOID';
+
+export type NettingStatus =
+  | 'PROPOSED'
+  | 'ELIGIBLE'
+  | 'APPROVED'
+  | 'EXECUTED'
+  | 'REJECTED'
+  | 'EXPIRED';
+
+export type BatchStatus =
+  | 'OPEN'
+  | 'READY'
+  | 'AUTHORIZED'
+  | 'EXECUTING'
+  | 'PARTIALLY_SETTLED'
+  | 'SETTLED'
+  | 'FAILED'
+  | 'RECONCILING';
+
+export type RefundStatus =
+  | 'REQUESTED'
+  | 'VALIDATING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'EXECUTING'
+  | 'SETTLED';
+
+export type ReconciliationStatus =
+  | 'MATCHED'
+  | 'MISMATCH'
+  | 'PENDING'
+  | 'AMBIGUOUS'
+  | 'RESOLVED';
+
+export interface EconomicObligation {
+  obligation_id: string;
+  organization_id: string;
+  payer_agent_id: string;
+  payee_agent_id: string;
+  contract_id: string;
+  capability?: string;
+  amount: string; // micro-USDC
+  currency: string;
+  status: ObligationStatus;
+  due_at?: string;
+  settled_amount: string;
+  payment_intent_id?: string;
+  execution_mode: ClearingExecutionMode;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EconomicEscrow {
+  escrow_id: string;
+  obligation_id: string;
+  contract_id: string;
+  organization_id: string;
+  payer: string;
+  payee: string;
+  vault_address: string;
+  amount: string;
+  reserved_amount: string;
+  released_amount: string;
+  refunded_amount: string;
+  currency: string;
+  status: EscrowStatus;
+  reservation_id?: string;
+  execution_mode: ClearingExecutionMode;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentMilestone {
+  milestone_id: string;
+  contract_id: string;
+  obligation_id: string;
+  organization_id: string;
+  sequence: number;
+  description: string;
+  amount: string;
+  verification_rule: string;
+  due_at?: string;
+  status: MilestoneStatus;
+  actual_output?: string;
+  result_hash?: string;
+  evidence_uri?: string;
+  verified_at?: string;
+  settled_at?: string;
+  payment_intent_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvoiceLineItem {
+  item_number: number;
+  description: string;
+  milestone_id?: string;
+  quantity?: number;
+  unit_price?: string;
+  amount: string;
+}
+
+export interface EconomicInvoice {
+  invoice_id: string;
+  contract_id: string;
+  obligation_id?: string;
+  organization_id: string;
+  provider_agent_id: string;
+  requester_agent_id: string;
+  amount: string;
+  currency: string;
+  line_items: InvoiceLineItem[];
+  evidence?: Record<string, string>;
+  milestone_refs?: string[];
+  issued_at: string;
+  due_at: string;
+  status: InvoiceStatus;
+  invoice_hash?: string;
+  payment_intent_id?: string;
+  execution_mode: ClearingExecutionMode;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NettingProposal {
+  proposal_id: string;
+  organization_id: string;
+  agent_a: string;
+  agent_b: string;
+  currency: string;
+  obligations_a_to_b: string[];
+  obligations_b_to_a: string[];
+  gross_amount_a_to_b: string;
+  gross_amount_b_to_a: string;
+  gross_total: string;
+  net_payer: string;
+  net_payee: string;
+  net_amount: string;
+  savings_amount: string;
+  status: NettingStatus;
+  approved_by_a: boolean;
+  approved_by_b: boolean;
+  payment_intent_id?: string;
+  created_at: string;
+  expires_at: string;
+  executed_at?: string;
+}
+
+export interface SettlementBatch {
+  batch_id: string;
+  organization_id: string;
+  currency: string;
+  obligation_ids: string[];
+  gross_amount: string;
+  net_amount: string;
+  savings: string;
+  status: BatchStatus;
+  failure_reason?: string;
+  payment_intent_ids?: string[];
+  execution_mode: ClearingExecutionMode;
+  created_at: string;
+  executed_at?: string;
+}
+
+export interface RefundRequest {
+  refund_id: string;
+  original_payment_id: string;
+  contract_id?: string;
+  obligation_id?: string;
+  organization_id: string;
+  requester_agent_id: string;
+  reason: string;
+  original_amount: string;
+  refund_amount: string;
+  evidence?: string;
+  status: RefundStatus;
+  payment_intent_id?: string;
+  execution_mode: ClearingExecutionMode;
+  created_at: string;
+  resolved_at?: string;
+}
+
+export interface ReconciliationRecord {
+  record_id: string;
+  organization_id: string;
+  obligation_id: string;
+  payment_intent_id: string;
+  transaction_hash?: string;
+  chain_id: string;
+  target_contract: string;
+  expected_amount: string;
+  actual_amount: string;
+  expected_recipient: string;
+  actual_recipient: string;
+  status: ReconciliationStatus;
+  discrepancy_notes?: string;
+  recommended_action?: string;
+  execution_mode: ClearingExecutionMode;
+  reconciled_at: string;
+}
+
+export interface CounterpartyExposure {
+  agent_id: string;
+  committed_payable: string;
+  reserved_in_escrow: string;
+  pending_settlement: string;
+  receivable_amount: string;
+  net_exposure: string;
+  risk_level: string;
+}
+
+export interface EconomicExposureSnapshot {
+  organization_id: string;
+  current_exposure: string;
+  max_possible_exposure: string;
+  reserved_in_escrow: string;
+  outstanding_obligations: string;
+  pending_settlements: string;
+  disputed_amount: string;
+  unsettled_invoices: string;
+  counterparties: CounterpartyExposure[];
+  execution_mode: ClearingExecutionMode;
+  calculated_at: string;
+}
+
+export interface EconomicHealthSnapshot {
+  organization_id: string;
+  on_chain_available: string;
+  active_escrow_reserved: string;
+  available_unencumbered: string;
+  total_exposure: string;
+  solvency_ratio: number;
+  health_status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  deterministic_signals: string[];
+  execution_mode: ClearingExecutionMode;
+  evaluated_at: string;
+}
+
+export interface ClearingLedgerEntry {
+  entry_id: string;
+  organization_id: string;
+  obligation_id: string;
+  contract_id?: string;
+  invoice_id?: string;
+  milestone_id?: string;
+  payment_intent_id?: string;
+  transaction_hash?: string;
+  entry_type: string;
+  debit_account: string;
+  credit_account: string;
+  amount: string;
+  currency: string;
+  execution_mode: ClearingExecutionMode;
+  timestamp: string;
+  hash: string;
+}
+
+// ============================================================================
+// TASK 11 — AUTONOMOUS TREASURY & LIQUIDITY ORCHESTRATOR TYPES
+// ============================================================================
+
+export type TreasuryOperationalMode = 'NORMAL' | 'CONSTRAINED' | 'EMERGENCY';
+export type TreasuryReconciliationStatus = 'MATCHED' | 'MISMATCH' | 'PENDING' | 'AMBIGUOUS' | 'REQUIRES_REVIEW' | 'UNVERIFIED';
+export type TreasuryReservationStatus = 'REQUESTED' | 'RESERVED' | 'CONSUMED' | 'RELEASED' | 'EXPIRED' | 'CANCELLED';
+export type TreasuryCommitmentType = 'SOFT_COMMITMENT' | 'HARD_COMMITMENT';
+export type TreasuryCommitmentLifecycle = 'EXPECTED' | 'PROPOSED' | 'AUTHORIZED' | 'RESERVED' | 'SETTLED';
+export type TreasuryInflowStatus = 'EXPECTED' | 'VERIFIED' | 'RECEIVED' | 'DELAYED' | 'CANCELLED';
+export type TreasuryScopeLevel = 'GLOBAL' | 'ORGANIZATION' | 'AGENT' | 'MISSION' | 'SWARM';
+export type TreasuryForecastHorizon = '1h' | '6h' | '24h' | '7d' | '30d';
+export type TreasuryStressScenarioType = 'BASELINE' | 'HIGH_OUTFLOW' | 'LOW_LIQUIDITY' | 'HIGH_FAILURE' | 'HIGH_RETRY' | 'HIGH_DELEGATION' | 'SETTLEMENT_CLUSTER' | 'CUSTOM';
+export type TreasurySurvivalState = 'SAFE' | 'CONSTRAINED' | 'CRITICAL' | 'UNAVAILABLE';
+export type TreasuryLiquidityGateResult = 'LIQUIDITY_AVAILABLE' | 'LIQUIDITY_CONSTRAINED' | 'LIQUIDITY_UNAVAILABLE';
+
+export interface TreasuryState {
+  treasury_id: string;
+  organization_id: string;
+  vault_address: string;
+  currency: string;
+  mode: 'REAL' | 'SIMULATION';
+  total_balance: string;
+  available_balance: string;
+  reserved_balance: string;
+  committed_balance: string;
+  pending_settlement: string;
+  disputed_balance: string;
+  minimum_buffer: string;
+  maximum_exposure: string;
+  operational_mode: TreasuryOperationalMode;
+  updated_at: string;
+  source_version: number;
+}
+
+export interface LiquidityReservation {
+  reservation_id: string;
+  organization_id: string;
+  source: string;
+  obligation_id?: string;
+  mission_id?: string;
+  swarm_id?: string;
+  agent_id?: string;
+  amount: string;
+  currency: string;
+  mode: 'REAL' | 'SIMULATION';
+  status: TreasuryReservationStatus;
+  policy_version?: string;
+  policy_hash?: string;
+  created_at: string;
+  expires_at: string;
+  consumed_at?: string;
+  released_at?: string;
+}
+
+export interface LiquidityReservationRequest {
+  organization_id: string;
+  source: string;
+  obligation_id?: string;
+  mission_id?: string;
+  swarm_id?: string;
+  agent_id?: string;
+  amount_base: string;
+  currency?: string;
+  mode?: 'REAL' | 'SIMULATION';
+  timeout_seconds?: number;
+  policy_version?: string;
+  policy_hash?: string;
+}
+
+export interface LiquidityCommitment {
+  commitment_id: string;
+  organization_id: string;
+  type: TreasuryCommitmentType;
+  lifecycle: TreasuryCommitmentLifecycle;
+  amount: string;
+  currency: string;
+  source: string;
+  source_id: string;
+  agent_id?: string;
+  created_at: string;
+  matures_at: string;
+  updated_at: string;
+}
+
+export interface ExpectedInflow {
+  inflow_id: string;
+  organization_id: string;
+  source: string;
+  expected_amount: string;
+  currency: string;
+  expected_at: string;
+  confidence: number;
+  status: TreasuryInflowStatus;
+  verified_at?: string;
+  tx_hash?: string;
+}
+
+export interface LiquidityEnvelope {
+  scope: TreasuryScopeLevel;
+  scope_id: string;
+  currency: string;
+  total_funds: string;
+  current_available: string;
+  reserved_funds: string;
+  committed_funds: string;
+  potential_exposure: string;
+  minimum_buffer: string;
+  current_capacity: string;
+  safe_commitment_capacity: string;
+  calculated_at: string;
+}
+
+export interface ForecastDataPoint {
+  timestamp: string;
+  available_liquidity: string;
+  committed_liquidity: string;
+  expected_outflow: string;
+  expected_inflow: string;
+  buffer: string;
+  safe_capacity: string;
+}
+
+export interface LiquidityForecast {
+  forecast_id: string;
+  organization_id: string;
+  horizon: TreasuryForecastHorizon;
+  scenario: TreasuryStressScenarioType;
+  current_balance: string;
+  points: ForecastDataPoint[];
+  confidence: number;
+  assumptions: string[];
+  sample_size: number;
+  generated_at: string;
+}
+
+export interface LiquidityStressScenario {
+  scenario_name: TreasuryStressScenarioType;
+  simultaneous_settlements?: number;
+  provider_fallback_rate?: number;
+  retry_surge_percentage?: number;
+  milestone_release_ratio?: number;
+  refund_surge_ratio?: number;
+  inflow_delay_hours?: number;
+  network_latency_multiplier?: number;
+}
+
+export interface LiquidityStressResult {
+  scenario_name: TreasuryStressScenarioType;
+  starting_liquidity: string;
+  total_projected_outflow: string;
+  minimum_resulting_liquidity: string;
+  buffer_breached: boolean;
+  emergency_buffer_breached: boolean;
+  worst_case_exposure: string;
+  survival_state: TreasurySurvivalState;
+  recommended_actions: string[];
+  simulated_at: string;
+}
+
+export interface TreasuryReconciliationReport {
+  report_id: string;
+  organization_id: string;
+  status: TreasuryReconciliationStatus;
+  internal_ledger_balance: string;
+  repository_balance: string;
+  vault_balance: string;
+  blockchain_balance: string;
+  discrepancy_amount: string;
+  chain_id: string;
+  vault_address: string;
+  token_address: string;
+  vault_paused: boolean;
+  vault_owner: string;
+  verified_at: string;
+  evidence: string;
+}
+
+export interface LiquidityAnomaly {
+  anomaly_id: string;
+  organization_id: string;
+  type: string;
+  severity: string;
+  affected_scope: string;
+  evidence: string;
+  detected_at: string;
+  status: string;
+}
+
+export interface TreasuryHealthSnapshot {
+  organization_id: string;
+  mode: 'REAL' | 'SIMULATION';
+  total_balance: string;
+  available_balance: string;
+  reserved_balance: string;
+  committed_balance: string;
+  pending_settlement: string;
+  disputed_balance: string;
+  minimum_buffer: string;
+  safe_capacity: string;
+  worst_case_exposure: string;
+  solvency_ratio: number;
+  operational_mode: TreasuryOperationalMode;
+  reconciliation_status: TreasuryReconciliationStatus;
+  last_verified_on_chain_balance: string;
+  verification_timestamp: string;
+  active_reservations_count: number;
+  active_anomalies_count: number;
+}
+
+export interface TreasurySummary {
+  organization_id: string;
+  vault_address: string;
+  on_chain_balance: string;
+  reserved_amount: string;
+  available_amount: string;
+  asset: string;
+  decimals: number;
+}
+
+// ==========================================
+// Task 12: Autonomous Economic Control Tower
+// ==========================================
+
+export interface EconomicStateStrip {
+  treasury_status: string;
+  policy_version: string;
+  risk_level: string;
+  execution_mode: 'LIVE' | 'SIMULATION';
+  arc_status: 'VERIFIED' | 'UNVERIFIED';
+  last_updated: string;
+}
+
+export interface ExecutiveOverview {
+  organization_id: string;
+  execution_mode: 'REAL' | 'SIMULATION';
+  active_missions_count: number;
+  active_agents_count: number;
+  active_contracts_count: number;
+  available_liquidity: string;
+  reserved_liquidity: string;
+  outstanding_obligations: string;
+  pending_settlements: string;
+  active_approvals_count: number;
+  current_policy_version: string;
+  current_treasury_mode: string;
+  security_status: string;
+  arc_verified_balance: string;
+  data_freshness: 'LIVE' | 'RECENT' | 'STALE' | 'UNAVAILABLE';
+  state_strip: EconomicStateStrip;
+  timestamp: string;
+}
+
+export type ControlCategory =
+  | 'MISSION'
+  | 'AGENT'
+  | 'ECONOMY'
+  | 'SECURITY'
+  | 'POLICY'
+  | 'TREASURY'
+  | 'EXECUTION'
+  | 'ARC'
+  | 'INTELLIGENCE';
+
+export interface ControlActivityEvent {
+  event_id: string;
+  type: string;
+  category: ControlCategory;
+  organization_id: string;
+  aggregate_id: string;
+  severity: string;
+  title: string;
+  summary: string;
+  evidence?: string;
+  timestamp: string;
+}
+
+export interface FinancialTraceStep {
+  step_number: number;
+  stage: string;
+  status: string;
+  reference_id: string;
+  description: string;
+  hash?: string;
+  timestamp: string;
+}
+
+export interface UniversalFinancialTrace {
+  trace_id: string;
+  organization_id: string;
+  payment_intent_id: string;
+  mission_id?: string;
+  task_id?: string;
+  agent_id?: string;
+  contract_id?: string;
+  obligation_id?: string;
+  policy_version: string;
+  policy_hash: string;
+  policy_decision: string;
+  risk_score: number;
+  risk_level: string;
+  approval_id?: string;
+  approval_status?: string;
+  reservation_id?: string;
+  reservation_status?: string;
+  payment_status: string;
+  execution_tx_hash?: string;
+  agent_vault_address?: string;
+  arc_chain_id?: string;
+  arc_block_number?: number;
+  reconciliation_id?: string;
+  reconciliation_status?: string;
+  observation_id?: string;
+  learning_notes?: string;
+  steps: FinancialTraceStep[];
+  created_at: string;
+}
+
+export interface TaskGraphNodeView {
+  task_id: string;
+  title: string;
+  agent_id: string;
+  status: string;
+  cost_reserved: string;
+  cost_settled: string;
+  duration_ms: number;
+  verification_rule: string;
+}
+
+export interface TaskGraphEdgeView {
+  from_task_id: string;
+  to_task_id: string;
+  type: 'DATA_FLOW' | 'DEPENDENCY' | 'DELEGATION';
+}
+
+export interface RejectedAlternativeAgent {
+  agent_id: string;
+  quoted_price: string;
+  rejection_reason: string;
+  score_difference: string;
+}
+
+export interface MissionAgentInfo {
+  agent_id: string;
+  display_name: string;
+  capability: string;
+  quoted_price: string;
+  selection_reason: string;
+  verification_rate: number;
+  risk_level: string;
+  rejected_alternatives?: RejectedAlternativeAgent[];
+}
+
+export interface MissionObligationView {
+  obligation_id: string;
+  contract_id: string;
+  payer_agent_id: string;
+  payee_agent_id: string;
+  amount: string;
+  settled_amount: string;
+  currency: string;
+  status: string;
+}
+
+export interface CurrentActionDesc {
+  action: string;
+  why: string;
+  evidence: string;
+  next_possible_action: string;
+}
+
+export interface MissionPolicySummary {
+  constitution_version: string;
+  policy_hash: string;
+  effective_rules: Record<string, string>;
+  explainability_notes: string;
+}
+
+export interface MissionTaskGraphView {
+  max_depth: number;
+  nodes: TaskGraphNodeView[];
+  edges: TaskGraphEdgeView[];
+}
+
+export interface MissionCommandCenterView {
+  mission_id: string;
+  title: string;
+  objective: string;
+  status: string;
+  budget_total: string;
+  budget_reserved: string;
+  budget_settled: string;
+  budget_remaining: string;
+  potential_exposure: string;
+  current_action: CurrentActionDesc;
+  next_expected_action: string;
+  policy_summary: MissionPolicySummary;
+  selected_agents: MissionAgentInfo[];
+  task_graph: MissionTaskGraphView;
+  obligations: MissionObligationView[];
+  timeline: ControlActivityEvent[];
+  learning_telemetry?: Record<string, unknown>;
+  updated_at: string;
+}
+
+export interface ArcStatusView {
+  chain_id: string;
+  rpc_url: string;
+  rpc_reachable: boolean;
+  latest_block_number: number;
+  agent_vault_address: string;
+  agent_vault_deployed: boolean;
+  agent_vault_paused: boolean;
+  usdc_address: string;
+  verified_treasury_balance: string;
+  live_execution_enabled: boolean;
+  last_checked_at: string;
+}
+
+export interface IncidentTimelineStep {
+  step_number: number;
+  timestamp: string;
+  subsystem: string;
+  description: string;
+}
+
+export interface ControlIncident {
+  incident_id: string;
+  organization_id: string;
+  title: string;
+  category: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  status: 'OPEN' | 'INVESTIGATING' | 'MITIGATED' | 'RESOLVED';
+  trigger_event: string;
+  detected_at: string;
+  mitigated_at?: string;
+  resolved_at?: string;
+  timeline: IncidentTimelineStep[];
+  root_cause: string;
+  resolution_notes?: string;
+}
+
+export interface ControlSearchResult {
+  type: 'MISSION' | 'AGENT' | 'CONTRACT' | 'OBLIGATION' | 'PAYMENT' | 'INCIDENT' | 'POLICY' | 'TREASURY';
+  id: string;
+  title: string;
+  subtitle: string;
+  status: string;
+  deep_link_url: string;
+}
+
+
+
 
 

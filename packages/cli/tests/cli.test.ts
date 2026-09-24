@@ -4,7 +4,47 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { test } from 'node:test';
 import { getConfig, maskApiKey, setConfigKey } from '../src/config.js';
-import { formatUsdc, printPaymentTrace, printAgentServicesList, printAgentQuote, printHire, printEconomicGraph, printSwarm, printSwarmTasks, printSwarmGraph, printSwarmTrace, printSwarmRisk, printSimulateSwarm } from '../src/output.js';
+import {
+  formatUsdc,
+  printPaymentTrace,
+  printAgentServicesList,
+  printAgentQuote,
+  printHire,
+  printEconomicGraph,
+  printSwarm,
+  printSwarmTasks,
+  printSwarmGraph,
+  printSwarmTrace,
+  printSwarmRisk,
+  printSimulateSwarm,
+  printObligationsList,
+  printObligationDetail,
+  printInvoicesList,
+  printInvoiceDetail,
+  printEscrowsList,
+  printMilestonesList,
+  printNettingProposalsList,
+  printSettlementBatchesList,
+  printReconciliationList,
+  printExposureSnapshot,
+  printHealthSnapshot,
+  printTreasuryState,
+  printTreasuryReservationsList,
+  printTreasuryReservationDetail,
+  printTreasuryForecast,
+  printTreasuryStressResult,
+  printTreasuryReconciliationReport,
+  printTreasuryHealth,
+  printTreasuryAnomaliesList,
+  printControlStateStrip,
+  printControlOverview,
+  printControlActivity,
+  printFinancialTrace,
+  printMissionCommandCenter,
+  printArcStatus,
+  printControlIncidents,
+  printControlSearch,
+} from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
   const originalConfig = getConfig();
@@ -268,4 +308,346 @@ test('AgentPay CLI Swarms — Output Formatting Test', () => {
   });
 });
 
+test('AgentPay CLI Output — Clearinghouse Formatters (Task 10)', () => {
+  const mockObligation = {
+    obligation_id: 'ob_cli_01',
+    organization_id: 'org_test',
+    payer_agent_id: 'agent_payer',
+    payee_agent_id: 'agent_payee',
+    contract_id: 'contract_cli_01',
+    amount: '30000000',
+    currency: 'USDC',
+    status: 'AUTHORIZED',
+    execution_mode: 'REAL',
+  };
 
+  const mockInvoice = {
+    invoice_id: 'inv_cli_01',
+    contract_id: 'contract_cli_01',
+    provider_agent_id: 'agent_payee',
+    requester_agent_id: 'agent_payer',
+    amount: '30000000',
+    currency: 'USDC',
+    status: 'ISSUED',
+    line_items: [{ item_number: 1, description: 'Service', amount: '30000000' }],
+  };
+
+  const mockEscrow = {
+    escrow_id: 'esc_cli_01',
+    obligation_id: 'ob_cli_01',
+    status: 'RESERVED',
+    reserved_amount: '30000000',
+    released_amount: '0',
+  };
+
+  const mockMilestones = [
+    { sequence: 1, milestone_id: 'ms_01', amount: '10000000', verification_rule: 'MIN_LENGTH_50', status: 'VERIFIED', description: 'Deliverable 1' },
+  ];
+
+  const mockNetting = [
+    { proposal_id: 'net_01', agent_a: 'agent_a', agent_b: 'agent_b', gross_total: '20000000', net_amount: '5000000', net_payer: 'agent_a', net_payee: 'agent_b', savings_amount: '15000000', status: 'PROPOSED' },
+  ];
+
+  const mockBatches = [
+    { batch_id: 'batch_01', obligation_ids: ['ob_1', 'ob_2'], gross_amount: '20000000', net_amount: '20000000', status: 'READY' },
+  ];
+
+  const mockRecon = [
+    { record_id: 'rec_01', status: 'MATCHED', payment_intent_id: 'pi_01', expected_amount: '10000000', actual_amount: '10000000' },
+  ];
+
+  const mockExposure = {
+    organization_id: 'org_test',
+    current_exposure: '30000000',
+    max_possible_exposure: '50000000',
+    reserved_in_escrow: '30000000',
+    outstanding_obligations: '30000000',
+    pending_settlements: '0',
+    disputed_amount: '0',
+    counterparties: [{ agent_id: 'agent_payee', risk_level: 'LOW', net_exposure: '30000000', committed_payable: '30000000', reserved_in_escrow: '30000000' }],
+  };
+
+  const mockHealth = {
+    organization_id: 'org_test',
+    on_chain_available: '100000000',
+    active_escrow_reserved: '30000000',
+    available_unencumbered: '70000000',
+    total_exposure: '30000000',
+    solvency_ratio: 3.33,
+    health_status: 'HEALTHY',
+    deterministic_signals: ['Adequate on-chain liquidity'],
+  };
+
+  assert.doesNotThrow(() => {
+    printObligationsList([mockObligation]);
+    printObligationDetail(mockObligation);
+    printInvoicesList([mockInvoice]);
+    printInvoiceDetail(mockInvoice);
+    printEscrowsList([mockEscrow]);
+    printMilestonesList(mockMilestones);
+    printNettingProposalsList(mockNetting);
+    printSettlementBatchesList(mockBatches);
+    printReconciliationList(mockRecon);
+    printExposureSnapshot(mockExposure);
+    printHealthSnapshot(mockHealth);
+  });
+});
+
+test('AgentPay CLI Output — Autonomous Treasury Formatters (Task 11)', () => {
+  const mockState = {
+    organization_id: 'org_test',
+    mode: 'REAL',
+    total_balance: '100000000',
+    available_balance: '80000000',
+    reserved_balance: '20000000',
+    committed_balance: '5000000',
+    pending_settlement: '2000000',
+    disputed_balance: '0',
+    minimum_buffer: '10000000',
+    safe_capacity: '70000000',
+    worst_case_exposure: '27000000',
+    solvency_ratio: 3.7,
+    operational_mode: 'LIQUIDITY_AVAILABLE',
+  };
+
+  const mockReservation = {
+    reservation_id: 'res_cli_01',
+    organization_id: 'org_test',
+    amount: '15000000',
+    purpose: 'SWARM_MISSION',
+    priority: 10,
+    agent_id: 'agent_cli_01',
+    mission_id: 'msn_01',
+    status: 'ACTIVE',
+    mode: 'REAL',
+    timeout_seconds: 3600,
+    created_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 3600000).toISOString(),
+  };
+
+  const mockForecast = {
+    organization_id: 'org_test',
+    horizon: '24h',
+    survival_state: 'SAFE',
+    starting_balance: '100000000',
+    expected_inflows: '10000000',
+    expected_outflows: '15000000',
+    worst_case_outflows: '25000000',
+    projected_closing_balance: '95000000',
+    stress_scenario: 'OUTFLOW_SPIKE',
+    gating_decision: 'LIQUIDITY_AVAILABLE',
+  };
+
+  const mockStress = {
+    scenario: 'OUTFLOW_SPIKE',
+    survival_state: 'SAFE',
+    pre_stress_balance: '100000000',
+    simulated_shock_outflow: '20000000',
+    simulated_inflow_haircut: '2000000',
+    post_stress_buffer_headroom: '68000000',
+    max_survivable_drawdown: '70000000',
+    capital_adequacy_ratio: 3.5,
+    safe_to_reserve: true,
+    recommendations: ['Liquidity buffer sufficient for peak volume'],
+  };
+
+  const mockRecon = {
+    organization_id: 'org_test',
+    reconciliation_status: 'MATCHED',
+    ledger_balance: '100000000',
+    repository_balance: '100000000',
+    vault_balance: '100000000',
+    blockchain_balance: '100000000',
+    discrepancy_amount: '0',
+    chain_id: 'arc-testnet-1',
+    vault_address: '0x1234567890123456789012345678901234567890',
+    vault_paused: false,
+    evidence: 'On-chain RPC event log and vault state verified.',
+  };
+
+  const mockHealth = {
+    organization_id: 'org_test',
+    mode: 'REAL',
+    total_balance: '100000000',
+    available_balance: '80000000',
+    reserved_balance: '20000000',
+    committed_balance: '5000000',
+    safe_capacity: '70000000',
+    solvency_ratio: 4.0,
+    operational_mode: 'LIQUIDITY_AVAILABLE',
+    reconciliation_status: 'MATCHED',
+    active_reservations_count: 3,
+    active_anomalies_count: 0,
+  };
+
+  const mockAnomaly = {
+    anomaly_id: 'anom_01',
+    organization_id: 'org_test',
+    type: 'HIGH_CONCENTRATION',
+    severity: 'MEDIUM',
+    affected_scope: 'SWARM_ORCHESTRATOR',
+    evidence: 'Over 60% of reserved funds held by single agent.',
+  };
+
+  assert.doesNotThrow(() => {
+    printTreasuryState(mockState);
+    printTreasuryReservationsList([mockReservation]);
+    printTreasuryReservationDetail(mockReservation);
+    printTreasuryForecast(mockForecast);
+    printTreasuryStressResult(mockStress);
+    printTreasuryReconciliationReport(mockRecon);
+    printTreasuryHealth(mockHealth);
+    printTreasuryAnomaliesList([mockAnomaly]);
+  });
+});
+
+test('AgentPay CLI Output — Autonomous Economic Control Tower Formatters (Task 12)', () => {
+  const mockStrip = {
+    treasury_status: 'HEALTHY',
+    policy_version: 'v8 ACTIVE',
+    risk_level: 'NORMAL',
+    execution_mode: 'LIVE',
+    arc_status: 'VERIFIED',
+    last_updated: new Date().toISOString(),
+  };
+
+  const mockOverview = {
+    organization_id: 'org_test',
+    execution_mode: 'REAL',
+    data_freshness: 'LIVE',
+    active_missions_count: 3,
+    active_agents_count: 12,
+    active_contracts_count: 5,
+    active_approvals_count: 1,
+    available_liquidity: '82500000000',
+    reserved_liquidity: '25000000000',
+    outstanding_obligations: '15000000000',
+    pending_settlements: '5000000000',
+    arc_verified_balance: '125000000000',
+    current_policy_version: 'v8 ACTIVE',
+    current_treasury_mode: 'NORMAL',
+    security_status: 'NORMAL',
+  };
+
+  const mockActivity = [
+    {
+      category: 'TREASURY',
+      timestamp: new Date().toISOString(),
+      severity: 'SUCCESS',
+      title: 'Reconciliation Verified',
+      aggregate_id: 'treasury_default',
+      summary: 'Zero discrepancies detected',
+    },
+  ];
+
+  const mockTrace = {
+    trace_id: 'trc_pi_live_01',
+    payment_intent_id: 'pi_live_01',
+    mission_id: 'msn_01',
+    agent_id: 'agent_analyst',
+    contract_id: 'contract_01',
+    obligation_id: 'ob_01',
+    policy_decision: 'ALLOW',
+    policy_version: 'v8',
+    risk_score: 12,
+    risk_level: 'LOW',
+    reservation_id: 'res_01',
+    reservation_status: 'CONSUMED',
+    payment_status: 'CONFIRMED',
+    execution_tx_hash: '0x1234...',
+    arc_block_number: 1492041,
+    arc_chain_id: '5042',
+    reconciliation_status: 'MATCHED',
+    learning_notes: 'Verified deliverable',
+    steps: [
+      { step_number: 1, stage: 'MISSION', status: 'COMPLETED', reference_id: 'msn_01', description: 'Mission init' },
+      { step_number: 13, stage: 'LEARNING', status: 'RECORDED', reference_id: 'obs_01', description: 'Learning complete' },
+    ],
+  };
+
+  const mockMcc = {
+    mission_id: 'msn_01',
+    title: 'Macro Research Mission',
+    objective: 'Orderbook scanning',
+    status: 'EXECUTING',
+    budget_total: '50000000',
+    budget_reserved: '15000000',
+    budget_settled: '10000000',
+    budget_remaining: '25000000',
+    potential_exposure: '15000000',
+    current_action: {
+      action: 'Waiting for verification',
+      why: 'Task 01 complete',
+      evidence: 'Payload checksum matched',
+    },
+    next_expected_action: 'RUNNING_VERIFICATION',
+    selected_agents: [
+      {
+        agent_id: 'agent_analyst',
+        display_name: 'Lead Analyst',
+        capability: 'modeling',
+        quoted_price: '10000000',
+        verification_rate: 0.994,
+        selection_reason: 'Lowest latency',
+        rejected_alternatives: [
+          {
+            agent_id: 'agent_alt_1',
+            quoted_price: '15000000',
+            rejection_reason: 'Higher price',
+            score_difference: '-14%',
+          },
+        ],
+      },
+    ],
+  };
+
+  const mockArc = {
+    chain_id: '5042',
+    rpc_reachable: true,
+    rpc_url: 'https://rpc.arc.network',
+    latest_block_number: 1492041,
+    agent_vault_address: '0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852',
+    agent_vault_deployed: true,
+    agent_vault_paused: false,
+    usdc_address: '0x0000...',
+    verified_treasury_balance: '125000000000',
+    live_execution_enabled: true,
+  };
+
+  const mockIncidents = [
+    {
+      incident_id: 'inc_01',
+      title: 'Provider Latency Spike',
+      status: 'RESOLVED',
+      severity: 'MEDIUM',
+      trigger_event: '504 Timeout',
+      root_cause: 'External API degraded',
+      timeline: [
+        { step_number: 1, subsystem: 'MISSION', description: 'Timeout detected' },
+        { step_number: 2, subsystem: 'REPLANNER', description: 'Selected fallback provider' },
+      ],
+    },
+  ];
+
+  const mockSearch = [
+    {
+      type: 'MISSION',
+      id: 'msn_01',
+      title: 'Macro Research Mission',
+      subtitle: 'Executing',
+      status: 'EXECUTING',
+      deep_link_url: '/control/missions/msn_01',
+    },
+  ];
+
+  assert.doesNotThrow(() => {
+    printControlStateStrip(mockStrip);
+    printControlOverview(mockOverview);
+    printControlActivity(mockActivity);
+    printFinancialTrace(mockTrace);
+    printMissionCommandCenter(mockMcc);
+    printArcStatus(mockArc);
+    printControlIncidents(mockIncidents);
+    printControlSearch(mockSearch, 'macro');
+  });
+});

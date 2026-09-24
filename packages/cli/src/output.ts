@@ -812,5 +812,446 @@ export function printPolicyChangeRequestsList(list: any[]): void {
   console.log('============================================================');
 }
 
+// =============================================================================
+// CLEARINGHOUSE FORMATTERS (TASK 10)
+// =============================================================================
+
+export function printObligationsList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC OBLIGATIONS (${list.length})`);
+  console.log('============================================================');
+  for (const ob of list) {
+    const modeBadge = ob.execution_mode === 'SIMULATION' ? '[SIM]' : '[REAL]';
+    console.log(`${modeBadge} [${ob.status}] ${ob.obligation_id} | ${ob.payer_agent_id} -> ${ob.payee_agent_id} | ${ob.amount} ${ob.currency}`);
+  }
+  console.log('============================================================');
+}
+
+export function printObligationDetail(ob: any): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC OBLIGATION: ${ob.obligation_id}`);
+  console.log('============================================================');
+  console.log(`Status:         ${ob.status}`);
+  console.log(`Execution Mode: ${ob.execution_mode}`);
+  console.log(`Payer:          ${ob.payer_agent_id}`);
+  console.log(`Payee:          ${ob.payee_agent_id}`);
+  console.log(`Contract:       ${ob.contract_id}`);
+  console.log(`Amount:         ${ob.amount} ${ob.currency}`);
+  console.log(`Settled:        ${ob.settled_amount || '0'} ${ob.currency}`);
+  if (ob.payment_intent_id) console.log(`Intent ID:      ${ob.payment_intent_id}`);
+  console.log('============================================================');
+}
+
+export function printInvoicesList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC INVOICES (${list.length})`);
+  console.log('============================================================');
+  for (const inv of list) {
+    console.log(`[${inv.status}] ${inv.invoice_id} | Provider: ${inv.provider_agent_id} -> Requester: ${inv.requester_agent_id} | ${inv.amount} ${inv.currency}`);
+  }
+  console.log('============================================================');
+}
+
+export function printInvoiceDetail(inv: any): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC INVOICE: ${inv.invoice_id}`);
+  console.log('============================================================');
+  console.log(`Status:         ${inv.status}`);
+  console.log(`Contract:       ${inv.contract_id}`);
+  console.log(`Provider:       ${inv.provider_agent_id}`);
+  console.log(`Requester:      ${inv.requester_agent_id}`);
+  console.log(`Amount:         ${inv.amount} ${inv.currency}`);
+  console.log(`Line Items:     ${inv.line_items?.length || 0}`);
+  if (inv.line_items) {
+    for (const item of inv.line_items) {
+      console.log(`  - #${item.item_number}: ${item.description} (${item.amount})`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printEscrowsList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC ESCROWS (${list.length})`);
+  console.log('============================================================');
+  for (const esc of list) {
+    console.log(`[${esc.status}] ${esc.escrow_id} | Obligation: ${esc.obligation_id} | Reserved: ${esc.reserved_amount} | Released: ${esc.released_amount}`);
+  }
+  console.log('============================================================');
+}
+
+export function printMilestonesList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`PAYMENT MILESTONES (${list.length})`);
+  console.log('============================================================');
+  for (const ms of list) {
+    console.log(`[${ms.status}] #${ms.sequence} ${ms.milestone_id} | Amount: ${ms.amount} | Rule: ${ms.verification_rule}`);
+    console.log(`  Description: ${ms.description}`);
+  }
+  console.log('============================================================');
+}
+
+export function printNettingProposalsList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`BILATERAL NETTING PROPOSALS (${list.length})`);
+  console.log('============================================================');
+  for (const p of list) {
+    console.log(`[${p.status}] ${p.proposal_id} | Between ${p.agent_a} & ${p.agent_b}`);
+    console.log(`  Gross: ${p.gross_total} | Net: ${p.net_amount} (${p.net_payer} -> ${p.net_payee}) | Savings: ${p.savings_amount}`);
+  }
+  console.log('============================================================');
+}
+
+export function printSettlementBatchesList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`SETTLEMENT BATCHES (${list.length})`);
+  console.log('============================================================');
+  for (const b of list) {
+    console.log(`[${b.status}] ${b.batch_id} | Items: ${b.obligation_ids?.length || 0} | Gross: ${b.gross_amount} | Net: ${b.net_amount}`);
+  }
+  console.log('============================================================');
+}
+
+export function printReconciliationList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`RECONCILIATION AUDIT RECORDS (${list.length})`);
+  console.log('============================================================');
+  for (const r of list) {
+    const badge = r.status === 'MATCHED' ? '✓ MATCHED' : r.status === 'MISMATCH' ? '✗ MISMATCH' : `? ${r.status}`;
+    console.log(`[${badge}] ${r.record_id} | Intent: ${r.payment_intent_id} | Expected: ${r.expected_amount} -> Actual: ${r.actual_amount}`);
+    if (r.discrepancy_notes) console.log(`  Notes: ${r.discrepancy_notes}`);
+  }
+  console.log('============================================================');
+}
+
+export function printExposureSnapshot(exp: any): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC EXPOSURE SNAPSHOT [${exp.execution_mode || 'REAL'}]`);
+  console.log('============================================================');
+  console.log(`Organization:            ${exp.organization_id}`);
+  console.log(`Current Exposure:        ${exp.current_exposure}`);
+  console.log(`Max Possible Exposure:   ${exp.max_possible_exposure}`);
+  console.log(`Reserved in Escrow:      ${exp.reserved_in_escrow}`);
+  console.log(`Outstanding Obligations: ${exp.outstanding_obligations}`);
+  console.log(`Pending Settlements:     ${exp.pending_settlements}`);
+  console.log(`Disputed Amount:         ${exp.disputed_amount}`);
+  console.log(`Counterparties Count:    ${exp.counterparties?.length || 0}`);
+  if (exp.counterparties?.length) {
+    for (const cp of exp.counterparties) {
+      console.log(`  - ${cp.agent_id} [${cp.risk_level}]: Net Exposure ${cp.net_exposure} (Payable: ${cp.committed_payable}, Escrow: ${cp.reserved_in_escrow})`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printHealthSnapshot(h: any): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC HEALTH SNAPSHOT [${h.health_status}]`);
+  console.log('============================================================');
+  console.log(`Organization:            ${h.organization_id}`);
+  console.log(`On-Chain Available:      ${h.on_chain_available}`);
+  console.log(`Active Escrow Reserved:  ${h.active_escrow_reserved}`);
+  console.log(`Available Unencumbered:  ${h.available_unencumbered}`);
+  console.log(`Total Exposure:          ${h.total_exposure}`);
+  console.log(`Solvency Ratio:          ${h.solvency_ratio}`);
+  if (h.deterministic_signals?.length) {
+    console.log('Signals:');
+    for (const sig of h.deterministic_signals) {
+      console.log(`  - ${sig}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printTreasuryState(s: any): void {
+  console.log('============================================================');
+  console.log(`TREASURY STATE [${s.mode || 'REAL'}] — ${s.operational_mode || 'UNKNOWN'}`);
+  console.log('============================================================');
+  console.log(`Organization:            ${s.organization_id}`);
+  console.log(`Total Balance:           ${s.total_balance} USDC`);
+  console.log(`Available Balance:       ${s.available_balance} USDC`);
+  console.log(`Reserved Balance:        ${s.reserved_balance} USDC`);
+  console.log(`Committed Balance:       ${s.committed_balance} USDC`);
+  console.log(`Pending Settlement:      ${s.pending_settlement} USDC`);
+  console.log(`Disputed Balance:        ${s.disputed_balance} USDC`);
+  console.log(`Minimum Buffer:          ${s.minimum_buffer} USDC`);
+  console.log(`Safe Capacity:           ${s.safe_capacity} USDC`);
+  console.log(`Worst Case Exposure:     ${s.worst_case_exposure} USDC`);
+  console.log(`Solvency Ratio:          ${s.solvency_ratio}`);
+  console.log('============================================================');
+}
+
+export function printTreasuryReservationsList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`TREASURY LIQUIDITY RESERVATIONS (${list.length})`);
+  console.log('============================================================');
+  for (const r of list) {
+    console.log(`[${r.status}] ${r.reservation_id} | Amount: ${r.amount} USDC | Priority: ${r.priority}`);
+    console.log(`  Purpose: ${r.purpose} | Agent: ${r.agent_id || 'N/A'} | Timeout: ${r.timeout_seconds}s | Expires: ${r.expires_at}`);
+  }
+  console.log('============================================================');
+}
+
+export function printTreasuryReservationDetail(r: any): void {
+  console.log('============================================================');
+  console.log(`LIQUIDITY RESERVATION [${r.status}] — ${r.reservation_id}`);
+  console.log('============================================================');
+  console.log(`Organization:            ${r.organization_id}`);
+  console.log(`Amount:                  ${r.amount} USDC`);
+  console.log(`Agent ID:                ${r.agent_id || 'N/A'}`);
+  console.log(`Mission ID:              ${r.mission_id || 'N/A'}`);
+  console.log(`Purpose:                 ${r.purpose}`);
+  console.log(`Priority:                ${r.priority}`);
+  console.log(`Execution Mode:          ${r.mode}`);
+  console.log(`Created At:              ${r.created_at}`);
+  console.log(`Expires At:              ${r.expires_at}`);
+  if (r.payment_intent_id) console.log(`Payment Intent:          ${r.payment_intent_id}`);
+  if (r.release_reason) console.log(`Release Reason:          ${r.release_reason}`);
+  console.log('============================================================');
+}
+
+export function printTreasuryForecast(fc: any): void {
+  console.log('============================================================');
+  console.log(`LIQUIDITY FORECAST [${fc.horizon}] — Survival State: ${fc.survival_state}`);
+  console.log('============================================================');
+  console.log(`Organization:            ${fc.organization_id}`);
+  console.log(`Starting Balance:        ${fc.starting_balance} USDC`);
+  console.log(`Expected Inflows:        ${fc.expected_inflows} USDC`);
+  console.log(`Expected Outflows:       ${fc.expected_outflows} USDC`);
+  console.log(`Worst Case Outflows:     ${fc.worst_case_outflows} USDC`);
+  console.log(`Projected Closing:       ${fc.projected_closing_balance} USDC`);
+  console.log(`Stress Scenario:         ${fc.stress_scenario}`);
+  if (fc.gating_decision) console.log(`Gating Decision:         ${fc.gating_decision}`);
+  console.log('============================================================');
+}
+
+export function printTreasuryStressResult(sr: any): void {
+  console.log('============================================================');
+  console.log(`TREASURY STRESS TEST RESULT — Scenario: ${sr.scenario}`);
+  console.log('============================================================');
+  console.log(`Survival State:          ${sr.survival_state}`);
+  console.log(`Pre-Stress Balance:      ${sr.pre_stress_balance} USDC`);
+  console.log(`Simulated Outflow:       ${sr.simulated_shock_outflow} USDC`);
+  console.log(`Simulated Inflow Haircut:${sr.simulated_inflow_haircut} USDC`);
+  console.log(`Post-Stress Buffer:      ${sr.post_stress_buffer_headroom} USDC`);
+  console.log(`Max Survivable Drawdown: ${sr.max_survivable_drawdown} USDC`);
+  console.log(`Capital Adequacy Ratio:  ${sr.capital_adequacy_ratio}`);
+  console.log(`Safe To Reserve:         ${sr.safe_to_reserve ? 'YES' : 'NO'}`);
+  if (sr.recommendations?.length) {
+    console.log('Recommendations:');
+    for (const rec of sr.recommendations) {
+      console.log(`  - ${rec}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printTreasuryReconciliationReport(rec: any): void {
+  console.log('============================================================');
+  console.log(`TREASURY RECONCILIATION AUDIT — Status: ${rec.reconciliation_status}`);
+  console.log('============================================================');
+  console.log(`Organization:            ${rec.organization_id}`);
+  console.log(`Ledger Balance:          ${rec.ledger_balance} USDC`);
+  console.log(`Repository Balance:      ${rec.repository_balance} USDC`);
+  console.log(`Vault Balance:           ${rec.vault_balance} USDC`);
+  console.log(`Blockchain Balance:      ${rec.blockchain_balance} USDC`);
+  console.log(`Discrepancy:             ${rec.discrepancy_amount} USDC`);
+  console.log(`Chain ID:                ${rec.chain_id || 'N/A'}`);
+  console.log(`Vault Address:           ${rec.vault_address || 'N/A'}`);
+  console.log(`Vault Paused:            ${rec.vault_paused ? 'YES (EMERGENCY)' : 'NO'}`);
+  console.log(`Evidence:                ${rec.evidence}`);
+  console.log('============================================================');
+}
+
+export function printTreasuryHealth(h: any): void {
+  console.log('============================================================');
+  console.log(`TREASURY HEALTH & SOLVENCY SNAPSHOT [${h.operational_mode || 'HEALTHY'}]`);
+  console.log('============================================================');
+  console.log(`Organization:            ${h.organization_id}`);
+  console.log(`Mode:                    ${h.mode || 'REAL'}`);
+  console.log(`Total Balance:           ${h.total_balance} USDC`);
+  console.log(`Available Balance:       ${h.available_balance} USDC`);
+  console.log(`Reserved Balance:        ${h.reserved_balance} USDC`);
+  console.log(`Committed Balance:       ${h.committed_balance} USDC`);
+  console.log(`Safe Capacity:           ${h.safe_capacity} USDC`);
+  console.log(`Solvency Ratio:          ${h.solvency_ratio}`);
+  console.log(`Reconciliation:          ${h.reconciliation_status}`);
+  console.log(`Active Reservations:     ${h.active_reservations_count}`);
+  console.log(`Active Anomalies:        ${h.active_anomalies_count}`);
+  console.log('============================================================');
+}
+
+export function printTreasuryAnomaliesList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`TREASURY LIQUIDITY ANOMALIES (${list.length})`);
+  console.log('============================================================');
+  for (const a of list) {
+    console.log(`[${a.severity}] ${a.anomaly_id} | Type: ${a.type} | Scope: ${a.affected_scope}`);
+    console.log(`  Evidence: ${a.evidence}`);
+  }
+  console.log('============================================================');
+}
+
+// ==========================================
+// Task 12: Autonomous Economic Control Tower
+// ==========================================
+
+export function printControlStateStrip(s: any): void {
+  console.log('============================================================');
+  console.log('ECONOMIC STATE STRIP — REAL-TIME OPERATIONAL BANNER');
+  console.log('============================================================');
+  console.log(`TREASURY:       ${s.treasury_status}`);
+  console.log(`POLICY:         ${s.policy_version}`);
+  console.log(`RISK:           ${s.risk_level}`);
+  console.log(`EXECUTION:      ${s.execution_mode}`);
+  console.log(`ARC:            ${s.arc_status}`);
+  console.log(`LAST UPDATED:   ${s.last_updated}`);
+  console.log('============================================================');
+}
+
+export function printControlOverview(o: any): void {
+  console.log('============================================================');
+  console.log('AUTONOMOUS ECONOMIC CONTROL TOWER — EXECUTIVE OVERVIEW');
+  console.log('============================================================');
+  console.log(`Organization:            ${o.organization_id}`);
+  console.log(`Execution Mode:          ${o.execution_mode}`);
+  console.log(`Data Freshness:          ${o.data_freshness}`);
+  console.log('------------------------------------------------------------');
+  console.log(`Active Missions:         ${o.active_missions_count}`);
+  console.log(`Active Agents:           ${o.active_agents_count}`);
+  console.log(`Active Contracts:        ${o.active_contracts_count}`);
+  console.log(`Active Approvals:        ${o.active_approvals_count}`);
+  console.log('------------------------------------------------------------');
+  console.log(`Available Liquidity:     ${o.available_liquidity} USDC`);
+  console.log(`Reserved Liquidity:      ${o.reserved_liquidity} USDC`);
+  console.log(`Outstanding Obligations: ${o.outstanding_obligations} USDC`);
+  console.log(`Pending Settlements:     ${o.pending_settlements} USDC`);
+  console.log(`Arc Verified Balance:    ${o.arc_verified_balance} USDC`);
+  console.log('------------------------------------------------------------');
+  console.log(`Current Policy:          ${o.current_policy_version}`);
+  console.log(`Current Treasury Mode:   ${o.current_treasury_mode}`);
+  console.log(`Security Status:         ${o.security_status}`);
+  console.log('============================================================');
+}
+
+export function printControlActivity(events: any[]): void {
+  console.log('============================================================');
+  console.log(`REALTIME ECONOMIC TIMELINE (${events.length} events)`);
+  console.log('============================================================');
+  for (const e of events) {
+    const timeStr = new Date(e.timestamp).toISOString();
+    console.log(`[${e.category}] ${timeStr} | ${e.severity} | ${e.title}`);
+    console.log(`  Aggregate: ${e.aggregate_id} | Summary: ${e.summary}`);
+  }
+  console.log('============================================================');
+}
+
+export function printFinancialTrace(t: any): void {
+  console.log('============================================================');
+  console.log(`UNIVERSAL FINANCIAL TRACE — Trace ID: ${t.trace_id}`);
+  console.log('============================================================');
+  console.log(`Intent ID:       ${t.payment_intent_id}`);
+  console.log(`Mission:         ${t.mission_id || 'N/A'}`);
+  console.log(`Agent:           ${t.agent_id || 'N/A'}`);
+  console.log(`Contract:        ${t.contract_id || 'N/A'}`);
+  console.log(`Obligation:      ${t.obligation_id || 'N/A'}`);
+  console.log(`Policy Decision: ${t.policy_decision} (Version: ${t.policy_version})`);
+  console.log(`Risk Score:      ${t.risk_score} (${t.risk_level})`);
+  console.log(`Reservation:     ${t.reservation_id || 'N/A'} [${t.reservation_status || 'CONSUMED'}]`);
+  console.log(`Payment Status:  ${t.payment_status}`);
+  console.log(`Execution Hash:  ${t.execution_tx_hash || 'N/A'}`);
+  console.log(`Arc Settlement:  Block ${t.arc_block_number || 'N/A'} on Chain ${t.arc_chain_id || 'N/A'}`);
+  console.log(`Reconciliation:  ${t.reconciliation_status || 'MATCHED'}`);
+  console.log(`Learning Notes:  ${t.learning_notes || 'N/A'}`);
+  console.log('------------------------------------------------------------');
+  console.log('EXECUTION CHAIN:');
+  for (const step of (t.steps || [])) {
+    console.log(`  [Stage ${step.step_number}: ${step.stage}] Status: ${step.status} | Ref: ${step.reference_id}`);
+    console.log(`    ${step.description}`);
+  }
+  console.log('============================================================');
+}
+
+export function printMissionCommandCenter(m: any): void {
+  console.log('============================================================');
+  console.log(`MISSION COMMAND CENTER — [${m.status}] ${m.title}`);
+  console.log('============================================================');
+  console.log(`Mission ID:         ${m.mission_id}`);
+  console.log(`Objective:          ${m.objective}`);
+  console.log('------------------------------------------------------------');
+  console.log(`Total Budget:       ${m.budget_total} USDC`);
+  console.log(`Reserved:           ${m.budget_reserved} USDC`);
+  console.log(`Settled:            ${m.budget_settled} USDC`);
+  console.log(`Remaining:          ${m.budget_remaining} USDC`);
+  console.log(`Potential Exposure: ${m.potential_exposure} USDC`);
+  console.log('------------------------------------------------------------');
+  console.log(`CURRENT ACTION:     ${m.current_action?.action}`);
+  console.log(`WHY:                ${m.current_action?.why}`);
+  console.log(`EVIDENCE:           ${m.current_action?.evidence}`);
+  console.log(`NEXT ACTION:        ${m.next_expected_action}`);
+  console.log('------------------------------------------------------------');
+  console.log(`ACTIVE PROVIDERS (${m.selected_agents?.length || 0}):`);
+  for (const a of (m.selected_agents || [])) {
+    console.log(`  * ${a.display_name} (${a.agent_id})`);
+    console.log(`    Capability: ${a.capability} | Price: ${a.quoted_price} USDC | Trust: ${(a.verification_rate * 100).toFixed(1)}%`);
+    console.log(`    Selection Reason: ${a.selection_reason}`);
+    if (a.rejected_alternatives?.length) {
+      console.log('    Alternatives Rejected:');
+      for (const alt of a.rejected_alternatives) {
+        console.log(`      - ${alt.agent_id} (${alt.quoted_price} USDC): ${alt.rejection_reason} [Diff: ${alt.score_difference}]`);
+      }
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printArcStatus(a: any): void {
+  console.log('============================================================');
+  console.log(`ARC BLOCKCHAIN SETTLEMENT VERIFICATION [Chain ID: ${a.chain_id}]`);
+  console.log('============================================================');
+  console.log(`RPC Reachable:           ${a.rpc_reachable ? 'YES (VERIFIED)' : 'UNREACHABLE'}`);
+  console.log(`RPC Endpoint:            ${a.rpc_url}`);
+  console.log(`Latest Block:            ${a.latest_block_number}`);
+  console.log(`AgentVault Address:      ${a.agent_vault_address || 'AGENTVAULT NOT DEPLOYED'}`);
+  console.log(`AgentVault Deployed:     ${a.agent_vault_deployed ? 'YES' : 'NO'}`);
+  console.log(`AgentVault Paused:       ${a.agent_vault_paused ? 'YES (EMERGENCY HALT)' : 'NO'}`);
+  console.log(`USDC Contract:           ${a.usdc_address}`);
+  console.log(`Verified Treasury:       ${a.verified_treasury_balance} USDC`);
+  console.log(`Live Execution Enabled:  ${a.live_execution_enabled ? 'LIVE ON-CHAIN' : 'SIMULATION MODE'}`);
+  console.log('============================================================');
+}
+
+export function printControlIncidents(incidents: any[]): void {
+  console.log('============================================================');
+  console.log(`INCIDENT CENTER (${incidents.length} incidents)`);
+  console.log('============================================================');
+  for (const inc of incidents) {
+    console.log(`[${inc.status}] ${inc.incident_id} | ${inc.severity} | ${inc.title}`);
+    console.log(`  Trigger:    ${inc.trigger_event}`);
+    console.log(`  Root Cause: ${inc.root_cause}`);
+    if (inc.timeline?.length) {
+      console.log('  Recovery Timeline:');
+      for (const step of inc.timeline) {
+        console.log(`    ${step.step_number}. [${step.subsystem}] ${step.description}`);
+      }
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printControlSearch(results: any[], query: string): void {
+  console.log('============================================================');
+  console.log(`CONTROL TOWER SEARCH RESULTS for "${query}" (${results.length} matches)`);
+  console.log('============================================================');
+  for (const r of results) {
+    console.log(`[${r.type}] ${r.id} | ${r.title}`);
+    console.log(`  ${r.subtitle} | Status: ${r.status}`);
+    console.log(`  URL: ${r.deep_link_url}`);
+  }
+  console.log('============================================================');
+}
+
+
+
 
 

@@ -774,6 +774,403 @@ class ConstitutionsResource:
     def review_change(self, change_request_id: str, approve: bool, reviewer: str = "governance_reviewer", notes: str = "") -> Dict[str, Any]:
         return self._client._request("POST", f"/v1/constitutions/changes/{change_request_id}/review", json={"approve": approve, "reviewer": reviewer, "notes": notes})
 
+
+class ClearinghouseResource:
+    """
+    Autonomous Economic Clearinghouse Resource (Task 10)
+    Coordinates obligations, invoices, escrows, milestones, netting, batches, refunds, and reconciliation.
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    # Obligations
+    def create_obligation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/economy/obligations", json=data)
+
+    def list_obligations(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/obligations", params=params)
+
+    def get_obligation(self, obligation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/economy/obligations/{obligation_id}")
+
+    def cancel_obligation(self, obligation_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/obligations/{obligation_id}/cancel", json={"reason": reason})
+
+    # Invoices
+    def create_invoice(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/economy/invoices", json=data)
+
+    def list_invoices(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/invoices", params=params)
+
+    def get_invoice(self, invoice_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/economy/invoices/{invoice_id}")
+
+    def accept_invoice(self, invoice_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/invoices/{invoice_id}/accept")
+
+    def dispute_invoice(self, invoice_id: str, reason: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/invoices/{invoice_id}/dispute", json={"reason": reason})
+
+    # Escrows
+    def create_escrow(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/economy/escrows", json=data)
+
+    def list_escrows(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/escrows", params=params)
+
+    def get_escrow(self, escrow_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/economy/escrows/{escrow_id}")
+
+    def release_escrow(self, escrow_id: str, amount: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/escrows/{escrow_id}/release", json={"amount": amount})
+
+    def refund_escrow(self, escrow_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/escrows/{escrow_id}/refund", json={"reason": reason})
+
+    # Milestones
+    def create_milestone(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/economy/milestones", json=data)
+
+    def list_milestones(self, contract_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"contract_id": contract_id} if contract_id else None
+        return self._client._request("GET", "/v1/economy/milestones", params=params)
+
+    def submit_milestone(self, milestone_id: str, actual_output: str, result_hash: Optional[str] = None, evidence_uri: Optional[str] = None) -> Dict[str, Any]:
+        payload = {"actual_output": actual_output}
+        if result_hash:
+            payload["result_hash"] = result_hash
+        if evidence_uri:
+            payload["evidence_uri"] = evidence_uri
+        return self._client._request("POST", f"/v1/economy/milestones/{milestone_id}/submit", json=payload)
+
+    def verify_milestone(self, milestone_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/milestones/{milestone_id}/verify")
+
+    def settle_milestone(self, milestone_id: str, idempotency_key: Optional[str] = None) -> Dict[str, Any]:
+        payload = {"idempotency_key": idempotency_key} if idempotency_key else {}
+        return self._client._request("POST", f"/v1/economy/milestones/{milestone_id}/settle", json=payload)
+
+    # Netting
+    def propose_netting(self, organization_id: str, agent_a: str, agent_b: str, currency: str = "USDC", ttl_seconds: int = 3600) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/economy/netting/proposals", json={
+            "organization_id": organization_id,
+            "agent_a": agent_a,
+            "agent_b": agent_b,
+            "currency": currency,
+            "ttl_seconds": ttl_seconds,
+        })
+
+    def list_netting(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/netting/proposals", params=params)
+
+    def approve_netting(self, proposal_id: str, agent_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/netting/{proposal_id}/approve", json={"agent_id": agent_id})
+
+    def execute_netting(self, proposal_id: str, idempotency_key: Optional[str] = None) -> Dict[str, Any]:
+        payload = {"idempotency_key": idempotency_key} if idempotency_key else {}
+        return self._client._request("POST", f"/v1/economy/netting/{proposal_id}/execute", json=payload)
+
+    # Batches
+    def create_batch(self, organization_id: str, currency: str, obligation_ids: List[str]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/economy/batches", json={
+            "organization_id": organization_id,
+            "currency": currency,
+            "obligation_ids": obligation_ids,
+        })
+
+    def list_batches(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/batches", params=params)
+
+    def get_batch(self, batch_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/economy/batches/{batch_id}")
+
+    def execute_batch(self, batch_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/batches/{batch_id}/execute")
+
+    # Refunds
+    def request_refund(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/economy/refunds", json=data)
+
+    def list_refunds(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/refunds", params=params)
+
+    def approve_refund(self, refund_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/refunds/{refund_id}/approve")
+
+    def execute_refund(self, refund_id: str, idempotency_key: Optional[str] = None) -> Dict[str, Any]:
+        payload = {"idempotency_key": idempotency_key} if idempotency_key else {}
+        return self._client._request("POST", f"/v1/economy/refunds/{refund_id}/execute", json=payload)
+
+    # Reconciliation, Exposure, Health & Ledger
+    def list_reconciliation(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/reconciliation", params=params)
+
+    def reconcile_obligation(self, obligation_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/economy/reconciliation/{obligation_id}")
+
+    def get_exposure(self, org_id: Optional[str] = None, mode: str = "REAL") -> Dict[str, Any]:
+        params = {"mode": mode}
+        if org_id:
+            params["org_id"] = org_id
+        return self._client._request("GET", "/v1/economy/exposure", params=params)
+
+    def get_health(self, org_id: Optional[str] = None, mode: str = "REAL", balance: Optional[str] = None) -> Dict[str, Any]:
+        params = {"mode": mode}
+        if org_id:
+            params["org_id"] = org_id
+        if balance:
+            params["balance"] = balance
+        return self._client._request("GET", "/v1/economy/health", params=params)
+
+    def get_ledger(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"org_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/economy/clearing/ledger", params=params)
+
+
+class TreasuryReservationsResource:
+    """
+    Autonomous Treasury Liquidity Reservations Resource (Task 11)
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def list(
+        self,
+        org_id: Optional[str] = None,
+        mode: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        if status:
+            params["status"] = status
+        return self._client._request("GET", "/v1/treasury/reservations", params=params or None)
+
+    def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/treasury/reservations", json=data)
+
+    def get(self, reservation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/treasury/reservations/{reservation_id}")
+
+    def release(self, reservation_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+        payload = {"reason": reason} if reason else {}
+        return self._client._request("POST", f"/v1/treasury/reservations/{reservation_id}/release", json=payload)
+
+    def consume(self, reservation_id: str, payment_intent_id: str) -> Dict[str, Any]:
+        return self._client._request(
+            "POST",
+            f"/v1/treasury/reservations/{reservation_id}/consume",
+            json={"payment_intent_id": payment_intent_id},
+        )
+
+
+class TreasuryResource:
+    """
+    Autonomous Treasury & Liquidity Orchestrator Resource (Task 11)
+    Coordinates liquidity reservations, commitments, multi-horizon forecasts, stress tests, and reconciliation.
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+        self.reservations = TreasuryReservationsResource(client)
+
+    def state(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        return self._client._request("GET", "/v1/treasury/state", params=params or None)
+
+    def balance(self, org_id: Optional[str] = None, vault: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if vault:
+            params["vault"] = vault
+        return self._client._request("GET", "/v1/treasury/balance", params=params or None)
+
+    def commitments(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"organization_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/treasury/commitments", params=params)
+
+    def exposure(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        return self._client._request("GET", "/v1/treasury/exposure", params=params or None)
+
+    def forecast(
+        self,
+        horizon: Optional[str] = None,
+        org_id: Optional[str] = None,
+        mode: Optional[str] = None,
+        scenario: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        params = {}
+        if horizon:
+            params["horizon"] = horizon
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        if scenario:
+            params["scenario"] = scenario
+        return self._client._request("GET", "/v1/treasury/forecast", params=params or None)
+
+    def stress(
+        self,
+        scenario: Optional[str] = None,
+        cluster_factor: Optional[float] = None,
+        network_stress: Optional[bool] = None,
+        simultaneous_settlements: Optional[int] = None,
+        org_id: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {}
+        if scenario:
+            payload["scenario"] = scenario
+        if cluster_factor is not None:
+            payload["cluster_factor"] = cluster_factor
+        if network_stress is not None:
+            payload["network_stress"] = network_stress
+        if simultaneous_settlements is not None:
+            payload["simultaneous_settlements"] = simultaneous_settlements
+        if org_id:
+            payload["organization_id"] = org_id
+        if mode:
+            payload["mode"] = mode
+        return self._client._request("POST", "/v1/treasury/stress", json=payload)
+
+    def reconcile(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {}
+        if org_id:
+            payload["organization_id"] = org_id
+        if mode:
+            payload["mode"] = mode
+        return self._client._request("POST", "/v1/treasury/reconcile", json=payload)
+
+    def anomalies(self, org_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {"organization_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/treasury/anomalies", params=params)
+
+    def health(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        return self._client._request("GET", "/v1/treasury/health", params=params or None)
+
+    def inflows(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        return self._client._request("GET", "/v1/treasury/inflows", params=params or None)
+
+    def add_inflow(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/v1/treasury/inflows", json=data)
+
+
+class ControlTowerResource:
+    """
+    ControlTowerResource provides operational observability and orchestration over the AgentPay economy.
+    AXIOM: ONE ECONOMIC SYSTEM. ONE FINANCIAL CONTROL PLANE. ONE AUDITABLE REALITY.
+    Strictly enforces INV-86 through INV-100: read models have zero financial mutation authority.
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def state_strip(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        return self._client._request("GET", "/v1/control/state", params=params or None)
+
+    def overview(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        return self._client._request("GET", "/v1/control/overview", params=params or None)
+
+    def activity(
+        self,
+        org_id: Optional[str] = None,
+        mode: Optional[str] = None,
+        category: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        if category:
+            params["category"] = category
+        if limit:
+            params["limit"] = limit
+        return self._client._request("GET", "/v1/control/activity", params=params or None)
+
+    def financial_trace(self, target_id: str, org_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {"organization_id": org_id} if org_id else None
+        return self._client._request("GET", f"/v1/control/financial-trace/{target_id}", params=params)
+
+    def mission(self, mission_id: str, org_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {"organization_id": org_id} if org_id else None
+        return self._client._request("GET", f"/v1/control/missions/{mission_id}", params=params)
+
+    def security(self, org_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {"organization_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/control/security", params=params)
+
+    def treasury(self, org_id: Optional[str] = None, mode: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if mode:
+            params["mode"] = mode
+        return self._client._request("GET", "/v1/control/treasury", params=params or None)
+
+    def arc(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/control/arc")
+
+    def incidents(self, org_id: Optional[str] = None, status: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if org_id:
+            params["organization_id"] = org_id
+        if status:
+            params["status"] = status
+        return self._client._request("GET", "/v1/control/incidents", params=params or None)
+
+    def intelligence(self, org_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {"organization_id": org_id} if org_id else None
+        return self._client._request("GET", "/v1/control/intelligence", params=params)
+
+    def search(self, query: str, org_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {"q": query}
+        if org_id:
+            params["organization_id"] = org_id
+        return self._client._request("GET", "/v1/control/search", params=params)
+
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -804,6 +1201,10 @@ class AgentPay:
         self.agent_network = AgentNetworkResource(self)
         self.constitutions = ConstitutionsResource(self)
         self.constitution = self.constitutions
+        self.clearinghouse = ClearinghouseResource(self)
+        self.economy = self.clearinghouse
+        self.treasury = TreasuryResource(self)
+        self.control = ControlTowerResource(self)
 
     def _request(
         self,

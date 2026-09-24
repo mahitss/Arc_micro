@@ -14,6 +14,10 @@ from .client import (
     SimulationsResource,
     TransactionsResource,
     WebhooksResource,
+    ClearinghouseResource,
+    TreasuryResource,
+    TreasuryReservationsResource,
+    ControlTowerResource,
 )
 from .errors import (
     AgentPayError,
@@ -44,6 +48,10 @@ __all__ = [
     "SimulationsResource",
     "TransactionsResource",
     "WebhooksResource",
+    "ClearinghouseResource",
+    "TreasuryResource",
+    "TreasuryReservationsResource",
+    "ControlTowerResource",
     "AgentPayError",
     "ApprovalRequiredError",
     "AuthenticationError",

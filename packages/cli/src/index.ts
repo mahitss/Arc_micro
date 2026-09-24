@@ -40,6 +40,33 @@ import {
   printConstitutionDecision,
   printPolicyDiff,
   printPolicyChangeRequestsList,
+  printObligationsList,
+  printObligationDetail,
+  printInvoicesList,
+  printInvoiceDetail,
+  printEscrowsList,
+  printMilestonesList,
+  printNettingProposalsList,
+  printSettlementBatchesList,
+  printReconciliationList,
+  printExposureSnapshot,
+  printHealthSnapshot,
+  printTreasuryState,
+  printTreasuryReservationsList,
+  printTreasuryReservationDetail,
+  printTreasuryForecast,
+  printTreasuryStressResult,
+  printTreasuryReconciliationReport,
+  printTreasuryHealth,
+  printTreasuryAnomaliesList,
+  printControlStateStrip,
+  printControlOverview,
+  printControlActivity,
+  printFinancialTrace,
+  printMissionCommandCenter,
+  printArcStatus,
+  printControlIncidents,
+  printControlSearch,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -145,6 +172,22 @@ Commands:
     --payload <json>               Raw webhook payload
     --signature <sig>              AgentPay-Signature header (t=...,v1=...)
     --secret <secret>              Webhook signing secret (whsec_...)
+
+  treasury state                   View real-time treasury balances, buffer, and mode (--org, --mode)
+  treasury balance                 View on-chain balance breakdown (--org, --vault)
+  treasury reservations list       List liquidity reservations (--org, --mode, --status)
+  treasury reservations get <id>   Get reservation details
+  treasury reservations create     Reserve liquidity (--amount, --purpose, --agent, --timeout, --mode)
+  treasury reservations release <id> Release reservation (--reason)
+  treasury reservations consume <id> Consume reservation (--intent <payment_intent_id>)
+  treasury commitments            List active soft and hard commitments (--org)
+  treasury exposure               View counterparty exposure & pending settlements (--org, --mode)
+  treasury forecast [horizon]      Forecast liquidity over horizon (1h, 6h, 24h, 7d, 30d) (--scenario)
+  treasury stress                  Simulate liquidity stress scenario (--scenario, --cluster, --settlements)
+  treasury reconcile               Run cross-layer treasury reconciliation audit (--org, --mode)
+  treasury anomalies               List active treasury liquidity anomalies (--org)
+  treasury health                  View complete treasury health & solvency snapshot (--org, --mode)
+  treasury inflows                 List expected future liquidity inflows (--org, --mode)
 
 Options:
   --json                           Output response in machine-readable JSON format
@@ -935,6 +978,431 @@ async function main(): Promise<void> {
         const res = await client.constitutions.listChanges();
         if (isJson) printJson(res);
         else printPolicyChangeRequestsList(res.change_requests);
+        return;
+      }
+    }
+
+    if (resource === 'economy' || resource === 'clearing') {
+      const sub = positional[1] || 'obligations';
+      const action = positional[2];
+      const param = positional[3];
+
+      if (sub === 'obligations') {
+        if (action === 'get' && param) {
+          const res = await client.economy.getObligation(param);
+          if (isJson) printJson(res);
+          else printObligationDetail(res);
+          return;
+        }
+        if (action === 'cancel' && param) {
+          const res = await client.economy.cancelObligation(param, (flags['reason'] as string) || undefined);
+          if (isJson) printJson(res);
+          else console.log(`Obligation ${param} cancelled: ${res.status}`);
+          return;
+        }
+        if (action === 'create') {
+          const res = await client.economy.createObligation({
+            payer_agent_id: (flags['payer'] as string) || 'agent_payer',
+            payee_agent_id: (flags['payee'] as string) || 'agent_payee',
+            amount: (flags['amount'] as string) || '1000000',
+            currency: (flags['currency'] as string) || 'USDC',
+            contract_id: (flags['contract'] as string) || 'contract_cli',
+          });
+          if (isJson) printJson(res);
+          else printObligationDetail(res);
+          return;
+        }
+        const list = await client.economy.listObligations((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else printObligationsList(list);
+        return;
+      }
+
+      if (sub === 'invoices') {
+        if (action === 'get' && param) {
+          const res = await client.economy.getInvoice(param);
+          if (isJson) printJson(res);
+          else printInvoiceDetail(res);
+          return;
+        }
+        if (action === 'accept' && param) {
+          const res = await client.economy.acceptInvoice(param);
+          if (isJson) printJson(res);
+          else console.log(`Invoice ${param} accepted.`);
+          return;
+        }
+        if (action === 'dispute' && param) {
+          const res = await client.economy.disputeInvoice(param, (flags['reason'] as string) || 'Disputed via CLI');
+          if (isJson) printJson(res);
+          else console.log(`Invoice ${param} disputed.`);
+          return;
+        }
+        const list = await client.economy.listInvoices((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else printInvoicesList(list);
+        return;
+      }
+
+      if (sub === 'escrows') {
+        if (action === 'get' && param) {
+          const res = await client.economy.getEscrow(param);
+          if (isJson) printJson(res);
+          else console.log(JSON.stringify(res, null, 2));
+          return;
+        }
+        if (action === 'release' && param) {
+          const amt = (flags['amount'] as string) || '1000000';
+          const res = await client.economy.releaseEscrow(param, amt);
+          if (isJson) printJson(res);
+          else console.log(`Escrow ${param} released ${amt}: ${res.status}`);
+          return;
+        }
+        const list = await client.economy.listEscrows((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else printEscrowsList(list);
+        return;
+      }
+
+      if (sub === 'milestones') {
+        if (action === 'verify' && param) {
+          const res = await client.economy.verifyMilestone(param);
+          if (isJson) printJson(res);
+          else console.log(`Milestone ${param} verification: [${res.outcome}] ${res.reason}`);
+          return;
+        }
+        if (action === 'settle' && param) {
+          const res = await client.economy.settleMilestone(param);
+          if (isJson) printJson(res);
+          else console.log(`Milestone ${param} settled: intent=${res.intent_id || res.id} status=${res.status}`);
+          return;
+        }
+        const list = await client.economy.listMilestones(action || undefined);
+        if (isJson) printJson(list);
+        else printMilestonesList(list);
+        return;
+      }
+
+      if (sub === 'netting') {
+        if (action === 'approve' && param) {
+          const agentId = (flags['agent'] as string) || 'agent_payer';
+          const res = await client.economy.approveNetting(param, agentId);
+          if (isJson) printJson(res);
+          else console.log(`Netting proposal ${param} approved by ${agentId}.`);
+          return;
+        }
+        if (action === 'execute' && param) {
+          const res = await client.economy.executeNetting(param);
+          if (isJson) printJson(res);
+          else console.log(`Netting proposal ${param} executed.`);
+          return;
+        }
+        const list = await client.economy.listNetting((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else printNettingProposalsList(list);
+        return;
+      }
+
+      if (sub === 'batches') {
+        if (action === 'execute' && param) {
+          const res = await client.economy.executeBatch(param);
+          if (isJson) printJson(res);
+          else console.log(`Batch ${param} executed: status=${res.status}`);
+          return;
+        }
+        const list = await client.economy.listBatches((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else printSettlementBatchesList(list);
+        return;
+      }
+
+      if (sub === 'refunds') {
+        const list = await client.economy.listRefunds((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else console.log(JSON.stringify(list, null, 2));
+        return;
+      }
+
+      if (sub === 'reconciliation') {
+        if (action === 'run' && param) {
+          const res = await client.economy.reconcileObligation(param);
+          if (isJson) printJson(res);
+          else console.log(`Reconciled ${param}: status=${res.status} actual=${res.actual_amount}`);
+          return;
+        }
+        const list = await client.economy.listReconciliation((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else printReconciliationList(list);
+        return;
+      }
+
+      if (sub === 'exposure') {
+        const mode = ((flags['mode'] as string) || 'REAL').toUpperCase() as any;
+        const res = await client.economy.getExposure((flags['org'] as string) || undefined, mode);
+        if (isJson) printJson(res);
+        else printExposureSnapshot(res);
+        return;
+      }
+
+      if (sub === 'health') {
+        const mode = ((flags['mode'] as string) || 'REAL').toUpperCase() as any;
+        const res = await client.economy.getHealth((flags['org'] as string) || undefined, mode, (flags['balance'] as string) || undefined);
+        if (isJson) printJson(res);
+        else printHealthSnapshot(res);
+        return;
+      }
+
+      if (sub === 'ledger') {
+        const list = await client.economy.getLedger((flags['org'] as string) || undefined);
+        if (isJson) printJson(list);
+        else console.log(JSON.stringify(list, null, 2));
+        return;
+      }
+    }
+
+    if (resource === 'treasury') {
+      const sub = positional[1] || 'state';
+      const action = positional[2];
+      const param = positional[3];
+
+      if (sub === 'state') {
+        const mode = (flags['mode'] as any) || undefined;
+        const orgId = (flags['org'] as string) || undefined;
+        const res = await client.treasury.state({ orgId, mode });
+        if (isJson) printJson(res);
+        else printTreasuryState(res);
+        return;
+      }
+
+      if (sub === 'balance') {
+        const orgId = (flags['org'] as string) || undefined;
+        const vault = (flags['vault'] as string) || undefined;
+        const res = await client.treasury.balance({ orgId, vault });
+        if (isJson) printJson(res);
+        else console.log(JSON.stringify(res, null, 2));
+        return;
+      }
+
+      if (sub === 'reservations') {
+        if (action === 'get' && param) {
+          const res = await client.treasury.reservations.get(param);
+          if (isJson) printJson(res);
+          else printTreasuryReservationDetail(res);
+          return;
+        }
+        if (action === 'release' && param) {
+          const reason = (flags['reason'] as string) || 'Released via CLI';
+          const res = await client.treasury.reservations.release(param, reason);
+          if (isJson) printJson(res);
+          else console.log(`Reservation ${param} released: status=${res.status}`);
+          return;
+        }
+        if (action === 'consume' && param) {
+          const intentId = (flags['intent'] as string) || 'pi_cli_consume';
+          const res = await client.treasury.reservations.consume(param, intentId);
+          if (isJson) printJson(res);
+          else console.log(`Reservation ${param} consumed by intent ${intentId}: status=${res.status}`);
+          return;
+        }
+        if (action === 'create') {
+          const amount = (flags['amount'] as string) || '1000000';
+          const purpose = (flags['purpose'] as string) || 'CLI_TEST';
+          const agentId = (flags['agent'] as string) || undefined;
+          const missionId = (flags['mission'] as string) || undefined;
+          const timeout = flags['timeout'] ? parseInt(flags['timeout'] as string, 10) : undefined;
+          const mode = (flags['mode'] as any) || undefined;
+          const orgId = (flags['org'] as string) || 'org_default';
+
+          const res = await client.treasury.reservations.create({
+            organization_id: orgId,
+            source: purpose,
+            amount_base: amount,
+            agent_id: agentId,
+            mission_id: missionId,
+            timeout_seconds: timeout,
+            mode,
+          });
+          if (isJson) printJson(res);
+          else printTreasuryReservationDetail(res);
+          return;
+        }
+
+        const orgId = (flags['org'] as string) || undefined;
+        const mode = (flags['mode'] as any) || undefined;
+        const status = (flags['status'] as any) || undefined;
+        const list = await client.treasury.reservations.list({ orgId, mode, status });
+        if (isJson) printJson(list);
+        else printTreasuryReservationsList(list);
+        return;
+      }
+
+      if (sub === 'commitments') {
+        const orgId = (flags['org'] as string) || undefined;
+        const list = await client.treasury.commitments({ orgId });
+        if (isJson) printJson(list);
+        else console.log(JSON.stringify(list, null, 2));
+        return;
+      }
+
+      if (sub === 'exposure') {
+        const orgId = (flags['org'] as string) || undefined;
+        const mode = (flags['mode'] as any) || undefined;
+        const res = await client.treasury.exposure({ orgId, mode });
+        if (isJson) printJson(res);
+        else console.log(JSON.stringify(res, null, 2));
+        return;
+      }
+
+      if (sub === 'forecast') {
+        const horizon = (action as any) || (flags['horizon'] as any) || '24h';
+        const orgId = (flags['org'] as string) || undefined;
+        const mode = (flags['mode'] as any) || undefined;
+        const scenario = (flags['scenario'] as any) || undefined;
+        const res = await client.treasury.forecast({ orgId, horizon, mode, scenario });
+        if (isJson) printJson(res);
+        else printTreasuryForecast(res);
+        return;
+      }
+
+      if (sub === 'stress') {
+        const scenarioName = (flags['scenario'] as any) || (action as any) || 'OUTFLOW_SPIKE';
+        const simultaneousSettlements = flags['settlements'] ? parseInt(flags['settlements'] as string, 10) : undefined;
+        const orgId = (flags['org'] as string) || undefined;
+        const mode = (flags['mode'] as any) || undefined;
+
+        const res = await client.treasury.stress(
+          {
+            scenario_name: scenarioName,
+            simultaneous_settlements: simultaneousSettlements,
+          },
+          { orgId, mode }
+        );
+        if (isJson) printJson(res);
+        else printTreasuryStressResult(res);
+        return;
+      }
+
+      if (sub === 'reconcile') {
+        const orgId = (flags['org'] as string) || undefined;
+        const mode = (flags['mode'] as any) || undefined;
+        const res = await client.treasury.reconcile({ orgId, mode });
+        if (isJson) printJson(res);
+        else printTreasuryReconciliationReport(res);
+        return;
+      }
+
+      if (sub === 'anomalies') {
+        const orgId = (flags['org'] as string) || undefined;
+        const list = await client.treasury.anomalies({ orgId });
+        if (isJson) printJson(list);
+        else printTreasuryAnomaliesList(list);
+        return;
+      }
+
+      if (sub === 'health') {
+        const orgId = (flags['org'] as string) || undefined;
+        const mode = (flags['mode'] as any) || undefined;
+        const res = await client.treasury.health({ orgId, mode });
+        if (isJson) printJson(res);
+        else printTreasuryHealth(res);
+        return;
+      }
+
+      if (sub === 'inflows') {
+        const orgId = (flags['org'] as string) || undefined;
+        const mode = (flags['mode'] as any) || undefined;
+        const list = await client.treasury.inflows({ orgId, mode });
+        if (isJson) printJson(list);
+        else console.log(JSON.stringify(list, null, 2));
+        return;
+      }
+    }
+
+    if (command === 'control') {
+      const sub = positional[1] || 'overview';
+      const param = positional[2];
+      const orgId = (flags['org'] as string) || undefined;
+      const mode = ((flags['mode'] as string) || 'REAL').toUpperCase() as any;
+
+      if (sub === 'overview') {
+        const ov = await client.control.getOverview({ orgId, mode });
+        if (isJson) printJson(ov);
+        else printControlOverview(ov);
+        return;
+      }
+
+      if (sub === 'state') {
+        const st = await client.control.getStateStrip({ orgId, mode });
+        if (isJson) printJson(st);
+        else printControlStateStrip(st);
+        return;
+      }
+
+      if (sub === 'activity' || sub === 'timeline') {
+        const category = (flags['category'] as string) || undefined;
+        const limit = flags['limit'] ? parseInt(flags['limit'] as string, 10) : undefined;
+        const res = await client.control.getActivityTimeline({ orgId, mode, category, limit });
+        if (isJson) printJson(res);
+        else printControlActivity(res.events || []);
+        return;
+      }
+
+      if (sub === 'trace') {
+        const targetId = param || (flags['id'] as string) || 'pi_live_9941';
+        const res = await client.control.getFinancialTrace(targetId, { orgId });
+        if (isJson) printJson(res);
+        else printFinancialTrace(res);
+        return;
+      }
+
+      if (sub === 'mission') {
+        const missionId = param || (flags['id'] as string) || 'msn_global_macro';
+        const res = await client.control.getMissionCommandCenter(missionId, { orgId });
+        if (isJson) printJson(res);
+        else printMissionCommandCenter(res);
+        return;
+      }
+
+      if (sub === 'arc') {
+        const res = await client.control.getArcStatus();
+        if (isJson) printJson(res);
+        else printArcStatus(res);
+        return;
+      }
+
+      if (sub === 'incidents') {
+        const status = (flags['status'] as string) || undefined;
+        const res = await client.control.getIncidents({ orgId, status });
+        if (isJson) printJson(res);
+        else printControlIncidents(res.incidents || []);
+        return;
+      }
+
+      if (sub === 'search') {
+        const query = param || (flags['q'] as string) || '';
+        const res = await client.control.search(query, { orgId });
+        if (isJson) printJson(res);
+        else printControlSearch(res.results || [], query);
+        return;
+      }
+
+      if (sub === 'security') {
+        const res = await client.control.getSecurityCenter({ orgId });
+        if (isJson) printJson(res);
+        else console.log(JSON.stringify(res, null, 2));
+        return;
+      }
+
+      if (sub === 'treasury') {
+        const res = await client.control.getTreasuryView({ orgId, mode });
+        if (isJson) printJson(res);
+        else console.log(JSON.stringify(res, null, 2));
+        return;
+      }
+
+      if (sub === 'intelligence') {
+        const res = await client.control.getIntelligenceView({ orgId });
+        if (isJson) printJson(res);
+        else console.log(JSON.stringify(res, null, 2));
         return;
       }
     }

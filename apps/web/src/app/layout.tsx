@@ -36,6 +36,13 @@ export default function RootLayout({
 
               <nav className="hidden lg:flex items-center space-x-1 text-xs font-mono font-medium">
                 <Link
+                  href="/control"
+                  className="px-3 py-1.5 rounded-lg text-amber-300 font-bold bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-amber-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  CONTROL TOWER
+                </Link>
+                <Link
                   href="/overview"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >
@@ -71,6 +78,20 @@ export default function RootLayout({
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >
                   Economy
+                </Link>
+                <Link
+                  href="/economy/clearing"
+                  className="px-3 py-1.5 rounded-lg text-emerald-300 font-semibold bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Clearinghouse
+                </Link>
+                <Link
+                  href="/treasury"
+                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-semibold bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  Treasury
                 </Link>
                 <Link
                   href="/intelligence"
@@ -149,6 +170,12 @@ export default function RootLayout({
             </Link>
             <Link href="/economy" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
               Economy
+            </Link>
+            <Link href="/economy/clearing" className="px-2.5 py-1 rounded text-emerald-300 font-semibold bg-emerald-500/10 whitespace-nowrap">
+              Clearinghouse
+            </Link>
+            <Link href="/treasury" className="px-2.5 py-1 rounded text-cyan-300 font-semibold bg-cyan-500/10 whitespace-nowrap">
+              Treasury
             </Link>
             <Link href="/approvals" className="px-2.5 py-1 rounded text-amber-300 hover:text-white whitespace-nowrap">
               Approvals

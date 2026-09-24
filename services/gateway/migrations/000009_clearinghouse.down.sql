@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS clearing_reconciliation_records;
+DROP TABLE IF EXISTS clearing_credits;
+DROP TABLE IF EXISTS clearing_refund_requests;
+DROP TABLE IF EXISTS clearing_settlement_batches;
+DROP TABLE IF EXISTS clearing_netting_proposals;
+DROP TABLE IF EXISTS clearing_ledger_entries;
+DROP TABLE IF EXISTS clearing_schedules;
+DROP TABLE IF EXISTS clearing_invoices;
+DROP TABLE IF EXISTS clearing_milestones;
+DROP TABLE IF EXISTS clearing_escrows;
+DROP TABLE IF EXISTS clearing_obligations;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { fetchServiceReputations } from '../../lib/api/missions';
 import { ServiceReputation } from '../../lib/api/types';
 
@@ -48,6 +49,72 @@ export default function EconomyPage() {
         <div className="flex items-center gap-2 font-mono text-xs text-slate-400 bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-800">
           <span className="w-2 h-2 rounded-full bg-teal-400" />
           <span>INV-E10: Cross-Org Isolation Enforced</span>
+        </div>
+      </div>
+
+      {/* Autonomous Economic Clearinghouse Hub */}
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900/80 to-slate-900/60 border border-emerald-500/30 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <h2 className="text-xl font-bold text-white tracking-tight">Autonomous Economic Clearinghouse</h2>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                TASK 10 ACTIVE
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-1 max-w-2xl font-mono">
+              The clearinghouse coordinates value. Existing policy/risk/approval authorizes value. Arc blockchain settles value.
+              Zero autonomous fund movement authority (INV-55 to INV-70).
+            </p>
+          </div>
+          <Link
+            href="/economy/clearing"
+            className="px-4 py-2 rounded-xl text-xs font-mono font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 transition-colors shadow-lg shadow-emerald-500/20 flex items-center gap-2 whitespace-nowrap self-start sm:self-auto"
+          >
+            Launch Clearing Mission Control &rarr;
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          <Link
+            href="/economy/clearing"
+            className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 transition-colors group space-y-2"
+          >
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-emerald-400 font-semibold group-hover:text-emerald-300">Obligations & Escrows</span>
+              <span className="text-slate-500">&rarr;</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Manage deferred payments, deliverable-backed milestones, and cryptographic escrows.
+            </p>
+          </Link>
+
+          <Link
+            href="/economy/clearing/netting"
+            className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 transition-colors group space-y-2"
+          >
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-teal-400 font-semibold group-hover:text-teal-300">Bilateral Netting Engine</span>
+              <span className="text-slate-500">&rarr;</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Deterministic cycle compression to optimize on-chain liquidity & minimize Arc gas fees.
+            </p>
+          </Link>
+
+          <Link
+            href="/economy/clearing/reconciliation"
+            className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 transition-colors group space-y-2"
+          >
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-cyan-400 font-semibold group-hover:text-cyan-300">Audit & Reconciliation</span>
+              <span className="text-slate-500">&rarr;</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Continuous machine-checked verification between internal ledger and Arc blockchain receipts.
+            </p>
+          </Link>
         </div>
       </div>
 

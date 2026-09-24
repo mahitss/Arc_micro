@@ -180,6 +180,87 @@ Mission Control Constitution Interface is live at **`http://localhost:3000/const
 
 ---
 
+## Autonomous Economic Clearinghouse (Task 10)
+
+The **Autonomous Economic Clearinghouse** coordinates peer-to-peer deferred obligations, milestone-based performance escrows, deliverable-verified invoices, and multilateral netting between autonomous agents under **zero-authority economic guarantees**:
+
+> **"The clearinghouse coordinates value. The existing financial control plane authorizes value. Arc settles value."**
+
+```
+                  AI AGENTS PROPOSE & COORDINATE
+                                │
+                                ▼
+┌───────────────────────────────────────────────────────────────┐
+│               AUTONOMOUS ECONOMIC CLEARINGHOUSE               │
+│  - Deferred Obligations (IMMEDIATE, MILESTONE, RECURRING)     │
+│  - Cryptographic Escrows (Policy Spending Reservations)       │
+│  - Deliverable Hash Verification (SHA-256 Checksums)          │
+│  - Bilateral & Multilateral Netting (Cycle Compression)       │
+│  - Double-Entry Continuous Audit & Reconciliation Ledger     │
+└───────────────────────────────┬───────────────────────────────┘
+                                │
+                                ▼
+┌───────────────────────────────────────────────────────────────┐
+│               EXISTING FINANCIAL CONTROL PLANE                │
+│  - PaymentIntents                                             │
+│  - Rust Deterministic Policy Engine                           │
+│  - Risk Engine & Velocity Counters                            │
+│  - Treasury & Multi-Sig Approvals                             │
+└───────────────────────────────┬───────────────────────────────┘
+                                │
+                                ▼
+┌───────────────────────────────────────────────────────────────┐
+│                    EXECUTION & SETTLEMENT                     │
+│  - Go Execution Gateway                                       │
+│  - AgentVault Keyless Smart Contract                          │
+│  - Arc L1/L2 Finality (USDC Settlement)                       │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### Key Capabilities
+1. **Strict Zero-Authority (INV-55 to INV-70):** The clearinghouse has zero private keys, zero autonomous balance movements, and zero treasury overrides. All value settlement routes through the canonical `intent.Service` pipeline.
+2. **Deliverable-Backed Milestones:** Milestones and performance escrows are locked to expected deliverable SHA-256 hashes, preventing payment release until deliverables are cryptographically verified.
+3. **Bilateral & Multilateral Netting:** Resolves circular agent obligations into minimal net transfers, saving up to 80%+ liquidity and slashing on-chain gas costs.
+4. **Real-Time Economic Exposure Ceilings:** Automatically blocks runaway agent contract commitments before they exceed organizational risk limits.
+5. **Continuous Blockchain Reconciliation:** Machine-checks internal ledger double-entry credits and debits against Arc `AgentVault` transaction receipts, flagging any off-by-one or dropped event.
+6. **Physical Mode Separation:** `REAL` and `SIMULATION` economic entities and batches are strictly isolated.
+
+Mission Control Clearinghouse is live at **`http://localhost:3000/economy/clearing`**.
+
+### Clearinghouse Quickstart (TypeScript SDK)
+```typescript
+import { AgentPayClient } from '@agentpay/sdk';
+
+const client = new AgentPayClient({ apiKey: process.env.AGENTPAY_API_KEY });
+
+// 1. Propose milestone-backed economic obligation
+const obligation = await client.clearinghouse.proposeObligation({
+  payerAgentId: 'agent_orchestrator',
+  payeeAgentId: 'agent_analyst',
+  amountBase: '10000000', // $10.00 USDC
+  asset: 'USDC',
+  type: 'MILESTONE_CONTINGENT',
+  mode: 'REAL',
+});
+
+// 2. Lock deliverable escrow reservation
+const escrow = await client.clearinghouse.createEscrow({
+  obligationId: obligation.id,
+  amountBase: '10000000',
+  payerAgentId: 'agent_orchestrator',
+  payeeAgentId: 'agent_analyst',
+  mode: 'REAL',
+  timeoutSeconds: 86400,
+});
+
+// 3. Settle milestone with deliverable verification
+const intent = await client.clearinghouse.settleMilestone(milestoneId, {
+  deliverableHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+});
+```
+
+---
+
 ## How It Works
 
 ```
@@ -409,6 +490,14 @@ AgentPay features a decentralized, zero-trust **Open Agent Network (OAN)** based
 - **Canonical Demo Scenarios Walkthrough:** [`docs/simulation-demo.md`](docs/simulation-demo.md)
 - **Simulation Implementation Report (Phases 0–33):** [`docs/simulation-implementation-report.md`](docs/simulation-implementation-report.md)
 - **Economic Constitution Reference:** [`docs/economic-constitution.md`](docs/economic-constitution.md)
+- **Autonomous Treasury & Liquidity Orchestrator Architecture:** [`docs/autonomous-treasury-architecture.md`](docs/autonomous-treasury-architecture.md)
+- **Hierarchical Liquidity & Multi-Tier Balance Model:** [`docs/liquidity-model.md`](docs/liquidity-model.md)
+- **Liquidity Reservations & Atomic Lifecycle:** [`docs/liquidity-reservations.md`](docs/liquidity-reservations.md)
+- **Multi-Horizon Liquidity Forecasting Engine:** [`docs/liquidity-forecasting.md`](docs/liquidity-forecasting.md)
+- **Digital Twin Liquidity Stress Testing Lab:** [`docs/liquidity-stress-testing.md`](docs/liquidity-stress-testing.md)
+- **Continuous 4-Way Treasury Reconciliation Engine:** [`docs/treasury-reconciliation.md`](docs/treasury-reconciliation.md)
+- **Treasury Security & Invariant Proofs (INV-71 to INV-85):** [`docs/treasury-security.md`](docs/treasury-security.md)
+- **Treasury Threat Model & Adversarial Analysis:** [`docs/treasury-threat-model.md`](docs/treasury-threat-model.md)
 - **Multi-Agent Swarm Architecture:** [`docs/swarm-orchestration-architecture.md`](docs/swarm-orchestration-architecture.md)
 - **Swarm Security Boundaries (INV-S1 to INV-S8):** [`docs/swarm-security-boundaries.md`](docs/swarm-security-boundaries.md)
 - **Swarm Economic Model & Reservations:** [`docs/swarm-economic-model.md`](docs/swarm-economic-model.md)
@@ -434,6 +523,133 @@ AgentPay features a decentralized, zero-trust **Open Agent Network (OAN)** based
 - **Arc Microgrant Submission Package:** [`docs/submission.md`](docs/submission.md)
 - **Threat Model v3:** [`docs/threat-model-v3.md`](docs/threat-model-v3.md)
 - **Demo Video Script:** [`docs/demo-script.md`](docs/demo-script.md)
+
+---
+
+## Autonomous Treasury & Liquidity Orchestrator (Task 11)
+
+AgentPay features an autonomous liquidity governor ensuring that AI swarms never overcommit on-chain float:
+> **"TREASURY INTELLIGENCE CAN PLAN. TREASURY CONTROLS CAN CONSTRAIN. ONLY THE EXISTING EXECUTION PIPELINE CAN MOVE MONEY."**
+
+### Core Capabilities
+- **Hierarchical Balance Model**: Distinctly separates On-Chain Capital, Available Unencumbered, Active Reservations, Soft/Hard Commitments, and Minimum Safety Buffer Floor (`INV-71` & `INV-72`).
+- **Atomic Concurrency-Guarded Reservations**: Off-chain cryptographic pre-encumbrance ensuring 0-oversubscription across 50+ concurrent goroutines (`INV-75`).
+- **Stale Reservation Reclaim**: Automated background garbage collection reclaiming expired headroom (`INV-76`).
+- **Multi-Horizon Liquidity Forecasting**: Forward-looking solvency predictions across `1h`, `6h`, `24h`, `7d`, and `30d` under 8 market perturbation scenarios (`INV-79` & `INV-80`).
+- **Digital Twin Stress Testing Lab**: Simulates sudden settlement shocks, inflow droughts, and correlated swarm demand spikes with real-time Capital Adequacy Ratio (CAR) calculations.
+- **Continuous 4-Way Balance Reconciliation**: Real-time cross-audit between Internal Memory Ledger, Postgres Repository, AgentVault Smart Contract, and Arc Blockchain Consensus Layer. Reports `UNVERIFIED` without active RPC (`INV-81`).
+- **Emergency Circuit Breaker**: Auto-transitions to `EMERGENCY_HALT` if AgentVault is paused or concentration exceeds 60% (`INV-83` & `INV-84`).
+- **Zero Wallet Bypass**: Contains ZERO private keys, ZERO signing capabilities, and strictly delegates execution to the canonical AgentVault pipeline (`INV-85`).
+
+### SDK Quickstart (TypeScript)
+```typescript
+import { AgentPay } from '@agentpay/sdk';
+
+const client = new AgentPay({ apiKey: 'ap_live_...' });
+
+// 1. Inspect Treasury Multi-Tier State & Solvency
+const state = await client.treasury.state({ mode: 'REAL' });
+console.log(`Available: ${state.available_balance} | Mode: ${state.operational_mode}`);
+
+// 2. Atomically Reserve Liquidity Headroom
+const reservation = await client.treasury.reservations.create({
+  organization_id: 'org_default',
+  source: 'SWARM_ORCHESTRATOR',
+  amount_base: '15000000', // 15 USDC
+  timeout_seconds: 3600,
+  mode: 'REAL',
+});
+
+// 3. Predictive Solvency Forecast
+const forecast = await client.treasury.forecast({ horizon: '24h', scenario: 'OUTFLOW_SPIKE' });
+console.log(`Forecast Survival State: ${forecast.survival_state}`);
+
+// 4. Digital Twin Stress Simulation
+const stress = await client.treasury.stress({ scenario_name: 'SETTLEMENT_CLUSTER', simultaneous_settlements: 20 });
+console.log(`Capital Adequacy Ratio: ${stress.capital_adequacy_ratio}x`);
+
+// 5. Release or Consume Reservation
+await client.treasury.reservations.release(reservation.reservation_id, 'Mission completed');
+```
+
+---
+
+## Autonomous Economic Control Tower (Task 12)
+
+**"AgentPay Control Tower is the operational interface for autonomous economic systems."**
+
+The **Control Tower** (`/control`) unifies AgentPay's distributed multi-agent subsystems, clearinghouse, deterministic policy engine, treasury controls, and Arc settlement layer into a single, high-fidelity operational experience.
+
+```
+USER
+  │
+  ▼
+CONTROL TOWER (/control)
+  │
+  ▼
+MISSION COMMAND CENTER (/control/missions/[id])
+  │
+  ▼
+AGENT NETWORK (Discovery & Marketplace)
+  │
+  ▼
+CONTRACT & CLEARINGHOUSE (Obligations, Invoices, Escrow)
+  │
+  ▼
+TREASURY & LIQUIDITY ENVELOPE (Headroom Reservation)
+  │
+  ▼
+ECONOMIC CONSTITUTION (Hierarchical Rule Inheritance)
+  │
+  ▼
+POLICY & RISK ENGINE (Deterministic Rust Microsecond Validation)
+  │
+  ▼
+APPROVAL CENTER (Human-in-the-Loop Gating for Flagged Intents)
+  │
+  ▼
+EXECUTION GATEWAY (Idempotent State Machine)
+  │
+  ▼
+AGENTVAULT SMART CONTRACT (Solidity Bound Envelopes)
+  │
+  ▼
+ARC BLOCKCHAIN SETTLEMENT (Consensus Finality & Verified Receipts)
+  │
+  ▼
+RECONCILIATION & AUDIT (4-Way continuous ledger cross-matching)
+  │
+  ▼
+ECONOMIC MEMORY & INTELLIGENCE (Outcome feedback & replanning)
+```
+
+### Core Architecture & Operational Surfaces
+
+1. **Executive Overview (`/control`)**: Real-time cross-economy KPIs, mission counters, treasury health, and active approvals.
+2. **Persistent Economic State Strip**: Global status header monitoring Treasury, Constitution Policy, Risk Composite, Execution Mode, and Arc RPC Verification.
+3. **Mission Command Center (`/control/missions/[id]`)**: Full mission DAG visualization, current action telemetry, why/evidence reasoning, next expected transitions, and agent selection explainability (with rejected alternative reasons).
+4. **Universal Financial Trace (`/trace`, `/v1/control/financial-trace/:id`)**: Immutable 13-stage lifecycle trace linking root user intent to on-chain Arc settlement receipt and economic feedback observations.
+5. **Approval Center (`/control/approvals`)**: Safe human intervention portal for policy- or risk-escalated payment intents; strictly prohibits overriding hard constitutional `DENY` outcomes (INV-97).
+6. **Security & Policy Center (`/control/security`)**: Constitution hierarchy browser, KMS/local signer status, and circuit breaker kill switches (Agent Pause, Org Pause, Global Emergency Stop).
+7. **Incident Operations (`/control/incidents`)**: Real-time detection and recovery sequences for external API timeouts, liquidity constraints, and verification failures.
+8. **Digital Twin Simulator (`/control/simulator`)**: Visual scenario modeling and counterfactual execution with zero financial risk.
+
+### Machine-Checked Security Invariants (INV-86 – INV-100)
+- **INV-86**: Control Tower aggregation is strictly a read-model; it is never the source of financial truth.
+- **INV-87**: Frontend cannot independently authorize or disburse payments.
+- **INV-88**: Frontend cannot choose arbitrary unverified blockchain recipients.
+- **INV-89**: Frontend cannot bypass deterministic policy evaluation.
+- **INV-90**: Frontend cannot bypass required human approvals.
+- **INV-91**: Frontend cannot bypass treasury liquidity reservation.
+- **INV-92**: Simulated events and outcomes can never appear as real on-chain settlements.
+- **INV-93**: Stale financial data is visibly marked as stale in the user interface.
+- **INV-94**: Tenant isolation prevents cross-organization data leakage.
+- **INV-95**: Operator commands are revalidated and authorized server-side.
+- **INV-96**: Dangerous operator commands enforce strict idempotency keys.
+- **INV-97**: Hard `DENY` outcomes strictly prohibit exposing an approval action.
+- **INV-98**: Displayed transaction hashes must correspond to verified on-chain settlement evidence.
+- **INV-99**: Read models cannot mutate financial state.
+- **INV-100**: Control Tower aggregation cannot create financial authority.
 
 ---
 
