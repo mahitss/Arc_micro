@@ -802,6 +802,71 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         self.assertEqual(srch["count"], 1)
         self.assertEqual(srch["results"][0]["type"], "MISSION")
 
+    @patch("requests.request")
+    def test_autonomous_operations_and_durable_runtime(self, mock_req):
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_req.return_value = mock_resp
+
+        client = AgentPay(api_key="ap_live_test123")
+        self.assertIsNotNone(client.runtime)
+
+        # 1. Create Workflow
+        mock_resp.json.return_value = {
+            "workflow_id": "wf_py_01",
+            "workflow_type": "MISSION_EXECUTION",
+            "state": "CREATED",
+            "version": 1,
+            "priority": 5,
+        }
+        wf = client.runtime.create_workflow(
+            workflow_type="MISSION_EXECUTION",
+            aggregate_type="MISSION",
+            aggregate_id="msn_001",
+            idempotency_key="idem_py_wf",
+            priority=5,
+        )
+        self.assertEqual(wf["workflow_id"], "wf_py_01")
+        self.assertEqual(wf["state"], "CREATED")
+
+        # 2. Pause & Resume
+        mock_resp.json.return_value = {"workflow_id": "wf_py_01", "state": "PAUSED", "version": 2}
+        paused = client.runtime.pause_workflow("wf_py_01", "Maintenance")
+        self.assertEqual(paused["state"], "PAUSED")
+
+        mock_resp.json.return_value = {"workflow_id": "wf_py_01", "state": "RUNNING", "version": 3}
+        resumed = client.runtime.resume_workflow("wf_py_01")
+        self.assertEqual(resumed["state"], "RUNNING")
+
+        # 3. List Workers
+        mock_resp.json.return_value = {
+            "workers": [
+                {"worker_id": "w_py_1", "status": "HEALTHY", "worker_type": "STANDARD"}
+            ],
+            "count": 1,
+        }
+        workers = client.runtime.list_workers()
+        self.assertEqual(workers["count"], 1)
+        self.assertEqual(workers["workers"][0]["worker_id"], "w_py_1")
+
+        # 4. Recovery Queue
+        mock_resp.json.return_value = {
+            "recovery_steps": [{"step_id": "step_rec_1", "state": "RETRYABLE_FAILURE"}],
+            "count": 1,
+        }
+        rec = client.runtime.get_recovery_queue()
+        self.assertEqual(rec["count"], 1)
+
+        # 5. Metrics
+        mock_resp.json.return_value = {
+            "active_workflows": 4,
+            "retry_rate_bps": 50,
+            "recovery_rate_bps": 9900,
+        }
+        metrics = client.runtime.get_metrics()
+        self.assertEqual(metrics["active_workflows"], 4)
+        self.assertEqual(metrics["recovery_rate_bps"], 9900)
+
 
 if __name__ == "__main__":
     unittest.main()

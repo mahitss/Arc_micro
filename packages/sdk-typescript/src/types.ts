@@ -2421,6 +2421,166 @@ export interface ControlSearchResult {
   deep_link_url: string;
 }
 
+// ============================================================================
+// TASK 13: DURABLE RUNTIME & AUTONOMOUS OPERATIONS TYPES
+// ============================================================================
+
+export type WorkflowState =
+  | 'CREATED'
+  | 'READY'
+  | 'RUNNING'
+  | 'WAITING'
+  | 'PAUSED'
+  | 'RETRYING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'ABORTED';
+
+export type StepState =
+  | 'PENDING'
+  | 'CLAIMED'
+  | 'RUNNING'
+  | 'WAITING'
+  | 'SUCCEEDED'
+  | 'RETRYABLE_FAILURE'
+  | 'PERMANENT_FAILURE'
+  | 'CANCELLED'
+  | 'EXPIRED';
+
+export type WorkerStatus =
+  | 'STARTING'
+  | 'HEALTHY'
+  | 'DRAINING'
+  | 'STOPPED'
+  | 'STALE';
+
+export interface DurableWorkflow {
+  workflow_id: string;
+  tenant_id: string;
+  workflow_type: string;
+  aggregate_type: string;
+  aggregate_id: string;
+  state: WorkflowState;
+  version: number;
+  priority: number;
+  idempotency_key: string;
+  parent_workflow_id?: string;
+  correlation_id?: string;
+  current_step?: string;
+  failure_reason?: string;
+  retry_count: number;
+  deadline?: string;
+  started_at?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ExecutionStep {
+  step_id: string;
+  workflow_id: string;
+  tenant_id: string;
+  step_type: string;
+  sequence: number;
+  state: StepState;
+  attempt: number;
+  idempotency_key: string;
+  input_hash?: string;
+  output_hash?: string;
+  lease_owner?: string;
+  lease_expires_at?: string;
+  timeout_seconds: number;
+  next_retry_at?: string;
+  error_code?: string;
+  error_message?: string;
+  started_at?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+  inputs?: Record<string, any>;
+  outputs?: Record<string, any>;
+}
+
+export interface RuntimeCheckpoint {
+  checkpoint_id: string;
+  workflow_id: string;
+  step_id?: string;
+  tenant_id: string;
+  state_hash: string;
+  event_position: number;
+  schema_version: number;
+  snapshot_data: Record<string, any>;
+  created_at: string;
+}
+
+export interface RuntimeWorker {
+  worker_id: string;
+  worker_type: string;
+  hostname: string;
+  status: WorkerStatus;
+  capabilities?: Record<string, any>;
+  version: string;
+  heartbeat_at: string;
+  last_seen: string;
+  created_at: string;
+}
+
+export interface RuntimeIncident {
+  incident_id: string;
+  tenant_id: string;
+  workflow_id: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  category: string;
+  state: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED';
+  detected_at: string;
+  acknowledged_at?: string;
+  resolved_at?: string;
+  root_cause?: string;
+  evidence?: Record<string, any>;
+  remediation?: string;
+  correlation_id?: string;
+}
+
+export interface RuntimeMetrics {
+  active_workflows: number;
+  waiting_workflows: number;
+  retry_rate_bps: number;
+  failure_rate_bps: number;
+  recovery_rate_bps: number;
+  average_step_duration_ms: number;
+  lease_expirations_count: number;
+  stale_worker_count: number;
+  queue_depth: number;
+  deadline_violations_count: number;
+  reconciliation_queue_size: number;
+  ambiguous_operations: number;
+  worker_utilization_pct: number;
+}
+
+export interface CreateWorkflowParams {
+  tenant_id?: string;
+  workflow_type: string;
+  aggregate_type: string;
+  aggregate_id: string;
+  idempotency_key: string;
+  priority?: number;
+  parent_workflow_id?: string;
+  correlation_id?: string;
+  deadline?: string;
+  metadata?: Record<string, any>;
+  steps?: Array<{
+    step_type: string;
+    sequence: number;
+    idempotency_key: string;
+    timeout_seconds?: number;
+    inputs?: Record<string, any>;
+  }>;
+}
+
+
 
 
 

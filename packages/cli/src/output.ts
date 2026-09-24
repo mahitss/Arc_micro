@@ -1251,6 +1251,122 @@ export function printControlSearch(results: any[], query: string): void {
   console.log('============================================================');
 }
 
+// ============================================================================
+// TASK 13: AUTONOMOUS OPERATIONS & DURABLE RUNTIME FORMATTERS
+// ============================================================================
+
+export function printRuntimeStatus(metrics: any, queues?: any): void {
+  console.log('============================================================');
+  console.log('AGENTPAY AUTONOMOUS OPERATIONS & DURABLE RUNTIME STATUS');
+  console.log('============================================================');
+  console.log(`Active Workflows:        ${metrics.active_workflows ?? 0}`);
+  console.log(`Waiting Workflows:       ${metrics.waiting_workflows ?? 0}`);
+  console.log(`Recovery Rate:           ${((metrics.recovery_rate_bps ?? 0) / 100).toFixed(2)}%`);
+  console.log(`Retry Rate:              ${((metrics.retry_rate_bps ?? 0) / 100).toFixed(2)}%`);
+  console.log(`Failure Rate:            ${((metrics.failure_rate_bps ?? 0) / 100).toFixed(2)}%`);
+  console.log(`Avg Step Duration:       ${metrics.average_step_duration_ms ?? 0}ms`);
+  console.log(`Lease Expirations:       ${metrics.lease_expirations_count ?? 0}`);
+  console.log(`Stale Workers:           ${metrics.stale_worker_count ?? 0}`);
+  console.log(`Queue Depth:             ${queues?.queue_depth ?? metrics.queue_depth ?? 0}`);
+  console.log(`Reconciliation Queue:    ${queues?.reconciliation_queue_size ?? metrics.reconciliation_queue_size ?? 0}`);
+  console.log(`Ambiguous Operations:    ${metrics.ambiguous_operations ?? 0}`);
+  console.log(`Worker Utilization:      ${((metrics.worker_utilization_pct ?? 0) * 100).toFixed(1)}%`);
+  console.log('============================================================');
+}
+
+export function printRuntimeWorkflows(workflows: any[]): void {
+  console.log('============================================================');
+  console.log(`DURABLE WORKFLOWS (${workflows.length} total)`);
+  console.log('============================================================');
+  for (const wf of workflows) {
+    console.log(`[${wf.state}] ${wf.workflow_id} | Type: ${wf.workflow_type} | v${wf.version}`);
+    console.log(`  Aggregate:    ${wf.aggregate_type}:${wf.aggregate_id}`);
+    console.log(`  Priority:     ${wf.priority} | Retries: ${wf.retry_count}`);
+    console.log(`  Idempotency:  ${wf.idempotency_key}`);
+    if (wf.current_step) console.log(`  Current Step: ${wf.current_step}`);
+    if (wf.failure_reason) console.log(`  Failure:      ${wf.failure_reason}`);
+  }
+  console.log('============================================================');
+}
+
+export function printRuntimeWorkflowDetail(wf: any, steps: any[] = [], checkpoints: any[] = []): void {
+  console.log('============================================================');
+  console.log(`DURABLE WORKFLOW: ${wf.workflow_id}`);
+  console.log('============================================================');
+  console.log(`Tenant:          ${wf.tenant_id}`);
+  console.log(`Type:            ${wf.workflow_type}`);
+  console.log(`State:           ${wf.state}`);
+  console.log(`Version:         ${wf.version}`);
+  console.log(`Aggregate:       ${wf.aggregate_type}:${wf.aggregate_id}`);
+  console.log(`Idempotency Key: ${wf.idempotency_key}`);
+  console.log(`Retry Count:     ${wf.retry_count}`);
+  console.log(`Created:         ${wf.created_at}`);
+  console.log(`Updated:         ${wf.updated_at}`);
+  if (wf.deadline) console.log(`Deadline:        ${wf.deadline}`);
+  if (wf.failure_reason) console.log(`Failure Reason:  ${wf.failure_reason}`);
+
+  if (steps.length > 0) {
+    console.log('\n--- EXECUTION STEPS ---');
+    for (const s of steps) {
+      console.log(`  Seq ${s.sequence}: [${s.state}] ${s.step_id} (${s.step_type})`);
+      console.log(`    Attempt: ${s.attempt} | Timeout: ${s.timeout_seconds}s`);
+      if (s.lease_owner) console.log(`    Lease Owner: ${s.lease_owner} (expires: ${s.lease_expires_at})`);
+      if (s.error_code) console.log(`    Error: ${s.error_code} - ${s.error_message}`);
+    }
+  }
+
+  if (checkpoints.length > 0) {
+    console.log('\n--- RECOVERY CHECKPOINTS ---');
+    for (const cp of checkpoints) {
+      console.log(`  [cp_${cp.checkpoint_id}] Step: ${cp.step_id || 'N/A'} | Hash: ${cp.state_hash.slice(0, 16)}... | Seq: ${cp.event_position}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printRuntimeWorkers(workers: any[]): void {
+  console.log('============================================================');
+  console.log(`RUNTIME WORKERS (${workers.length} active)`);
+  console.log('============================================================');
+  for (const w of workers) {
+    console.log(`[${w.status}] ${w.worker_id} (${w.worker_type}) | Host: ${w.hostname} | v${w.version}`);
+    console.log(`  Heartbeat: ${w.heartbeat_at} | Last Seen: ${w.last_seen}`);
+  }
+  console.log('============================================================');
+}
+
+export function printRuntimeRecoveryQueue(steps: any[]): void {
+  console.log('============================================================');
+  console.log(`RECOVERY QUEUE (${steps.length} pending steps)`);
+  console.log('============================================================');
+  for (const s of steps) {
+    console.log(`[${s.state}] Step: ${s.step_id} | Workflow: ${s.workflow_id}`);
+    console.log(`  Type: ${s.step_type} | Attempt: ${s.attempt} | Next Retry: ${s.next_retry_at || 'IMMEDIATE'}`);
+    if (s.error_code) console.log(`  Error: ${s.error_code} - ${s.error_message}`);
+  }
+  console.log('============================================================');
+}
+
+export function printRuntimeDangerousAction(
+  operation: string,
+  details: { tenant: string; workflow: string; currentState: string; idempotencyKey: string; result?: any }
+): void {
+  console.log('============================================================');
+  console.log(`OPERATOR ACTION EXECUTED: ${operation}`);
+  console.log('============================================================');
+  console.log(`Tenant:              ${details.tenant}`);
+  console.log(`Workflow:            ${details.workflow}`);
+  console.log(`Current State:       ${details.currentState}`);
+  console.log(`Requested Operation: ${operation}`);
+  console.log(`Idempotency Key:     ${details.idempotencyKey}`);
+  if (details.result) {
+    console.log(`New State:           ${details.result.state || 'PROCESSED'}`);
+    console.log(`Version:             ${details.result.version ?? 'N/A'}`);
+  }
+  console.log('============================================================');
+}
+
+
 
 
 

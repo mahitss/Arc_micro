@@ -67,6 +67,12 @@ import {
   printArcStatus,
   printControlIncidents,
   printControlSearch,
+  printRuntimeStatus,
+  printRuntimeWorkflows,
+  printRuntimeWorkflowDetail,
+  printRuntimeWorkers,
+  printRuntimeRecoveryQueue,
+  printRuntimeDangerousAction,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -188,6 +194,16 @@ Commands:
   treasury anomalies               List active treasury liquidity anomalies (--org)
   treasury health                  View complete treasury health & solvency snapshot (--org, --mode)
   treasury inflows                 List expected future liquidity inflows (--org, --mode)
+
+  runtime status                   View aggregate runtime metrics and queue status
+  runtime workflows                List durable workflows (--state, --limit)
+  runtime inspect <workflow_id>    Inspect detailed workflow state, steps, and checkpoints
+  runtime workers                  List registered runtime worker processes
+  runtime recovery                 View steps currently queued for automated recovery
+  runtime pause <workflow_id>      Pause an active workflow (--reason)
+  runtime resume <workflow_id>     Resume a paused workflow
+  runtime cancel <workflow_id>     Cancel a workflow safely (--reason)
+  runtime reconcile <incident_id>  Reconcile an operational runtime incident
 
 Options:
   --json                           Output response in machine-readable JSON format
@@ -1317,7 +1333,7 @@ async function main(): Promise<void> {
       }
     }
 
-    if (command === 'control') {
+    if (resource === 'control') {
       const sub = positional[1] || 'overview';
       const param = positional[2];
       const orgId = (flags['org'] as string) || undefined;
@@ -1403,6 +1419,140 @@ async function main(): Promise<void> {
         const res = await client.control.getIntelligenceView({ orgId });
         if (isJson) printJson(res);
         else console.log(JSON.stringify(res, null, 2));
+        return;
+      }
+    }
+
+    // 16. Autonomous Operations & Durable Runtime (Task 13)
+    if (resource === 'runtime') {
+      const sub = action || 'status';
+      const id = targetId || (flags['id'] as string);
+
+      if (sub === 'status') {
+        const metrics = await client.runtime.getMetrics();
+        const queues = await client.runtime.getQueues();
+        if (isJson) printJson({ metrics, queues });
+        else printRuntimeStatus(metrics, queues);
+        return;
+      }
+
+      if (sub === 'workflows') {
+        const state = (flags['state'] as string) || undefined;
+        const limit = flags['limit'] ? Number(flags['limit']) : undefined;
+        const res = await client.runtime.listWorkflows({ state, limit });
+        if (isJson) printJson(res);
+        else printRuntimeWorkflows(res.workflows || []);
+        return;
+      }
+
+      if (sub === 'inspect') {
+        if (!id) {
+          console.error('Error: "runtime inspect" requires a <workflow_id>');
+          process.exit(1);
+        }
+        const wf = await client.runtime.getWorkflow(id);
+        const stepsRes = await client.runtime.listSteps(id);
+        const checkpointsRes = await client.runtime.listCheckpoints(id);
+        if (isJson) {
+          printJson({ workflow: wf, steps: stepsRes.steps, checkpoints: checkpointsRes.checkpoints });
+        } else {
+          printRuntimeWorkflowDetail(wf, stepsRes.steps || [], checkpointsRes.checkpoints || []);
+        }
+        return;
+      }
+
+      if (sub === 'workers') {
+        const res = await client.runtime.listWorkers();
+        if (isJson) printJson(res);
+        else printRuntimeWorkers(res.workers || []);
+        return;
+      }
+
+      if (sub === 'recovery') {
+        const res = await client.runtime.getRecoveryQueue();
+        if (isJson) printJson(res);
+        else printRuntimeRecoveryQueue(res.recovery_steps || []);
+        return;
+      }
+
+      if (sub === 'pause') {
+        if (!id) {
+          console.error('Error: "runtime pause" requires a <workflow_id>');
+          process.exit(1);
+        }
+        const reason = (flags['reason'] as string) || 'Operator paused workflow via CLI';
+        const wf = await client.runtime.getWorkflow(id);
+        const res = await client.runtime.pauseWorkflow(id, reason);
+        if (isJson) printJson(res);
+        else {
+          printRuntimeDangerousAction('PAUSE_WORKFLOW', {
+            tenant: wf.tenant_id,
+            workflow: id,
+            currentState: wf.state,
+            idempotencyKey: wf.idempotency_key,
+            result: res,
+          });
+        }
+        return;
+      }
+
+      if (sub === 'resume') {
+        if (!id) {
+          console.error('Error: "runtime resume" requires a <workflow_id>');
+          process.exit(1);
+        }
+        const wf = await client.runtime.getWorkflow(id);
+        const res = await client.runtime.resumeWorkflow(id);
+        if (isJson) printJson(res);
+        else {
+          printRuntimeDangerousAction('RESUME_WORKFLOW', {
+            tenant: wf.tenant_id,
+            workflow: id,
+            currentState: wf.state,
+            idempotencyKey: wf.idempotency_key,
+            result: res,
+          });
+        }
+        return;
+      }
+
+      if (sub === 'cancel') {
+        if (!id) {
+          console.error('Error: "runtime cancel" requires a <workflow_id>');
+          process.exit(1);
+        }
+        const reason = (flags['reason'] as string) || 'Operator cancelled workflow via CLI';
+        const wf = await client.runtime.getWorkflow(id);
+        const res = await client.runtime.cancelWorkflow(id, reason);
+        if (isJson) printJson(res);
+        else {
+          printRuntimeDangerousAction('CANCEL_WORKFLOW', {
+            tenant: wf.tenant_id,
+            workflow: id,
+            currentState: wf.state,
+            idempotencyKey: wf.idempotency_key,
+            result: res,
+          });
+        }
+        return;
+      }
+
+      if (sub === 'reconcile') {
+        if (!id) {
+          console.error('Error: "runtime reconcile" requires an <incident_id>');
+          process.exit(1);
+        }
+        const res = await client.runtime.reconcileIncident(id);
+        if (isJson) printJson(res);
+        else {
+          printRuntimeDangerousAction('RECONCILE_INCIDENT', {
+            tenant: 'tenant_default',
+            workflow: id,
+            currentState: 'RECONCILING',
+            idempotencyKey: `idem_reconcile_${id}`,
+            result: res,
+          });
+        }
         return;
       }
     }

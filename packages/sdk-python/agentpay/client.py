@@ -1171,6 +1171,98 @@ class ControlTowerResource:
         return self._client._request("GET", "/v1/control/search", params=params)
 
 
+class RuntimeResource:
+    """
+    Autonomous Operations & Durable Runtime Resource (Task 13)
+    Coordinates durable workflows, execution steps, leases, checkpoints, workers, recovery, and incidents.
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def create_workflow(
+        self,
+        workflow_type: str,
+        aggregate_type: str,
+        aggregate_id: str,
+        idempotency_key: str,
+        priority: int = 0,
+        tenant_id: Optional[str] = None,
+        parent_workflow_id: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        deadline: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        steps: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "workflow_type": workflow_type,
+            "aggregate_type": aggregate_type,
+            "aggregate_id": aggregate_id,
+            "idempotency_key": idempotency_key,
+            "priority": priority,
+        }
+        if tenant_id:
+            payload["tenant_id"] = tenant_id
+        if parent_workflow_id:
+            payload["parent_workflow_id"] = parent_workflow_id
+        if correlation_id:
+            payload["correlation_id"] = correlation_id
+        if deadline:
+            payload["deadline"] = deadline
+        if metadata:
+            payload["metadata"] = metadata
+        if steps:
+            payload["steps"] = steps
+        return self._client._request("POST", "/v1/runtime/workflows", json=payload)
+
+    def get_workflow(self, workflow_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/runtime/workflows/{workflow_id}")
+
+    def list_workflows(self, state: Optional[str] = None, limit: Optional[int] = None) -> Dict[str, Any]:
+        params = {}
+        if state:
+            params["state"] = state
+        if limit:
+            params["limit"] = str(limit)
+        return self._client._request("GET", "/v1/runtime/workflows", params=params or None)
+
+    def pause_workflow(self, workflow_id: str, reason: str = "Operator paused workflow") -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/runtime/workflows/{workflow_id}/pause", json={"reason": reason})
+
+    def resume_workflow(self, workflow_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/runtime/workflows/{workflow_id}/resume")
+
+    def cancel_workflow(self, workflow_id: str, reason: str = "Operator cancelled workflow") -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/runtime/workflows/{workflow_id}/cancel", json={"reason": reason})
+
+    def retry_step(self, workflow_id: str, step_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/runtime/workflows/{workflow_id}/retry", json={"step_id": step_id})
+
+    def list_steps(self, workflow_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/runtime/workflows/{workflow_id}/steps")
+
+    def list_checkpoints(self, workflow_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/runtime/workflows/{workflow_id}/checkpoints")
+
+    def list_workers(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/runtime/workers")
+
+    def get_queues(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/runtime/queues")
+
+    def get_recovery_queue(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/runtime/recovery")
+
+    def list_incidents(self, state: Optional[str] = None) -> Dict[str, Any]:
+        params = {"state": state} if state else None
+        return self._client._request("GET", "/v1/runtime/incidents", params=params)
+
+    def reconcile_incident(self, incident_id: str) -> Dict[str, Any]:
+        return self._client._request("POST", f"/v1/runtime/incidents/{incident_id}/reconcile")
+
+    def get_metrics(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/runtime/metrics")
+
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -1205,6 +1297,7 @@ class AgentPay:
         self.economy = self.clearinghouse
         self.treasury = TreasuryResource(self)
         self.control = ControlTowerResource(self)
+        self.runtime = RuntimeResource(self)
 
     def _request(
         self,

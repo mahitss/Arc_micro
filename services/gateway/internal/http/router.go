@@ -20,6 +20,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/network"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/runtime"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/service"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/simulation"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
@@ -475,6 +476,42 @@ func NewRouter(
 		mux.HandleFunc("GET /api/control/intelligence", controlHandler.HandleIntelligence)
 		mux.HandleFunc("GET /v1/control/search", controlHandler.HandleSearch)
 		mux.HandleFunc("GET /api/control/search", controlHandler.HandleSearch)
+
+		// 17. Task 13: Autonomous Operations & Durable Runtime APIs
+		runtimeStore := storage.NewMemoryRuntimeStore()
+		runtimeService := runtime.NewService(runtimeStore, runtimeStore, runtimeStore, runtimeStore, runtimeStore, runtimeStore, runtimeStore, runtimeStore)
+		runtimeHandler := handlers.NewRuntimeHandler(runtimeService)
+
+		mux.HandleFunc("POST /v1/runtime/workflows", runtimeHandler.HandleCreateWorkflow)
+		mux.HandleFunc("POST /api/runtime/workflows", runtimeHandler.HandleCreateWorkflow)
+		mux.HandleFunc("GET /v1/runtime/workflows", runtimeHandler.HandleListWorkflows)
+		mux.HandleFunc("GET /api/runtime/workflows", runtimeHandler.HandleListWorkflows)
+		mux.HandleFunc("GET /v1/runtime/workflows/{id}", runtimeHandler.HandleGetWorkflow)
+		mux.HandleFunc("GET /api/runtime/workflows/{id}", runtimeHandler.HandleGetWorkflow)
+		mux.HandleFunc("POST /v1/runtime/workflows/{id}/pause", runtimeHandler.HandlePauseWorkflow)
+		mux.HandleFunc("POST /api/runtime/workflows/{id}/pause", runtimeHandler.HandlePauseWorkflow)
+		mux.HandleFunc("POST /v1/runtime/workflows/{id}/resume", runtimeHandler.HandleResumeWorkflow)
+		mux.HandleFunc("POST /api/runtime/workflows/{id}/resume", runtimeHandler.HandleResumeWorkflow)
+		mux.HandleFunc("POST /v1/runtime/workflows/{id}/cancel", runtimeHandler.HandleCancelWorkflow)
+		mux.HandleFunc("POST /api/runtime/workflows/{id}/cancel", runtimeHandler.HandleCancelWorkflow)
+		mux.HandleFunc("POST /v1/runtime/workflows/{id}/retry", runtimeHandler.HandleRetryStep)
+		mux.HandleFunc("POST /api/runtime/workflows/{id}/retry", runtimeHandler.HandleRetryStep)
+		mux.HandleFunc("GET /v1/runtime/workflows/{id}/steps", runtimeHandler.HandleListSteps)
+		mux.HandleFunc("GET /api/runtime/workflows/{id}/steps", runtimeHandler.HandleListSteps)
+		mux.HandleFunc("GET /v1/runtime/workflows/{id}/checkpoints", runtimeHandler.HandleListCheckpoints)
+		mux.HandleFunc("GET /api/runtime/workflows/{id}/checkpoints", runtimeHandler.HandleListCheckpoints)
+		mux.HandleFunc("GET /v1/runtime/workers", runtimeHandler.HandleListWorkers)
+		mux.HandleFunc("GET /api/runtime/workers", runtimeHandler.HandleListWorkers)
+		mux.HandleFunc("GET /v1/runtime/queues", runtimeHandler.HandleGetQueues)
+		mux.HandleFunc("GET /api/runtime/queues", runtimeHandler.HandleGetQueues)
+		mux.HandleFunc("GET /v1/runtime/recovery", runtimeHandler.HandleGetRecoveryQueue)
+		mux.HandleFunc("GET /api/runtime/recovery", runtimeHandler.HandleGetRecoveryQueue)
+		mux.HandleFunc("GET /v1/runtime/incidents", runtimeHandler.HandleListIncidents)
+		mux.HandleFunc("GET /api/runtime/incidents", runtimeHandler.HandleListIncidents)
+		mux.HandleFunc("POST /v1/runtime/incidents/{id}/reconcile", runtimeHandler.HandleReconcileIncident)
+		mux.HandleFunc("POST /api/runtime/incidents/{id}/reconcile", runtimeHandler.HandleReconcileIncident)
+		mux.HandleFunc("GET /v1/runtime/metrics", runtimeHandler.HandleGetMetrics)
+		mux.HandleFunc("GET /api/runtime/metrics", runtimeHandler.HandleGetMetrics)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {

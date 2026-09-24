@@ -44,6 +44,12 @@ import {
   printArcStatus,
   printControlIncidents,
   printControlSearch,
+  printRuntimeStatus,
+  printRuntimeWorkflows,
+  printRuntimeWorkflowDetail,
+  printRuntimeWorkers,
+  printRuntimeRecoveryQueue,
+  printRuntimeDangerousAction,
 } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
@@ -651,3 +657,105 @@ test('AgentPay CLI Output — Autonomous Economic Control Tower Formatters (Task
     printControlSearch(mockSearch, 'macro');
   });
 });
+
+test('AgentPay CLI Output — Task 13 Autonomous Operations & Durable Runtime Formatters', () => {
+  const mockMetrics = {
+    active_workflows: 3,
+    waiting_workflows: 1,
+    retry_rate_bps: 100,
+    failure_rate_bps: 20,
+    recovery_rate_bps: 9900,
+    average_step_duration_ms: 280,
+    lease_expirations_count: 1,
+    stale_worker_count: 0,
+    queue_depth: 2,
+    deadline_violations_count: 0,
+    reconciliation_queue_size: 0,
+    ambiguous_operations: 0,
+    worker_utilization_pct: 0.35,
+  };
+
+  const mockQueues = {
+    queue_depth: 2,
+    reconciliation_queue_size: 0,
+  };
+
+  const mockWorkflows = [
+    {
+      workflow_id: 'wf_cli_01',
+      tenant_id: 'tenant_default',
+      workflow_type: 'MISSION_EXECUTION',
+      aggregate_type: 'MISSION',
+      aggregate_id: 'msn_001',
+      state: 'RUNNING',
+      version: 2,
+      priority: 10,
+      idempotency_key: 'idem_cli_wf',
+      current_step: 'step_discover',
+      retry_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+
+  const mockSteps = [
+    {
+      step_id: 'step_discover',
+      sequence: 1,
+      step_type: 'SERVICE_DISCOVERY',
+      state: 'SUCCEEDED',
+      attempt: 1,
+      timeout_seconds: 30,
+    },
+  ];
+
+  const mockCheckpoints = [
+    {
+      checkpoint_id: 'cp_01',
+      step_id: 'step_discover',
+      state_hash: 'abcdef0123456789abcdef0123456789',
+      event_position: 1,
+    },
+  ];
+
+  const mockWorkers = [
+    {
+      worker_id: 'worker_cli_01',
+      worker_type: 'STANDARD',
+      hostname: 'node-cli-1',
+      status: 'HEALTHY',
+      version: '1.0.0',
+      heartbeat_at: new Date().toISOString(),
+      last_seen: new Date().toISOString(),
+    },
+  ];
+
+  const mockRecoverySteps = [
+    {
+      step_id: 'step_rec_cli_01',
+      workflow_id: 'wf_cli_01',
+      step_type: 'QUOTE_COLLECTION',
+      state: 'RETRYABLE_FAILURE',
+      attempt: 1,
+      next_retry_at: new Date().toISOString(),
+      error_code: 'PROVIDER_TIMEOUT',
+      error_message: 'External provider timed out after 30s',
+    },
+  ];
+
+  assert.doesNotThrow(() => {
+    printRuntimeStatus(mockMetrics, mockQueues);
+    printRuntimeWorkflows(mockWorkflows);
+    printRuntimeWorkflowDetail(mockWorkflows[0], mockSteps, mockCheckpoints);
+    printRuntimeWorkers(mockWorkers);
+    printRuntimeRecoveryQueue(mockRecoverySteps);
+    printRuntimeDangerousAction('PAUSE_WORKFLOW', {
+      tenant: 'tenant_default',
+      workflow: 'wf_cli_01',
+      currentState: 'RUNNING',
+      idempotencyKey: 'idem_cli_wf',
+      result: { state: 'PAUSED', version: 3 },
+    });
+  });
+});
+

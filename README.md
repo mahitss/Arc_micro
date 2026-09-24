@@ -653,6 +653,73 @@ ECONOMIC MEMORY & INTELLIGENCE (Outcome feedback & replanning)
 
 ---
 
+## Autonomous Operations & Durable Runtime (Task 13)
+
+AgentPay features an enterprise durable runtime making long-running autonomous economic workflows recoverable, observable, idempotent, and safe across crashes, network partitions, and counterparty delays.
+
+### Core Runtime Principles
+> **AUTONOMY MAY CONTINUE THROUGH FAILURES.**  
+> **FINANCIAL AUTHORITY MUST NEVER EXPAND DURING RECOVERY.**  
+>
+> **CRASH RECOVERY MUST RECONSTRUCT STATE FROM DURABLE FACTS, NOT MEMORY.**  
+> **RETRYING A FINANCIAL ACTION MUST NEVER BECOME AN UNCONTROLLED SECOND PAYMENT.**
+
+```
+MISSION / SWARM
+      │
+      ▼
+DURABLE WORKFLOW (Optimistic Concurrency & Version Checks)
+      │
+      ▼
+EXECUTION STEP (Claimed via Fenced Leases)
+      │
+      ▼
+FINANCIAL BARRIER (12-Point Pre-Flight Safety Verification)
+      │
+      ▼
+AUTHORIZED DOMAIN PIPELINE (Policy → Risk → Approval → Treasury → Signer → AgentVault → Arc)
+      │
+      ▼
+CHECKPOINT & OUTBOX (Atomic SHA-256 State Fingerprints)
+      │
+      ▼
+RECONCILIATION / ECONOMIC MEMORY (Deterministic Feedback & Learning)
+```
+
+### Key Capabilities
+1. **Durable Workflows & Steps**: Full explicit state machines (`CREATED` → `READY` → `RUNNING` → `WAITING` → `PAUSED` → `RETRYING` → `COMPLETED`) with optimistic version concurrency rejecting stale writers (`INV-111`).
+2. **Distributed Leases & Fencing**: Heartbeated leases with monotonic fencing tokens prevent stale or revived workers from committing results after step reassignment (`INV-101`, `INV-115`).
+3. **12-Point Financial Side-Effect Barrier**: Pre-flight checks revalidate workflow state, step version, policy snapshot, risk decision, approval validity, treasury reservations, payment intents, execution gates, idempotency keys, live/sim mode, target validity, and signer boundary before calling the payment pipeline (`INV-102`, `INV-108`).
+4. **Deterministic Retry & Backoff**: Exponential backoff with jitter and deadline awareness. Policy `DENY` or invalid payment recipients strictly produce `PERMANENT_FAILURE` and can **never** be retried (`INV-103`).
+5. **Event-Sourced Recovery & Checkpoints**: SHA-256 state snapshots and transactional outbox/inbox events enable exact state reconstruction from PostgreSQL or memory on startup.
+6. **Ambiguous Blockchain Reconciliation**: Unconfirmed blockchain submissions transition strictly to `AMBIGUOUS` and require on-chain verification or reconciliation; blind rebroadcast is mathematically prevented (`INV-106`).
+7. **Control Tower Runtime Center**: Full interactive observability across `/control/runtime`, `/control/runtime/workflows`, `/control/runtime/workers`, `/control/runtime/queues`, `/control/runtime/recovery`, and `/control/runtime/incidents`.
+
+### Machine-Checked Security Invariants (INV-101 – INV-120)
+- **INV-101**: A stale worker cannot commit after lease fencing.
+- **INV-102**: Workflow recovery cannot create financial authority.
+- **INV-103**: Retry cannot bypass HARD_DENY.
+- **INV-104**: Retry cannot bypass approval.
+- **INV-105**: Retry cannot bypass treasury reservation.
+- **INV-106**: Ambiguous blockchain execution cannot be blindly rebroadcast.
+- **INV-107**: Simulation workflows can never broadcast.
+- **INV-108**: Runtime cannot directly invoke AgentVault.
+- **INV-109**: Runtime cannot modify policy.
+- **INV-110**: Runtime cannot modify constitutional authority.
+- **INV-111**: Workflow state transitions require version correctness.
+- **INV-112**: Duplicate external callbacks are idempotent.
+- **INV-113**: Duplicate financial commands cannot create duplicate payment intents.
+- **INV-114**: Expired approvals cannot authorize execution.
+- **INV-115**: Expired leases cannot authorize commits.
+- **INV-116**: Cross-tenant workflow access is impossible.
+- **INV-117**: Operator commands require authorization.
+- **INV-118**: Dangerous commands are idempotent.
+- **INV-119**: Financial state is derived from durable facts.
+- **INV-120**: In-memory runtime state is never financial truth.
+
+---
+
+
 ## Development & Test Commands
 
 ```bash

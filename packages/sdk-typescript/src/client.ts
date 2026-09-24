@@ -29,6 +29,7 @@ import { ConstitutionsResource } from './resources/constitutions.js';
 import { ClearinghouseResource } from './resources/clearinghouse.js';
 import { TreasuryResource } from './resources/treasury.js';
 import { ControlTowerResource } from './resources/control.js';
+import { RuntimeResource } from './resources/runtime.js';
 import type { ClientOptions, RequestOptions } from './types.js';
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
@@ -72,6 +73,7 @@ export class AgentPay {
   public readonly economy: ClearinghouseResource;
   public readonly treasury: TreasuryResource;
   public readonly control: ControlTowerResource;
+  public readonly runtime: RuntimeResource;
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
@@ -103,6 +105,7 @@ export class AgentPay {
     this.economy = this.clearinghouse;
     this.treasury = new TreasuryResource(this);
     this.control = new ControlTowerResource(this);
+    this.runtime = new RuntimeResource(this);
   }
 
   /**

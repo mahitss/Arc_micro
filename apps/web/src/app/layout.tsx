@@ -43,6 +43,13 @@ export default function RootLayout({
                   CONTROL TOWER
                 </Link>
                 <Link
+                  href="/control/runtime"
+                  className="px-3 py-1.5 rounded-lg text-indigo-300 font-bold bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-indigo-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                  RUNTIME
+                </Link>
+                <Link
                   href="/overview"
                   className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                 >

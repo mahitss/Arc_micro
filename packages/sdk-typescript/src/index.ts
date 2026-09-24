@@ -33,8 +33,19 @@ export { ConstitutionsResource } from './resources/constitutions.js';
 export { ClearinghouseResource } from './resources/clearinghouse.js';
 export { TreasuryResource, TreasuryReservationsResource } from './resources/treasury.js';
 export { ControlTowerResource } from './resources/control.js';
+export { RuntimeResource } from './resources/runtime.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
+  WorkflowState,
+  StepState,
+  WorkerStatus,
+  DurableWorkflow,
+  ExecutionStep,
+  RuntimeCheckpoint,
+  RuntimeWorker,
+  RuntimeIncident,
+  RuntimeMetrics,
+  CreateWorkflowParams,
   EconomicStateStrip,
   ExecutiveOverview,
   ControlCategory,

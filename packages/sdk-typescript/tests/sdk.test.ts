@@ -2065,6 +2065,161 @@ test('AgentPay SDK — Task 12: Autonomous Economic Control Tower Surface', asyn
   assert.equal(srch.results[0].type, 'MISSION');
 });
 
+test('AgentPay SDK — Autonomous Operations & Durable Runtime (Task 13)', async () => {
+  let capturedUrl = '';
+  let capturedMethod = '';
+  let capturedBody = '';
+
+  const mockFetch: typeof fetch = async (input, init) => {
+    capturedUrl = input.toString();
+    capturedMethod = init?.method || 'GET';
+    capturedBody = (init?.body as string) || '';
+
+    if (capturedUrl.includes('/v1/runtime/workflows/wf_task13_001/pause')) {
+      return new Response(
+        JSON.stringify({
+          workflow_id: 'wf_task13_001',
+          state: 'PAUSED',
+          version: 2,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/runtime/workflows/wf_task13_001/resume')) {
+      return new Response(
+        JSON.stringify({
+          workflow_id: 'wf_task13_001',
+          state: 'RUNNING',
+          version: 3,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.endsWith('/v1/runtime/workflows') && capturedMethod === 'POST') {
+      return new Response(
+        JSON.stringify({
+          workflow_id: 'wf_task13_001',
+          tenant_id: 'tenant_default',
+          workflow_type: 'MISSION_EXECUTION',
+          aggregate_type: 'MISSION',
+          aggregate_id: 'msn_001',
+          state: 'CREATED',
+          version: 1,
+          priority: 10,
+          idempotency_key: 'idem_wf_001',
+          retry_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/runtime/workers')) {
+      return new Response(
+        JSON.stringify({
+          workers: [
+            {
+              worker_id: 'worker_01',
+              worker_type: 'STANDARD',
+              hostname: 'worker-node-1',
+              status: 'HEALTHY',
+              version: '1.0.0',
+              heartbeat_at: new Date().toISOString(),
+              last_seen: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+            },
+          ],
+          count: 1,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/runtime/recovery')) {
+      return new Response(
+        JSON.stringify({
+          recovery_steps: [
+            {
+              step_id: 'step_rec_01',
+              workflow_id: 'wf_task13_001',
+              state: 'RETRYABLE_FAILURE',
+              attempt: 1,
+            },
+          ],
+          count: 1,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (capturedUrl.includes('/v1/runtime/metrics')) {
+      return new Response(
+        JSON.stringify({
+          active_workflows: 5,
+          waiting_workflows: 2,
+          retry_rate_bps: 120,
+          failure_rate_bps: 40,
+          recovery_rate_bps: 9800,
+          average_step_duration_ms: 350,
+          lease_expirations_count: 1,
+          stale_worker_count: 0,
+          queue_depth: 3,
+          deadline_violations_count: 0,
+          reconciliation_queue_size: 0,
+          ambiguous_operations: 0,
+          worker_utilization_pct: 0.42,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
+  const client = new AgentPay({ apiKey: 'ap_live_test', fetch: mockFetch });
+
+  // 1. Create Workflow
+  const wf = await client.runtime.createWorkflow({
+    workflow_type: 'MISSION_EXECUTION',
+    aggregate_type: 'MISSION',
+    aggregate_id: 'msn_001',
+    idempotency_key: 'idem_wf_001',
+    priority: 10,
+  });
+  assert.equal(wf.workflow_id, 'wf_task13_001');
+  assert.equal(wf.state, 'CREATED');
+
+  // 2. Pause Workflow
+  const paused = await client.runtime.pauseWorkflow('wf_task13_001', 'Operator inspection');
+  assert.equal(paused.state, 'PAUSED');
+
+  // 3. Resume Workflow
+  const resumed = await client.runtime.resumeWorkflow('wf_task13_001');
+  assert.equal(resumed.state, 'RUNNING');
+
+  // 4. List Workers
+  const workers = await client.runtime.listWorkers();
+  assert.equal(workers.count, 1);
+  assert.equal(workers.workers[0].worker_id, 'worker_01');
+
+  // 5. Recovery Queue
+  const rec = await client.runtime.getRecoveryQueue();
+  assert.equal(rec.count, 1);
+  assert.equal(rec.recovery_steps[0].step_id, 'step_rec_01');
+
+  // 6. Metrics
+  const metrics = await client.runtime.getMetrics();
+  assert.equal(metrics.active_workflows, 5);
+  assert.equal(metrics.recovery_rate_bps, 9800);
+});
+
+
 
 
 
