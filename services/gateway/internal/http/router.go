@@ -454,6 +454,24 @@ func NewRouter(
 		mux.HandleFunc("GET /api/economy/exposure", clearingHandler.HandleGetExposure)
 		mux.HandleFunc("GET /api/economy/health", clearingHandler.HandleGetHealth)
 
+		// Task 18: Economic Clearing Network APIs
+		mux.HandleFunc("GET /api/economy/obligations/{id}/why-unsettled", clearingHandler.HandleExplainUnsettled)
+		mux.HandleFunc("GET /api/economy/counterparties", clearingHandler.HandleListCounterparties)
+		mux.HandleFunc("POST /api/economy/counterparties", clearingHandler.HandleRegisterCounterparty)
+		mux.HandleFunc("GET /api/economy/counterparties/{id}", clearingHandler.HandleGetCounterparty)
+		mux.HandleFunc("POST /api/economy/netting/simulate", clearingHandler.HandleSimulateNetting)
+		mux.HandleFunc("POST /api/economy/netting/propose", clearingHandler.HandleProposeMultiPartyNetting)
+		mux.HandleFunc("GET /api/economy/netting/counterfactual/{id}", clearingHandler.HandleGetNettingCounterfactual)
+		mux.HandleFunc("GET /api/economy/settlements", clearingHandler.HandleListSettlements)
+		mux.HandleFunc("GET /api/economy/settlements/{id}", clearingHandler.HandleGetSettlement)
+		mux.HandleFunc("GET /api/economy/reconciliation/{id}", clearingHandler.HandleGetReconciliationItem)
+		mux.HandleFunc("GET /api/economy/disputes", clearingHandler.HandleListDisputes)
+		mux.HandleFunc("POST /api/economy/disputes", clearingHandler.HandleCreateDispute)
+		mux.HandleFunc("GET /api/economy/disputes/{id}", clearingHandler.HandleGetDispute)
+		mux.HandleFunc("GET /api/economy/trace/{id}", clearingHandler.HandleGetFinancialTrace)
+		mux.HandleFunc("GET /api/economy/network", clearingHandler.HandleGetObligationGraph)
+		mux.HandleFunc("GET /api/economy/clearing/health", clearingHandler.HandleGetClearingNetworkHealth)
+
 		// 16. Task 12: Autonomous Economic Control Tower APIs
 		controlService := control.NewService(repo, ts, policyClient, bc, reg, cfg)
 		controlService.SetClearinghouse(clearingSvc)

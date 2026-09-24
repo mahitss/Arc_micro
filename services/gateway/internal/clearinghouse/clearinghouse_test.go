@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,8 +16,9 @@ import (
 
 // MockIntentCreator implements IntentCreator for testing.
 type MockIntentCreator struct {
-	intents map[string]*intent.PaymentIntent
-	failAuth bool
+	mu              sync.RWMutex
+	intents         map[string]*intent.PaymentIntent
+	failAuth        bool
 	requireApproval bool
 }
 
@@ -27,6 +29,9 @@ func NewMockIntentCreator() *MockIntentCreator {
 }
 
 func (m *MockIntentCreator) CreateIntent(ctx context.Context, params intent.CreateIntentParams) (*intent.PaymentIntent, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	id := fmtSprintf("intent_%d", len(m.intents)+1)
 	pi := &intent.PaymentIntent{
 		IntentID:       id,
@@ -47,6 +52,9 @@ func (m *MockIntentCreator) CreateIntent(ctx context.Context, params intent.Crea
 }
 
 func (m *MockIntentCreator) AuthorizeIntent(ctx context.Context, intentID string) (*intent.PaymentIntent, *domain.AuthorizationDecision, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	pi, ok := m.intents[intentID]
 	if !ok {
 		return nil, nil, errorsNew("intent not found")
@@ -76,6 +84,9 @@ func (m *MockIntentCreator) AuthorizeIntent(ctx context.Context, intentID string
 }
 
 func (m *MockIntentCreator) ConfirmIntent(ctx context.Context, intentID string) (*intent.PaymentIntent, *blockchain.PaymentExecutionResult, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	pi, ok := m.intents[intentID]
 	if !ok {
 		return nil, nil, errorsNew("intent not found")

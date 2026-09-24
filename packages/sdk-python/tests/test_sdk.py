@@ -1333,9 +1333,115 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         self.assertFalse(hasattr(client.marketplace, "private_key"))
         self.assertFalse(hasattr(client.marketplace, "authorize_payment"))
 
+    @patch("requests.request")
+    def test_clearing_client_task_18(self, mock_req):
+        client = AgentPay(api_key="ap_live_clearing_test")
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.headers = {"x-request-id": "req_clearing_123"}
+        mock_req.return_value = mock_resp
+
+        # 1. Obligations
+        mock_resp.json.return_value = {
+            "obligation_id": "ob_100",
+            "amount": "10000000",
+            "currency": "USDC",
+            "status": "CONFIRMED",
+        }
+        ob = client.clearing.get_obligation("ob_100")
+        self.assertEqual(ob["obligation_id"], "ob_100")
+        self.assertEqual(ob["status"], "CONFIRMED")
+
+        mock_resp.json.return_value = {"obligations": [ob]}
+        obs = client.clearing.list_obligations(organization_id="org_test")
+        self.assertEqual(len(obs), 1)
+
+        # 2. Counterparty & Exposure
+        mock_resp.json.return_value = {
+            "counterparty_id": "cp_100",
+            "agent_id": "agent_alpha",
+            "current_exposure": "10000000",
+        }
+        cp = client.clearing.get_counterparty_exposure("cp_100")
+        self.assertEqual(cp["counterparty_id"], "cp_100")
+
+        mock_resp.json.return_value = {"counterparty_id": "cp_new", "agent_id": "agent_beta"}
+        new_cp = client.clearing.register_counterparty({"agent_id": "agent_beta", "organization_id": "org_test"})
+        self.assertEqual(new_cp["counterparty_id"], "cp_new")
+
+        # 3. Netting
+        mock_resp.json.return_value = {
+            "proposal_id": "net_prop_100",
+            "gross_value": "30000000",
+            "net_value": "16000000",
+            "savings_value": "14000000",
+        }
+        prop = client.clearing.propose_netting({"organization_id": "org_test", "obligation_ids": ["ob_1", "ob_2"]})
+        self.assertEqual(prop["proposal_id"], "net_prop_100")
+        self.assertEqual(prop["savings_value"], "14000000")
+
+        # 4. Settlement Batches & Status
+        mock_resp.json.return_value = {
+            "batch_id": "batch_100",
+            "status": "SETTLED",
+            "gross_amount": "30000000",
+            "net_amount": "16000000",
+        }
+        batch = client.clearing.get_settlement_batch("batch_100")
+        self.assertEqual(batch["batch_id"], "batch_100")
+
+        status = client.clearing.get_settlement_status("batch_100")
+        self.assertEqual(status["status"], "SETTLED")
+
+        # 5. Reconciliation & Graph & Trace & Health & Explanation & Disputes
+        mock_resp.json.return_value = {
+            "item_id": "rec_100",
+            "reconciliation_type": "MATCHED",
+            "status": "CONFIRMED",
+        }
+        recon = client.clearing.get_reconciliation("rec_100")
+        self.assertEqual(recon["status"], "CONFIRMED")
+
+        mock_resp.json.return_value = {
+            "nodes": [{"id": "agent_a"}, {"id": "agent_b"}],
+            "edges": [{"from": "agent_a", "to": "agent_b", "amount": "10000000"}],
+        }
+        graph = client.clearing.get_network_graph()
+        self.assertEqual(len(graph["nodes"]), 2)
+        self.assertEqual(len(graph["edges"]), 1)
+
+        mock_resp.json.return_value = {
+            "trace_id": "trace_ob_100",
+            "obligation_id": "ob_100",
+            "canonical_path": "objective -> mission -> contract -> obligation -> clearing -> settlement",
+        }
+        trace = client.clearing.get_financial_trace("ob_100")
+        self.assertEqual(trace["trace_id"], "trace_ob_100")
+
+        mock_resp.json.return_value = {
+            "open_obligations": 12,
+            "pending_settlements": 3,
+            "disputed_value": "0",
+        }
+        health = client.clearing.get_clearing_health()
+        self.assertEqual(health["open_obligations"], 12)
+
+        mock_resp.json.return_value = {
+            "obligation_id": "ob_100",
+            "reason_code": "REASON_APPROVAL_REQUIRED",
+            "explanation": "Payment pending because approval is required by governance policy",
+        }
+        why = client.clearing.explain_unsettled("ob_100")
+        self.assertEqual(why["reason_code"], "REASON_APPROVAL_REQUIRED")
+
+        # 6. Invariant check: INV-201 Clearing client does not hold private keys or create financial authority
+        self.assertFalse(hasattr(client.clearing, "private_key"))
+        self.assertFalse(hasattr(client.clearing, "authorize_payment"))
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

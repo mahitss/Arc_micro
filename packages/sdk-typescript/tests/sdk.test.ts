@@ -2991,6 +2991,176 @@ test('AgentPay SDK — Task 17 Autonomous Economic Marketplace', async () => {
   assert.equal(sim.simulation_only_label, 'SIMULATION ONLY: NO MONEY MOVED (INV-192)');
 });
 
+test('AgentPay SDK — Task 18 Autonomous Economic Clearing Network Client', async () => {
+  const mockFetch: typeof fetch = async (input, init) => {
+    const url = input.toString();
+
+    if (url.includes('/api/economy/obligations/ob_100/why-unsettled')) {
+      return new Response(JSON.stringify({
+        obligation_id: 'ob_100',
+        status: 'RESERVED',
+        reason_code: 'REASON_APPROVAL_REQUIRED',
+        explanation: 'Payment execution requires policy review.',
+        required_actions: ['Check policy gate'],
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/obligations/ob_100')) {
+      return new Response(JSON.stringify({
+        obligation_id: 'ob_100',
+        organization_id: 'org_test',
+        payer_agent_id: 'agent_buyer',
+        payee_agent_id: 'agent_seller',
+        amount: '10000000',
+        currency: 'USDC',
+        status: 'AUTHORIZED',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/obligations')) {
+      return new Response(JSON.stringify([
+        {
+          obligation_id: 'ob_100',
+          organization_id: 'org_test',
+          payer_agent_id: 'agent_buyer',
+          payee_agent_id: 'agent_seller',
+          amount: '10000000',
+          currency: 'USDC',
+          status: 'AUTHORIZED',
+        },
+      ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/counterparties/cp_100')) {
+      return new Response(JSON.stringify({
+        counterparty_id: 'cp_100',
+        agent_id: 'agent_seller',
+        current_exposure: '10000000',
+        exposure_limit: '500000000',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/counterparties') && init?.method === 'POST') {
+      return new Response(JSON.stringify({
+        counterparty_id: 'cp_new',
+        agent_id: 'agent_new',
+        identity_status: 'VERIFIED',
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/counterparties')) {
+      return new Response(JSON.stringify([
+        { counterparty_id: 'cp_100', agent_id: 'agent_seller', identity_status: 'VERIFIED' },
+      ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/netting/propose')) {
+      return new Response(JSON.stringify({
+        proposal_id: 'net_mp_100',
+        gross_value: '20000000',
+        net_value: '6000000',
+        savings_value: '14000000',
+        status: 'PROPOSED',
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/settlements/batch_100')) {
+      return new Response(JSON.stringify({
+        batch_id: 'batch_100',
+        status: 'SETTLED',
+        gross_amount: '20000000',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/reconciliation/ob_100')) {
+      return new Response(JSON.stringify({
+        record_id: 'rec_100',
+        obligation_id: 'ob_100',
+        status: 'MATCHED',
+        actual_amount: '10000000',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/network')) {
+      return new Response(JSON.stringify({
+        nodes: [{ id: 'agent_buyer', type: 'AGENT' }, { id: 'agent_seller', type: 'AGENT' }],
+        edges: [{ source: 'agent_buyer', target: 'agent_seller', relationship: 'OWES', amount: '10000000' }],
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/trace/ob_100')) {
+      return new Response(JSON.stringify({
+        trace_id: 'trace_ob_100',
+        agent_id: 'agent_buyer',
+        verified_on_chain: true,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/api/economy/clearing/health')) {
+      return new Response(JSON.stringify({
+        open_obligations: 5,
+        disputed_value: '0',
+        source: 'Clearinghouse',
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+
+  const client = new AgentPay({ fetch: mockFetch });
+
+  // 1. Obligations
+  const ob = await client.clearing.getObligation('ob_100');
+  assert.equal(ob.obligation_id, 'ob_100');
+  assert.equal(ob.status, 'AUTHORIZED');
+
+  const list = await client.clearing.listObligations('org_test');
+  assert.equal(list.length, 1);
+
+  // 2. Counterparty & Exposure
+  const cpExp = await client.clearing.getCounterpartyExposure('cp_100');
+  assert.equal(cpExp.counterparty_id, 'cp_100');
+
+  const regCp = await client.clearing.registerCounterparty({
+    agentId: 'agent_new',
+    organizationId: 'org_test',
+    identityStatus: 'VERIFIED',
+  });
+  assert.equal(regCp.counterparty_id, 'cp_new');
+
+  // 3. Netting
+  const prop = await client.clearing.proposeNetting({
+    organizationId: 'org_test',
+    obligationIds: ['ob_1', 'ob_2'],
+  });
+  assert.equal(prop.proposal_id, 'net_mp_100');
+  assert.equal(prop.savings_value, '14000000');
+
+  // 4. Settlements & Status
+  const batch = await client.clearing.getSettlementBatch('batch_100');
+  assert.equal(batch.batch_id, 'batch_100');
+  const status = await client.clearing.getSettlementStatus('batch_100');
+  assert.equal(status.status, 'SETTLED');
+
+  // 5. Reconciliation & Trace & Graph & Health
+  const recon = await client.clearing.getReconciliation('ob_100');
+  assert.equal(recon.status, 'MATCHED');
+
+  const graph = await client.clearing.getNetworkGraph();
+  assert.equal(graph.nodes.length, 2);
+  assert.equal(graph.edges.length, 1);
+
+  const trace = await client.clearing.getFinancialTrace('ob_100');
+  assert.equal(trace.trace_id, 'trace_ob_100');
+
+  const health = await client.clearing.getClearingHealth();
+  assert.equal(health.open_obligations, 5);
+
+  const why = await client.clearing.explainUnsettled('ob_100');
+  assert.equal(why.reason_code, 'REASON_APPROVAL_REQUIRED');
+});
+
+
 
 
 

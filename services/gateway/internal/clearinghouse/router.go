@@ -98,6 +98,11 @@ func (sr *SettlementRouter) RouteMilestoneSettlement(
 		return authorizedPI, nil
 	}
 
+	// Policy DENY halts execution
+	if authRes != nil && authRes.Decision == domain.DecisionDeny {
+		return authorizedPI, fmt.Errorf("%w: policy evaluation returned DENY", ErrNettingPolicyBypass)
+	}
+
 	// 5. If authorized and auto-executable, confirm through Execution Gate -> Signer -> Arc
 	if authorizedPI.Status == intent.StatusAuthorized {
 		confirmedPI, _, err := sr.intentService.ConfirmIntent(ctx, authorizedPI.IntentID)

@@ -1,0 +1,553 @@
+openapi: 3.0.3
+info:
+  title: AgentPay Autonomous Economic Clearing Network API
+  version: 1.0.0
+  description: |
+    Task 18: Authoritative network clearing layer coordinating obligations created by autonomous agents,
+    marketplace contracts, swarms, recurring services, and external protocol participants.
+    
+    CORE PRINCIPLE:
+    Agents may create economic obligations. AgentPay determines how those obligations may safely settle.
+    
+    SECOND PRINCIPLE:
+    Clearing may coordinate value. Clearing may not create financial authority.
+servers:
+  - url: http://localhost:8080
+    description: AgentPay Gateway Local Environment
+  - url: https://api.agentpay.arc
+    description: Production Environment
+
+paths:
+  /api/economy/obligations:
+    get:
+      summary: List Economic Obligations
+      operationId: listObligations
+      parameters:
+        - name: organization_id
+          in: query
+          schema:
+            type: string
+        - name: tenant_id
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of obligations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EconomicObligation'
+
+  /api/economy/obligations/{id}:
+    get:
+      summary: Get Economic Obligation Detail
+      operationId: getObligation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Obligation detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EconomicObligation'
+        '404':
+          description: Obligation not found
+
+  /api/economy/obligations/{id}/explain:
+    get:
+      summary: Explain Why Obligation Is Unsettled
+      operationId: explainUnsettled
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unsettled explanation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnsettledExplanation'
+
+  /api/economy/counterparties:
+    get:
+      summary: List Economic Counterparties
+      operationId: listCounterparties
+      parameters:
+        - name: organization_id
+          in: query
+          schema:
+            type: string
+        - name: tenant_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of counterparties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EconomicCounterparty'
+    post:
+      summary: Register Economic Counterparty
+      operationId: registerCounterparty
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCounterpartyRequest'
+      responses:
+        '201':
+          description: Counterparty registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EconomicCounterparty'
+
+  /api/economy/counterparties/{id}:
+    get:
+      summary: Get Economic Counterparty Exposure
+      operationId: getCounterparty
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Counterparty record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EconomicCounterparty'
+
+  /api/economy/exposure:
+    get:
+      summary: Get Network Exposure Breakdown
+      operationId: getExposure
+      parameters:
+        - name: organization_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Exposure breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExposureBreakdown'
+
+  /api/economy/netting/simulate:
+    post:
+      summary: Simulate Multi-Party Netting (Read-Only Preview)
+      operationId: simulateNetting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NettingProposalRequest'
+      responses:
+        '200':
+          description: Netting simulation output
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiPartyNettingProposal'
+
+  /api/economy/netting/propose:
+    post:
+      summary: Create Multi-Party Netting Proposal
+      operationId: proposeNetting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NettingProposalRequest'
+      responses:
+        '201':
+          description: Netting proposal created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiPartyNettingProposal'
+
+  /api/economy/settlements:
+    get:
+      summary: List Settlement Batches
+      operationId: listSettlements
+      parameters:
+        - name: organization_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of settlement batches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SettlementBatch'
+
+  /api/economy/settlements/{id}:
+    get:
+      summary: Get Settlement Batch Detail
+      operationId: getSettlementBatch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Settlement batch detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementBatch'
+
+  /api/economy/reconciliation:
+    get:
+      summary: List Reconciliation Records
+      operationId: listReconciliation
+      parameters:
+        - name: organization_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of reconciliation items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReconciliationItem'
+
+  /api/economy/reconciliation/{id}:
+    get:
+      summary: Get Reconciliation Record Detail
+      operationId: getReconciliation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reconciliation item detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationItem'
+
+  /api/economy/disputes:
+    get:
+      summary: List Economic Clearing Disputes
+      operationId: listDisputes
+      parameters:
+        - name: organization_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of disputes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClearingDispute'
+
+  /api/economy/trace/{id}:
+    get:
+      summary: Reconstruct Canonical Financial Causal Trace
+      operationId: getFinancialTrace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Canonical financial causal trace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialTrace'
+
+  /api/economy/network:
+    get:
+      summary: Get Economic Network Graph Topology
+      operationId: getNetworkGraph
+      parameters:
+        - name: organization_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Network graph nodes and edges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkGraph'
+
+  /api/economy/clearing/health:
+    get:
+      summary: Get Clearing Network Health Telemetry
+      operationId: getClearingHealth
+      responses:
+        '200':
+          description: Health telemetry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearingHealth'
+
+components:
+  schemas:
+    EconomicObligation:
+      type: object
+      properties:
+        obligation_id:
+          type: string
+        tenant_id:
+          type: string
+        organization_id:
+          type: string
+        payer_agent_id:
+          type: string
+        payee_agent_id:
+          type: string
+        contract_id:
+          type: string
+        source_type:
+          type: string
+        source_id:
+          type: string
+        amount:
+          type: string
+        currency:
+          type: string
+        status:
+          type: string
+        settled_amount:
+          type: string
+
+    EconomicCounterparty:
+      type: object
+      properties:
+        counterparty_id:
+          type: string
+        tenant_id:
+          type: string
+        agent_id:
+          type: string
+        organization_id:
+          type: string
+        identity_status:
+          type: string
+          enum: [UNVERIFIED, IDENTIFIED, VERIFIED, SUSPENDED]
+        current_exposure:
+          type: string
+        exposure_limit:
+          type: string
+        historical_obligations:
+          type: integer
+        active_contracts:
+          type: integer
+
+    RegisterCounterpartyRequest:
+      type: object
+      required: [agent_id, organization_id]
+      properties:
+        agent_id:
+          type: string
+        organization_id:
+          type: string
+        tenant_id:
+          type: string
+        identity_status:
+          type: string
+        capability_reference:
+          type: string
+        exposure_limit:
+          type: string
+
+    ExposureBreakdown:
+      type: object
+      properties:
+        organization_id:
+          type: string
+        gross_exposure:
+          type: string
+        net_exposure:
+          type: string
+        counterparties_count:
+          type: integer
+
+    NettingProposalRequest:
+      type: object
+      required: [organization_id, obligation_ids]
+      properties:
+        organization_id:
+          type: string
+        tenant_id:
+          type: string
+        currency:
+          type: string
+        obligation_ids:
+          type: array
+          items:
+            type: string
+
+    MultiPartyNettingProposal:
+      type: object
+      properties:
+        proposal_id:
+          type: string
+        organization_id:
+          type: string
+        gross_value:
+          type: string
+        net_value:
+          type: string
+        savings_value:
+          type: string
+        status:
+          type: string
+
+    SettlementBatch:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        settlement_window:
+          type: string
+        gross_amount:
+          type: string
+        net_amount:
+          type: string
+        savings:
+          type: string
+        status:
+          type: string
+
+    ReconciliationItem:
+      type: object
+      properties:
+        item_id:
+          type: string
+        discrepancy_type:
+          type: string
+        expected_amount:
+          type: string
+        observed_amount:
+          type: string
+        difference:
+          type: string
+        safe_next_action:
+          type: string
+        status:
+          type: string
+
+    ClearingDispute:
+      type: object
+      properties:
+        dispute_id:
+          type: string
+        obligation_id:
+          type: string
+        claim_amount:
+          type: string
+        status:
+          type: string
+        reason:
+          type: string
+
+    FinancialTrace:
+      type: object
+      properties:
+        trace_id:
+          type: string
+        obligation_id:
+          type: string
+        canonical_path:
+          type: string
+        nodes:
+          type: array
+          items:
+            type: object
+
+    UnsettledExplanation:
+      type: object
+      properties:
+        obligation_id:
+          type: string
+        status:
+          type: string
+        reason_code:
+          type: string
+        explanation:
+          type: string
+        safe_next_step:
+          type: string
+
+    NetworkGraph:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+        edges:
+          type: array
+          items:
+            type: object
+
+    ClearingHealth:
+      type: object
+      properties:
+        open_obligations:
+          type: integer
+        overdue_obligations:
+          type: integer
+        pending_settlements:
+          type: integer
+        reconciliation_backlog:
+          type: integer
+        disputed_value:
+          type: string
+        nettable_value:
+          type: string
+        batch_count:
+          type: integer

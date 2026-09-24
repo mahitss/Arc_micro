@@ -33,19 +33,25 @@ const (
 type ObligationStatus string
 
 const (
-	ObligationProposed          ObligationStatus = "PROPOSED"
-	ObligationAuthorized        ObligationStatus = "AUTHORIZED"
-	ObligationReserved          ObligationStatus = "RESERVED"
-	ObligationDue               ObligationStatus = "DUE"
-	ObligationSubmitted         ObligationStatus = "SUBMITTED"
-	ObligationVerified          ObligationStatus = "VERIFIED"
-	ObligationSettlementPending ObligationStatus = "SETTLEMENT_PENDING"
-	ObligationSettled           ObligationStatus = "SETTLED"
-	ObligationPartiallySettled  ObligationStatus = "PARTIALLY_SETTLED"
-	ObligationDisputed          ObligationStatus = "DISPUTED"
-	ObligationCancelled         ObligationStatus = "CANCELLED"
-	ObligationExpired           ObligationStatus = "EXPIRED"
-	ObligationRefunded          ObligationStatus = "REFUNDED"
+	ObligationCreated             ObligationStatus = "CREATED"
+	ObligationValidating          ObligationStatus = "VALIDATING"
+	ObligationConfirmed           ObligationStatus = "CONFIRMED"
+	ObligationProposed            ObligationStatus = "PROPOSED"
+	ObligationAuthorized          ObligationStatus = "AUTHORIZED"
+	ObligationReserved            ObligationStatus = "RESERVED"
+	ObligationDue                 ObligationStatus = "DUE"
+	ObligationSubmitted           ObligationStatus = "SUBMITTED"
+	ObligationVerified            ObligationStatus = "VERIFIED"
+	ObligationSettlementPending   ObligationStatus = "SETTLEMENT_PENDING"
+	ObligationSettlementSubmitted ObligationStatus = "SETTLEMENT_SUBMITTED"
+	ObligationSettled             ObligationStatus = "SETTLED"
+	ObligationPartiallySettled    ObligationStatus = "PARTIALLY_SETTLED"
+	ObligationDisputed            ObligationStatus = "DISPUTED"
+	ObligationCancelled           ObligationStatus = "CANCELLED"
+	ObligationExpired             ObligationStatus = "EXPIRED"
+	ObligationFailed              ObligationStatus = "FAILED"
+	ObligationReconciling         ObligationStatus = "RECONCILING"
+	ObligationRefunded            ObligationStatus = "REFUNDED"
 )
 
 // EscrowStatus represents the state of reserved funds locked for a contract/milestone.
@@ -116,13 +122,18 @@ type BatchStatus string
 
 const (
 	BatchOpen             BatchStatus = "OPEN"
+	BatchBuilding         BatchStatus = "BUILDING"
 	BatchReady            BatchStatus = "READY"
+	BatchAwaitingApproval BatchStatus = "AWAITING_APPROVAL"
+	BatchApproved         BatchStatus = "APPROVED"
 	BatchAuthorized       BatchStatus = "AUTHORIZED"
+	BatchSubmitting       BatchStatus = "SUBMITTING"
 	BatchExecuting        BatchStatus = "EXECUTING"
 	BatchPartiallySettled BatchStatus = "PARTIALLY_SETTLED"
 	BatchSettled          BatchStatus = "SETTLED"
 	BatchFailed           BatchStatus = "FAILED"
 	BatchReconciling      BatchStatus = "RECONCILING"
+	BatchCancelled        BatchStatus = "CANCELLED"
 )
 
 // RefundStatus represents the lifecycle of a refund operation.
@@ -180,6 +191,11 @@ type EconomicObligation struct {
 	VerificationRequirement string                 `json:"verification_requirement"`
 	PaymentIntentID         string                 `json:"payment_intent_id,omitempty"`
 	ExecutionMode           ExecutionMode          `json:"execution_mode"` // REAL or SIMULATION
+	SourceType              string                 `json:"source_type,omitempty"`
+	SourceID                string                 `json:"source_id,omitempty"`
+	TenantID                string                 `json:"tenant_id,omitempty"`
+	TaskID                  string                 `json:"task_id,omitempty"`
+	ObjectiveID             string                 `json:"objective_id,omitempty"`
 	Metadata                map[string]string      `json:"metadata,omitempty"`
 }
 
@@ -374,9 +390,16 @@ type SettlementBatch struct {
 	Status          BatchStatus   `json:"status"`
 	FailureReason   string        `json:"failure_reason,omitempty"`
 	PaymentIntentIDs []string     `json:"payment_intent_ids,omitempty"`
-	ExecutionMode   ExecutionMode `json:"execution_mode"`
-	CreatedAt       time.Time     `json:"created_at"`
-	ExecutedAt      *time.Time    `json:"executed_at,omitempty"`
+	ExecutionMode    ExecutionMode          `json:"execution_mode"`
+	TenantID         string                 `json:"tenant_id,omitempty"`
+	SettlementWindow SettlementWindow       `json:"settlement_window,omitempty"`
+	ApprovalStatus   NettingApprovalStatus  `json:"approval_status,omitempty"`
+	Items            []*SettlementBatchItem `json:"items,omitempty"`
+	ApprovedAt       *time.Time             `json:"approved_at,omitempty"`
+	SubmittedAt      *time.Time             `json:"submitted_at,omitempty"`
+	CompletedAt      *time.Time             `json:"completed_at,omitempty"`
+	CreatedAt        time.Time              `json:"created_at"`
+	ExecutedAt       *time.Time             `json:"executed_at,omitempty"`
 }
 
 // RefundRequest specifies a request to return previously settled value.

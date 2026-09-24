@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpay.arc/schemas/clearing/financial_trace.json",
+  "title": "FinancialTrace",
+  "description": "Canonical end-to-end causal trace from economic objective to blockchain receipt reconciliation (Task 18, Section 54).",
+  "type": "object",
+  "required": [
+    "trace_id",
+    "obligation_id",
+    "canonical_path",
+    "nodes",
+    "created_at"
+  ],
+  "properties": {
+    "trace_id": {
+      "type": "string",
+      "pattern": "^trace_[a-zA-Z0-9_-]+$"
+    },
+    "obligation_id": {
+      "type": "string"
+    },
+    "canonical_path": {
+      "type": "string"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "node_type", "node_id", "status", "description", "timestamp"],
+        "properties": {
+          "step": { "type": "integer", "minimum": 1 },
+          "node_type": { "type": "string" },
+          "node_id": { "type": "string" },
+          "status": { "type": "string" },
+          "description": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "metadata": { "type": "object" }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

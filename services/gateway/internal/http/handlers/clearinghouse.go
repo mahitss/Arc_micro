@@ -574,3 +574,290 @@ func (h *ClearinghouseHandler) HandleGetLedger(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(entries)
 }
+
+// -----------------------------------------------------------------------------
+// TASK 18: ECONOMIC CLEARING NETWORK HANDLERS
+// -----------------------------------------------------------------------------
+
+// Counterparties
+func (h *ClearinghouseHandler) HandleRegisterCounterparty(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var cp clearinghouse.EconomicCounterparty
+	if err := json.NewDecoder(r.Body).Decode(&cp); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	created, err := h.service.RegisterCounterparty(r.Context(), &cp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(created)
+}
+
+func (h *ClearinghouseHandler) HandleListCounterparties(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.URL.Query().Get("tenant_id")
+	orgID := r.URL.Query().Get("organization_id")
+	list, err := h.service.ListCounterparties(r.Context(), tenantID, orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(list)
+}
+
+func (h *ClearinghouseHandler) HandleGetCounterparty(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		parts := strings.Split(r.URL.Path, "/")
+		id = parts[len(parts)-1]
+	}
+	tenantID := r.URL.Query().Get("tenant_id")
+	cp, err := h.service.GetCounterparty(r.Context(), tenantID, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(cp)
+}
+
+// Netting
+func (h *ClearinghouseHandler) HandleSimulateNetting(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req clearinghouse.ClearingSimulationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.ScenarioType == "" {
+		req.ScenarioType = "NETTING"
+	}
+	res, err := h.service.SimulateClearing(r.Context(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(res)
+}
+
+func (h *ClearinghouseHandler) HandleProposeMultiPartyNetting(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		TenantID      string   `json:"tenant_id"`
+		OrganizationID string   `json:"organization_id"`
+		Currency      string   `json:"currency"`
+		ObligationIDs []string `json:"obligation_ids"`
+		TTLSeconds    int      `json:"ttl_seconds"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.Currency == "" {
+		req.Currency = "USDC"
+	}
+	ttl := 24 * time.Hour
+	if req.TTLSeconds > 0 {
+		ttl = time.Duration(req.TTLSeconds) * time.Second
+	}
+	prop, err := h.service.ProposeMultiPartyNetting(r.Context(), req.TenantID, req.OrganizationID, req.Currency, req.ObligationIDs, ttl)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(prop)
+}
+
+func (h *ClearinghouseHandler) HandleGetNettingCounterfactual(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		parts := strings.Split(r.URL.Path, "/")
+		id = parts[len(parts)-1]
+	}
+	cf, err := h.service.GetNettingCounterfactual(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(cf)
+}
+
+// Settlements
+func (h *ClearinghouseHandler) HandleListSettlements(w http.ResponseWriter, r *http.Request) {
+	orgID := r.URL.Query().Get("organization_id")
+	batches, err := h.service.ListBatches(r.Context(), orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(batches)
+}
+
+func (h *ClearinghouseHandler) HandleGetSettlement(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		parts := strings.Split(r.URL.Path, "/")
+		id = parts[len(parts)-1]
+	}
+	batch, err := h.service.GetBatch(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	items, _ := h.service.GetBatchItems(r.Context(), id)
+	if items != nil && len(items) > 0 {
+		batch.Items = items
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(batch)
+}
+
+// Reconciliation
+func (h *ClearinghouseHandler) HandleListReconciliationItems(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.URL.Query().Get("tenant_id")
+	orgID := r.URL.Query().Get("organization_id")
+	items, err := h.service.ListReconciliationItems(r.Context(), tenantID, orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(items)
+}
+
+func (h *ClearinghouseHandler) HandleGetReconciliationItem(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		parts := strings.Split(r.URL.Path, "/")
+		id = parts[len(parts)-1]
+	}
+	item, err := h.service.GetReconciliationItem(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(item)
+}
+
+// Disputes
+func (h *ClearinghouseHandler) HandleCreateDispute(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var d clearinghouse.ClearingDispute
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	created, err := h.service.CreateDispute(r.Context(), &d)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(created)
+}
+
+func (h *ClearinghouseHandler) HandleListDisputes(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.URL.Query().Get("tenant_id")
+	orgID := r.URL.Query().Get("organization_id")
+	list, err := h.service.ListDisputes(r.Context(), tenantID, orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(list)
+}
+
+func (h *ClearinghouseHandler) HandleGetDispute(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		parts := strings.Split(r.URL.Path, "/")
+		id = parts[len(parts)-1]
+	}
+	d, err := h.service.GetDispute(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(d)
+}
+
+// Trace & Graph & Explanation
+func (h *ClearinghouseHandler) HandleGetFinancialTrace(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		parts := strings.Split(r.URL.Path, "/")
+		id = parts[len(parts)-1]
+	}
+	trace, err := h.service.GetFinancialTrace(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(trace)
+}
+
+func (h *ClearinghouseHandler) HandleGetObligationGraph(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.URL.Query().Get("tenant_id")
+	orgID := r.URL.Query().Get("organization_id")
+	graph, err := h.service.GetObligationGraph(r.Context(), tenantID, orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(graph)
+}
+
+func (h *ClearinghouseHandler) HandleExplainUnsettled(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		parts := strings.Split(r.URL.Path, "/")
+		id = parts[len(parts)-1]
+	}
+	exp, err := h.service.ExplainUnsettledObligation(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(exp)
+}
+
+func (h *ClearinghouseHandler) HandleGetClearingNetworkHealth(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.URL.Query().Get("tenant_id")
+	orgID := r.URL.Query().Get("organization_id")
+	health, err := h.service.GetClearingHealth(r.Context(), tenantID, orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(health)
+}
+

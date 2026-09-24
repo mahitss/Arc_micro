@@ -84,6 +84,14 @@ import {
   printMarketplaceCompare,
   printMarketplaceAgentProfile,
   printMarketplacePerformance,
+  printEconomicCounterpartiesList,
+  printEconomicCounterpartyDetail,
+  printEconomicNettingProposal,
+  printEconomicSettlementBatchDetail,
+  printEconomicReconciliationDetail,
+  printEconomicDisputesList,
+  printEconomicFinancialTrace,
+  printClearingHealth,
 } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
@@ -1199,5 +1207,115 @@ test('AgentPay CLI — Task 17 Autonomous Economic Marketplace Formatters', () =
     printMarketplacePerformance(mockPerformance);
   });
 });
+
+test('AgentPay CLI — Task 18 Autonomous Clearing Network Formatters', () => {
+  const mockCp = {
+    counterparty_id: 'cp_100',
+    tenant_id: 'tenant_default',
+    agent_id: 'agent_alpha',
+    organization_id: 'org_main',
+    identity_status: 'VERIFIED',
+    capability_reference: 'sec.audit',
+    protocol_version: 'v1.0',
+    current_exposure: '10000000',
+    exposure_limit: '50000000',
+    historical_obligations: 42,
+    active_contracts: 3,
+    risk_reference: 'LOW',
+    created_at: '2026-09-25T00:00:00Z',
+    updated_at: '2026-09-25T00:00:00Z',
+  };
+
+  const mockProposal = {
+    proposal_id: 'net_mp_100',
+    status: 'PROPOSED',
+    currency: 'USDC',
+    cycles_count: 1,
+    gross_value: '30000000',
+    net_value: '16000000',
+    savings_value: '14000000',
+    counterparties: ['agent_a', 'agent_b', 'agent_c'],
+    proposed_net_obligations: [
+      { payer_id: 'agent_a', payee_id: 'agent_b', net_amount: '4000000' },
+    ],
+  };
+
+  const mockBatch = {
+    batch_id: 'batch_100',
+    status: 'SETTLED',
+    settlement_window: 'HOURLY',
+    currency: 'USDC',
+    gross_amount: '30000000',
+    net_amount: '16000000',
+    savings: '14000000',
+    items: [
+      {
+        item_id: 'item_1',
+        obligation_id: 'ob_1',
+        status: 'SETTLED',
+        amount: '10000000',
+        payment_intent_id: 'pi_1',
+      },
+    ],
+  };
+
+  const mockRecon = {
+    item_id: 'rec_100',
+    status: 'CONFIRMED',
+    discrepancy_type: 'MATCHED',
+    obligation_id: 'ob_1',
+    payment_intent_id: 'pi_1',
+    expected_amount: '10000000',
+    observed_amount: '10000000',
+    difference: '0',
+    safe_next_action: 'NO_ACTION_REQUIRED',
+    tx_hash: '0x1234567890abcdef',
+  };
+
+  const mockDispute = {
+    dispute_id: 'disp_100',
+    obligation_id: 'ob_1',
+    status: 'OPEN',
+    disputed_by: 'agent_a',
+    disputed_against: 'agent_b',
+    reason: 'Deliverable quality below SLA specification',
+    claim_amount: '5000000',
+    currency: 'USDC',
+  };
+
+  const mockTrace = {
+    trace_id: 'trace_100',
+    obligation_id: 'ob_1',
+    canonical_path: 'objective -> contract -> obligation -> clearing -> settlement -> reconciliation',
+    nodes: [
+      { step: 1, node_type: 'OBJECTIVE', node_id: 'obj_1', status: 'ACTIVE' },
+      { step: 2, node_type: 'CONTRACT', node_id: 'ctr_1', status: 'CONFIRMED' },
+    ],
+  };
+
+  const mockHealth = {
+    open_obligations: 12,
+    overdue_obligations: 0,
+    pending_settlements: 2,
+    reconciliation_backlog: 0,
+    disputed_value: '0',
+    nettable_value: '14000000',
+    batch_count: 5,
+    failed_settlements: 0,
+    freshness_timestamp: '2026-09-25T00:00:00Z',
+  };
+
+  assert.doesNotThrow(() => {
+    printEconomicCounterpartiesList([mockCp]);
+    printEconomicCounterpartyDetail(mockCp);
+    printEconomicNettingProposal(mockProposal);
+    printEconomicSettlementBatchDetail(mockBatch);
+    printEconomicReconciliationDetail(mockRecon);
+    printEconomicDisputesList([mockDispute]);
+    printEconomicFinancialTrace(mockTrace);
+    printClearingHealth(mockHealth);
+  });
+});
+
 
 

@@ -38,6 +38,7 @@ export { OperationsResource } from './resources/operations.js';
 export { FabricResource } from './resources/fabric.js';
 export { ProtocolClient, ProtocolResource } from './resources/protocol.js';
 export { MarketplaceClient } from './resources/marketplace.js';
+export { ClearingClient } from './resources/clearing.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
   ProtocolMessage,

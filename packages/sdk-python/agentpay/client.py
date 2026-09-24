@@ -1561,6 +1561,133 @@ class MarketplaceClient:
     getHealth = get_health
 
 
+
+class ClearingClient:
+    """
+    Autonomous Economic Clearing Network Client (Task 18)
+
+    Coordinates multi-party obligations, network counterparties, multi-party cycle netting,
+    settlement batches, reconciliation items, causal financial traces, and health telemetry.
+    Read-only by default; mutating operations require canonical policy and authorization.
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def get_obligation(self, obligation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/economy/obligations/{obligation_id}")
+
+    def list_obligations(self, organization_id: Optional[str] = None, tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        res = self._client._request("GET", "/api/economy/obligations", params=params or None)
+        return res if isinstance(res, list) else res.get("obligations", [])
+
+    def get_counterparty_exposure(self, counterparty_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/economy/counterparties/{counterparty_id}")
+
+    def list_counterparties(self, organization_id: Optional[str] = None, tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        res = self._client._request("GET", "/api/economy/counterparties", params=params or None)
+        return res if isinstance(res, list) else res.get("counterparties", [])
+
+    def register_counterparty(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/api/economy/counterparties", json=data)
+
+    def propose_netting(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/api/economy/netting/propose", json=data)
+
+    def simulate_netting(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._client._request("POST", "/api/economy/netting/simulate", json=data)
+
+    def get_settlement_batch(self, batch_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/economy/settlements/{batch_id}")
+
+    def list_settlement_batches(self, organization_id: Optional[str] = None, tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        res = self._client._request("GET", "/api/economy/settlements", params=params or None)
+        return res if isinstance(res, list) else res.get("batches", [])
+
+    def get_settlement_status(self, batch_id: str) -> Dict[str, Any]:
+        batch = self.get_settlement_batch(batch_id)
+        return {
+            "batch_id": batch.get("batch_id") or batch_id,
+            "status": batch.get("status", "UNKNOWN"),
+        }
+
+    def get_reconciliation(self, item_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/economy/reconciliation/{item_id}")
+
+    def list_reconciliation(self, organization_id: Optional[str] = None, tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        res = self._client._request("GET", "/api/economy/reconciliation", params=params or None)
+        return res if isinstance(res, list) else res.get("items", [])
+
+    def get_network_graph(self, organization_id: Optional[str] = None, tenant_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        return self._client._request("GET", "/api/economy/network", params=params or None)
+
+    def get_financial_trace(self, target_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/economy/trace/{target_id}")
+
+    def get_clearing_health(self, organization_id: Optional[str] = None, tenant_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        return self._client._request("GET", "/api/economy/health", params=params or None)
+
+    def explain_unsettled(self, obligation_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/api/economy/obligations/{obligation_id}/explain")
+
+    def list_disputes(self, organization_id: Optional[str] = None, tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if organization_id:
+            params["organization_id"] = organization_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        res = self._client._request("GET", "/api/economy/disputes", params=params or None)
+        return res if isinstance(res, list) else res.get("disputes", [])
+
+    # CamelCase aliases
+    getObligation = get_obligation
+    listObligations = list_obligations
+    getCounterpartyExposure = get_counterparty_exposure
+    listCounterparties = list_counterparties
+    registerCounterparty = register_counterparty
+    proposeNetting = propose_netting
+    simulateNetting = simulate_netting
+    getSettlementBatch = get_settlement_batch
+    listSettlementBatches = list_settlement_batches
+    getSettlementStatus = get_settlement_status
+    getReconciliation = get_reconciliation
+    listReconciliation = list_reconciliation
+    getNetworkGraph = get_network_graph
+    getFinancialTrace = get_financial_trace
+    getClearingHealth = get_clearing_health
+    explainUnsettled = explain_unsettled
+    listDisputes = list_disputes
+
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -1593,6 +1720,8 @@ class AgentPay:
         self.constitution = self.constitutions
         self.clearinghouse = ClearinghouseResource(self)
         self.economy = self.clearinghouse
+        self.clearing = ClearingClient(self)
+        self.clearing_network = self.clearing
         self.treasury = TreasuryResource(self)
         self.control = ControlTowerResource(self)
         self.runtime = RuntimeResource(self)

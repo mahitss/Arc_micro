@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpay.arc/schemas/clearing/settlement_batch.json",
+  "title": "SettlementBatch",
+  "description": "Aggregate settlement execution batch coordinating multiple obligations through windows (Task 18, Section 15).",
+  "type": "object",
+  "required": [
+    "batch_id",
+    "organization_id",
+    "settlement_window",
+    "obligations",
+    "gross_amount",
+    "net_amount",
+    "savings",
+    "currency",
+    "status"
+  ],
+  "properties": {
+    "batch_id": {
+      "type": "string",
+      "pattern": "^batch_[a-zA-Z0-9_-]+$"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string"
+    },
+    "settlement_window": {
+      "type": "string",
+      "enum": ["IMMEDIATE", "HOURLY", "DAILY", "MILESTONE", "MANUAL"]
+    },
+    "obligations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "netting_proposal_id": {
+      "type": "string"
+    },
+    "gross_amount": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "net_amount": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "savings": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "BUILDING",
+        "READY",
+        "AWAITING_APPROVAL",
+        "APPROVED",
+        "SUBMITTING",
+        "PARTIALLY_SETTLED",
+        "SETTLED",
+        "FAILED",
+        "RECONCILING",
+        "CANCELLED"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

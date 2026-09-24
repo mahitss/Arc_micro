@@ -52,6 +52,14 @@ import {
   printReconciliationList,
   printExposureSnapshot,
   printHealthSnapshot,
+  printEconomicCounterpartiesList,
+  printEconomicCounterpartyDetail,
+  printEconomicNettingProposal,
+  printEconomicSettlementBatchDetail,
+  printEconomicReconciliationDetail,
+  printEconomicDisputesList,
+  printEconomicFinancialTrace,
+  printClearingHealth,
   printTreasuryState,
   printTreasuryReservationsList,
   printTreasuryReservationDetail,
@@ -275,7 +283,19 @@ Commands:
   marketplace compare              Compare providers side-by-side (--capability, --providers)
   marketplace award                Award opportunity to provider (--opportunity, --provider, --quote, --price)
   marketplace agent <id>           View marketplace agent trust profile & completed jobs
-  marketplace performance          View contextual performance metrics (--agent, --capability)
+  marketplace performance          View contextual performance history (--agent, --capability)
+
+  economy obligations              List network economic obligations (--org)
+  economy obligation <id>          Get detailed obligation record
+  economy counterparties           List economic counterparties (--org)
+  economy exposure                 Get counterparty exposure and risk summary
+  economy netting                  Propose or preview multi-party netting (--obligations)
+  economy settlements              List settlement batches
+  economy settlement <id>          Get settlement batch detail and item traces
+  economy reconciliation           List or get reconciliation audit records
+  economy disputes                 List economic clearing disputes
+  economy trace <id>               Reconstruct canonical financial causal trace
+  economy health                   Autonomous clearing network health telemetry
 
 Options:
   --dry-run                        Simulate action without mutating persistent state
@@ -2233,6 +2253,159 @@ async function main(): Promise<void> {
         const perf = await client.marketplace.getPerformance(agentId, cap);
         if (isJson) printJson(perf);
         else printMarketplacePerformance(perf);
+        return;
+      }
+    }
+
+    if (resource === 'economy') {
+      const sub = positional[1];
+      const arg = positional[2];
+      const orgId = (flags['organization'] || flags['org']) as string | undefined;
+      const tenantId = (flags['tenant'] || flags['tenant-id']) as string | undefined;
+
+      if (!sub || sub === 'help') {
+        console.log(`
+AgentPay Economy CLI (Task 18 Autonomous Clearing Network)
+
+Usage:
+  agentpay economy obligations [--org <id>]
+  agentpay economy obligation <id>
+  agentpay economy counterparties [--org <id>]
+  agentpay economy exposure [--counterparty <id>]
+  agentpay economy netting [--org <id>] [--obligations <id,id,...>]
+  agentpay economy settlements [--org <id>]
+  agentpay economy settlement <id>
+  agentpay economy reconciliation [--org <id>] [<id>]
+  agentpay economy disputes [--org <id>]
+  agentpay economy trace <id>
+  agentpay economy health [--org <id>]
+`);
+        return;
+      }
+
+      if (sub === 'obligations') {
+        const list = await client.clearing.listObligations(orgId);
+        if (isJson) printJson(list);
+        else printObligationsList(list);
+        return;
+      }
+
+      if (sub === 'obligation') {
+        const obId = (flags['id'] as string) || arg;
+        if (!obId) {
+          console.error('Error: "economy obligation" requires <obligation_id>');
+          process.exit(1);
+        }
+        const ob = await client.clearing.getObligation(obId);
+        if (isJson) printJson(ob);
+        else printObligationDetail(ob);
+        return;
+      }
+
+      if (sub === 'counterparties') {
+        const list = await client.clearing.listCounterparties(orgId, tenantId);
+        if (isJson) printJson(list);
+        else printEconomicCounterpartiesList(list);
+        return;
+      }
+
+      if (sub === 'exposure') {
+        const cpId = (flags['counterparty'] as string) || (flags['id'] as string) || arg;
+        if (cpId) {
+          const exp = await client.clearing.getCounterpartyExposure(cpId);
+          if (isJson) printJson(exp);
+          else printEconomicCounterpartyDetail(exp);
+        } else {
+          const list = await client.clearing.listCounterparties(orgId, tenantId);
+          if (isJson) printJson(list);
+          else printEconomicCounterpartiesList(list);
+        }
+        return;
+      }
+
+      if (sub === 'netting') {
+        const obIdsRaw = (flags['obligations'] as string) || arg;
+        if (obIdsRaw) {
+          const obIds = obIdsRaw.split(',').map(s => s.trim()).filter(Boolean);
+          const proposal = await client.clearing.proposeNetting({
+            organizationId: orgId || 'default_org',
+            obligationIds: obIds,
+            currency: (flags['currency'] as string) || 'USDC',
+          });
+          if (isJson) printJson(proposal);
+          else printEconomicNettingProposal(proposal);
+        } else {
+          const graph = await client.clearing.getNetworkGraph(tenantId, orgId);
+          if (isJson) printJson(graph);
+          else {
+            console.log('============================================================');
+            console.log('CLEARING NETWORK NETTING ELIGIBILITY');
+            console.log('============================================================');
+            console.log(`Network Nodes: ${graph.nodes?.length || 0}`);
+            console.log(`Network Edges: ${graph.edges?.length || 0}`);
+            console.log('Specify --obligations <id,id,...> to generate a multi-party netting proposal.');
+            console.log('============================================================');
+          }
+        }
+        return;
+      }
+
+      if (sub === 'settlements') {
+        const batches = await client.clearing.listSettlementBatches(orgId, tenantId);
+        if (isJson) printJson(batches);
+        else printSettlementBatchesList(batches);
+        return;
+      }
+
+      if (sub === 'settlement') {
+        const batchId = (flags['id'] as string) || arg;
+        if (!batchId) {
+          console.error('Error: "economy settlement" requires <batch_id>');
+          process.exit(1);
+        }
+        const batch = await client.clearing.getSettlementBatch(batchId);
+        if (isJson) printJson(batch);
+        else printEconomicSettlementBatchDetail(batch);
+        return;
+      }
+
+      if (sub === 'reconciliation') {
+        const recId = (flags['id'] as string) || arg;
+        if (recId) {
+          const rec = await client.clearing.getReconciliation(recId);
+          if (isJson) printJson(rec);
+          else printEconomicReconciliationDetail(rec);
+        } else {
+          const items = await client.clearing.listReconciliation(orgId, tenantId);
+          if (isJson) printJson(items);
+          else printReconciliationList(items);
+        }
+        return;
+      }
+
+      if (sub === 'disputes') {
+        const disputes = await client.clearing.listDisputes(orgId, tenantId);
+        if (isJson) printJson(disputes);
+        else printEconomicDisputesList(disputes);
+        return;
+      }
+
+      if (sub === 'trace') {
+        const targetId = (flags['id'] as string) || arg;
+        if (!targetId) {
+          console.error('Error: "economy trace" requires <id>');
+          process.exit(1);
+        }
+        const trace = await client.clearing.getFinancialTrace(targetId);
+        if (isJson) printJson(trace);
+        else printEconomicFinancialTrace(trace);
+        return;
+      }
+
+      if (sub === 'health') {
+        const health = await client.clearing.getClearingHealth(orgId, tenantId);
+        if (isJson) printJson(health);
+        else printClearingHealth(health);
         return;
       }
     }

@@ -41,6 +41,11 @@ func NewStateMachine() *StateMachine {
 // -----------------------------------------------------------------------------
 
 func (sm *StateMachine) ValidateObligationTransition(from, to ObligationStatus) error {
+	// Terminal states cannot transition to anything, including themselves
+	if from == ObligationCancelled || from == ObligationExpired || from == ObligationRefunded {
+		return fmt.Errorf("%w: cannot transition from terminal state %s to %s", ErrTerminalState, from, to)
+	}
+
 	if from == to {
 		return nil
 	}
@@ -54,12 +59,24 @@ func (sm *StateMachine) ValidateObligationTransition(from, to ObligationStatus) 
 	}
 
 	switch from {
+	case ObligationCreated:
+		if to == ObligationValidating || to == ObligationProposed || to == ObligationCancelled || to == ObligationExpired {
+			return nil
+		}
+	case ObligationValidating:
+		if to == ObligationConfirmed || to == ObligationAuthorized || to == ObligationCancelled || to == ObligationFailed {
+			return nil
+		}
+	case ObligationConfirmed:
+		if to == ObligationReserved || to == ObligationDue || to == ObligationCancelled || to == ObligationDisputed {
+			return nil
+		}
 	case ObligationProposed:
-		if to == ObligationAuthorized || to == ObligationCancelled || to == ObligationExpired {
+		if to == ObligationAuthorized || to == ObligationValidating || to == ObligationConfirmed || to == ObligationCancelled || to == ObligationExpired {
 			return nil
 		}
 	case ObligationAuthorized:
-		if to == ObligationReserved || to == ObligationCancelled || to == ObligationExpired {
+		if to == ObligationReserved || to == ObligationDue || to == ObligationCancelled || to == ObligationExpired {
 			return nil
 		}
 	case ObligationReserved:
@@ -67,7 +84,7 @@ func (sm *StateMachine) ValidateObligationTransition(from, to ObligationStatus) 
 			return nil
 		}
 	case ObligationDue:
-		if to == ObligationSubmitted || to == ObligationDisputed || to == ObligationCancelled {
+		if to == ObligationSubmitted || to == ObligationDisputed || to == ObligationCancelled || to == ObligationSettlementPending {
 			return nil
 		}
 	case ObligationSubmitted:
@@ -79,11 +96,23 @@ func (sm *StateMachine) ValidateObligationTransition(from, to ObligationStatus) 
 			return nil
 		}
 	case ObligationSettlementPending:
-		if to == ObligationSettled || to == ObligationPartiallySettled || to == ObligationDisputed {
+		if to == ObligationSettled || to == ObligationPartiallySettled || to == ObligationSettlementSubmitted || to == ObligationDisputed || to == ObligationFailed || to == ObligationReconciling {
+			return nil
+		}
+	case ObligationSettlementSubmitted:
+		if to == ObligationSettled || to == ObligationPartiallySettled || to == ObligationFailed || to == ObligationReconciling || to == ObligationDisputed {
 			return nil
 		}
 	case ObligationPartiallySettled:
-		if to == ObligationSettled || to == ObligationSettlementPending || to == ObligationDisputed || to == ObligationRefunded {
+		if to == ObligationSettled || to == ObligationSettlementPending || to == ObligationSettlementSubmitted || to == ObligationDisputed || to == ObligationRefunded || to == ObligationReconciling {
+			return nil
+		}
+	case ObligationReconciling:
+		if to == ObligationSettled || to == ObligationPartiallySettled || to == ObligationFailed || to == ObligationDisputed {
+			return nil
+		}
+	case ObligationFailed:
+		if to == ObligationReconciling || to == ObligationSettlementPending || to == ObligationCancelled {
 			return nil
 		}
 	case ObligationDisputed:
@@ -301,15 +330,31 @@ func (sm *StateMachine) ValidateBatchTransition(from, to BatchStatus) error {
 
 	switch from {
 	case BatchOpen:
-		if to == BatchReady || to == BatchFailed {
+		if to == BatchBuilding || to == BatchReady || to == BatchAwaitingApproval || to == BatchFailed || to == BatchCancelled {
+			return nil
+		}
+	case BatchBuilding:
+		if to == BatchReady || to == BatchAwaitingApproval || to == BatchCancelled || to == BatchFailed {
 			return nil
 		}
 	case BatchReady:
-		if to == BatchAuthorized || to == BatchFailed || to == BatchOpen {
+		if to == BatchAwaitingApproval || to == BatchApproved || to == BatchAuthorized || to == BatchFailed || to == BatchOpen || to == BatchCancelled {
+			return nil
+		}
+	case BatchAwaitingApproval:
+		if to == BatchApproved || to == BatchAuthorized || to == BatchFailed || to == BatchCancelled {
+			return nil
+		}
+	case BatchApproved:
+		if to == BatchSubmitting || to == BatchExecuting || to == BatchAuthorized || to == BatchFailed || to == BatchCancelled {
 			return nil
 		}
 	case BatchAuthorized:
-		if to == BatchExecuting || to == BatchFailed {
+		if to == BatchSubmitting || to == BatchExecuting || to == BatchFailed || to == BatchCancelled {
+			return nil
+		}
+	case BatchSubmitting:
+		if to == BatchExecuting || to == BatchSettled || to == BatchPartiallySettled || to == BatchFailed || to == BatchReconciling {
 			return nil
 		}
 	case BatchExecuting:
@@ -321,10 +366,10 @@ func (sm *StateMachine) ValidateBatchTransition(from, to BatchStatus) error {
 			return nil
 		}
 	case BatchReconciling:
-		if to == BatchSettled || to == BatchFailed {
+		if to == BatchSettled || to == BatchPartiallySettled || to == BatchFailed {
 			return nil
 		}
-	case BatchSettled, BatchFailed:
+	case BatchSettled, BatchFailed, BatchCancelled:
 		return fmt.Errorf("%w: settlement batch in terminal state %s", ErrTerminalState, from)
 	}
 

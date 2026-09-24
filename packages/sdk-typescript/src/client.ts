@@ -34,6 +34,7 @@ import { OperationsResource } from './resources/operations.js';
 import { FabricResource } from './resources/fabric.js';
 import { ProtocolClient } from './resources/protocol.js';
 import { MarketplaceClient } from './resources/marketplace.js';
+import { ClearingClient } from './resources/clearing.js';
 import type { ClientOptions, RequestOptions } from './types.js';
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
@@ -84,6 +85,7 @@ export class AgentPay {
   public readonly objectives: FabricResource;
   public readonly protocol: ProtocolClient;
   public readonly marketplace: MarketplaceClient;
+  public readonly clearing: ClearingClient;
 
   constructor(options: ClientOptions = {}) {
     this.apiKey = options.apiKey || (typeof process !== 'undefined' ? process.env?.AGENTPAY_API_KEY : undefined);
@@ -122,6 +124,7 @@ export class AgentPay {
     this.objectives = this.fabric;
     this.protocol = new ProtocolClient(this);
     this.marketplace = new MarketplaceClient(this);
+    this.clearing = new ClearingClient(this);
   }
 
   /**

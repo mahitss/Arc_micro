@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpay.arc/schemas/clearing/reconciliation_item.json",
+  "title": "ReconciliationItem",
+  "description": "Settlement reconciliation audit item tracking expected vs observed blockchain evidence (Task 18, Section 35).",
+  "type": "object",
+  "required": [
+    "item_id",
+    "discrepancy_type",
+    "expected_amount",
+    "observed_amount",
+    "difference",
+    "safe_next_action",
+    "status",
+    "evidence_verified"
+  ],
+  "properties": {
+    "item_id": {
+      "type": "string",
+      "pattern": "^rec_[a-zA-Z0-9_-]+$"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "obligation_id": {
+      "type": "string"
+    },
+    "payment_intent_id": {
+      "type": "string"
+    },
+    "discrepancy_type": {
+      "type": "string",
+      "enum": [
+        "MATCHED",
+        "AMBIGUOUS",
+        "UNMATCHED_RECEIPT",
+        "MISSING_RECEIPT",
+        "AMOUNT_MISMATCH",
+        "RECIPIENT_MISMATCH",
+        "CHAIN_MISMATCH",
+        "DUPLICATE_TX",
+        "STALE_SETTLEMENT"
+      ]
+    },
+    "expected_amount": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "observed_amount": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "difference": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "safe_next_action": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OPEN", "INVESTIGATING", "RECONCILED", "ESCALATED", "CONFIRMED"]
+    },
+    "tx_hash": {
+      "type": "string"
+    },
+    "chain_id": {
+      "type": "string"
+    },
+    "evidence_verified": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reconciled_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

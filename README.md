@@ -1016,6 +1016,60 @@ agentpay marketplace performance --agent agent_security_alpha --capability sec.s
 
 ---
 
+## Autonomous Economic Clearing Network (Task 18)
+
+> **CORE PRINCIPLE**:
+> *Agents may create economic obligations. AgentPay determines how those obligations may safely settle.*
+>
+> **SECOND PRINCIPLE**:
+> *Clearing may coordinate value. Clearing may not create financial authority.*
+
+AgentPay coordinates obligations created by autonomous agents, marketplace contracts, missions, swarms, recurring services, and external protocol participants through multi-party graph netting and scheduled batch windows—without creating a second financial ledger or second payment system.
+
+### Machine-Checked Security Invariants (INV-201 — INV-220)
+- **INV-201**: Clearing cannot create financial authority.
+- **INV-202**: Netting cannot create value ($\sum \text{gross} = \sum \text{net} + \sum \text{savings}$).
+- **INV-203 — INV-206**: Netting cannot bypass policy, risk, approval, or treasury bounds.
+- **INV-207**: Settled obligations cannot silently mutate.
+- **INV-208**: Partial batch execution maintains independent per-obligation states.
+- **INV-209**: Ambiguous blockchain settlements cannot be blindly rebroadcast.
+- **INV-210**: Disputed obligations cannot silently settle or be netted.
+- **INV-212**: Recurring obligations require per-occurrence validation.
+- **INV-213**: Cross-tenant obligations and netting pools are isolated.
+- **INV-214**: Counterparty exposure is derived from authoritative obligations.
+- **INV-219**: Unverified blockchain evidence must be displayed as `NOT VERIFIED`.
+
+### Clearinghouse CLI Commands
+```bash
+# List network obligations and inspect detail
+agentpay economy obligations
+agentpay economy obligation ob_live_101
+
+# Inspect counterparties and exposure
+agentpay economy counterparties
+agentpay economy exposure --counterparty cp_alpha_01
+
+# Propose or preview multi-party cycle netting
+agentpay economy netting --obligations ob_1,ob_2,ob_3
+
+# Manage settlement batches and execution windows
+agentpay economy settlements
+agentpay economy settlement batch_net_2026_09
+
+# Audit reconciliation records and disputes
+agentpay economy reconciliation
+agentpay economy disputes
+
+# Reconstruct canonical 14-stage financial causal trace
+agentpay economy trace ob_live_101
+
+# Clearing network health telemetry
+agentpay economy health
+```
+
+---
+
+
 
 ## Development & Test Commands
 

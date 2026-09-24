@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpay.arc/schemas/clearing/economic_counterparty.json",
+  "title": "EconomicCounterparty",
+  "description": "Authoritative network participant record for exposure tracking and clearing network coordination (Task 18, Section 2).",
+  "type": "object",
+  "required": [
+    "counterparty_id",
+    "tenant_id",
+    "agent_id",
+    "organization_id",
+    "identity_status",
+    "protocol_version",
+    "exposure_limit",
+    "current_exposure"
+  ],
+  "properties": {
+    "counterparty_id": {
+      "type": "string",
+      "pattern": "^cp_[a-zA-Z0-9_-]+$"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string"
+    },
+    "identity_status": {
+      "type": "string",
+      "enum": ["UNVERIFIED", "IDENTIFIED", "VERIFIED", "SUSPENDED"]
+    },
+    "capability_reference": {
+      "type": "string"
+    },
+    "protocol_version": {
+      "type": "string"
+    },
+    "exposure_limit": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "current_exposure": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "historical_obligations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "active_contracts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "risk_reference": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

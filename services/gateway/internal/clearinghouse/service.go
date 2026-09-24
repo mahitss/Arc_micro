@@ -104,22 +104,71 @@ type Service interface {
 
 	// Ledger
 	GetLedgerEntries(ctx context.Context, orgID string) ([]*ClearingLedgerEntry, error)
+
+	// Counterparties (Task 18)
+	RegisterCounterparty(ctx context.Context, cp *EconomicCounterparty) (*EconomicCounterparty, error)
+	GetCounterparty(ctx context.Context, tenantID, counterpartyID string) (*EconomicCounterparty, error)
+	GetCounterpartyByAgent(ctx context.Context, tenantID, agentID string) (*EconomicCounterparty, error)
+	ListCounterparties(ctx context.Context, tenantID, orgID string) ([]*EconomicCounterparty, error)
+	UpdateCounterpartyStatus(ctx context.Context, tenantID, counterpartyID string, status CounterpartyStatus) error
+	UpdateCounterpartyExposure(ctx context.Context, tenantID, counterpartyID string, exposure string) error
+
+	// Multi-Party Netting (Task 18)
+	ProposeMultiPartyNetting(ctx context.Context, tenantID, orgID, currency string, obligationIDs []string, ttl time.Duration) (*MultiPartyNettingProposal, error)
+	ApproveMultiPartyNetting(ctx context.Context, proposalID string) (*MultiPartyNettingProposal, error)
+	ExecuteMultiPartyNetting(ctx context.Context, proposalID, idempotencyKey string) ([]*intent.PaymentIntent, error)
+	ListMultiPartyNettingProposals(ctx context.Context, tenantID, orgID string) ([]*MultiPartyNettingProposal, error)
+	GetMultiPartyNettingProposal(ctx context.Context, proposalID string) (*MultiPartyNettingProposal, error)
+
+	// Batches with Windows & Items (Task 18)
+	CreateBatchWithWindow(ctx context.Context, tenantID, orgID, currency string, window SettlementWindow, obligationIDs []string, mode ExecutionMode) (*SettlementBatch, error)
+	ApproveBatch(ctx context.Context, batchID string) (*SettlementBatch, error)
+	GetBatchItems(ctx context.Context, batchID string) ([]*SettlementBatchItem, error)
+
+	// Disputes (Task 18)
+	CreateDispute(ctx context.Context, dispute *ClearingDispute) (*ClearingDispute, error)
+	GetDispute(ctx context.Context, id string) (*ClearingDispute, error)
+	ListDisputes(ctx context.Context, tenantID, orgID string) ([]*ClearingDispute, error)
+	ResolveDispute(ctx context.Context, id, resolution string, refundObligation bool) error
+
+	// Derived Views & Trace (Task 18)
+	GetObligationGraph(ctx context.Context, tenantID, orgID string) (*ObligationGraph, error)
+	ExplainUnsettledObligation(ctx context.Context, id string) (*UnsettledExplanation, error)
+	GetFinancialTrace(ctx context.Context, traceIDOrObligationID string) (*FinancialTrace, error)
+	GetClearingHealth(ctx context.Context, tenantID, orgID string) (*ClearingHealth, error)
+
+	// Simulation & Counterfactuals (Task 18)
+	SimulateClearing(ctx context.Context, req *ClearingSimulationRequest) (*ClearingSimulationResult, error)
+	GetNettingCounterfactual(ctx context.Context, proposalID string) (*ClearingCounterfactual, error)
+
+	// Reconciliation Items (Task 18)
+	ListReconciliationItems(ctx context.Context, tenantID, orgID string) ([]*ReconciliationItem, error)
+	GetReconciliationItem(ctx context.Context, id string) (*ReconciliationItem, error)
+	RecordReconciliationItem(ctx context.Context, item *ReconciliationItem) (*ReconciliationItem, error)
 }
 
 // DefaultClearinghouseService implements Service with concurrency safety and audit guarantees.
 type DefaultClearinghouseService struct {
-	mu             sync.RWMutex
-	obligations    map[string]*EconomicObligation
-	escrows        map[string]*EconomicEscrow
-	milestones     map[string]*PaymentMilestone
-	invoices       map[string]*EconomicInvoice
-	schedules      map[string]*PaymentSchedule
-	nettingProps   map[string]*NettingProposal
-	batches        map[string]*SettlementBatch
-	refunds        map[string]*RefundRequest
-	credits        map[string]*EconomicCredit
+	mu              sync.RWMutex
+	obligations     map[string]*EconomicObligation
+	escrows         map[string]*EconomicEscrow
+	milestones      map[string]*PaymentMilestone
+	invoices        map[string]*EconomicInvoice
+	schedules       map[string]*PaymentSchedule
+	nettingProps    map[string]*NettingProposal
+	batches         map[string]*SettlementBatch
+	refunds         map[string]*RefundRequest
+	credits         map[string]*EconomicCredit
 	reconciliations map[string]*ReconciliationRecord
-	ledgerEntries  []*ClearingLedgerEntry
+	ledgerEntries   []*ClearingLedgerEntry
+
+	// Task 18 additions
+	counterparties  map[string]*EconomicCounterparty
+	mpNettingProps  map[string]*MultiPartyNettingProposal
+	batchItems      map[string][]*SettlementBatchItem
+	disputes        map[string]*ClearingDispute
+	reconItems      map[string]*ReconciliationItem
+	causalLinks     map[string]*EconomicCausalLink
 
 	stateMachine   *StateMachine
 	verifier       *MilestoneVerifier
@@ -152,6 +201,13 @@ func NewClearinghouseService(
 		credits:         make(map[string]*EconomicCredit),
 		reconciliations: make(map[string]*ReconciliationRecord),
 		ledgerEntries:   make([]*ClearingLedgerEntry, 0),
+
+		counterparties: make(map[string]*EconomicCounterparty),
+		mpNettingProps: make(map[string]*MultiPartyNettingProposal),
+		batchItems:     make(map[string][]*SettlementBatchItem),
+		disputes:       make(map[string]*ClearingDispute),
+		reconItems:     make(map[string]*ReconciliationItem),
+		causalLinks:    make(map[string]*EconomicCausalLink),
 
 		stateMachine:  NewStateMachine(),
 		verifier:      NewMilestoneVerifier(),

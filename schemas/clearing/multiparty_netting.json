@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpay.arc/schemas/clearing/multiparty_netting.json",
+  "title": "MultiPartyNettingProposal",
+  "description": "Multi-party graph cycle netting proposal preserving conservation of value (INV-202, Task 18, Section 12).",
+  "type": "object",
+  "required": [
+    "proposal_id",
+    "organization_id",
+    "currency",
+    "original_obligations",
+    "proposed_net_obligations",
+    "gross_value",
+    "net_value",
+    "savings_value",
+    "status"
+  ],
+  "properties": {
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^net_[a-zA-Z0-9_-]+$"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "original_obligations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "proposed_net_obligations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["payer_id", "payee_id", "net_amount", "currency"],
+        "properties": {
+          "payer_id": { "type": "string" },
+          "payee_id": { "type": "string" },
+          "net_amount": { "type": "string", "pattern": "^[0-9]+$" },
+          "currency": { "type": "string" }
+        }
+      }
+    },
+    "gross_value": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "net_value": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "savings_value": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "counterparties": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "cycles_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "economic_impact": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PROPOSED", "APPROVED", "EXECUTED", "REJECTED", "EXPIRED"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

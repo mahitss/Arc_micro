@@ -1910,6 +1910,164 @@ export function printMarketplacePerformance(metrics: any[]): void {
   console.log('============================================================');
 }
 
+// =============================================================================
+// AUTONOMOUS ECONOMIC CLEARING NETWORK FORMATTERS (TASK 18)
+// =============================================================================
+
+export function printEconomicCounterpartiesList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC COUNTERPARTIES (${list.length})`);
+  console.log('============================================================');
+  if (list.length === 0) {
+    console.log('No economic counterparties found.');
+    console.log('============================================================');
+    return;
+  }
+  console.log('ID               AGENT            ORGANIZATION     STATUS       CURRENT EXP    LIMIT');
+  console.log('────────────────────────────────────────────────────────────────────────────────────────');
+  for (const cp of list) {
+    const id = (cp.counterparty_id || '').padEnd(16);
+    const agent = (cp.agent_id || '').padEnd(16);
+    const org = (cp.organization_id || '').padEnd(16);
+    const status = (cp.identity_status || 'UNVERIFIED').padEnd(12);
+    const exp = formatUsdc(cp.current_exposure || '0').padEnd(14);
+    const limit = formatUsdc(cp.exposure_limit || '0');
+    console.log(`${id} ${agent} ${org} ${status} ${exp} ${limit}`);
+  }
+  console.log('============================================================');
+}
+
+export function printEconomicCounterpartyDetail(cp: any): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC COUNTERPARTY: ${cp.counterparty_id}`);
+  console.log('============================================================');
+  console.log(`Tenant ID:              ${cp.tenant_id || 'default'}`);
+  console.log(`Agent ID:               ${cp.agent_id}`);
+  console.log(`Organization ID:        ${cp.organization_id}`);
+  console.log(`Identity Status:        ${cp.identity_status}`);
+  console.log(`Capability Reference:   ${cp.capability_reference || 'N/A'}`);
+  console.log(`Protocol Version:       ${cp.protocol_version || 'v1.0'}`);
+  console.log(`Current Exposure:       ${formatUsdc(cp.current_exposure || '0')} (${cp.current_exposure || '0'} base units)`);
+  console.log(`Exposure Limit:         ${formatUsdc(cp.exposure_limit || '0')} (${cp.exposure_limit || '0'} base units)`);
+  console.log(`Historical Obligations: ${cp.historical_obligations || 0}`);
+  console.log(`Active Contracts:       ${cp.active_contracts || 0}`);
+  console.log(`Risk Reference:         ${cp.risk_reference || 'NOMINAL'}`);
+  console.log(`Created At:             ${cp.created_at || 'N/A'}`);
+  console.log(`Updated At:             ${cp.updated_at || 'N/A'}`);
+  console.log('============================================================');
+}
+
+export function printEconomicNettingProposal(p: any): void {
+  console.log('============================================================');
+  console.log(`MULTI-PARTY NETTING PROPOSAL: ${p.proposal_id}`);
+  console.log('============================================================');
+  console.log(`Status:              ${p.status}`);
+  console.log(`Currency:            ${p.currency}`);
+  console.log(`Cycle Count:         ${p.cycles_count || 0}`);
+  console.log(`Gross Obligations:   ${p.original_obligations?.length || 0} (${formatUsdc(p.gross_value || '0')})`);
+  console.log(`Proposed Net Value:  ${formatUsdc(p.net_value || '0')}`);
+  console.log(`Gross Savings Value: ${formatUsdc(p.savings_value || '0')}`);
+  console.log(`Affected Parties:    ${(p.counterparties || []).join(', ') || 'N/A'}`);
+  if (p.proposed_net_obligations && p.proposed_net_obligations.length > 0) {
+    console.log('');
+    console.log('PROPOSED NET OBLIGATIONS:');
+    for (const netOb of p.proposed_net_obligations) {
+      console.log(`  - ${netOb.payer_id} -> ${netOb.payee_id}: ${formatUsdc(netOb.net_amount)}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printEconomicSettlementBatchDetail(b: any): void {
+  console.log('============================================================');
+  console.log(`SETTLEMENT BATCH: ${b.batch_id}`);
+  console.log('============================================================');
+  console.log(`Status:            ${b.status}`);
+  console.log(`Settlement Window: ${b.settlement_window || 'IMMEDIATE'}`);
+  console.log(`Currency:          ${b.currency}`);
+  console.log(`Gross Amount:      ${formatUsdc(b.gross_amount || '0')}`);
+  console.log(`Net Amount:        ${formatUsdc(b.net_amount || '0')}`);
+  console.log(`Savings:           ${formatUsdc(b.savings || '0')}`);
+  console.log(`Created At:        ${b.created_at || 'N/A'}`);
+  console.log(`Completed At:      ${b.completed_at || 'N/A'}`);
+  if (b.items && b.items.length > 0) {
+    console.log('');
+    console.log(`BATCH ITEMS (${b.items.length}):`);
+    for (const item of b.items) {
+      console.log(`  [${item.status}] Obligation: ${item.obligation_id} | Amount: ${formatUsdc(item.amount)} | Intent: ${item.payment_intent_id || 'PENDING'}`);
+      if (item.failure_reason) console.log(`    Failure: ${item.failure_reason}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printEconomicReconciliationDetail(r: any): void {
+  console.log('============================================================');
+  console.log(`RECONCILIATION RECORD: ${r.item_id || r.record_id}`);
+  console.log('============================================================');
+  console.log(`Status:            ${r.status}`);
+  console.log(`Type:              ${r.discrepancy_type || r.reconciliation_type || 'N/A'}`);
+  console.log(`Obligation ID:     ${r.obligation_id || 'N/A'}`);
+  console.log(`Payment Intent ID: ${r.payment_intent_id || 'N/A'}`);
+  console.log(`Expected Amount:   ${formatUsdc(r.expected_amount || '0')}`);
+  console.log(`Observed Amount:   ${formatUsdc(r.observed_amount || r.actual_amount || '0')}`);
+  console.log(`Difference:        ${formatUsdc(r.difference || '0')}`);
+  console.log(`Safe Next Action:  ${r.safe_next_action || 'N/A'}`);
+  console.log(`Blockchain Tx:     ${r.tx_hash ? r.tx_hash : 'NOT VERIFIED'}`);
+  console.log('============================================================');
+}
+
+export function printEconomicDisputesList(list: any[]): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC CLEARING DISPUTES (${list.length})`);
+  console.log('============================================================');
+  if (list.length === 0) {
+    console.log('No open economic disputes.');
+    console.log('============================================================');
+    return;
+  }
+  for (const d of list) {
+    console.log(`[${d.status}] ${d.dispute_id} | Obligation: ${d.obligation_id} | Claim: ${formatUsdc(d.claim_amount)} ${d.currency}`);
+    console.log(`  Claimant: ${d.disputed_by} vs Respondent: ${d.disputed_against}`);
+    console.log(`  Reason:   ${d.reason}`);
+  }
+  console.log('============================================================');
+}
+
+export function printEconomicFinancialTrace(t: any): void {
+  console.log('============================================================');
+  console.log(`FINANCIAL CAUSAL TRACE: ${t.trace_id}`);
+  console.log('============================================================');
+  console.log(`Target ID:       ${t.obligation_id || t.target_id}`);
+  console.log(`Canonical Path:  ${t.canonical_path || 'objective -> contract -> obligation -> clearing -> settlement -> reconciliation'}`);
+  if (t.nodes && t.nodes.length > 0) {
+    console.log('');
+    console.log('LIFECYCLE NODES:');
+    for (const node of t.nodes) {
+      console.log(`  - [${node.step}] ${node.node_type}: ${node.node_id} (${node.status || 'OK'})`);
+      if (node.description) console.log(`      ${node.description}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printClearingHealth(h: any): void {
+  console.log('============================================================');
+  console.log(`AUTONOMOUS CLEARING NETWORK HEALTH`);
+  console.log('============================================================');
+  console.log(`Open Obligations:       ${h.open_obligations || 0}`);
+  console.log(`Overdue Obligations:    ${h.overdue_obligations || 0}`);
+  console.log(`Pending Settlements:    ${h.pending_settlements || 0}`);
+  console.log(`Reconciliation Backlog: ${h.reconciliation_backlog || 0}`);
+  console.log(`Disputed Value:         ${formatUsdc(h.disputed_value || '0')}`);
+  console.log(`Nettable Value:         ${formatUsdc(h.nettable_value || '0')}`);
+  console.log(`Settlement Batches:     ${h.batch_count || 0}`);
+  console.log(`Failed Settlements:     ${h.failed_settlements || 0}`);
+  console.log(`Telemetry Freshness:    ${h.freshness_timestamp || new Date().toISOString()}`);
+  console.log('============================================================');
+}
+
+
 
 
 
