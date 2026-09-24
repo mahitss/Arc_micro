@@ -964,6 +964,133 @@ class TestAgentPayPythonSDK(unittest.TestCase):
         next_act = client.operations.get_next_action("wf_1")
         self.assertEqual(next_act["action"], "RUN")
 
+    @patch("requests.request")
+    def test_task15_economic_fabric_resource(self, mock_req):
+        client = AgentPay(api_key="ap_live_test_task15")
+        mock_resp = MagicMock()
+        mock_resp.ok = True
+        mock_resp.headers = {"x-request-id": "req_fab_1"}
+        mock_req.return_value = mock_resp
+
+        # 1. Create Objective
+        mock_resp.json.return_value = {
+            "objective_id": "obj_test_1",
+            "status": "DRAFT",
+            "tenant_id": "tenant_default",
+            "description": "Produce security audit",
+            "economic_budget": "50.00",
+        }
+        obj = client.fabric.create_objective(
+            tenant_id="tenant_default",
+            description="Produce security audit",
+            economic_budget="50.00",
+            constraints={"max_budget": "50.00"},
+        )
+        self.assertEqual(obj["objective_id"], "obj_test_1")
+        self.assertEqual(obj["status"], "DRAFT")
+
+        # 2. Plan Objective (dry run)
+        mock_resp.json.return_value = {
+            "objective_id": "obj_test_1",
+            "status": "PLANNED",
+            "blueprint_id": "bp_1",
+        }
+        plan = client.fabric.plan_objective("obj_test_1", dry_run=True)
+        self.assertEqual(plan["status"], "PLANNED")
+        call_kwargs = mock_req.call_args[1]
+        self.assertEqual(call_kwargs["method"], "POST")
+        self.assertIn("/v1/fabric/objectives/obj_test_1/plan", call_kwargs["url"])
+        self.assertEqual(call_kwargs["params"], {"dry_run": "true"})
+
+        # 3. Simulate Objective
+        mock_resp.json.return_value = {
+            "objective_id": "obj_test_1",
+            "status": "SIMULATED",
+            "expected_cost": "24.50",
+            "expected_duration": "45s",
+        }
+        sim = client.fabric.simulate_objective("obj_test_1")
+        self.assertEqual(sim["status"], "SIMULATED")
+
+        # 4. Start Objective
+        mock_resp.json.return_value = {
+            "objective_id": "obj_test_1",
+            "status": "RUNNING",
+            "mission_id": "msn_1",
+            "workflow_id": "wf_1",
+        }
+        start = client.objectives.start_objective("obj_test_1")
+        self.assertEqual(start["status"], "RUNNING")
+
+        # 5. Pause & Resume
+        mock_resp.json.return_value = {"objective_id": "obj_test_1", "status": "WAITING"}
+        paused = client.fabric.pause_objective("obj_test_1", reason="Manual inspection")
+        self.assertEqual(paused["status"], "WAITING")
+
+        mock_resp.json.return_value = {"objective_id": "obj_test_1", "status": "RUNNING"}
+        resumed = client.fabric.resume_objective("obj_test_1")
+        self.assertEqual(resumed["status"], "RUNNING")
+
+        # 6. Replan Objective
+        mock_resp.json.return_value = {
+            "objective_id": "obj_test_1",
+            "status": "RUNNING",
+            "replan_count": 1,
+            "version": 2,
+        }
+        replanned = client.fabric.replan_objective("obj_test_1", reason="Provider latency spike")
+        self.assertEqual(replanned["replan_count"], 1)
+
+        # 7. Trace & State
+        mock_resp.json.return_value = {
+            "objective_id": "obj_test_1",
+            "nodes": [{"stage": "OBJECTIVE"}, {"stage": "ARC"}],
+        }
+        trace = client.fabric.get_objective_trace("obj_test_1")
+        self.assertEqual(len(trace["nodes"]), 2)
+
+        mock_resp.json.return_value = {
+            "objective_id": "obj_test_1",
+            "objective_status": "RUNNING",
+            "financial_status": "RESERVED",
+        }
+        state = client.fabric.get_objective_state("obj_test_1")
+        self.assertEqual(state["financial_status"], "RESERVED")
+
+        # 8. Explain (Why This / Why Not)
+        mock_resp.json.return_value = {
+            "selected_provider": "prov-alpha",
+            "policy_result": "ALLOW",
+            "financial_authority": "RESERVED",
+        }
+        why = client.fabric.explain_objective("obj_test_1")
+        self.assertEqual(why["selected_provider"], "prov-alpha")
+
+        mock_resp.json.return_value = {
+            "blocked_action": "PAYMENT_OVER_LIMIT",
+            "reasons": ["Policy hard limit: 10.00 USDC"],
+        }
+        why_not = client.fabric.get_why_not("obj_test_1")
+        self.assertIn("Policy hard limit", why_not["reasons"][0])
+
+        # 9. Autonomy Metrics
+        mock_resp.json.return_value = {
+            "automation_rate": 0.88,
+            "recovery_rate": 0.95,
+            "policy_blocks": 4,
+        }
+        metrics = client.fabric.get_autonomy_metrics()
+        self.assertEqual(metrics["automation_rate"], 0.88)
+
+        # 10. Cancel Objective
+        mock_resp.json.return_value = {"objective_id": "obj_test_1", "status": "CANCELLED"}
+        cancelled = client.fabric.cancel_objective("obj_test_1", reason="Operator aborted")
+        self.assertEqual(cancelled["status"], "CANCELLED")
+
+        # 11. Zero Private Key Invariant
+        self.assertFalse(hasattr(client.fabric, "private_key"))
+        self.assertFalse(hasattr(client, "private_key"))
+
 
 if __name__ == "__main__":
     unittest.main()

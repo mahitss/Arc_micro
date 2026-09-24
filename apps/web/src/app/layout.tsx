@@ -36,6 +36,20 @@ export default function RootLayout({
 
               <nav className="hidden lg:flex items-center space-x-1 text-xs font-mono font-medium">
                 <Link
+                  href="/control/autonomy"
+                  className="px-3 py-1.5 rounded-lg text-emerald-300 font-bold bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  AUTONOMY
+                </Link>
+                <Link
+                  href="/control/objectives"
+                  className="px-3 py-1.5 rounded-lg text-teal-300 font-bold bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-teal-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                  OBJECTIVES
+                </Link>
+                <Link
                   href="/control"
                   className="px-3 py-1.5 rounded-lg text-amber-300 font-bold bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-amber-500/10"
                 >

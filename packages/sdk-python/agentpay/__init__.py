@@ -20,6 +20,7 @@ from .client import (
     ControlTowerResource,
     RuntimeResource,
     OperationsResource,
+    FabricResource,
 )
 from .errors import (
     AgentPayError,
@@ -56,6 +57,7 @@ __all__ = [
     "ControlTowerResource",
     "RuntimeResource",
     "OperationsResource",
+    "FabricResource",
     "AgentPayError",
     "ApprovalRequiredError",
     "AuthenticationError",

@@ -12,6 +12,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/fabric"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/health"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/handlers"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
@@ -550,6 +551,40 @@ func NewRouter(
 		mux.HandleFunc("GET /api/operations/why/{eventId}", opsHandler.HandleExplainEvent)
 		mux.HandleFunc("GET /v1/operations/next/{workflowId}", opsHandler.HandleGetNextAction)
 		mux.HandleFunc("GET /api/operations/next/{workflowId}", opsHandler.HandleGetNextAction)
+
+		// 19. Task 15: Autonomous Economic Fabric APIs
+		fabricStore := fabric.NewMemoryFabricStore()
+		fabricService := fabric.NewEconomicFabricService(fabricStore)
+		fabricHandler := handlers.NewFabricHandler(fabricService)
+
+		mux.HandleFunc("POST /v1/fabric/objectives", fabricHandler.HandleCreateObjective)
+		mux.HandleFunc("POST /api/fabric/objectives", fabricHandler.HandleCreateObjective)
+		mux.HandleFunc("GET /v1/fabric/objectives", fabricHandler.HandleListObjectives)
+		mux.HandleFunc("GET /api/fabric/objectives", fabricHandler.HandleListObjectives)
+		mux.HandleFunc("GET /v1/fabric/objectives/{id}", fabricHandler.HandleGetObjective)
+		mux.HandleFunc("GET /api/fabric/objectives/{id}", fabricHandler.HandleGetObjective)
+		mux.HandleFunc("POST /v1/fabric/objectives/{id}/plan", fabricHandler.HandlePlanObjective)
+		mux.HandleFunc("POST /api/fabric/objectives/{id}/plan", fabricHandler.HandlePlanObjective)
+		mux.HandleFunc("POST /v1/fabric/objectives/{id}/simulate", fabricHandler.HandleSimulateObjective)
+		mux.HandleFunc("POST /api/fabric/objectives/{id}/simulate", fabricHandler.HandleSimulateObjective)
+		mux.HandleFunc("POST /v1/fabric/objectives/{id}/start", fabricHandler.HandleStartObjective)
+		mux.HandleFunc("POST /api/fabric/objectives/{id}/start", fabricHandler.HandleStartObjective)
+		mux.HandleFunc("POST /v1/fabric/objectives/{id}/pause", fabricHandler.HandlePauseObjective)
+		mux.HandleFunc("POST /api/fabric/objectives/{id}/pause", fabricHandler.HandlePauseObjective)
+		mux.HandleFunc("POST /v1/fabric/objectives/{id}/resume", fabricHandler.HandleResumeObjective)
+		mux.HandleFunc("POST /api/fabric/objectives/{id}/resume", fabricHandler.HandleResumeObjective)
+		mux.HandleFunc("POST /v1/fabric/objectives/{id}/replan", fabricHandler.HandleReplanObjective)
+		mux.HandleFunc("POST /api/fabric/objectives/{id}/replan", fabricHandler.HandleReplanObjective)
+		mux.HandleFunc("POST /v1/fabric/objectives/{id}/cancel", fabricHandler.HandleCancelObjective)
+		mux.HandleFunc("POST /api/fabric/objectives/{id}/cancel", fabricHandler.HandleCancelObjective)
+		mux.HandleFunc("GET /v1/fabric/objectives/{id}/trace", fabricHandler.HandleGetTrace)
+		mux.HandleFunc("GET /api/fabric/objectives/{id}/trace", fabricHandler.HandleGetTrace)
+		mux.HandleFunc("GET /v1/fabric/objectives/{id}/why", fabricHandler.HandleExplainWhy)
+		mux.HandleFunc("GET /api/fabric/objectives/{id}/why", fabricHandler.HandleExplainWhy)
+		mux.HandleFunc("GET /v1/fabric/objectives/{id}/why-not", fabricHandler.HandleExplainWhyNot)
+		mux.HandleFunc("GET /api/fabric/objectives/{id}/why-not", fabricHandler.HandleExplainWhyNot)
+		mux.HandleFunc("GET /v1/fabric/metrics", fabricHandler.HandleGetAutonomyMetrics)
+		mux.HandleFunc("GET /api/fabric/metrics", fabricHandler.HandleGetAutonomyMetrics)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {

@@ -1515,6 +1515,153 @@ export function printOpsStateAt(state: any): void {
   console.log('============================================================');
 }
 
+export function printObjective(obj: any): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC OBJECTIVE — ${obj.objective_id}`);
+  console.log('============================================================');
+  console.log(`Status:              ${obj.status}`);
+  console.log(`Tenant:              ${obj.tenant_id}`);
+  console.log(`Owner:               ${obj.owner}`);
+  console.log(`Description:         ${obj.description}`);
+  console.log(`Economic Budget:     ${obj.economic_budget} USDC`);
+  console.log(`Operational Budget:  ${obj.operational_budget} compute units`);
+  console.log(`Risk Tolerance:      ${obj.risk_tolerance}`);
+  if (obj.deadline) console.log(`Deadline:            ${obj.deadline}`);
+  if (obj.current_blueprint_id) console.log(`Blueprint ID:        ${obj.current_blueprint_id} (v${obj.blueprint_version || 1})`);
+  if (obj.active_mission_id) console.log(`Active Mission:      ${obj.active_mission_id}`);
+  if (obj.active_workflow_id) console.log(`Active Workflow:     ${obj.active_workflow_id}`);
+  if (obj.replan_count !== undefined) console.log(`Replan Count:        ${obj.replan_count} / 3 max`);
+  console.log('------------------------------------------------------------');
+  console.log(`Financial Authority: HELD BY TREASURY/POLICY (INV-141)`);
+  console.log('============================================================');
+}
+
+export function printObjectivesList(objs: any[]): void {
+  console.log('============================================================');
+  console.log(`ECONOMIC OBJECTIVES (${objs.length})`);
+  console.log('============================================================');
+  if (objs.length === 0) {
+    console.log('  No economic objectives found.');
+    return;
+  }
+  for (const o of objs) {
+    console.log(`  [${o.status.padEnd(10)}] ${o.objective_id} | ${o.economic_budget} USDC | ${o.description.slice(0, 45)}`);
+  }
+  console.log('============================================================');
+}
+
+export function printBlueprint(bp: any): void {
+  console.log('============================================================');
+  console.log(`EXECUTION BLUEPRINT — ${bp.blueprint_id} (v${bp.version})`);
+  console.log('============================================================');
+  console.log(`Objective ID:        ${bp.objective_id}`);
+  console.log(`Status:              ${bp.status}`);
+  console.log(`Policy Hash:         ${bp.policy_hash}`);
+  console.log(`Risk Envelope:       Max Risk ${bp.risk_envelope?.max_risk_score} | Min Conf ${bp.risk_envelope?.minimum_confidence}`);
+  console.log(`Resource Envelope:   Max Workers ${bp.resource_envelope?.max_workers} | Max Retries ${bp.resource_envelope?.max_retries}`);
+  console.log(`Simulation ID:       ${bp.simulation_id || 'PENDING'}`);
+  console.log('Task Graph:');
+  for (const t of (bp.tasks || [])) {
+    console.log(`  - Task ${t.task_id} [${t.type}] deps: [${(t.dependencies || []).join(', ')}] cap: ${t.required_capability}`);
+  }
+  console.log('============================================================');
+}
+
+export function printObjectiveSimulation(sim: any): void {
+  console.log('============================================================');
+  console.log(`OBJECTIVE SIMULATION RESULT`);
+  console.log('============================================================');
+  console.log(`Objective ID:        ${sim.objective_id}`);
+  console.log(`Status:              ${sim.status}`);
+  console.log(`Expected Cost:       ${sim.expected_cost} USDC`);
+  console.log(`Expected Duration:   ${sim.expected_duration}`);
+  console.log(`Max Exposure:        ${sim.max_exposure} USDC`);
+  console.log(`Failure Probability: ${(sim.failure_probability * 100).toFixed(1)}%`);
+  console.log(`Policy Decision:     ${sim.policy_decision}`);
+  console.log(`Liquidity Check:     ${sim.liquidity_ok ? 'PASS' : 'FAIL'}`);
+  console.log(`Candidate Providers: ${(sim.candidate_providers || []).join(', ')}`);
+  console.log('------------------------------------------------------------');
+  console.log('SIMULATION ONLY: NO REAL MONEY MOVED (INV-156)');
+  console.log('============================================================');
+}
+
+export function printObjectiveTrace(trace: any): void {
+  console.log('============================================================');
+  console.log(`UNIFIED ECONOMIC TRACE — ${trace.trace_id || trace.objective_id}`);
+  console.log('============================================================');
+  console.log(`Tenant:              ${trace.tenant_id}`);
+  console.log(`Started:             ${trace.started_at}`);
+  console.log(`Completed:           ${trace.completed_at || 'IN_PROGRESS'}`);
+  console.log('Stages Reconstructed:');
+  for (const n of (trace.nodes || [])) {
+    const status = n.status ? `[${n.status}]` : '';
+    console.log(`  ↓ ${n.stage.padEnd(16)} ID: ${(n.id || 'N/A').padEnd(20)} ${status} (${n.source_of_truth})`);
+  }
+  console.log('============================================================');
+}
+
+export function printObjectiveExplain(why: any): void {
+  console.log('============================================================');
+  console.log('EXPLAIN OBJECTIVE — WHY THIS DECISION?');
+  console.log('============================================================');
+  console.log(`Selected Provider:   ${why.selected_provider}`);
+  console.log(`Selection Rationale: ${why.selection_rationale}`);
+  console.log(`Policy Decision:     ${why.policy_decision} (${why.policy_rule})`);
+  console.log(`Financial Authority: ${why.financial_authority} (INV-141)`);
+  console.log(`Budget Approved:     ${why.budget_approved}`);
+  if (why.rejected_candidates && why.rejected_candidates.length > 0) {
+    console.log('Rejected Candidates:');
+    for (const r of why.rejected_candidates) {
+      console.log(`  - ${r.provider_id}: ${r.reason}`);
+    }
+  }
+  console.log('============================================================');
+}
+
+export function printObjectiveWhyNot(whyNot: any): void {
+  console.log('============================================================');
+  console.log('WHY NOT? — BLOCKED ACTION INSPECTOR');
+  console.log('============================================================');
+  console.log(`Blocked Action:      ${whyNot.blocked_action}`);
+  console.log('Denial Reasons:');
+  for (const r of (whyNot.reasons || [])) {
+    console.log(`  [DENIED] ${r}`);
+  }
+  console.log('Safe Next Actions:');
+  for (const a of (whyNot.safe_alternatives || [])) {
+    console.log(`  → ${a}`);
+  }
+  console.log('------------------------------------------------------------');
+  console.log('NOTE: Policy rules cannot be disabled or weakened (INV-145/148)');
+  console.log('============================================================');
+}
+
+export function printObjectiveState(state: any): void {
+  console.log('============================================================');
+  console.log(`OBJECTIVE STATE SYNCHRONIZATION — ${state.objective_id}`);
+  console.log('============================================================');
+  console.log(`Fabric Level State:  ${state.objective_status}`);
+  console.log(`Mission State:       ${state.mission_status || 'N/A'}`);
+  console.log(`Workflow State:      ${state.workflow_status || 'N/A'}`);
+  console.log(`Financial State:     ${state.financial_status} (Authoritative)`);
+  console.log(`Treasury State:      ${state.treasury_status}`);
+  console.log(`Arc Settlement:      ${state.arc_settlement_status}`);
+  console.log('============================================================');
+}
+
+export function printAutonomyMetrics(m: any): void {
+  console.log('============================================================');
+  console.log('AUTONOMY TELEMETRY METRICS');
+  console.log('============================================================');
+  console.log(`Automation Rate:     ${(m.automation_rate * 100).toFixed(1)}%`);
+  console.log(`Self-Recovery Rate:  ${(m.recovery_rate * 100).toFixed(1)}%`);
+  console.log(`Human Escalations:   ${m.human_escalations}`);
+  console.log(`Policy Blocks:       ${m.policy_blocks}`);
+  console.log(`Financial Actions:   ${m.financial_actions}`);
+  console.log(`Simulated Actions:   ${m.simulated_actions}`);
+  console.log('============================================================');
+}
+
 
 
 

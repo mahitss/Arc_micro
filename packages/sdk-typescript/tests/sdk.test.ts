@@ -2429,6 +2429,130 @@ test('AgentPay SDK — Task 14 Autonomous Operations OS API', async () => {
   assert.equal(next.action, 'RUN');
 });
 
+test('AgentPay SDK — Task 15 Autonomous Economic Fabric API', async () => {
+  const mockFetch: typeof fetch = async (input, init) => {
+    const url = input.toString();
+    const method = init?.method || 'GET';
+
+    if (url.includes('/v1/fabric/objectives') && method === 'POST') {
+      if (url.includes('/plan')) {
+        return new Response(JSON.stringify({
+          blueprint_id: 'bp_test_1',
+          objective_id: 'obj_test_1',
+          version: 1,
+          tasks: [],
+          status: 'COMPILED',
+          economic_envelope: { max_total_cost_usdc: 50.0 },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/simulate')) {
+        return new Response(JSON.stringify({
+          simulation_id: 'sim_test_1',
+          expected_duration_seconds: 180,
+          expected_cost_usdc: 35.0,
+          max_exposure_usdc: 50.0,
+          policy_decision: 'ALLOW',
+          risk_score: 22,
+          simulation_stale: false,
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/start')) {
+        return new Response(JSON.stringify({
+          decision_id: 'dec_test_1',
+          objective_id: 'obj_test_1',
+          decision_type: 'CONTINUE',
+          reason_code: 'START_AUTHORIZED',
+          financial_authority: 'UNCHANGED',
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      // Create objective
+      return new Response(JSON.stringify({
+        objective_id: 'obj_test_1',
+        tenant_id: 'tenant_default',
+        description: 'Verify infrastructure posture',
+        status: 'DRAFT',
+        economic_budget_usdc: 50.0,
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/v1/fabric/objectives/obj_test_1/trace')) {
+      return new Response(JSON.stringify({
+        objective_id: 'obj_test_1',
+        tenant_id: 'tenant_default',
+        nodes: [
+          { id: 'obj_test_1', stage: 'OBJECTIVE', label: 'Objective', state: 'RUNNING' },
+          { id: 'bp_test_1', stage: 'BLUEPRINT', label: 'Blueprint', state: 'ACTIVE' },
+        ],
+        generated_at: new Date().toISOString(),
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/v1/fabric/objectives/obj_test_1/why-not')) {
+      return new Response(JSON.stringify({
+        objective_id: 'obj_test_1',
+        requested_action: 'Increase budget',
+        block_reason: 'Objective envelopes cannot self-increase (INV-148)',
+        next_safe_actions: ['Replan within envelope'],
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.includes('/v1/fabric/metrics')) {
+      return new Response(JSON.stringify({
+        tenant_id: 'tenant_default',
+        automation_percentage: 95.0,
+        recovery_percentage: 99.0,
+        human_escalation_count: 1,
+        policy_block_count: 2,
+        financial_action_count: 12,
+        simulated_action_count: 24,
+        total_objectives: 4,
+        active_objectives: 2,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    return new Response(JSON.stringify({ status: 'OK' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+
+  const client = new AgentPay({ apiKey: 'test_key', fetch: mockFetch });
+
+  // 1. Create Objective
+  const obj = await client.fabric.createObjective({
+    description: 'Verify infrastructure posture',
+    constraints: { max_budget_usdc: 50.0 },
+    economic_budget_usdc: 50.0,
+    risk_tolerance: 'LOW',
+    required_capabilities: ['security-audit'],
+  }) as any;
+  assert.equal(obj.objective_id, 'obj_test_1');
+
+  // 2. Plan Objective
+  const bp = await client.objectives.planObjective('obj_test_1') as any;
+  assert.equal(bp.blueprint_id, 'bp_test_1');
+
+  // 3. Simulate Objective
+  const sim = await client.fabric.simulateObjective('obj_test_1');
+  assert.equal(sim.simulation_id, 'sim_test_1');
+  assert.equal(sim.policy_decision, 'ALLOW');
+
+  // 4. Start Objective
+  const dec = await client.fabric.startObjective('obj_test_1') as any;
+  assert.equal(dec.decision_type, 'CONTINUE');
+  assert.equal(dec.financial_authority, 'UNCHANGED');
+
+  // 5. Trace
+  const trace = await client.fabric.getObjectiveTrace('obj_test_1');
+  assert.equal(trace.nodes.length, 2);
+
+  // 6. Why Not
+  const whyNot = await client.fabric.explainObjectiveBlocked('obj_test_1');
+  assert.ok(whyNot.block_reason);
+
+  // 7. Metrics
+  const metrics = await client.fabric.getAutonomyMetrics();
+  assert.equal(metrics.automation_percentage, 95.0);
+  assert.equal(metrics.total_objectives, 4);
+});
+
 
 
 

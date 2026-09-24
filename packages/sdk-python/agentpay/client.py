@@ -1312,6 +1312,114 @@ class OperationsResource:
         return self._client._request("GET", "/v1/operations/topology")
 
 
+class FabricResource:
+    """
+    Task 15 Autonomous Economic Fabric Resource.
+    Coordinates high-level objectives, execution blueprints, simulations,
+    safe replanning, and unified traces while strictly leaving financial
+    authority outside autonomous reach (INV-141 - INV-160).
+    """
+    def __init__(self, client: "AgentPay"):
+        self._client = client
+
+    def create_objective(
+        self,
+        tenant_id: str,
+        description: str,
+        constraints: Optional[Dict[str, Any]] = None,
+        economic_budget: Optional[str] = "100.00",
+        operational_budget: Optional[str] = "100.00",
+        risk_tolerance: Optional[str] = "MEDIUM",
+        required_capabilities: Optional[List[str]] = None,
+        owner: Optional[str] = "system",
+        deadline: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "tenant_id": tenant_id,
+            "description": description,
+            "owner": owner,
+            "constraints": constraints or {},
+            "economic_budget": economic_budget,
+            "operational_budget": operational_budget,
+            "risk_tolerance": risk_tolerance,
+            "required_capabilities": required_capabilities or [],
+        }
+        if deadline:
+            payload["deadline"] = deadline
+        return self._client._request("POST", "/v1/fabric/objectives", json=payload)
+
+    def get_objective(self, objective_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/fabric/objectives/{objective_id}")
+
+    def list_objectives(self, status: Optional[str] = None, tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if status:
+            params["status"] = status
+        if tenant_id:
+            params["tenant_id"] = tenant_id
+        res = self._client._request("GET", "/v1/fabric/objectives", params=params or None)
+        return res.get("objectives", [])
+
+    def plan_objective(self, objective_id: str, dry_run: bool = False) -> Dict[str, Any]:
+        params = {"dry_run": "true"} if dry_run else None
+        return self._client._request("POST", f"/v1/fabric/objectives/{objective_id}/plan", params=params)
+
+    def simulate_objective(self, objective_id: str, dry_run: bool = False) -> Dict[str, Any]:
+        params = {"dry_run": "true"} if dry_run else None
+        return self._client._request("POST", f"/v1/fabric/objectives/{objective_id}/simulate", params=params)
+
+    def start_objective(self, objective_id: str, dry_run: bool = False) -> Dict[str, Any]:
+        params = {"dry_run": "true"} if dry_run else None
+        return self._client._request("POST", f"/v1/fabric/objectives/{objective_id}/start", params=params)
+
+    def pause_objective(self, objective_id: str, reason: Optional[str] = None, dry_run: bool = False) -> Dict[str, Any]:
+        params = {"dry_run": "true"} if dry_run else None
+        payload = {"reason": reason or "Operator requested pause"}
+        return self._client._request("POST", f"/v1/fabric/objectives/{objective_id}/pause", json=payload, params=params)
+
+    def resume_objective(self, objective_id: str, dry_run: bool = False) -> Dict[str, Any]:
+        params = {"dry_run": "true"} if dry_run else None
+        return self._client._request("POST", f"/v1/fabric/objectives/{objective_id}/resume", params=params)
+
+    def replan_objective(self, objective_id: str, reason: str, dry_run: bool = False) -> Dict[str, Any]:
+        params = {"dry_run": "true"} if dry_run else None
+        payload = {"reason": reason}
+        return self._client._request("POST", f"/v1/fabric/objectives/{objective_id}/replan", json=payload, params=params)
+
+    def cancel_objective(self, objective_id: str, reason: Optional[str] = None, dry_run: bool = False) -> Dict[str, Any]:
+        params = {"dry_run": "true"} if dry_run else None
+        payload = {"reason": reason or "Operator requested cancellation"}
+        return self._client._request("POST", f"/v1/fabric/objectives/{objective_id}/cancel", json=payload, params=params)
+
+    def get_objective_trace(self, objective_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/fabric/objectives/{objective_id}/trace")
+
+    def explain_objective(self, objective_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/fabric/objectives/{objective_id}/why")
+
+    def get_why_not(self, objective_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/fabric/objectives/{objective_id}/why-not")
+
+    def get_objective_state(self, objective_id: str) -> Dict[str, Any]:
+        return self._client._request("GET", f"/v1/fabric/objectives/{objective_id}/state")
+
+    def get_autonomy_metrics(self) -> Dict[str, Any]:
+        return self._client._request("GET", "/v1/fabric/metrics")
+
+    # CamelCase aliases per Section 48 specification
+    createObjective = create_objective
+    planObjective = plan_objective
+    simulateObjective = simulate_objective
+    startObjective = start_objective
+    pauseObjective = pause_objective
+    resumeObjective = resume_objective
+    replanObjective = replan_objective
+    cancelObjective = cancel_objective
+    getObjectiveTrace = get_objective_trace
+    explainObjective = explain_objective
+    getObjectiveState = get_objective_state
+
+
 class AgentPay:
     """
     AgentPay SDK Client
@@ -1349,6 +1457,8 @@ class AgentPay:
         self.runtime = RuntimeResource(self)
         self.operations = OperationsResource(self)
         self.ops = self.operations
+        self.fabric = FabricResource(self)
+        self.objectives = self.fabric
 
     def _request(
         self,

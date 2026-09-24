@@ -35,8 +35,22 @@ export { TreasuryResource, TreasuryReservationsResource } from './resources/trea
 export { ControlTowerResource } from './resources/control.js';
 export { RuntimeResource } from './resources/runtime.js';
 export { OperationsResource } from './resources/operations.js';
+export { FabricResource } from './resources/fabric.js';
 export { VerifySignatureOptions, WebhooksResource, verifyWebhook, verifyWebhookSignature } from './resources/webhooks.js';
 export type {
+  EconomicObjective,
+  ExecutionBlueprint,
+  BlueprintVersion,
+  EconomicEnvelope,
+  RiskEnvelope,
+  ResourceEnvelope,
+  FabricDecision,
+  UnifiedEconomicTrace,
+  WhyThisExplanation,
+  WhyNotExplanation,
+  AutonomyMetrics,
+  SimulationCompareResult,
+  DryRunResult,
   OperationsSnapshot,
   OperationsHealth,
   OperationsWorker,

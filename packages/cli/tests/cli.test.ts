@@ -60,6 +60,15 @@ import {
   printOpsWhy,
   printOpsNext,
   printOpsStateAt,
+  printObjective,
+  printObjectivesList,
+  printBlueprint,
+  printObjectiveSimulation,
+  printObjectiveTrace,
+  printObjectiveExplain,
+  printObjectiveWhyNot,
+  printObjectiveState,
+  printAutonomyMetrics,
 } from '../src/output.js';
 
 test('AgentPay CLI Config — Set and Get API Key', () => {
@@ -868,6 +877,110 @@ test('AgentPay CLI Operations OS — Output Formatting Test', () => {
     printOpsWhy(mockWhy);
     printOpsNext(mockNext);
     printOpsStateAt(mockStateAt);
+  });
+});
+
+test('AgentPay CLI Output — Task 15 Autonomous Economic Fabric Formatters', () => {
+  const mockObjective = {
+    objective_id: 'obj_cli_01',
+    tenant_id: 'tenant_default',
+    description: 'Execute security audit of provider cluster',
+    owner: 'operator',
+    economic_budget: '50.00',
+    operational_budget: '100.00',
+    risk_tolerance: 'LOW',
+    deadline: '2026-10-01T00:00:00Z',
+    status: 'RUNNING',
+    current_blueprint_id: 'bp_cli_01',
+    blueprint_version: 1,
+    active_mission_id: 'msn_cli_01',
+    active_workflow_id: 'wf_cli_01',
+    replan_count: 0,
+  };
+
+  const mockBlueprint = {
+    blueprint_id: 'bp_cli_01',
+    objective_id: 'obj_cli_01',
+    version: 1,
+    status: 'VALIDATED',
+    policy_hash: 'pol_hash_safe_123',
+    risk_envelope: { max_risk_score: 30, minimum_confidence: 0.95 },
+    resource_envelope: { max_workers: 4, max_retries: 3 },
+    simulation_id: 'sim_cli_01',
+    tasks: [
+      { task_id: 't1', type: 'DISCOVERY', dependencies: [], required_capability: 'sec-scan' },
+    ],
+  };
+
+  const mockSim = {
+    objective_id: 'obj_cli_01',
+    status: 'SIMULATED',
+    expected_cost: '22.50',
+    expected_duration: '35s',
+    max_exposure: '35.00',
+    failure_probability: 0.05,
+    policy_decision: 'ALLOW',
+    liquidity_ok: true,
+    candidate_providers: ['provider-alpha', 'provider-beta'],
+  };
+
+  const mockTrace = {
+    trace_id: 'trc_cli_01',
+    tenant_id: 'tenant_default',
+    started_at: '2026-09-24T12:00:00Z',
+    completed_at: '2026-09-24T12:05:00Z',
+    nodes: [
+      { stage: 'OBJECTIVE', id: 'obj_cli_01', status: 'RUNNING', source_of_truth: 'FABRIC_DB' },
+      { stage: 'POLICY', id: 'pol_1', status: 'ALLOW', source_of_truth: 'RUST_POLICY_ENGINE' },
+      { stage: 'ARC', id: 'tx_arc_1', status: 'CONFIRMED', source_of_truth: 'ARC_BLOCKCHAIN' },
+    ],
+  };
+
+  const mockExplain = {
+    selected_provider: 'provider-alpha',
+    selection_rationale: 'Lowest cost with verified security reputation',
+    policy_decision: 'ALLOW',
+    policy_rule: 'RULE_BUDGET_UNDER_CAP',
+    financial_authority: 'RESERVED',
+    budget_approved: '22.50 USDC',
+    rejected_candidates: [{ provider_id: 'provider-beta', reason: 'Higher quote 35.00 USDC' }],
+  };
+
+  const mockWhyNot = {
+    blocked_action: 'REQUEST_PAYMENT_OVER_LIMIT',
+    reasons: ['Budget limit exceeded: 50.00 USDC cap', 'Policy DENY'],
+    safe_alternatives: ['Reduce requested payment', 'Request milestone split'],
+  };
+
+  const mockState = {
+    objective_id: 'obj_cli_01',
+    objective_status: 'RUNNING',
+    mission_status: 'ACTIVE',
+    workflow_status: 'RUNNING',
+    financial_status: 'RESERVED',
+    treasury_status: 'LIQUIDITY_SECURED',
+    arc_settlement_status: 'PENDING_DELIVERABLE',
+  };
+
+  const mockMetrics = {
+    automation_rate: 0.92,
+    recovery_rate: 0.98,
+    human_escalations: 1,
+    policy_blocks: 3,
+    financial_actions: 14,
+    simulated_actions: 45,
+  };
+
+  assert.doesNotThrow(() => {
+    printObjective(mockObjective);
+    printObjectivesList([mockObjective]);
+    printBlueprint(mockBlueprint);
+    printObjectiveSimulation(mockSim);
+    printObjectiveTrace(mockTrace);
+    printObjectiveExplain(mockExplain);
+    printObjectiveWhyNot(mockWhyNot);
+    printObjectiveState(mockState);
+    printAutonomyMetrics(mockMetrics);
   });
 });
 

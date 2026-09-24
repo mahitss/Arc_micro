@@ -2734,6 +2734,217 @@ export interface SystemStateAtSnapshot {
   financial_state_frozen: boolean;
 }
 
+// ============================================================
+// TASK 15: AUTONOMOUS ECONOMIC FABRIC TYPES
+// ============================================================
+
+export type ObjectiveStatus =
+  | 'DRAFT'
+  | 'PLANNED'
+  | 'SIMULATED'
+  | 'APPROVED'
+  | 'RUNNING'
+  | 'WAITING'
+  | 'DEGRADED'
+  | 'RECOVERING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'EXPIRED';
+
+export interface ObjectiveConstraints {
+  deadline?: string;
+  max_budget_usdc: number;
+  max_single_payment_usdc?: number;
+  max_parallel_tasks?: number;
+  required_capability?: string;
+  minimum_confidence?: number;
+  required_policy_hash?: string;
+  execution_mode?: 'SIMULATION' | 'LIVE';
+}
+
+export interface EconomicObjective {
+  objective_id: string;
+  tenant_id: string;
+  description: string;
+  owner: string;
+  status: ObjectiveStatus;
+  constraints: ObjectiveConstraints;
+  economic_budget_usdc: number;
+  risk_tolerance: 'LOW' | 'MEDIUM' | 'HIGH';
+  required_capabilities: string[];
+  active_blueprint_id?: string;
+  active_mission_id?: string;
+  active_workflow_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlueprintTask {
+  task_id: string;
+  task_name: string;
+  required_capability: string;
+  dependencies: string[];
+  estimated_cost_usdc: number;
+  assigned_agent_id?: string;
+  selected_provider?: string;
+  requires_payment: boolean;
+  milestone_hash?: string;
+}
+
+export interface EconomicEnvelope {
+  envelope_id: string;
+  objective_id: string;
+  tenant_id: string;
+  max_total_cost_usdc: number;
+  max_single_cost_usdc: number;
+  max_exposure_usdc: number;
+  max_parallel_exposure_usdc: number;
+  reserved_amount_usdc: number;
+  spent_amount_usdc: number;
+  expiry: string;
+  policy_hash: string;
+  created_at: string;
+}
+
+export interface RiskEnvelope {
+  envelope_id: string;
+  objective_id: string;
+  tenant_id: string;
+  max_risk_score: number;
+  allowed_risk_classes: string[];
+  escalation_threshold: number;
+  confidence_threshold: number;
+  security_requirements: string[];
+  created_at: string;
+}
+
+export interface ResourceEnvelope {
+  envelope_id: string;
+  objective_id: string;
+  tenant_id: string;
+  max_workers: number;
+  max_parallel_tasks: number;
+  max_provider_calls: number;
+  max_agent_depth: number;
+  max_runtime_seconds: number;
+  max_retries: number;
+  created_at: string;
+}
+
+export interface ExecutionBlueprint {
+  blueprint_id: string;
+  objective_id: string;
+  tenant_id: string;
+  version: number;
+  tasks: BlueprintTask[];
+  agent_assignments: Record<string, string>;
+  service_candidates: string[];
+  economic_envelope: EconomicEnvelope;
+  risk_envelope: RiskEnvelope;
+  resource_envelope: ResourceEnvelope;
+  policy_references: string[];
+  simulation_id?: string;
+  simulation_timestamp?: string;
+  simulation_stale: boolean;
+  policy_hash: string;
+  status: string;
+  created_at: string;
+}
+
+export interface BlueprintVersion {
+  version_id: string;
+  blueprint_id: string;
+  objective_id: string;
+  version: number;
+  diff_summary: Record<string, any>;
+  replan_reason: string;
+  policy_revalidation_required: boolean;
+  created_at: string;
+}
+
+export interface FabricDecision {
+  decision_id: string;
+  objective_id: string;
+  tenant_id: string;
+  decision_type: string;
+  reason_code: string;
+  explanation: string;
+  inputs_hash: string;
+  financial_authority: string;
+  created_at: string;
+}
+
+export interface UnifiedTraceNode {
+  id: string;
+  stage: string;
+  label: string;
+  state: string;
+  source_of_truth: string;
+  hash?: string;
+  timestamp: string;
+}
+
+export interface UnifiedEconomicTrace {
+  objective_id: string;
+  tenant_id: string;
+  nodes: UnifiedTraceNode[];
+  generated_at: string;
+}
+
+export interface WhyThisExplanation {
+  objective_id: string;
+  selected_provider: string;
+  selection_factors: string[];
+  quote_price_usdc: number;
+  policy_decision: string;
+  approval_status: string;
+  treasury_status: string;
+  rejected_candidates: Array<{ provider_id: string; reason: string }>;
+}
+
+export interface WhyNotExplanation {
+  objective_id: string;
+  requested_action: string;
+  block_reason: string;
+  policy_violated?: string;
+  next_safe_actions: string[];
+}
+
+export interface AutonomyMetrics {
+  tenant_id: string;
+  automation_percentage: number;
+  recovery_percentage: number;
+  human_escalation_count: number;
+  policy_block_count: number;
+  financial_action_count: number;
+  simulated_action_count: number;
+  total_objectives: number;
+  active_objectives: number;
+}
+
+export interface SimulationCompareResult {
+  simulation_id: string;
+  simulation_timestamp: string;
+  expected_duration_seconds: number;
+  expected_cost_usdc: number;
+  max_exposure_usdc: number;
+  policy_decision: string;
+  risk_score: number;
+  simulation_stale: boolean;
+  stale_reasons?: string[];
+}
+
+export interface DryRunResult {
+  is_dry_run: boolean;
+  action: string;
+  would_change: Record<string, any>;
+  would_not_change: string[];
+  financial_delta_usdc: number;
+  policy_impact: string;
+}
+
+
 
 
 

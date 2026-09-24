@@ -83,6 +83,15 @@ import {
   printOpsWhy,
   printOpsNext,
   printOpsStateAt,
+  printObjective,
+  printObjectivesList,
+  printBlueprint,
+  printObjectiveSimulation,
+  printObjectiveTrace,
+  printObjectiveExplain,
+  printObjectiveWhyNot,
+  printObjectiveState,
+  printAutonomyMetrics,
 } from './output.js';
 import { verifyWebhookSignature } from '@agentpay/sdk';
 
@@ -215,7 +224,23 @@ Commands:
   runtime cancel <workflow_id>     Cancel a workflow safely (--reason)
   runtime reconcile <incident_id>  Reconcile an operational runtime incident
 
+  objective create                 Create economic objective (--desc, --budget, --tenant, --deadline)
+  objective plan <id>              Compile execution blueprint (--dry-run)
+  objective simulate <id>          Run deterministic pre-execution simulation (--dry-run)
+  objective start <id>             Start objective execution into durable workflows (--dry-run)
+  objective status [id]            View objective details or list all objectives (--status, --tenant)
+  objective trace <id>             Reconstruct 18-stage end-to-end causal trace
+  objective explain <id>           Explain provider and policy decisions (Why This?)
+  objective why-not <id>           Inspect blocked actions and guardrails (Why Not?)
+  objective state <id>             Synchronized fabric vs financial source-of-truth state
+  objective replan <id>            Safely adapt plan with bounded replanning (--reason, --dry-run)
+  objective pause <id>             Pause objective execution (--reason, --dry-run)
+  objective resume <id>            Resume paused objective (--dry-run)
+  objective cancel <id>            Cancel objective safely (--reason, --dry-run)
+  objective metrics                View descriptive autonomy metrics
+
 Options:
+  --dry-run                        Simulate action without mutating persistent state
   --json                           Output response in machine-readable JSON format
   --help                           Display this help message
 `);
@@ -1665,6 +1690,188 @@ async function main(): Promise<void> {
         const state = await client.operations.getStateAt(arg);
         if (isJson) printJson(state);
         else printOpsStateAt(state);
+        return;
+      }
+    }
+
+    // Task 15 Autonomous Economic Fabric Commands
+    if (resource === 'objective' || resource === 'fabric') {
+      const sub = action;
+      const arg = targetId || (flags['id'] as string) || (positional[2] as string);
+      const isDryRun = Boolean(flags['dry-run'] || flags['dryRun']);
+
+      if (sub === 'create') {
+        const desc = (flags['desc'] as string) || (flags['description'] as string) || positional.slice(2).join(' ') || 'Produce verified security report';
+        const tenant = (flags['tenant'] as string) || (flags['tenant_id'] as string) || 'tenant_default';
+        const budget = (flags['budget'] as string) || '100.00';
+        const operationalBudget = (flags['operational-budget'] as string) || '100.00';
+        const deadline = flags['deadline'] as string | undefined;
+        const owner = (flags['owner'] as string) || 'operator';
+        const risk = (flags['risk'] as string) || 'MEDIUM';
+
+        const res = await client.fabric.createObjective({
+          tenant_id: tenant,
+          description: desc,
+          economic_budget: budget,
+          operational_budget: operationalBudget,
+          risk_tolerance: risk,
+          owner,
+          deadline,
+          constraints: {
+            max_budget: budget,
+            max_parallel_tasks: 5,
+            deadline: deadline || '',
+          },
+        });
+        if (isJson) printJson(res);
+        else printObjective(res);
+        return;
+      }
+
+      if (sub === 'status' || sub === 'get' || sub === 'list') {
+        if (arg && sub !== 'list') {
+          const res = await client.fabric.getObjective(arg);
+          if (isJson) printJson(res);
+          else printObjective(res);
+        } else {
+          const status = flags['status'] as string | undefined;
+          const tenant = flags['tenant'] as string | undefined;
+          const res = await client.fabric.listObjectives({ status, tenant_id: tenant });
+          if (isJson) printJson(res);
+          else printObjectivesList(res);
+        }
+        return;
+      }
+
+      if (sub === 'plan') {
+        if (!arg) {
+          console.error('Error: "objective plan" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.planObjective(arg, { dry_run: isDryRun });
+        if (isJson) printJson(res);
+        else if (res.blueprint) printBlueprint(res.blueprint);
+        else printObjective(res);
+        return;
+      }
+
+      if (sub === 'simulate') {
+        if (!arg) {
+          console.error('Error: "objective simulate" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.simulateObjective(arg, { dry_run: isDryRun });
+        if (isJson) printJson(res);
+        else printObjectiveSimulation(res);
+        return;
+      }
+
+      if (sub === 'start') {
+        if (!arg) {
+          console.error('Error: "objective start" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.startObjective(arg, { dry_run: isDryRun });
+        if (isJson) printJson(res);
+        else printObjective(res);
+        return;
+      }
+
+      if (sub === 'pause') {
+        if (!arg) {
+          console.error('Error: "objective pause" requires an <objective_id>');
+          process.exit(1);
+        }
+        const reason = (flags['reason'] as string) || 'Operator requested pause';
+        const res = await client.fabric.pauseObjective(arg, reason, { dry_run: isDryRun });
+        if (isJson) printJson(res);
+        else printObjective(res);
+        return;
+      }
+
+      if (sub === 'resume') {
+        if (!arg) {
+          console.error('Error: "objective resume" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.resumeObjective(arg, { dry_run: isDryRun });
+        if (isJson) printJson(res);
+        else printObjective(res);
+        return;
+      }
+
+      if (sub === 'replan') {
+        if (!arg) {
+          console.error('Error: "objective replan" requires an <objective_id>');
+          process.exit(1);
+        }
+        const reason = (flags['reason'] as string) || 'Operator requested replan';
+        const res = await client.fabric.replanObjective(arg, reason, { dry_run: isDryRun });
+        if (isJson) printJson(res);
+        else printObjective(res);
+        return;
+      }
+
+      if (sub === 'cancel') {
+        if (!arg) {
+          console.error('Error: "objective cancel" requires an <objective_id>');
+          process.exit(1);
+        }
+        const reason = (flags['reason'] as string) || 'Operator cancelled objective';
+        const res = await client.fabric.cancelObjective(arg, reason, { dry_run: isDryRun });
+        if (isJson) printJson(res);
+        else printObjective(res);
+        return;
+      }
+
+      if (sub === 'trace') {
+        if (!arg) {
+          console.error('Error: "objective trace" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.getObjectiveTrace(arg);
+        if (isJson) printJson(res);
+        else printObjectiveTrace(res);
+        return;
+      }
+
+      if (sub === 'explain') {
+        if (!arg) {
+          console.error('Error: "objective explain" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.explainObjective(arg);
+        if (isJson) printJson(res);
+        else printObjectiveExplain(res);
+        return;
+      }
+
+      if (sub === 'why-not') {
+        if (!arg) {
+          console.error('Error: "objective why-not" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.getWhyNot(arg);
+        if (isJson) printJson(res);
+        else printObjectiveWhyNot(res);
+        return;
+      }
+
+      if (sub === 'state') {
+        if (!arg) {
+          console.error('Error: "objective state" requires an <objective_id>');
+          process.exit(1);
+        }
+        const res = await client.fabric.getObjectiveState(arg);
+        if (isJson) printJson(res);
+        else printObjectiveState(res);
+        return;
+      }
+
+      if (sub === 'metrics') {
+        const res = await client.fabric.getAutonomyMetrics();
+        if (isJson) printJson(res);
+        else printAutonomyMetrics(res);
         return;
       }
     }

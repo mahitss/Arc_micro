@@ -1,15 +1,22 @@
-# AgentPay
+# AgentPay: The Financial Control Plane for Autonomous Economies
 
-Programmable financial control plane and autonomous economic operating system for AI agents, featuring deterministic policy controls and native USDC settlement on Arc.
+**AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.**
+
+AgentPay lets autonomous agents discover services, negotiate work, coordinate missions, manage budgets, recover from failures, and execute authorized economic actions while deterministic policy and financial controls remain outside the agent's authority.
 
 ---
 
-## The Adaptive Autonomous Economic Control Plane
+## The Autonomous Economic Fabric
 
-AgentPay is the control center for an autonomous AI economy: **"AI Requests → AgentPay Controls → Arc Settles."**
+AgentPay operates as one unified autonomous economic fabric:
 
-**AgentPay doesn't simply execute payments.**  
-**It observes economic outcomes and helps autonomous agents adapt while keeping financial authorization deterministic.**
+> **THE SYSTEM MAY AUTONOMOUSLY CHANGE WHAT IT DOES.**  
+> **IT MAY NOT AUTONOMOUSLY CHANGE WHAT IT IS ALLOWED TO DO.**
+
+### The Complete Autonomous Economic Loop
+```
+OBJECTIVE → UNDERSTAND → PLAN → SIMULATE → ALLOCATE → EXECUTE → OBSERVE → RECOVER → REPLAN → SETTLE → LEARN → CONTINUE
+```
 
 ### The Adaptive Autonomous Mission Loop
 ```
@@ -821,6 +828,71 @@ agentpay ops state-at <iso_timestamp>
 
 ---
 
+## Autonomous Economic Fabric (Task 15)
+
+The **Economic Fabric** coordinates existing domain engines into a unified autonomous loop:
+`OBJECTIVE → UNDERSTAND → PLAN → SIMULATE → ALLOCATE → EXECUTE → OBSERVE → RECOVER → REPLAN → SETTLE → LEARN → CONTINUE`
+
+### Constitutional Invariants (INV-141 — INV-160)
+- **INV-141:** EconomicFabric cannot authorize payment.
+- **INV-142:** ObjectiveCompiler cannot create financial authority.
+- **INV-143:** Blueprint cannot increase financial limits.
+- **INV-144:** Stale simulation cannot silently authorize execution.
+- **INV-145:** Replanning cannot weaken policy.
+- **INV-146:** Provider substitution cannot bypass policy.
+- **INV-147:** Agent substitution cannot bypass policy.
+- **INV-148:** EconomicEnvelope cannot self-increase.
+- **INV-149:** RiskEnvelope cannot weaken Constitution.
+- **INV-150:** ResourceEnvelope cannot modify treasury authority.
+- **INV-151:** Learning cannot silently change authority.
+- **INV-152:** Objective state cannot override payment state.
+- **INV-153:** Financial source-of-truth remains authoritative.
+- **INV-154:** Read models cannot mutate financial truth.
+- **INV-155:** Dry-run cannot mutate production state.
+- **INV-156:** Simulation cannot broadcast on-chain.
+- **INV-157:** Live mode requires current authorization.
+- **INV-158:** Expired approval cannot execute.
+- **INV-159:** Changed policy invalidates stale financial authorization.
+- **INV-160:** Unverified Arc evidence cannot be displayed as verified.
+
+### CLI Commands for Economic Fabric
+```bash
+# Create an economic objective
+agentpay objective create --desc "Produce verified security audit" --budget 50.00
+
+# Compile execution blueprint (--dry-run supported)
+agentpay objective plan <objective_id>
+
+# Run deterministic pre-flight simulation
+agentpay objective simulate <objective_id>
+
+# Start live execution into durable workflows
+agentpay objective start <objective_id>
+
+# Inspect objective status and envelopes
+agentpay objective status <objective_id>
+
+# View 18-stage end-to-end unified trace
+agentpay objective trace <objective_id>
+
+# Explain deterministic provider selection (Why This?)
+agentpay objective explain <objective_id>
+
+# Inspect blocked actions and guardrails (Why Not?)
+agentpay objective why-not <objective_id>
+
+# Bounded self-healing replan (max 3 replans)
+agentpay objective replan <objective_id> --reason "Provider latency spike"
+
+# Pause and resume objective
+agentpay objective pause <objective_id>
+agentpay objective resume <objective_id>
+
+# View descriptive autonomy metrics
+agentpay objective metrics
+```
+
+---
 
 ## Development & Test Commands
 
