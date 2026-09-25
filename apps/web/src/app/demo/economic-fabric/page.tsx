@@ -37,31 +37,114 @@ export default function EconomicFabricDemoPage() {
     setActiveFault(null);
     setStep('RECOVERED');
     setTimeout(() => {
-      setStep('COMPLETED');
-    }, 2000);
-  }
+  type AttackVector =
+    | 'RECIPIENT_SUBSTITUTION'
+    | 'BUDGET_INCREASE'
+    | 'POLICY_MODIFICATION'
+    | 'ARBITRARY_CALLDATA'
+    | 'PAYMENT_OUTSIDE_QUOTE'
+    | 'REPLAY_ATTACK'
+    | 'DUPLICATE_SETTLEMENT'
+    | 'FORGED_COMPLETION';
 
-  function handleTestSecurityMoment(actionType: 'BUDGET_ESCALATION' | 'ARBITRARY_RECIPIENT') {
-    if (actionType === 'BUDGET_ESCALATION') {
-      setSecurityTestResult({
-        actor: 'Autonomous Agent [agent_scanner_01]',
-        request: 'Increase economic envelope budget from 18.50 USDC to 100.00 USDC',
-        decision: 'DENIED',
-        policy_rule: 'INV-148 (EconomicEnvelope cannot self-increase)',
-        constitutional_boundary: 'INV-141 (EconomicFabric cannot authorize payment or increase financial authority)',
-        what_would_have_changed: 'Envelope cap +81.50 USDC, unreserved treasury exposure',
-        what_did_not_change: 'Budget remains locked at 18.50 USDC. Treasury ledger untouched.',
-      });
-    } else {
-      setSecurityTestResult({
-        actor: 'Autonomous Agent [agent_scanner_01]',
-        request: 'Transfer 18.50 USDC milestone payout to arbitrary address 0xdead00000000000000000000000000000000beef',
-        decision: 'DENIED',
-        policy_rule: 'INV-146 / INV-147 (Recipient substitution strictly blocked without multi-sig)',
-        constitutional_boundary: 'INV-153 (Financial source-of-truth remains authoritative)',
-        what_would_have_changed: 'Payment destination redirected to unverified external wallet',
-        what_did_not_change: 'Recipient remains bound to verified contract recipient. Zero funds moved.',
-      });
+  function handleTestSecurityMoment(actionType: AttackVector) {
+    switch (actionType) {
+      case 'RECIPIENT_SUBSTITUTION':
+        setSecurityTestResult({
+          vector: '1. Recipient Substitution Attack',
+          actor: 'Adversarial Provider [agent_attacker_01]',
+          request: 'Substitute contract payout address with unverified wallet 0xdead00000000000000000000000000000000beef',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-186 (raw hex 0x... blocked; recipient must be verified directory agent) & INV-146 (unauthorized substitution blocked)',
+          constitutional_boundary: 'INV-153 (Financial source-of-truth remains authoritative; multi-sig required)',
+          what_would_have_changed: 'Payment destination redirected to unverified attacker address',
+          what_did_not_change: 'Recipient remains bound to verified contract recipient. Zero funds moved.',
+        });
+        break;
+      case 'BUDGET_INCREASE':
+        setSecurityTestResult({
+          vector: '2. Budget Escalation Attack',
+          actor: 'Autonomous Agent [agent_scanner_01]',
+          request: 'Self-escalate economic envelope budget from 18.50 USDC to 100.00 USDC mid-execution',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-148 (EconomicEnvelope cannot self-increase) & INV-185 (quote exceeds budget cap)',
+          constitutional_boundary: 'INV-141 (EconomicFabric cannot authorize payment or increase financial limits)',
+          what_would_have_changed: 'Envelope cap +81.50 USDC, unreserved treasury exposure',
+          what_did_not_change: 'Budget remains locked at 18.50 USDC. Treasury ledger untouched.',
+        });
+        break;
+      case 'POLICY_MODIFICATION':
+        setSecurityTestResult({
+          vector: '3. Policy Modification Attack',
+          actor: 'Malicious Workflow Script',
+          request: 'Inject relaxed constitutional policy rule setting max_spend_limit to unlimited',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-109 (Runtime cannot modify deterministic policy rules) & INV-110 (Constitutional authority immutable)',
+          constitutional_boundary: 'INV-149 (Risk envelope cannot weaken Constitution)',
+          what_would_have_changed: 'Autonomous rewrite of governance constraints',
+          what_did_not_change: 'Policy Constitution remains immutable. Deterministic hash verified.',
+        });
+        break;
+      case 'ARBITRARY_CALLDATA':
+        setSecurityTestResult({
+          vector: '4. Arbitrary Calldata Injection',
+          actor: 'Compromised Worker Node',
+          request: 'Send arbitrary bytecode calldata directly to AgentVault smart contract',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-21 (Signer strictly bound to canonical PaymentIntent schema) & INV-108 (Direct vault invocation forbidden)',
+          constitutional_boundary: 'Authority Invariant: Only canonical PaymentIntent pipeline with authorized signer can interact with vault',
+          what_would_have_changed: 'Arbitrary EVM call execution on AgentVault',
+          what_did_not_change: 'Worker holds zero private keys. Calldata rejected at execution gate.',
+        });
+        break;
+      case 'PAYMENT_OUTSIDE_QUOTE':
+        setSecurityTestResult({
+          vector: '5. Payment Outside Quote Attack',
+          actor: 'Provider Billing Endpoint',
+          request: 'Submit invoice claiming 35.00 USDC against agreed quote of 18.50 USDC',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-164 (Payment must strictly match awarded quote) & INV-185 (Price exceeds cap)',
+          constitutional_boundary: 'INV-142 (Compiler output cannot exceed objective constraints)',
+          what_would_have_changed: 'Unauthorized drain of additional 16.50 USDC treasury liquidity',
+          what_did_not_change: 'Invoice rejected. Payout strictly locked to quote contract value (18.50 USDC).',
+        });
+        break;
+      case 'REPLAY_ATTACK':
+        setSecurityTestResult({
+          vector: '6. Replay Attack',
+          actor: 'Network Adversary',
+          request: 'Replay previously settled transaction hash and idempotency token to duplicate payout',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-6 (Idempotency key uniqueness) & INV-112 (Duplicate external callbacks must be idempotent)',
+          constitutional_boundary: 'INV-118 (Dangerous commands require fresh idempotency validation)',
+          what_would_have_changed: 'Second 18.50 USDC payout for already settled deliverable',
+          what_did_not_change: 'Idempotency hit detected. Existing transaction returned without re-execution.',
+        });
+        break;
+      case 'DUPLICATE_SETTLEMENT':
+        setSecurityTestResult({
+          vector: '7. Duplicate Settlement Attack',
+          actor: 'Concurrent Malicious Thread',
+          request: 'Trigger simultaneous second settlement batch for same clearing obligation',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-113 (Duplicate financial commands cannot create duplicate intents) & INV-194 (Duplicate award blocked)',
+          constitutional_boundary: 'INV-77 (Treasury double release or double consumption prevented)',
+          what_would_have_changed: 'Dual settlement of single counterparty obligation',
+          what_did_not_change: 'Mutex lock and obligation state machine halt duplicate attempt.',
+        });
+        break;
+      case 'FORGED_COMPLETION':
+        setSecurityTestResult({
+          vector: '8. Forged Completion Checksum Attack',
+          actor: 'Adversarial Worker',
+          request: 'Submit completion claim with fabricated deliverable hash 0x0000...fake',
+          decision: 'BLOCKED (HARD DENY)',
+          policy_rule: 'INV-162 (Milestone deliverable requires valid critic SHA-256 cryptographic verification)',
+          constitutional_boundary: 'Quality Gate S4: Evaluator critic score must exceed threshold before settlement release',
+          what_would_have_changed: 'Payment release for incomplete or fraudulent deliverable',
+          what_did_not_change: 'Critic rejected deliverable. Zero funds released to provider.',
+        });
+        break;
     }
     setStep('SECURITY_MOMENT');
   }
@@ -394,31 +477,80 @@ export default function EconomicFabricDemoPage() {
             {/* Completion & Arc Confirmation */}
             {step === 'COMPLETED' && (
               <div className="p-4 bg-emerald-950/20 border border-emerald-500/40 rounded-xl space-y-3 font-mono text-xs">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                  <span>✓ OBJECTIVE COMPLETED & VERIFIED</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                    <span>✓ OBJECTIVE COMPLETED & VERIFIED</span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                    SIMULATION — NO FUNDS MOVED
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-300">
-                  <div>Settled Amount: <strong className="text-emerald-400">18.50 USDC</strong></div>
-                  <div>Arc Block: <strong className="text-cyan-400">#184920</strong></div>
-                  <div>Tx Hash: <strong className="text-slate-200">0x99281a...f82a</strong></div>
-                  <div>Learnings: <strong className="text-indigo-400">Emitted to Memory</strong></div>
+                  <div>Projected Settlement: <strong className="text-emerald-400">18.50 USDC (SIMULATED)</strong></div>
+                  <div>Arc Mainnet (5042): <strong className="text-amber-400">UNDEPLOYED</strong></div>
+                  <div>Deterministic Trace: <strong className="text-slate-200">sim_trace_intel_01</strong></div>
+                  <div>Live Execution: <strong className="text-rose-400">DISABLED (INV-156)</strong></div>
                 </div>
 
-                {/* Trigger Security Moment (Section 57) */}
-                <div className="pt-3 border-t border-emerald-500/20 flex flex-wrap items-center gap-3">
-                  <span className="text-amber-400 font-bold text-xs">NOW TEST THE SECURITY THESIS:</span>
-                  <button
-                    onClick={() => handleTestSecurityMoment('BUDGET_ESCALATION')}
-                    className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg transition-colors font-bold"
-                  >
-                    Test Budget Elevation Attack
-                  </button>
-                  <button
-                    onClick={() => handleTestSecurityMoment('ARBITRARY_RECIPIENT')}
-                    className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg transition-colors font-bold"
-                  >
-                    Test Arbitrary Recipient Attack
-                  </button>
+                <div className="p-2.5 bg-cyan-950/40 border border-cyan-500/30 rounded-lg text-cyan-300 text-center text-[11px]">
+                  <strong>SIMULATION — NO FUNDS MOVED:</strong> Autonomous planning, matching, fault recovery, and critic evaluation succeeded without on-chain broadcast or real vault mutation.
+                </div>
+
+                {/* Trigger Security Moment (All 8 Malicious Provider Scenarios) */}
+                <div className="pt-3 border-t border-emerald-500/20 space-y-2">
+                  <span className="text-amber-400 font-bold text-xs block">
+                    ATTACK VECTOR PROVING GROUND — 8 DETERMINISTIC SCENARIOS (ALL BLOCKED):
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                      onClick={() => handleTestSecurityMoment('RECIPIENT_SUBSTITUTION')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      1. Recipient Substitution
+                    </button>
+                    <button
+                      onClick={() => handleTestSecurityMoment('BUDGET_INCREASE')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      2. Budget Escalation
+                    </button>
+                    <button
+                      onClick={() => handleTestSecurityMoment('POLICY_MODIFICATION')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      3. Policy Modification
+                    </button>
+                    <button
+                      onClick={() => handleTestSecurityMoment('ARBITRARY_CALLDATA')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      4. Arbitrary Calldata
+                    </button>
+                    <button
+                      onClick={() => handleTestSecurityMoment('PAYMENT_OUTSIDE_QUOTE')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      5. Payment Outside Quote
+                    </button>
+                    <button
+                      onClick={() => handleTestSecurityMoment('REPLAY_ATTACK')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      6. Replay Attack
+                    </button>
+                    <button
+                      onClick={() => handleTestSecurityMoment('DUPLICATE_SETTLEMENT')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      7. Duplicate Settlement
+                    </button>
+                    <button
+                      onClick={() => handleTestSecurityMoment('FORGED_COMPLETION')}
+                      className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold text-left transition-colors"
+                    >
+                      8. Forged Completion
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -431,7 +563,7 @@ export default function EconomicFabricDemoPage() {
             <div className="flex items-center justify-between border-b border-rose-500/30 pb-3">
               <div>
                 <span className="text-xs font-mono text-rose-400 uppercase tracking-wider font-semibold">
-                  Section 57 Security Moment
+                  {securityTestResult.vector || 'Deterministic Security Scenario'}
                 </span>
                 <h2 className="text-2xl font-black text-white mt-0.5">
                   Autonomous Authority Boundary Held
