@@ -444,18 +444,18 @@ func (s *DefaultService) GetFinancialTrace(ctx context.Context, orgID string, ta
 		{
 			StepNumber:  10,
 			Stage:       "VAULT",
-			Status:      "TRANSFERRED",
+			Status:      func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "TRANSFERRED" }; return "SIMULATED" }(),
 			ReferenceID: "0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852",
-			Description: "AgentVault smart contract verified daily cap and authorized transfer",
+			Description: func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "AgentVault smart contract verified daily cap and authorized transfer" }; return "AgentVault smart contract verified daily cap and authorized transfer (SIMULATION -- NOT DEPLOYED ON MAINNET)" }(),
 			Timestamp:   now.Add(-8 * time.Minute),
 		},
 		{
 			StepNumber:  11,
 			Stage:       "ARC",
-			Status:      "CONFIRMED",
-			ReferenceID: "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344",
-			Description: "Arc consensus confirmed block 1492041 with 0 gas failure",
-			Hash:        "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344",
+			Status:      func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "CONFIRMED" }; return "PROJECTED" }(),
+			ReferenceID: func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344" }; return "sim_tx_projected_arc_settlement" }(),
+			Description: func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "Arc consensus confirmed block 1492041 with 0 gas failure" }; return "Arc settlement payload projected for Chain ID 5042 (SIMULATION -- ZERO ON-CHAIN TRANSACTIONS BROADCAST)" }(),
+			Hash:        func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344" }; return "sim_tx_projected_arc_settlement" }(),
 			Timestamp:   now.Add(-5 * time.Minute),
 		},
 		{
@@ -474,6 +474,11 @@ func (s *DefaultService) GetFinancialTrace(ctx context.Context, orgID string, ta
 			Description: "Economic memory updated counterparty latency and reliability scores",
 			Timestamp:   now.Add(-1 * time.Minute),
 		},
+	}
+
+	execTxHash := "sim_tx_projected_arc_settlement"
+	if s.cfg != nil && s.cfg.EnableLiveExecution {
+		execTxHash = "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344"
 	}
 
 	return &UniversalFinancialTrace{
@@ -495,7 +500,7 @@ func (s *DefaultService) GetFinancialTrace(ctx context.Context, orgID string, ta
 		ReservationID:        "res_live_01",
 		ReservationStatus:    "CONSUMED",
 		PaymentStatus:        status,
-		ExecutionTxHash:      "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344",
+		ExecutionTxHash:      execTxHash,
 		AgentVaultAddress:    "0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852",
 		ArcChainID:           "5042",
 		ArcBlockNumber:       1492041,
@@ -808,7 +813,7 @@ func (s *DefaultService) GetArcStatus(ctx context.Context) (*ArcStatusView, erro
 		RPCReachable:            rpcReachable,
 		LatestBlockNumber:       blockNum,
 		AgentVaultAddress:       vaultAddr,
-		AgentVaultDeployed:      vaultAddr != "",
+		AgentVaultDeployed:      liveEnabled && vaultAddr != "",
 		AgentVaultPaused:        false,
 		USDCAddress:             usdcAddr,
 		VerifiedTreasuryBalance: balanceStr,

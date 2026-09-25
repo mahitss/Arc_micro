@@ -37,6 +37,10 @@ export default function EconomicFabricDemoPage() {
     setActiveFault(null);
     setStep('RECOVERED');
     setTimeout(() => {
+      setStep('COMPLETED');
+    }, 1500);
+  }
+
   type AttackVector =
     | 'RECIPIENT_SUBSTITUTION'
     | 'BUDGET_INCREASE'

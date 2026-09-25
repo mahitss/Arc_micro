@@ -25,7 +25,7 @@ export default function ControlApprovalsPage() {
       requester_agent: 'agent_lead_analyst',
       mission_id: 'msn_global_macro',
       amount: '22000000', // 22 USDC (Threshold is 20 USDC)
-      recipient: '0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852',
+      recipient: 'agent_modeler_01',
       capability: 'financial-modeling',
       policy_decision: 'REQUIRE_APPROVAL',
       risk_score: 28,

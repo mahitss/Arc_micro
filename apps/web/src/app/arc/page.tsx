@@ -40,15 +40,15 @@ export default function ArcPanelPage() {
     },
     {
       label: 'AgentVault Contract',
-      value: '0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852',
+      value: '0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852 (NOT DEPLOYED ON MAINNET)',
       status: 'OPERATOR ACTION REQUIRED' as const,
-      description: 'Pending production deployment multi-sig verification',
+      description: 'Pending production deployment multi-sig verification (0x bytecode on Arc Mainnet)',
     },
     {
       label: 'Owner Key / Signer',
-      value: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-      status: 'VERIFIED' as const,
-      description: 'Air-gapped KMS / Local HSM Keystore configured',
+      value: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (LOCAL DEV ONLY)',
+      status: 'OPERATOR ACTION REQUIRED' as const,
+      description: 'Local development keystore (Foundry default; Mainnet cold owner unconfigured)',
     },
     {
       label: 'Relayer Address',
