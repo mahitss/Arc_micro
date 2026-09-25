@@ -149,6 +149,50 @@ export default function ArcPanelPage() {
           </div>
         </div>
 
+        {/* SECTION 6: TRUTHFUL ARC MAINNET STATUS */}
+        <section className="bg-[#0e1626] border border-cyan-800/40 rounded-xl p-6 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+              <h2 className="text-base font-bold font-mono text-white">ARC MAINNET STATUS</h2>
+            </div>
+            <span className="px-2.5 py-0.5 rounded font-mono text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              TRUTHFUL AUDIT
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-xs font-mono">
+            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
+              <span className="text-slate-400 text-[10px] block">CHAIN</span>
+              <span className="text-white font-bold text-sm">5042</span>
+            </div>
+            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
+              <span className="text-slate-400 text-[10px] block">RPC</span>
+              <span className="text-emerald-400 font-bold text-sm">CONNECTED</span>
+            </div>
+            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
+              <span className="text-slate-400 text-[10px] block">NATIVE USDC</span>
+              <span className="text-emerald-400 font-bold text-sm">VERIFIED</span>
+            </div>
+            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
+              <span className="text-slate-400 text-[10px] block">AGENTVAULT</span>
+              <span className="text-rose-400 font-bold text-sm">NOT DEPLOYED</span>
+            </div>
+            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
+              <span className="text-slate-400 text-[10px] block">LIVE EXECUTION</span>
+              <span className="text-rose-400 font-bold text-sm">DISABLED</span>
+            </div>
+            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
+              <span className="text-slate-400 text-[10px] block">REAL SETTLEMENTS</span>
+              <span className="text-slate-300 font-bold text-sm">0 VERIFIED</span>
+            </div>
+            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
+              <span className="text-slate-400 text-[10px] block">BROADCASTS</span>
+              <span className="text-slate-300 font-bold text-sm">0</span>
+            </div>
+          </div>
+        </section>
+
         {/* Core Invariant Banner */}
         <div className="bg-gradient-to-r from-cyan-950/40 via-blue-950/20 to-slate-900 border border-cyan-800/40 rounded-xl p-5 shadow-lg">
           <div className="flex items-start gap-3">
@@ -283,14 +327,14 @@ export default function ArcPanelPage() {
 
             <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
               <span className="text-slate-400 text-[10px]">3. AGENTVAULT BALANCE</span>
-              <div className="text-emerald-400 font-bold text-base">$100.00 USDC</div>
-              <span className="text-[10px] text-slate-500">Smart contract pool</span>
+              <div className="text-teal-400 font-bold text-base">$100.00 USDC (Sim)</div>
+              <span className="text-[10px] text-slate-500">Contract pool (Simulated)</span>
             </div>
 
             <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
-              <span className="text-slate-400 text-[10px]">4. ARC CONSENSUS</span>
-              <div className="text-emerald-400 font-bold text-base">$100.00 USDC</div>
-              <span className="text-[10px] text-slate-500">On-chain state confirmed</span>
+              <span className="text-slate-400 text-[10px]">4. REAL ARC SETTLEMENT</span>
+              <div className="text-slate-300 font-bold text-base">0 Verified</div>
+              <span className="text-[10px] text-slate-500">Sim: $100.00 | Live: $0.00</span>
             </div>
           </div>
         </section>
