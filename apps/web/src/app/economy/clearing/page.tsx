@@ -101,41 +101,40 @@ export default function ClearinghouseMissionControl() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16 px-4">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 text-[#f5f5f5]">
       {/* Header with Title and Mode Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#222222]">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Autonomous Economic Clearinghouse</h1>
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold ${
-              mode === 'REAL'
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-            }`}>
-              {mode === 'REAL' ? '● ARC MAINNET LIVE' : '○ SIMULATION DIGITAL TWIN'}
+            <h1 className="text-2xl font-bold tracking-tight text-[#f5f5f5]">
+              AUTONOMOUS ECONOMIC CLEARINGHOUSE
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+              <span className={`w-1.5 h-1.5 rounded-full ${mode === 'REAL' ? 'bg-[#22c55e]' : 'bg-[#f59e0b]'}`} />
+              {mode === 'REAL' ? 'ARC MAINNET SETTLEMENT' : 'SIMULATION DIGITAL TWIN'}
             </span>
           </div>
-          <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-            Coordinates value across AI counterparties. The clearinghouse enforces invariants INV-55 to INV-70,
-            guaranteeing that AI never has unilateral financial authority and Arc blockchain settles all state.
+          <p className="text-xs text-[#a3a3a3] mt-1 max-w-2xl leading-relaxed">
+            Coordinates value across AI counterparties under invariants INV-55 to INV-70.
+            Zero autonomous fund movement authority; Arc blockchain settles all state.
           </p>
         </div>
 
         {/* Mode & Navigation Controls */}
-        <div className="flex items-center gap-3">
-          <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-1 text-xs font-mono">
+        <div className="flex items-center gap-2.5">
+          <div className="flex bg-[#101010] border border-[#222222] rounded-lg p-0.5 text-xs font-mono">
             <button
               onClick={() => setMode('REAL')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                mode === 'REAL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                mode === 'REAL' ? 'bg-[#1a1a1a] text-[#f5f5f5] border border-[#2a2a2a]' : 'text-[#a3a3a3] hover:text-[#f5f5f5]'
               }`}
             >
               REAL (ARC)
             </button>
             <button
               onClick={() => setMode('SIMULATION')}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                mode === 'SIMULATION' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                mode === 'SIMULATION' ? 'bg-[#1a1a1a] text-[#f5f5f5] border border-[#2a2a2a]' : 'text-[#a3a3a3] hover:text-[#f5f5f5]'
               }`}
             >
               SIMULATION
@@ -143,13 +142,13 @@ export default function ClearinghouseMissionControl() {
           </div>
           <Link
             href="/economy/clearing/reconciliation"
-            className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-xs border border-cyan-500/30 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1a1a1a] text-[#f5f5f5] font-mono text-xs border border-[#262626] transition-colors"
           >
             Reconciliation Center →
           </Link>
           <Link
             href="/economy/clearing/netting"
-            className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 font-mono text-xs border border-purple-500/30 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1a1a1a] text-[#f5f5f5] font-mono text-xs border border-[#262626] transition-colors"
           >
             Netting Center →
           </Link>
@@ -158,80 +157,87 @@ export default function ClearinghouseMissionControl() {
 
       {/* Notifications */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 font-mono text-xs flex justify-between items-center">
-          <span>Error: {error}</span>
-          <button onClick={() => setError(null)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="p-3 rounded-lg bg-[#171717] border border-[#ef4444]/40 text-xs text-[#ef4444] font-mono flex justify-between items-center">
+          <span className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
+            Error: {error}
+          </span>
+          <button onClick={() => setError(null)} className="text-[#a3a3a3] hover:text-white">✕</button>
         </div>
       )}
       {actionSuccess && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-xs flex justify-between items-center">
-          <span>✓ {actionSuccess}</span>
-          <button onClick={() => setActionSuccess(null)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="p-3 rounded-lg bg-[#171717] border border-[#22c55e]/40 text-xs text-[#22c55e] font-mono flex justify-between items-center">
+          <span className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+            ✓ {actionSuccess}
+          </span>
+          <button onClick={() => setActionSuccess(null)} className="text-[#a3a3a3] hover:text-white">✕</button>
         </div>
       )}
 
       {/* Financial State Cards: Available, Reserved, Outstanding, Solvency */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* On-Chain Available */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="text-slate-400 text-xs font-mono uppercase tracking-wider">Unencumbered Balance</div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 mt-2">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-[#a3a3a3] text-[11px] font-mono uppercase tracking-wider">Unencumbered Balance</div>
+          <div className="text-xl font-bold font-mono text-[#f5f5f5] mt-1">
             {formatUsdc(health?.available_unencumbered || '85000000')}
           </div>
-          <div className="text-[11px] font-mono text-slate-500 mt-1">
+          <div className="text-[10px] font-mono text-[#666666] mt-0.5">
             Total Vault: {formatUsdc(health?.on_chain_available || '100000000')}
           </div>
         </div>
 
         {/* Reserved in Escrow */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="text-slate-400 text-xs font-mono uppercase tracking-wider">Active Escrow Locked</div>
-          <div className="text-2xl font-bold font-mono text-cyan-400 mt-2">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-[#a3a3a3] text-[11px] font-mono uppercase tracking-wider">Active Escrow Locked</div>
+          <div className="text-xl font-bold font-mono text-[#f5f5f5] mt-1">
             {formatUsdc(exposure?.reserved_in_escrow || '15000000')}
           </div>
-          <div className="text-[11px] font-mono text-slate-500 mt-1">
+          <div className="text-[10px] font-mono text-[#666666] mt-0.5">
             Bounded Reservations (INV-56)
           </div>
         </div>
 
         {/* Current Total Exposure */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="text-slate-400 text-xs font-mono uppercase tracking-wider">Current Exposure</div>
-          <div className="text-2xl font-bold font-mono text-amber-400 mt-2">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-[#a3a3a3] text-[11px] font-mono uppercase tracking-wider">Current Exposure</div>
+          <div className="text-xl font-bold font-mono text-[#f5f5f5] mt-1">
             {formatUsdc(exposure?.current_exposure || '30000000')}
           </div>
-          <div className="text-[11px] font-mono text-slate-500 mt-1">
+          <div className="text-[10px] font-mono text-[#666666] mt-0.5">
             Max Cap: {formatUsdc(exposure?.max_possible_exposure || '45000000')}
           </div>
         </div>
 
         {/* Solvency & Health Ratio */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div className="text-slate-400 text-xs font-mono uppercase tracking-wider">Solvency Health</div>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-2xl font-bold font-mono text-white">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-[#a3a3a3] text-[11px] font-mono uppercase tracking-wider">Solvency Health</div>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xl font-bold font-mono text-[#f5f5f5]">
               {health?.solvency_ratio ? `${health.solvency_ratio.toFixed(2)}x` : '3.33x'}
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#22c55e] border border-[#222222]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
               HEALTHY
             </span>
           </div>
-          <div className="text-[11px] font-mono text-slate-500 mt-1">
+          <div className="text-[10px] font-mono text-[#666666] mt-0.5">
             Deterministic Signals: OK
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-slate-800 gap-6 text-sm font-mono overflow-x-auto">
+      <div className="flex border-b border-[#222222] gap-4 text-xs font-mono overflow-x-auto">
         {(['obligations', 'milestones', 'escrows', 'netting', 'batches', 'reconciliation'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-3 border-b-2 font-medium capitalize transition-colors ${
+            className={`pb-2.5 border-b-2 font-medium uppercase transition-colors ${
               activeTab === tab
-                ? 'border-cyan-400 text-cyan-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-[#f5f5f5] text-[#f5f5f5]'
+                : 'border-transparent text-[#666666] hover:text-[#a3a3a3]'
             }`}
           >
             {tab}
@@ -241,19 +247,19 @@ export default function ClearinghouseMissionControl() {
 
       {/* Tab Content */}
       {loading ? (
-        <div className="p-16 text-center font-mono text-sm text-slate-500">
+        <div className="p-16 text-center font-mono text-xs text-[#666666]">
           Syncing clearinghouse ledger with Arc...
         </div>
       ) : activeTab === 'obligations' ? (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">Economic Obligations</h2>
-            <span className="text-xs font-mono text-slate-400">Total: {obligations.length}</span>
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+          <div className="flex justify-between items-center border-b border-[#222222] pb-3">
+            <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#f5f5f5]">Economic Obligations</h2>
+            <span className="text-[11px] font-mono text-[#666666]">Total: {obligations.length}</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                <tr className="border-b border-[#222222] text-[#666666] text-[11px]">
                   <th className="pb-3">OBLIGATION ID</th>
                   <th className="pb-3">PAYER</th>
                   <th className="pb-3">PAYEE</th>
@@ -263,23 +269,18 @@ export default function ClearinghouseMissionControl() {
                   <th className="pb-3">STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#1a1a1a]">
                 {obligations.map((ob) => (
-                  <tr key={ob.obligation_id} className="hover:bg-slate-800/30">
-                    <td className="py-3 text-white font-bold">{ob.obligation_id}</td>
-                    <td className="py-3 text-cyan-300">{ob.payer_agent_id}</td>
-                    <td className="py-3 text-slate-300">{ob.payee_agent_id}</td>
-                    <td className="py-3 text-slate-400">{ob.contract_id} ({ob.capability || 'general'})</td>
-                    <td className="py-3 text-white font-bold">{formatUsdc(ob.amount)}</td>
-                    <td className="py-3 text-emerald-400">{formatUsdc(ob.settled_amount)}</td>
+                  <tr key={ob.obligation_id} className="hover:bg-[#141414] transition-colors">
+                    <td className="py-3 text-[#f5f5f5] font-bold">{ob.obligation_id}</td>
+                    <td className="py-3 text-[#a3a3a3]">{ob.payer_agent_id}</td>
+                    <td className="py-3 text-[#a3a3a3]">{ob.payee_agent_id}</td>
+                    <td className="py-3 text-[#666666]">{ob.contract_id} ({ob.capability || 'general'})</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{formatUsdc(ob.amount)}</td>
+                    <td className="py-3 text-[#a3a3a3]">{formatUsdc(ob.settled_amount)}</td>
                     <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        ob.status === 'SETTLED'
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : ob.status === 'AUTHORIZED'
-                          ? 'bg-cyan-500/20 text-cyan-400'
-                          : 'bg-amber-500/20 text-amber-400'
-                      }`}>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+                        <span className={`w-1.5 h-1.5 rounded-full ${ob.status === 'SETTLED' ? 'bg-[#22c55e]' : ob.status === 'AUTHORIZED' ? 'bg-[#60a5fa]' : 'bg-[#f59e0b]'}`} />
                         {ob.status}
                       </span>
                     </td>
@@ -290,15 +291,15 @@ export default function ClearinghouseMissionControl() {
           </div>
         </div>
       ) : activeTab === 'milestones' ? (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">Payment Milestones & Deliverable Verification</h2>
-            <span className="text-xs font-mono text-slate-400">Total: {milestones.length}</span>
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+          <div className="flex justify-between items-center border-b border-[#222222] pb-3">
+            <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#f5f5f5]">Payment Milestones & Deliverable Verification</h2>
+            <span className="text-[11px] font-mono text-[#666666]">Total: {milestones.length}</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                <tr className="border-b border-[#222222] text-[#666666] text-[11px]">
                   <th className="pb-3">SEQ</th>
                   <th className="pb-3">ID</th>
                   <th className="pb-3">DESCRIPTION</th>
@@ -307,21 +308,16 @@ export default function ClearinghouseMissionControl() {
                   <th className="pb-3 text-right">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#1a1a1a]">
                 {milestones.map((ms) => (
-                  <tr key={ms.milestone_id} className="hover:bg-slate-800/30">
-                    <td className="py-3 text-slate-400 font-bold">#{ms.sequence}</td>
-                    <td className="py-3 text-white font-bold">{ms.milestone_id}</td>
-                    <td className="py-3 text-slate-300 max-w-xs truncate">{ms.description}</td>
-                    <td className="py-3 text-white font-bold">{formatUsdc(ms.amount)}</td>
+                  <tr key={ms.milestone_id} className="hover:bg-[#141414] transition-colors">
+                    <td className="py-3 text-[#666666] font-bold">#{ms.sequence}</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{ms.milestone_id}</td>
+                    <td className="py-3 text-[#a3a3a3] max-w-xs truncate">{ms.description}</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{formatUsdc(ms.amount)}</td>
                     <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        ms.status === 'SETTLED'
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : ms.status === 'VERIFIED'
-                          ? 'bg-cyan-500/20 text-cyan-400'
-                          : 'bg-slate-800 text-slate-400'
-                      }`}>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+                        <span className={`w-1.5 h-1.5 rounded-full ${ms.status === 'SETTLED' ? 'bg-[#22c55e]' : ms.status === 'VERIFIED' ? 'bg-[#60a5fa]' : 'bg-[#f59e0b]'}`} />
                         {ms.status}
                       </span>
                     </td>
@@ -329,7 +325,7 @@ export default function ClearinghouseMissionControl() {
                       {ms.status === 'PENDING' && (
                         <button
                           onClick={() => handleVerify(ms.milestone_id)}
-                          className="px-2.5 py-1 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-[11px]"
+                          className="px-2.5 py-1 rounded bg-[#151515] hover:bg-[#1a1a1a] text-[#f5f5f5] font-mono text-[11px] border border-[#262626] transition-colors"
                         >
                           Verify Evidence
                         </button>
@@ -337,13 +333,13 @@ export default function ClearinghouseMissionControl() {
                       {ms.status === 'VERIFIED' && (
                         <button
                           onClick={() => handleSettle(ms.milestone_id)}
-                          className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[11px]"
+                          className="px-2.5 py-1 rounded bg-[#f5f5f5] hover:bg-[#e5e5e5] text-[#080808] font-mono font-bold text-[11px] transition-colors"
                         >
                           Settle Milestone →
                         </button>
                       )}
                       {ms.status === 'SETTLED' && (
-                        <span className="text-[11px] text-emerald-400 font-bold">Settled ✓</span>
+                        <span className="text-[11px] text-[#22c55e] font-bold font-mono">Settled ✓</span>
                       )}
                     </td>
                   </tr>
@@ -353,15 +349,15 @@ export default function ClearinghouseMissionControl() {
           </div>
         </div>
       ) : activeTab === 'escrows' ? (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">Active Economic Escrows</h2>
-            <span className="text-xs font-mono text-slate-400">Total: {escrows.length}</span>
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+          <div className="flex justify-between items-center border-b border-[#222222] pb-3">
+            <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#f5f5f5]">Active Economic Escrows</h2>
+            <span className="text-[11px] font-mono text-[#666666]">Total: {escrows.length}</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                <tr className="border-b border-[#222222] text-[#666666] text-[11px]">
                   <th className="pb-3">ESCROW ID</th>
                   <th className="pb-3">OBLIGATION</th>
                   <th className="pb-3">VAULT ADDRESS</th>
@@ -370,16 +366,17 @@ export default function ClearinghouseMissionControl() {
                   <th className="pb-3">STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#1a1a1a]">
                 {escrows.map((esc) => (
-                  <tr key={esc.escrow_id} className="hover:bg-slate-800/30">
-                    <td className="py-3 text-white font-bold">{esc.escrow_id}</td>
-                    <td className="py-3 text-cyan-300">{esc.obligation_id}</td>
-                    <td className="py-3 text-slate-400 truncate max-w-[120px]">{esc.vault_address}</td>
-                    <td className="py-3 text-amber-400 font-bold">{formatUsdc(esc.reserved_amount)}</td>
-                    <td className="py-3 text-emerald-400 font-bold">{formatUsdc(esc.released_amount)}</td>
+                  <tr key={esc.escrow_id} className="hover:bg-[#141414] transition-colors">
+                    <td className="py-3 text-[#f5f5f5] font-bold">{esc.escrow_id}</td>
+                    <td className="py-3 text-[#a3a3a3]">{esc.obligation_id}</td>
+                    <td className="py-3 text-[#666666] truncate max-w-[120px]">{esc.vault_address}</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{formatUsdc(esc.reserved_amount)}</td>
+                    <td className="py-3 text-[#a3a3a3] font-bold">{formatUsdc(esc.released_amount)}</td>
                     <td className="py-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-400">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa]" />
                         {esc.status}
                       </span>
                     </td>
@@ -390,15 +387,15 @@ export default function ClearinghouseMissionControl() {
           </div>
         </div>
       ) : activeTab === 'netting' ? (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+          <div className="flex justify-between items-center border-b border-[#222222] pb-3">
             <div>
-              <h2 className="text-lg font-semibold text-white">Bilateral Netting Engine</h2>
-              <p className="text-xs text-slate-400">Offsets opposing obligations preserving full audit history (INV-60, INV-61)</p>
+              <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#f5f5f5]">Bilateral Netting Engine</h2>
+              <p className="text-[11px] text-[#666666]">Offsets opposing obligations preserving full audit history (INV-60, INV-61)</p>
             </div>
             <Link
               href="/economy/clearing/netting"
-              className="text-xs font-mono text-cyan-400 hover:underline"
+              className="text-xs font-mono text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors"
             >
               Open Netting Center →
             </Link>
@@ -406,7 +403,7 @@ export default function ClearinghouseMissionControl() {
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                <tr className="border-b border-[#222222] text-[#666666] text-[11px]">
                   <th className="pb-3">PROPOSAL ID</th>
                   <th className="pb-3">COUNTERPARTIES</th>
                   <th className="pb-3">GROSS TOTAL</th>
@@ -415,16 +412,17 @@ export default function ClearinghouseMissionControl() {
                   <th className="pb-3">STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#1a1a1a]">
                 {netting.map((p) => (
-                  <tr key={p.proposal_id} className="hover:bg-slate-800/30">
-                    <td className="py-3 text-white font-bold">{p.proposal_id}</td>
-                    <td className="py-3 text-slate-300">{p.agent_a} ↔ {p.agent_b}</td>
-                    <td className="py-3 text-slate-400">{formatUsdc(p.gross_total)}</td>
-                    <td className="py-3 text-emerald-400 font-bold">{formatUsdc(p.net_amount)} ({p.net_payer} → {p.net_payee})</td>
-                    <td className="py-3 text-purple-400 font-bold">+{formatUsdc(p.savings_amount)}</td>
+                  <tr key={p.proposal_id} className="hover:bg-[#141414] transition-colors">
+                    <td className="py-3 text-[#f5f5f5] font-bold">{p.proposal_id}</td>
+                    <td className="py-3 text-[#a3a3a3]">{p.agent_a} ↔ {p.agent_b}</td>
+                    <td className="py-3 text-[#666666]">{formatUsdc(p.gross_total)}</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{formatUsdc(p.net_amount)} ({p.net_payer} → {p.net_payee})</td>
+                    <td className="py-3 text-[#22c55e] font-bold">+{formatUsdc(p.savings_amount)}</td>
                     <td className="py-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa]" />
                         {p.status}
                       </span>
                     </td>
@@ -435,15 +433,15 @@ export default function ClearinghouseMissionControl() {
           </div>
         </div>
       ) : activeTab === 'batches' ? (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">Settlement Batches</h2>
-            <span className="text-xs font-mono text-slate-400">Total: {batches.length}</span>
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+          <div className="flex justify-between items-center border-b border-[#222222] pb-3">
+            <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#f5f5f5]">Settlement Batches</h2>
+            <span className="text-[11px] font-mono text-[#666666]">Total: {batches.length}</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                <tr className="border-b border-[#222222] text-[#666666] text-[11px]">
                   <th className="pb-3">BATCH ID</th>
                   <th className="pb-3">ITEMS</th>
                   <th className="pb-3">GROSS AMOUNT</th>
@@ -451,15 +449,16 @@ export default function ClearinghouseMissionControl() {
                   <th className="pb-3">STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#1a1a1a]">
                 {batches.map((b) => (
-                  <tr key={b.batch_id} className="hover:bg-slate-800/30">
-                    <td className="py-3 text-white font-bold">{b.batch_id}</td>
-                    <td className="py-3 text-cyan-300">{b.obligation_ids?.length || 0} obligations</td>
-                    <td className="py-3 text-slate-300">{formatUsdc(b.gross_amount)}</td>
-                    <td className="py-3 text-emerald-400 font-bold">{formatUsdc(b.net_amount)}</td>
+                  <tr key={b.batch_id} className="hover:bg-[#141414] transition-colors">
+                    <td className="py-3 text-[#f5f5f5] font-bold">{b.batch_id}</td>
+                    <td className="py-3 text-[#a3a3a3]">{b.obligation_ids?.length || 0} obligations</td>
+                    <td className="py-3 text-[#666666]">{formatUsdc(b.gross_amount)}</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{formatUsdc(b.net_amount)}</td>
                     <td className="py-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-400">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa]" />
                         {b.status}
                       </span>
                     </td>
@@ -470,23 +469,23 @@ export default function ClearinghouseMissionControl() {
           </div>
         </div>
       ) : (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+          <div className="flex justify-between items-center border-b border-[#222222] pb-3">
             <div>
-              <h2 className="text-lg font-semibold text-white">Reconciliation Audit Log</h2>
-              <p className="text-xs text-slate-400">Machine checks between obligations, intents, and Arc on-chain receipts (INV-68, INV-69)</p>
+              <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#f5f5f5]">Reconciliation Audit Log</h2>
+              <p className="text-[11px] text-[#666666]">Machine checks between obligations, intents, and Arc on-chain receipts (INV-68, INV-69)</p>
             </div>
             <Link
               href="/economy/clearing/reconciliation"
-              className="text-xs font-mono text-cyan-400 hover:underline"
+              className="text-xs font-mono text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors"
             >
-              Open Full Reconciliation Center →
+              Open Reconciliation Center →
             </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left font-mono text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                <tr className="border-b border-[#222222] text-[#666666] text-[11px]">
                   <th className="pb-3">STATUS</th>
                   <th className="pb-3">RECORD ID</th>
                   <th className="pb-3">PAYMENT INTENT</th>
@@ -495,25 +494,20 @@ export default function ClearinghouseMissionControl() {
                   <th className="pb-3">NOTES</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#1a1a1a]">
                 {reconciliation.map((rec) => (
-                  <tr key={rec.record_id} className="hover:bg-slate-800/30">
+                  <tr key={rec.record_id} className="hover:bg-[#141414] transition-colors">
                     <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        rec.status === 'MATCHED'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : rec.status === 'MISMATCH'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      }`}>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+                        <span className={`w-1.5 h-1.5 rounded-full ${rec.status === 'MATCHED' ? 'bg-[#22c55e]' : rec.status === 'MISMATCH' ? 'bg-[#ef4444]' : 'bg-[#f59e0b]'}`} />
                         {rec.status}
                       </span>
                     </td>
-                    <td className="py-3 text-white font-bold">{rec.record_id}</td>
-                    <td className="py-3 text-cyan-300">{rec.payment_intent_id}</td>
-                    <td className="py-3 text-slate-300">{formatUsdc(rec.expected_amount)}</td>
-                    <td className="py-3 text-emerald-400 font-bold">{rec.actual_amount ? formatUsdc(rec.actual_amount) : 'Pending...'}</td>
-                    <td className="py-3 text-slate-400 max-w-sm truncate">{rec.discrepancy_notes}</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{rec.record_id}</td>
+                    <td className="py-3 text-[#a3a3a3]">{rec.payment_intent_id}</td>
+                    <td className="py-3 text-[#666666]">{formatUsdc(rec.expected_amount)}</td>
+                    <td className="py-3 text-[#f5f5f5] font-bold">{rec.actual_amount ? formatUsdc(rec.actual_amount) : 'Pending...'}</td>
+                    <td className="py-3 text-[#666666] max-w-sm truncate">{rec.discrepancy_notes}</td>
                   </tr>
                 ))}
               </tbody>

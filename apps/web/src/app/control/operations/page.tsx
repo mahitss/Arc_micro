@@ -124,8 +124,8 @@ export default function OperationsCommandCenter() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-slate-800 shadow-2xl">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-              TASK 14 OPERATIONS OS
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
+              OPERATIONS OS
             </span>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold border flex items-center gap-1.5 ${freshnessColor}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${snapshot?.freshness === 'FRESH' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />

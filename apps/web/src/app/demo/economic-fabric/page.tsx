@@ -166,8 +166,8 @@ export default function EconomicFabricDemoPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-teal-500/10 text-teal-400 border border-teal-500/30">
-                TASK 15 INTERACTIVE SHOWCASE
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
+                ECONOMIC FABRIC SHOWCASE
               </span>
               <span className="text-xs font-mono text-slate-400">Autonomous Economic Fabric</span>
             </div>
@@ -370,7 +370,7 @@ export default function EconomicFabricDemoPage() {
                 <div className="flex items-center gap-3">
                   <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-xs">✓</span>
                   <div>
-                    <strong className="text-white">Task 1: Provider Discovery & Quoting</strong>
+                    <strong className="text-white">Step 1: Provider Discovery & Quoting</strong>
                     <div className="text-[11px] text-slate-400">Selected VigilSec-AI at 18.50 USDC</div>
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export default function EconomicFabricDemoPage() {
                     {step === 'FAULT_INJECTED' ? '!' : step === 'RECOVERED' || step === 'COMPLETED' ? '✓' : '⟳'}
                   </span>
                   <div>
-                    <strong className="text-white">Task 2: Infrastructure Penetration & Telemetry</strong>
+                    <strong className="text-white">Step 2: Infrastructure Penetration & Telemetry</strong>
                     <div className="text-[11px] text-slate-400">
                       {step === 'FAULT_INJECTED'
                         ? `FAULT DETECTED: ${activeFault} — Worker lease timed out`
@@ -420,7 +420,7 @@ export default function EconomicFabricDemoPage() {
                     {step === 'COMPLETED' ? '✓' : '3'}
                   </span>
                   <div>
-                    <strong className="text-white">Task 3: Result Verification & Settlement</strong>
+                    <strong className="text-white">Step 3: Result Verification & Settlement</strong>
                     <div className="text-[11px] text-slate-400">
                       {step === 'COMPLETED' ? 'Deliverable verified with SHA-256; Arc settlement confirmed' : 'Awaiting deliverable validation'}
                     </div>

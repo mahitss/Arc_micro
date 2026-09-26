@@ -46,8 +46,8 @@ export default function CounterpartiesPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-semibold tracking-wider text-indigo-400 uppercase">
-                Task 18 — Economic Clearing Network
+              <span className="text-xs font-semibold tracking-wider text-[#a3a3a3] uppercase font-mono">
+                Economic Clearing Network
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">

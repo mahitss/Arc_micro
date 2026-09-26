@@ -47,8 +47,8 @@ export default function SettlementCenterPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
-              <span className="text-xs font-semibold tracking-wider text-purple-400 uppercase">
-                Task 18 — Settlement Center
+              <span className="text-xs font-semibold tracking-wider text-[#a3a3a3] uppercase font-mono">
+                Autonomous Settlement Center
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">

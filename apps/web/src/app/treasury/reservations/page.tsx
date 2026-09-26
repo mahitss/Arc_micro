@@ -28,7 +28,7 @@ export default function TreasuryReservationsPage() {
   // Form state
   const [newAmount, setNewAmount] = useState('5000000'); // 5 USDC
   const [newSource, setNewSource] = useState('SWARM_ORCHESTRATOR');
-  const [newPurpose, setNewPurpose] = useState('Task 11 Autonomous Pipeline Test');
+  const [newPurpose, setNewPurpose] = useState('Autonomous Pipeline Test');
   const [newAgentId, setNewAgentId] = useState('agent_researcher_01');
   const [newMissionId, setNewMissionId] = useState('msn_demo_01');
   const [newTimeout, setNewTimeout] = useState('3600');

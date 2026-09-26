@@ -72,8 +72,8 @@ export default function AutonomousClearingDemoPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-semibold tracking-wider text-emerald-400 uppercase">
-                Task 18 — Autonomous Economic Clearing Lab
+              <span className="text-xs font-semibold tracking-wider text-[#a3a3a3] uppercase font-mono">
+                Autonomous Economic Clearing Lab
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">

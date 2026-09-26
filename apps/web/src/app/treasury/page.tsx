@@ -91,8 +91,8 @@ export default function TreasuryDashboardPage() {
             <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
               Autonomous Treasury & Liquidity Orchestrator
             </h1>
-            <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
-              TASK 11
+            <span className="text-xs px-2 py-0.5 rounded bg-[#141414] text-[#a3a3a3] border border-[#222222] font-mono">
+              LIQUIDITY ORCHESTRATOR
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-400">
