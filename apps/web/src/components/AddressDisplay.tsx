@@ -17,7 +17,7 @@ export function AddressDisplay({
   label = 'address',
 }: AddressDisplayProps) {
   if (!address) {
-    return <span className="text-slate-500 font-mono text-xs">None</span>;
+    return <span className="text-[#716F69] font-mono text-xs">None</span>;
   }
 
   const formatted =
@@ -26,13 +26,13 @@ export function AddressDisplay({
       : address;
 
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-xs text-slate-300">
+    <span className="inline-flex items-center gap-1.5 font-mono text-xs text-[#B0ADA5]">
       {explorerUrl ? (
         <a
           href={`${explorerUrl}/address/${address}`}
           target="_blank"
           rel="noreferrer"
-          className="hover:text-teal-400 hover:underline transition-colors"
+          className="hover:text-[#F2F0EA] hover:underline transition-colors"
           title={address}
         >
           {formatted}

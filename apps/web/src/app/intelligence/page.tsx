@@ -205,43 +205,43 @@ export default function IntelligenceCenterPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#222222]">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-white">AgentPay Intelligence Center</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+            <h1 className="text-3xl font-bold tracking-tight text-[#F2F0EA]">AgentPay Intelligence Center</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-[#141414] text-[#D6A83A] border border-[#222222]">
               Adaptive Control Plane
             </span>
           </div>
-          <p className="text-sm text-slate-400 mt-1.5 max-w-3xl">
+          <p className="text-sm text-[#716F69] mt-1.5 max-w-3xl">
             Autonomous economic observation, contextual reliability analytics, circuit breakers, and deterministic
             re-planning engine.
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
-          <div className="font-mono text-xs text-slate-400 bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <div className="font-mono text-xs text-[#716F69] bg-[#101010] px-3 py-2 rounded-lg border border-[#222222] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D6A83A] animate-pulse" />
             <span>AI Non-Invasive Security Invariant Active</span>
           </div>
         </div>
       </div>
 
       {/* Security Invariant Guarantee Box */}
-      <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs font-mono text-slate-300">
+      <div className="p-4 rounded-xl bg-[#101010] border border-[#222222] flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs font-mono text-[#F2F0EA]">
         <div className="flex items-start gap-3">
           <span className="text-lg">🛡️</span>
           <div>
-            <span className="font-bold text-cyan-400">DETERMINISTIC SECURITY BOUNDARY:</span>
-            <p className="text-slate-400 text-[11px] mt-0.5">
+            <span className="font-bold text-[#D6A83A]">DETERMINISTIC SECURITY BOUNDARY:</span>
+            <p className="text-[#716F69] text-[11px] mt-0.5">
               The intelligence layer recommends adaptations based on append-only economic memory. It holds zero private
               keys, cannot sign transactions, cannot bypass hard policy DENY, and cannot mutate treasury balances.
             </p>
           </div>
         </div>
         <div className="flex-shrink-0 flex items-center gap-2">
-          <span className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-[10px]">AUTH_GATE_V2</span>
-          <span className="px-2 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40 text-[10px]">
+          <span className="px-2 py-1 rounded bg-[#141414] text-[#716F69] border border-[#222222] text-[10px]">AUTH_GATE_V2</span>
+          <span className="px-2 py-1 rounded bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/40 text-[10px]">
             100% INTACT
           </span>
         </div>
@@ -277,13 +277,13 @@ export default function IntelligenceCenterPage() {
       {/* Controls & Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Tabs */}
-        <div className="flex items-center gap-2 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-2 bg-[#101010] p-1 rounded-xl border border-[#222222]">
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
               activeTab === 'overview'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#D6A83A] text-[#080808] font-bold'
+                : 'text-[#716F69] hover:text-[#F2F0EA]'
             }`}
           >
             All Services ({services.length})
@@ -292,8 +292,8 @@ export default function IntelligenceCenterPage() {
             onClick={() => setActiveTab('anomalies')}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
               activeTab === 'anomalies'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#D6A83A] text-[#080808] font-bold'
+                : 'text-[#716F69] hover:text-[#F2F0EA]'
             }`}
           >
             Anomalies ({services.filter((s) => !!s.anomaly).length})
@@ -302,8 +302,8 @@ export default function IntelligenceCenterPage() {
             onClick={() => setActiveTab('circuit_breakers')}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
               activeTab === 'circuit_breakers'
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#D6A83A] text-[#080808] font-bold'
+                : 'text-[#716F69] hover:text-[#F2F0EA]'
             }`}
           >
             Circuit Breakers ({services.filter((s) => s.circuitBreaker !== 'HEALTHY').length})
@@ -317,13 +317,13 @@ export default function IntelligenceCenterPage() {
             placeholder="Search service, capability..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono w-full sm:w-64"
+            className="bg-[#0B0B0B] border border-[#222222] rounded-lg px-3 py-1.5 text-xs text-[#F2F0EA] placeholder-[#50504C] focus:outline-none focus:border-[#D6A83A] font-mono w-full sm:w-64"
           />
 
           <select
             value={selectedWindow}
             onChange={(e) => setSelectedWindow(e.target.value as PerformanceWindow)}
-            className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-500"
+            className="bg-[#0B0B0B] border border-[#222222] rounded-lg px-3 py-1.5 text-xs text-[#F2F0EA] font-mono focus:outline-none focus:border-[#D6A83A]"
           >
             <option value="last_10_jobs">Last 10 Jobs</option>
             <option value="last_24_hours">Last 24 Hours</option>
@@ -334,10 +334,10 @@ export default function IntelligenceCenterPage() {
       </div>
 
       {/* Services Performance Table */}
-      <div className="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden shadow-xl">
+      <div className="rounded-2xl bg-[#101010] border border-[#222222] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
+            <thead className="bg-[#0B0B0B] text-[#716F69] border-b border-[#222222] text-[11px] uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">Service</th>
                 <th className="py-3 px-4">Capability</th>
@@ -350,24 +350,24 @@ export default function IntelligenceCenterPage() {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-[#222222]">
               {filteredServices.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-500 font-mono text-xs">
+                  <td colSpan={9} className="py-8 text-center text-[#716F69] font-mono text-xs">
                     No services match the current filter criteria.
                   </td>
                 </tr>
               ) : (
                 filteredServices.map((svc) => (
-                  <tr key={svc.serviceId} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-white">
+                  <tr key={svc.serviceId} className="hover:bg-[#141414] transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-[#F2F0EA]">
                       <div className="flex flex-col">
                         <span>{svc.name}</span>
-                        <span className="text-[10px] text-slate-500">{svc.serviceId}</span>
+                        <span className="text-[10px] text-[#50504C]">{svc.serviceId}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300">
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px]">
+                    <td className="py-3.5 px-4 text-[#B0ADA5]">
+                      <span className="px-2 py-0.5 rounded bg-[#141414] text-[#716F69] border border-[#222222] text-[10px]">
                         {svc.capability}
                       </span>
                     </td>
@@ -375,10 +375,10 @@ export default function IntelligenceCenterPage() {
                       <span
                         className={`font-bold ${
                           svc.successRate >= 95
-                            ? 'text-emerald-400'
+                            ? 'text-[#2FB36F]'
                             : svc.successRate >= 80
-                            ? 'text-amber-400'
-                            : 'text-rose-400'
+                            ? 'text-[#D6A83A]'
+                            : 'text-[#D85C5C]'
                         }`}
                       >
                         {svc.successRate.toFixed(1)}%
@@ -388,25 +388,25 @@ export default function IntelligenceCenterPage() {
                       <span
                         className={`font-semibold ${
                           svc.recentSuccessRate >= 95
-                            ? 'text-emerald-400'
+                            ? 'text-[#2FB36F]'
                             : svc.recentSuccessRate >= 80
-                            ? 'text-amber-400'
-                            : 'text-rose-400'
+                            ? 'text-[#D6A83A]'
+                            : 'text-[#D85C5C]'
                         }`}
                       >
                         {svc.recentSuccessRate.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300">{svc.averageLatency}ms</td>
-                    <td className="py-3.5 px-4 text-slate-300">{svc.averagePrice}</td>
+                    <td className="py-3.5 px-4 text-[#B0ADA5]">{svc.averageLatency}ms</td>
+                    <td className="py-3.5 px-4 text-[#B0ADA5]">{svc.averagePrice}</td>
                     <td className="py-3.5 px-4">
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           svc.confidence === 'HIGH'
-                            ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/40'
+                            ? 'bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/40'
                             : svc.confidence === 'MEDIUM'
-                            ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-800/40'
-                            : 'bg-slate-800 text-slate-400'
+                            ? 'bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/40'
+                            : 'bg-[#141414] text-[#716F69] border border-[#222222]'
                         }`}
                       >
                         {svc.confidence}
@@ -416,16 +416,16 @@ export default function IntelligenceCenterPage() {
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           svc.circuitBreaker === 'HEALTHY'
-                            ? 'bg-emerald-950/60 text-emerald-400'
+                            ? 'bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/40'
                             : svc.circuitBreaker === 'DEGRADED'
-                            ? 'bg-amber-950/80 text-amber-300 border border-amber-800/50'
-                            : 'bg-rose-950/80 text-rose-300 border border-rose-800/50 animate-pulse'
+                            ? 'bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/40'
+                            : 'bg-[#141414] text-[#D85C5C] border border-[#D85C5C]/40 animate-pulse'
                         }`}
                       >
                         {svc.circuitBreaker}
                       </span>
                       {svc.anomaly && (
-                        <span className="block text-[10px] text-amber-400/90 mt-1 max-w-[200px] truncate" title={svc.anomaly.description}>
+                        <span className="block text-[10px] text-[#D6A83A] mt-1 max-w-[200px] truncate" title={svc.anomaly.description}>
                           {svc.anomaly.signal_type}
                         </span>
                       )}
@@ -433,7 +433,7 @@ export default function IntelligenceCenterPage() {
                     <td className="py-3.5 px-4 text-right">
                       <Link
                         href={`/marketplace/${encodeURIComponent(svc.serviceId)}`}
-                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] transition-colors"
+                        className="px-2.5 py-1 rounded bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] text-[11px] transition-colors"
                       >
                         Inspect Memory →
                       </Link>

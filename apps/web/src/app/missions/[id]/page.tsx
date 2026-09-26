@@ -150,31 +150,31 @@ export default function MissionDetailPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30';
       case 'EXECUTING':
       case 'CONTINUING':
-        return 'bg-teal-500/20 text-teal-300 border-teal-500/40 animate-pulse';
+        return 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30 animate-pulse';
       case 'PLANNING':
       case 'DISCOVERING':
       case 'EVALUATING':
       case 'SELECTING':
-        return 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30';
+        return 'bg-[#141414] text-[#B0ADA5] border-[#222222]';
       case 'AWAITING_APPROVAL':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30';
       case 'BUDGET_EXHAUSTED':
       case 'FAILED':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        return 'bg-[#D85C5C]/10 text-[#D85C5C] border-[#D85C5C]/30';
       case 'CANCELLED':
-        return 'bg-slate-800 text-slate-400 border-slate-700';
+        return 'bg-[#141414] text-[#716F69] border-[#222222]';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-[#141414] text-[#716F69] border-[#222222]';
     }
   };
 
   if (loading) {
     return (
-      <div className="p-16 text-center text-slate-500 font-mono text-sm max-w-5xl mx-auto space-y-3">
-        <div className="w-8 h-8 rounded-full border-2 border-teal-500 border-t-transparent animate-spin mx-auto" />
+      <div className="p-16 text-center text-[#716F69] font-mono text-sm max-w-5xl mx-auto space-y-3">
+        <div className="w-8 h-8 rounded-full border-2 border-[#D6A83A] border-t-transparent animate-spin mx-auto" />
         <div>Connecting to Autonomous Mission Telemetry...</div>
       </div>
     );
@@ -183,13 +183,13 @@ export default function MissionDetailPage() {
   if (error || !mission) {
     return (
       <div className="p-8 max-w-5xl mx-auto text-center space-y-4">
-        <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 font-mono text-xs">
+        <div className="p-5 rounded-2xl bg-[#D85C5C]/10 border border-[#D85C5C]/30 text-[#D85C5C] font-mono text-xs">
           Error: {error || 'Mission not found'}
         </div>
         <div className="flex justify-center gap-3 font-mono text-xs">
           <Link
             href="/missions"
-            className="px-4 py-2 rounded-lg bg-slate-800 text-slate-200"
+            className="px-4 py-2 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
           >
             ← Return to Missions
           </Link>
@@ -198,7 +198,7 @@ export default function MissionDetailPage() {
               setIsDemoMode(true);
               loadData(true);
             }}
-            className="px-4 py-2 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30"
+            className="px-4 py-2 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold transition-colors"
           >
             Load in Sandboxed Demo Mode
           </button>
@@ -244,16 +244,16 @@ export default function MissionDetailPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">
       {/* Top Breadcrumb & Live Polling Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#222222] pb-3">
         <div className="flex items-center gap-2">
           <Link
             href="/missions"
-            className="text-xs font-mono text-teal-400 hover:text-teal-300 transition-colors"
+            className="text-xs font-mono text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
           >
             ← Missions
           </Link>
-          <span className="text-slate-600 font-mono">/</span>
-          <span className="font-mono text-xs text-white font-bold">
+          <span className="text-[#50504C] font-mono">/</span>
+          <span className="font-mono text-xs text-[#F2F0EA] font-bold">
             MISSION #AP-{mission.id.slice(-8).toUpperCase()}
           </span>
         </div>
@@ -262,16 +262,16 @@ export default function MissionDetailPage() {
           <div className="flex items-center gap-1.5">
             <span
               className={`w-2 h-2 rounded-full ${
-                isActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'
+                isActive ? 'bg-[#2FB36F] animate-ping' : 'bg-[#50504C]'
               }`}
             />
-            <span className={isActive ? 'text-emerald-400' : 'text-slate-400'}>
+            <span className={isActive ? 'text-[#2FB36F]' : 'text-[#716F69]'}>
               {isActive ? 'STATUS: LIVE ACTIVE' : 'STATUS: FINALIZED'}
             </span>
           </div>
           <Link
             href={`/trace?mission_id=${mission.id}`}
-            className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 transition-colors"
+            className="px-3 py-1 rounded bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
           >
             Flight Replay ▶
           </Link>
@@ -279,7 +279,7 @@ export default function MissionDetailPage() {
       </div>
 
       {/* Hero Header */}
-      <div className="p-8 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-2xl space-y-4">
+      <div className="p-8 rounded-2xl bg-[#101010] border border-[#222222] shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-3xl">
             <div className="flex items-center gap-3">
@@ -290,19 +290,19 @@ export default function MissionDetailPage() {
               >
                 {mission.status}
               </span>
-              <span className="text-xs font-mono text-slate-400">Agent: <span className="text-teal-300 font-semibold">{mission.agent_id}</span></span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs font-mono text-slate-400">Org: {mission.organization_id}</span>
+              <span className="text-xs font-mono text-[#716F69]">Agent: <span className="text-[#F2F0EA] font-semibold">{mission.agent_id}</span></span>
+              <span className="text-[#50504C]">•</span>
+              <span className="text-xs font-mono text-[#716F69]">Org: {mission.organization_id}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#F2F0EA] tracking-tight leading-tight">
               {mission.objective}
             </h1>
           </div>
 
-          <div className="flex flex-col items-end justify-center font-mono text-xs text-slate-400">
+          <div className="flex flex-col items-end justify-center font-mono text-xs text-[#716F69]">
             <div>Created: {new Date(mission.created_at).toLocaleTimeString()}</div>
             {mission.completed_at && (
-              <div className="text-emerald-400">Completed: {new Date(mission.completed_at).toLocaleTimeString()}</div>
+              <div className="text-[#2FB36F]">Completed: {new Date(mission.completed_at).toLocaleTimeString()}</div>
             )}
           </div>
         </div>
@@ -322,19 +322,19 @@ export default function MissionDetailPage() {
       />
 
       {/* Mission Intelligence Panel */}
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 shadow-xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+      <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#222222] pb-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-            <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D6A83A] animate-pulse" />
+            <h2 className="text-sm font-mono font-bold text-[#F2F0EA] uppercase tracking-wider">
               Autonomous Intelligence & Adaptation Panel (Phase 22)
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/50">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141414] text-[#D6A83A] border border-[#222222]">
               CONFIDENCE: {intelligence?.confidence || 'HIGH'}
             </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/50">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141414] text-[#2FB36F] border border-[#222222]">
               NON-INVASIVE AI
             </span>
           </div>
@@ -342,60 +342,60 @@ export default function MissionDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 font-mono text-xs">
           {/* Current Recommendation */}
-          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-slate-500 text-[10px] uppercase tracking-wider">
+              <span className="text-[#716F69] text-[10px] uppercase tracking-wider">
                 Current Recommendation
               </span>
-              <span className="text-emerald-400 font-bold text-[11px]">
+              <span className="text-[#2FB36F] font-bold text-[11px]">
                 {intelligence?.current_recommendation?.estimated_cost || '$0.35'}
               </span>
             </div>
             <div>
-              <div className="text-sm font-bold text-cyan-300">
+              <div className="text-sm font-bold text-[#F2F0EA]">
                 {intelligence?.current_recommendation?.recommended_service_id || 'DataAgent Beta'}
               </div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Capability: <span className="text-slate-300">{intelligence?.current_recommendation?.capability || 'data_analysis'}</span>
-                {' • '}Est. Latency: <span className="text-slate-300">{intelligence?.current_recommendation?.estimated_duration_ms || 380}ms</span>
+              <div className="text-[11px] text-[#716F69] mt-0.5">
+                Capability: <span className="text-[#B0ADA5]">{intelligence?.current_recommendation?.capability || 'data_analysis'}</span>
+                {' • '}Est. Latency: <span className="text-[#B0ADA5]">{intelligence?.current_recommendation?.estimated_duration_ms || 380}ms</span>
               </div>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-300">
-              <span className="text-cyan-400 font-bold block mb-0.5">WHY RECOMMENDED:</span>
+            <div className="p-2.5 rounded-lg bg-[#141414] border border-[#222222] text-[11px] text-[#B0ADA5]">
+              <span className="text-[#D6A83A] font-bold block mb-0.5">WHY RECOMMENDED:</span>
               {intelligence?.why_recommended || 'Highest contextual reliability within budget.'}
             </div>
           </div>
 
           {/* Recovery History & Previous Attempts */}
-          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-slate-500 text-[10px] uppercase tracking-wider">
+              <span className="text-[#716F69] text-[10px] uppercase tracking-wider">
                 Recovery & Re-Planning History
               </span>
-              <span className="text-amber-400 font-bold text-[11px]">
+              <span className="text-[#D6A83A] font-bold text-[11px]">
                 Attempts: {intelligence?.previous_attempts || 0}
               </span>
             </div>
             {intelligence?.recovery_history && intelligence.recovery_history.length > 0 ? (
               <div className="space-y-2">
                 {intelligence.recovery_history.map((rec, idx) => (
-                  <div key={idx} className="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
-                    <div className="flex items-center justify-between text-slate-400">
-                      <span className="text-amber-300 font-semibold">{rec.strategy}</span>
+                  <div key={idx} className="p-2 rounded bg-[#141414] border border-[#222222] text-[11px]">
+                    <div className="flex items-center justify-between text-[#716F69]">
+                      <span className="text-[#D6A83A] font-semibold">{rec.strategy}</span>
                       <span className="text-[10px]">{rec.confidence}</span>
                     </div>
-                    <p className="text-slate-300 mt-1 line-clamp-2">{rec.reason}</p>
+                    <p className="text-[#B0ADA5] mt-1 line-clamp-2">{rec.reason}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-slate-500 text-[11px] py-4 text-center">
+              <div className="text-[#716F69] text-[11px] py-4 text-center">
                 Nominal execution. Zero recovery attempts required.
               </div>
             )}
-            <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800/50">
-              <span className="text-slate-500">Budget Impact:</span>{' '}
-              <span className="text-emerald-400">{intelligence?.budget_impact || 'Nominal'}</span>
+            <div className="text-[11px] text-[#716F69] pt-1 border-t border-[#222222]">
+              <span className="text-[#716F69]">Budget Impact:</span>{' '}
+              <span className="text-[#2FB36F]">{intelligence?.budget_impact || 'Nominal'}</span>
             </div>
           </div>
         </div>
@@ -403,8 +403,8 @@ export default function MissionDetailPage() {
         {/* Alternative Services & Potential Next Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 font-mono text-xs pt-1">
           {/* Alternative Services */}
-          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2.5">
-            <span className="text-slate-500 text-[10px] uppercase tracking-wider block">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-2.5">
+            <span className="text-[#716F69] text-[10px] uppercase tracking-wider block">
               Ranked Alternative Services
             </span>
             {intelligence?.alternative_services && intelligence.alternative_services.length > 0 ? (
@@ -412,40 +412,40 @@ export default function MissionDetailPage() {
                 {intelligence.alternative_services.map((alt, idx) => (
                   <div
                     key={idx}
-                    className="p-2 rounded bg-slate-900 border border-slate-800 flex items-center justify-between text-[11px]"
+                    className="p-2 rounded bg-[#141414] border border-[#222222] flex items-center justify-between text-[11px]"
                   >
                     <div>
-                      <div className="font-semibold text-slate-200">{alt.recommended_service_id}</div>
-                      <div className="text-[10px] text-slate-500">{alt.reason}</div>
+                      <div className="font-semibold text-[#F2F0EA]">{alt.recommended_service_id}</div>
+                      <div className="text-[10px] text-[#716F69]">{alt.reason}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-cyan-300 font-semibold">{alt.estimated_cost}</div>
-                      <div className="text-[10px] text-slate-400">{alt.estimated_duration_ms}ms</div>
+                      <div className="text-[#D6A83A] font-semibold">{alt.estimated_cost}</div>
+                      <div className="text-[10px] text-[#716F69]">{alt.estimated_duration_ms}ms</div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-slate-500 text-[11px] py-2">No active alternatives queued.</div>
+              <div className="text-[#716F69] text-[11px] py-2">No active alternatives queued.</div>
             )}
           </div>
 
           {/* Potential Next Actions */}
-          <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2.5">
-            <span className="text-slate-500 text-[10px] uppercase tracking-wider block">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-2.5">
+            <span className="text-[#716F69] text-[10px] uppercase tracking-wider block">
               Potential Next Actions (Deterministic Rules)
             </span>
             <div className="flex flex-wrap gap-2">
               {intelligence?.potential_next_actions?.map((act, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-cyan-300 text-[11px] font-mono"
+                  className="px-2.5 py-1.5 rounded-lg bg-[#141414] border border-[#222222] text-[#F2F0EA] text-[11px] font-mono"
                 >
                   ⚡ {act}
                 </span>
               ))}
             </div>
-            <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
+            <p className="text-[10px] text-[#716F69] mt-2 leading-relaxed">
               Every action must re-enter the canonical PaymentIntent → Policy → Risk → Treasury pipeline. AI never
               authorizes disbursements directly.
             </p>
@@ -454,48 +454,48 @@ export default function MissionDetailPage() {
       </div>
 
       {/* Mission Economics Panel */}
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-xl space-y-4">
-        <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+      <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] shadow-sm space-y-4">
+        <h2 className="text-sm font-mono font-bold text-[#F2F0EA] uppercase tracking-wider">
           Mission Economics & Financial Bounds
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono text-xs">
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-            <span className="text-slate-500 block text-[10px] mb-1">BUDGET CEILING</span>
-            <span className="text-xl font-bold text-white">{formatUsdc(mission.budget)}</span>
-            <span className="text-[10px] text-teal-400 block mt-0.5">Strict INV-E1 cap</span>
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222]">
+            <span className="text-[#716F69] block text-[10px] mb-1">BUDGET CEILING</span>
+            <span className="text-xl font-bold text-[#F2F0EA]">{formatUsdc(mission.budget)}</span>
+            <span className="text-[10px] text-[#B0ADA5] block mt-0.5">Strict INV-E1 cap</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-            <span className="text-slate-500 block text-[10px] mb-1">CUMULATIVE SPENT</span>
-            <span className="text-xl font-bold text-teal-300">{formatUsdc(mission.spent)}</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">{pctSpent}% consumed</span>
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222]">
+            <span className="text-[#716F69] block text-[10px] mb-1">CUMULATIVE SPENT</span>
+            <span className="text-xl font-bold text-[#F2F0EA]">{formatUsdc(mission.spent)}</span>
+            <span className="text-[10px] text-[#716F69] block mt-0.5">{pctSpent}% consumed</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-            <span className="text-slate-500 block text-[10px] mb-1">REMAINING BUDGET</span>
-            <span className="text-xl font-bold text-emerald-400">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222]">
+            <span className="text-[#716F69] block text-[10px] mb-1">REMAINING BUDGET</span>
+            <span className="text-xl font-bold text-[#2FB36F]">
               {formatUsdc(mission.remaining_budget || '0')}
             </span>
-            <span className="text-[10px] text-emerald-500 block mt-0.5">Treasury balance unencumbered</span>
+            <span className="text-[10px] text-[#2FB36F] block mt-0.5">Treasury balance unencumbered</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-            <span className="text-slate-500 block text-[10px] mb-1">SETTLEMENT ASSET</span>
-            <span className="text-xl font-bold text-cyan-300">{mission.currency || 'USDC'}</span>
-            <span className="text-[10px] text-cyan-500 block mt-0.5">Arc Native Base Units</span>
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222]">
+            <span className="text-[#716F69] block text-[10px] mb-1">SETTLEMENT ASSET</span>
+            <span className="text-xl font-bold text-[#D6A83A]">{mission.currency || 'USDC'}</span>
+            <span className="text-[10px] text-[#716F69] block mt-0.5">Arc Native Base Units</span>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-1">
-          <div className="flex justify-between text-[11px] font-mono text-slate-400">
+          <div className="flex justify-between text-[11px] font-mono text-[#716F69]">
             <span>Spend Allocation Meter</span>
             <span>{pctSpent}% Used</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-[#181818] overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-teal-500 to-cyan-400 transition-all duration-500"
+              className="h-full bg-[#D6A83A] transition-all duration-500"
               style={{ width: `${pctSpent}%` }}
             />
           </div>
@@ -516,40 +516,40 @@ export default function MissionDetailPage() {
       />
 
       {/* Canonical Payment Panel */}
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-[#222222] pb-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
-            <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D6A83A]" />
+            <h2 className="text-sm font-mono font-bold text-[#F2F0EA] uppercase tracking-wider">
               Canonical Payment & Settlement Panel (INV-E12)
             </h2>
           </div>
-          <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141414] text-[#D6A83A] border border-[#222222]">
             SIMULATION ONLY (ZERO REAL FUNDS)
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
-            <span className="text-[10px] text-slate-500 block">POLICY DECISION</span>
-            <div className="text-emerald-400 font-bold text-sm">✓ ALLOWED</div>
-            <p className="text-[11px] text-slate-400">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-1.5">
+            <span className="text-[10px] text-[#716F69] block">POLICY DECISION</span>
+            <div className="text-[#2FB36F] font-bold text-sm">✓ ALLOWED</div>
+            <p className="text-[11px] text-[#716F69]">
               Evaluated by Rust policy engine. Within per-tx ($2.00) and daily limit ($10.00).
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
-            <span className="text-[10px] text-slate-500 block">RISK EVALUATION</span>
-            <div className="text-teal-300 font-bold text-sm">LOW RISK (SCORE: 5/100)</div>
-            <p className="text-[11px] text-slate-400">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-1.5">
+            <span className="text-[10px] text-[#716F69] block">RISK EVALUATION</span>
+            <div className="text-[#2FB36F] font-bold text-sm">LOW RISK (SCORE: 5/100)</div>
+            <p className="text-[11px] text-[#716F69]">
               Recipient is authoritative server-bound registry address (0x1111...1111).
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
-            <span className="text-[10px] text-slate-500 block">ARC SETTLEMENT STATUS</span>
-            <div className="text-cyan-300 font-bold text-sm">DEV-SANDBOX (CHAIN ID 5042)</div>
-            <p className="text-[11px] text-slate-400">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-1.5">
+            <span className="text-[10px] text-[#716F69] block">ARC SETTLEMENT STATUS</span>
+            <div className="text-[#D6A83A] font-bold text-sm">DEV-SANDBOX (CHAIN ID 5042)</div>
+            <p className="text-[11px] text-[#716F69]">
               Simulated settlement. No real transaction hash generated without live Arc verification.
             </p>
           </div>
@@ -557,35 +557,35 @@ export default function MissionDetailPage() {
       </div>
 
       {/* Untrusted Service Result Panel */}
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#222222] pb-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2FB36F]" />
+            <h2 className="text-sm font-mono font-bold text-[#F2F0EA] uppercase tracking-wider">
               Result Panel & Sanitized Payload
             </h2>
           </div>
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141414] text-[#D6A83A] border border-[#222222]">
             UNTRUSTED SERVICE OUTPUT (ZERO FINANCIAL AUTHORITY)
           </span>
         </div>
 
         {trace?.steps && trace.steps[0]?.result_data ? (
           <div className="space-y-3 font-mono text-xs">
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-              <pre className="text-slate-300 overflow-x-auto text-[11px] leading-relaxed">
+            <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222]">
+              <pre className="text-[#F2F0EA] overflow-x-auto text-[11px] leading-relaxed">
                 {trace.steps[0].result_data}
               </pre>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-500">
-              <span className="text-emerald-400">✓ Invariant INV-E4:</span>
+            <div className="flex items-center gap-2 text-[11px] text-[#716F69]">
+              <span className="text-[#2FB36F]">✓ Invariant INV-E4:</span>
               <span>
                 Payload scanned for prompt injection attacks. Zero financial parameters or policy rules were modified.
               </span>
             </div>
           </div>
         ) : (
-          <div className="p-6 text-center text-slate-500 font-mono text-xs">
+          <div className="p-6 text-center text-[#716F69] font-mono text-xs">
             No service results received yet.
           </div>
         )}

@@ -202,21 +202,21 @@ export default function ProtocolLiveDemoPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-8">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
       {/* Header */}
-      <div className="mb-6 rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-5 backdrop-blur-md">
+      <div className="mb-6 rounded-xl border border-[#222222] bg-[#101010] p-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+              <span className="flex h-2 w-2 rounded-full bg-[#2FB36F] animate-pulse" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#D6A83A]">
                 Interactive Protocol Multi-Agent Demonstration
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-1">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-[#F2F0EA] mt-1">
               Autonomous Economic Protocol in Action
             </h1>
-            <p className="text-xs md:text-sm text-slate-400 mt-1">
+            <p className="text-xs md:text-sm text-[#716F69] mt-1">
               Agent A (Requester) ➔ Agent B (Specialist) ➔ Agent C (Oracle Verifier) ➔ AgentPay Control ➔ Arc Settlement
             </p>
           </div>
@@ -225,13 +225,13 @@ export default function ProtocolLiveDemoPage() {
             <button
               onClick={runFullSequence}
               disabled={isRunning}
-              className="px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 transition disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#F2F0EA] hover:bg-white text-[#080808] shadow-sm transition disabled:opacity-50"
             >
               {isRunning ? 'Running Sequence...' : '▶ Run Full 10-Step Sequence'}
             </button>
             <Link
               href="/control/protocol"
-              className="px-4 py-2 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+              className="px-4 py-2 rounded-lg text-xs font-medium bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition"
             >
               Control Tower
             </Link>
@@ -242,7 +242,7 @@ export default function ProtocolLiveDemoPage() {
       {/* Main 10-Step Interactive Stepper */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2 space-y-3">
-          <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <div className="text-xs font-semibold uppercase tracking-wider text-[#716F69] mb-2">
             Deterministic Protocol Lifecycle Steps
           </div>
           {demoSteps.map((step) => {
@@ -255,10 +255,10 @@ export default function ProtocolLiveDemoPage() {
                 onClick={() => runStep(step.stepNumber - 1)}
                 className={`p-4 rounded-xl border transition cursor-pointer ${
                   isCurrent
-                    ? 'bg-indigo-950/60 border-indigo-500 shadow-lg shadow-indigo-950/50'
+                    ? 'bg-[#141414] border-[#D6A83A]/60 shadow-sm'
                     : isCompleted
-                    ? 'bg-slate-900/60 border-emerald-900/50'
-                    : 'bg-slate-900/30 border-slate-800 hover:border-slate-700'
+                    ? 'bg-[#101010] border-[#222222]'
+                    : 'bg-[#0B0B0B] border-[#222222] hover:border-[#2D2D2D]'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -266,28 +266,28 @@ export default function ProtocolLiveDemoPage() {
                     <span
                       className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
                         isCompleted
-                          ? 'bg-emerald-600 text-white'
+                          ? 'bg-[#141414] text-[#2FB36F] border border-[#222222]'
                           : isCurrent
-                          ? 'bg-indigo-600 text-white animate-pulse'
-                          : 'bg-slate-800 text-slate-400'
+                          ? 'bg-[#F2F0EA] text-[#080808]'
+                          : 'bg-[#141414] text-[#716F69] border border-[#222222]'
                       }`}
                     >
                       {isCompleted ? '✓' : step.stepNumber}
                     </span>
                     <div>
-                      <h3 className="text-sm font-semibold text-white">{step.title}</h3>
-                      <div className="text-[11px] text-slate-400 font-mono">
+                      <h3 className="text-sm font-semibold text-[#F2F0EA]">{step.title}</h3>
+                      <div className="text-[11px] text-[#716F69] font-mono">
                         {step.sender} → {step.receiver}
                       </div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-indigo-300 text-[10px] font-mono">
+                  <span className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#D6A83A] text-[10px] font-mono">
                     {step.messageType}
                   </span>
                 </div>
 
-                <p className="text-xs text-slate-300 mt-2 ml-9">{step.description}</p>
-                <div className="text-[11px] text-emerald-400 font-mono mt-1 ml-9">
+                <p className="text-xs text-[#B0ADA5] mt-2 ml-9">{step.description}</p>
+                <div className="text-[11px] text-[#2FB36F] font-mono mt-1 ml-9">
                   {step.invariant}
                 </div>
               </div>
@@ -296,39 +296,39 @@ export default function ProtocolLiveDemoPage() {
         </div>
 
         {/* Live Terminal Console */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 flex flex-col justify-between">
+        <div className="rounded-xl border border-[#222222] bg-[#0B0B0B] p-5 flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800 text-xs font-mono text-slate-400">
+            <div className="flex justify-between items-center pb-3 border-b border-[#222222] text-xs font-mono text-[#716F69]">
               <span>PROTOCOL AUDIT LOG</span>
-              <span className="text-emerald-400">● GATEWAY ONLINE</span>
+              <span className="text-[#2FB36F]">● GATEWAY ONLINE</span>
             </div>
-            <div className="mt-4 space-y-2 text-xs font-mono text-slate-300 max-h-[500px] overflow-y-auto">
+            <div className="mt-4 space-y-2 text-xs font-mono text-[#F2F0EA] max-h-[500px] overflow-y-auto">
               {logs.length === 0 ? (
-                <div className="text-slate-500 italic">
+                <div className="text-[#716F69] italic">
                   Click any step or hit &quot;Run Full Sequence&quot; to inspect real-time message payloads and invariant enforcement...
                 </div>
               ) : (
                 logs.map((l, idx) => (
-                  <div key={idx} className="p-2 rounded bg-slate-900/70 border border-slate-800/80">
+                  <div key={idx} className="p-2 rounded bg-[#101010] border border-[#222222]">
                     {l}
                   </div>
                 ))
               )}
             </div>
           </div>
-          <div className="pt-4 border-t border-slate-900 text-[11px] text-slate-500 font-mono">
+          <div className="pt-4 border-t border-[#222222] text-[11px] text-[#716F69] font-mono">
             Every step is machine-checked for invariants INV-161 through INV-180.
           </div>
         </div>
       </div>
 
       {/* Malicious Agent Attack Sandbox */}
-      <div className="rounded-xl border border-rose-900/40 bg-rose-950/10 p-6 backdrop-blur-sm">
+      <div className="rounded-xl border border-[#222222] bg-[#101010] p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-rose-400 font-bold text-sm">⚠ ADVERSARIAL SANDBOX</span>
-          <span className="text-xs text-slate-400 font-mono">— Malicious Agent Attack Vectors (Section 60 & 63)</span>
+          <span className="text-[#D85C5C] font-bold text-sm">⚠ ADVERSARIAL SANDBOX</span>
+          <span className="text-xs text-[#716F69] font-mono">— Malicious Agent Attack Vectors (Section 60 & 63)</span>
         </div>
-        <p className="text-xs text-slate-400 mb-6">
+        <p className="text-xs text-[#716F69] mb-6">
           Execute attacks against the Protocol Gateway to verify that external malicious actors are deterministically neutralized.
         </p>
 
@@ -337,16 +337,16 @@ export default function ProtocolLiveDemoPage() {
             <button
               key={sc.id}
               onClick={sc.trigger}
-              className="p-3.5 text-left rounded-xl bg-slate-900/80 border border-rose-900/30 hover:border-rose-500/60 hover:bg-slate-900 transition"
+              className="p-3.5 text-left rounded-xl bg-[#0B0B0B] border border-[#222222] hover:border-[#D85C5C]/50 hover:bg-[#141414] transition-colors"
             >
-              <div className="text-xs font-semibold text-rose-300">{sc.title}</div>
-              <div className="text-[11px] text-slate-400 mt-1">Simulate attack against gateway ➔</div>
+              <div className="text-xs font-semibold text-[#D85C5C]">{sc.title}</div>
+              <div className="text-[11px] text-[#716F69] mt-1">Simulate attack against gateway ➔</div>
             </button>
           ))}
         </div>
 
         {maliciousLog && (
-          <div className="rounded-xl bg-slate-950 border border-rose-800/50 p-4 font-mono text-xs text-rose-300 whitespace-pre-wrap leading-relaxed">
+          <div className="rounded-xl bg-[#0B0B0B] border border-[#D85C5C]/30 p-4 font-mono text-xs text-[#D85C5C] whitespace-pre-wrap leading-relaxed">
             {maliciousLog}
           </div>
         )}

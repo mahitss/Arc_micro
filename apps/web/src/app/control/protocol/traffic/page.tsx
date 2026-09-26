@@ -46,46 +46,46 @@ export default function ProtocolTrafficPage() {
     : '0';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-8">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
       {/* Header */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
             <Link
               href="/control/protocol"
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition"
             >
               ← Back to Protocol Overview
             </Link>
-            <span className="text-xs font-mono text-slate-500">/</span>
-            <span className="text-xs font-mono text-indigo-400">traffic</span>
+            <span className="text-xs font-mono text-[#50504C]">/</span>
+            <span className="text-xs font-mono text-[#D6A83A]">traffic</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mt-2">Protocol Telemetry Stream</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-2xl font-bold text-[#F2F0EA] mt-2">Protocol Telemetry Stream</h1>
+          <p className="text-xs text-[#716F69]">
             Real-time auditable message flow through the 6-stage ProtocolGateway pipeline.
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-4 bg-[#101010] border border-[#222222] rounded-xl px-4 py-2.5">
           <div>
-            <div className="text-[10px] uppercase font-semibold text-slate-400">Average Latency</div>
-            <div className="text-xl font-bold text-indigo-400">{avgLatency} ms</div>
+            <div className="text-[10px] uppercase font-semibold text-[#716F69]">Average Latency</div>
+            <div className="text-xl font-bold text-[#D6A83A]">{avgLatency} ms</div>
           </div>
-          <div className="border-l border-slate-800 pl-4">
-            <div className="text-[10px] uppercase font-semibold text-slate-400">Total Entries</div>
-            <div className="text-xl font-bold text-white">{traffic.length}</div>
+          <div className="border-l border-[#222222] pl-4">
+            <div className="text-[10px] uppercase font-semibold text-[#716F69]">Total Entries</div>
+            <div className="text-xl font-bold text-[#F2F0EA]">{traffic.length}</div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-6 bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
+      <div className="flex flex-wrap items-center gap-3 mb-6 bg-[#101010] border border-[#222222] p-4 rounded-xl">
         <input
           type="text"
           placeholder="Filter by agent or type..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 font-mono w-64"
+          className="bg-[#0B0B0B] border border-[#222222] rounded-lg px-3 py-1.5 text-xs text-[#F2F0EA] placeholder-[#716F69] font-mono w-64 focus:border-[#D6A83A] outline-none"
         />
 
         <div className="flex items-center gap-1 overflow-x-auto">
@@ -95,8 +95,8 @@ export default function ProtocolTrafficPage() {
               onClick={() => setFilterType(t)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                 filterType === t
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                  ? 'bg-[#D6A83A] text-[#080808] font-bold shadow-sm'
+                  : 'bg-[#0B0B0B] text-[#716F69] hover:text-[#F2F0EA] border border-[#222222]'
               }`}
             >
               {t}
@@ -106,9 +106,9 @@ export default function ProtocolTrafficPage() {
       </div>
 
       {/* Traffic Table */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-xl border border-[#222222] bg-[#101010] overflow-hidden">
         <table className="w-full text-left text-xs font-mono">
-          <thead className="bg-slate-900/80 text-slate-400 uppercase tracking-wider text-[11px] border-b border-slate-800">
+          <thead className="bg-[#0B0B0B] text-[#716F69] uppercase tracking-wider text-[11px] border-b border-[#222222]">
             <tr>
               <th className="py-3 px-4">Timestamp</th>
               <th className="py-3 px-4">Message Type</th>
@@ -118,28 +118,28 @@ export default function ProtocolTrafficPage() {
               <th className="py-3 px-4 text-right">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className="divide-y divide-[#222222]">
             {filtered.map((e) => (
-              <tr key={e.traffic_id} className="hover:bg-slate-800/30 transition">
-                <td className="py-3 px-4 text-slate-400 text-[11px]">{e.timestamp}</td>
+              <tr key={e.traffic_id} className="hover:bg-[#141414] transition">
+                <td className="py-3 px-4 text-[#50504C] text-[11px]">{e.timestamp}</td>
                 <td className="py-3 px-4">
-                  <span className="px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/40 text-[11px]">
+                  <span className="px-2 py-0.5 rounded bg-[#141414] text-[#D6A83A] border border-[#222222] text-[11px]">
                     {e.message_type}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-slate-200">
-                  <span className="font-semibold text-slate-100">{e.sender_id}</span>
-                  <span className="text-slate-500 mx-2">→</span>
-                  <span className="font-semibold text-slate-100">{e.recipient_id}</span>
+                <td className="py-3 px-4 text-[#F2F0EA]">
+                  <span className="font-semibold text-[#F2F0EA]">{e.sender_id}</span>
+                  <span className="text-[#50504C] mx-2">→</span>
+                  <span className="font-semibold text-[#F2F0EA]">{e.recipient_id}</span>
                 </td>
-                <td className="py-3 px-4 text-slate-500 text-[11px]">{e.correlation_id}</td>
-                <td className="py-3 px-4 text-slate-400">{e.latency_ms} ms</td>
+                <td className="py-3 px-4 text-[#716F69] text-[11px]">{e.correlation_id}</td>
+                <td className="py-3 px-4 text-[#B0ADA5]">{e.latency_ms} ms</td>
                 <td className="py-3 px-4 text-right">
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${
                       e.status.includes('FAIL') || e.status.includes('ERROR')
-                        ? 'bg-rose-950 text-rose-400 border-rose-800/50'
-                        : 'bg-emerald-950 text-emerald-400 border-emerald-800/50'
+                        ? 'bg-[#141414] text-[#D85C5C] border-[#D85C5C]/30'
+                        : 'bg-[#141414] text-[#2FB36F] border-[#2FB36F]/30'
                     }`}
                   >
                     {e.status}

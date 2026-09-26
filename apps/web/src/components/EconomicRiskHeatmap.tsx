@@ -94,43 +94,43 @@ export default function EconomicRiskHeatmap({
   const getRiskColor = (level: string) => {
     switch (level) {
       case 'LOW':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-[#141414] text-[#2FB36F] border border-[#222222]';
       case 'MEDIUM':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'bg-[#141414] text-[#D6A83A] border border-[#222222]';
       case 'HIGH':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        return 'bg-[#141414] text-[#D85C5C] border border-[#222222]';
       default:
-        return 'bg-zinc-800 text-zinc-400 border-zinc-700';
+        return 'bg-[#141414] text-[#716F69] border border-[#222222]';
     }
   };
 
   const getReliabilityBar = (bps: number) => {
     const pct = Math.min(100, Math.max(0, bps / 100));
-    const color = pct >= 99 ? 'bg-emerald-500' : pct >= 95 ? 'bg-amber-500' : 'bg-rose-500';
+    const color = pct >= 99 ? 'bg-[#2FB36F]' : pct >= 95 ? 'bg-[#D6A83A]' : 'bg-[#D85C5C]';
     return { width: `${pct}%`, color };
   };
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-950/80 p-5 shadow-2xl backdrop-blur-md">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 pb-3">
+    <div className="rounded-xl border border-[#222222] bg-[#101010] p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-[#222222] pb-3">
         <div>
-          <h3 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-cyan-400 animate-pulse" />
+          <h3 className="text-base font-semibold text-[#F2F0EA] flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-[#D6A83A] animate-pulse" />
             Deterministic Economic Risk Heatmap
           </h3>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-[#716F69] mt-0.5">
             Trade-off matrix based on deterministic economic selection algorithm (Price vs. Inherent Risk vs. Reliability)
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1.5 text-emerald-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" /> Low Risk
+          <span className="flex items-center gap-1.5 text-[#2FB36F]">
+            <span className="h-2 w-2 rounded-full bg-[#2FB36F]" /> Low Risk
           </span>
-          <span className="flex items-center gap-1.5 text-amber-400">
-            <span className="h-2 w-2 rounded-full bg-amber-400" /> Medium Risk
+          <span className="flex items-center gap-1.5 text-[#D6A83A]">
+            <span className="h-2 w-2 rounded-full bg-[#D6A83A]" /> Medium Risk
           </span>
-          <span className="flex items-center gap-1.5 text-rose-400">
-            <span className="h-2 w-2 rounded-full bg-rose-400" /> High Risk
+          <span className="flex items-center gap-1.5 text-[#D85C5C]">
+            <span className="h-2 w-2 rounded-full bg-[#D85C5C]" /> High Risk
           </span>
         </div>
       </div>
@@ -146,23 +146,23 @@ export default function EconomicRiskHeatmap({
               onClick={() => setSelectedService(svc)}
               className={`cursor-pointer rounded-lg border p-3.5 transition-all duration-200 ${
                 isCurrent
-                  ? 'border-cyan-500/80 bg-cyan-950/20 shadow-lg shadow-cyan-950/30'
-                  : 'border-zinc-800/70 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70'
+                  ? 'border-[#D6A83A] bg-[#141414]'
+                  : 'border-[#222222] bg-[#101010] hover:border-[#2D2D2D]'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-1.5">
                     {svc.isSelected && (
-                      <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300 border border-cyan-500/30">
+                      <span className="rounded bg-[#181818] px-1.5 py-0.5 text-[10px] font-medium text-[#F2F0EA] border border-[#2D2D2D]">
                         Rank #{svc.selectionRank} Selected
                       </span>
                     )}
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#85827B]">
                       {svc.category}
                     </span>
                   </div>
-                  <h4 className="mt-1 text-sm font-medium text-zinc-100 line-clamp-1">{svc.name}</h4>
+                  <h4 className="mt-1 text-sm font-medium text-[#F2F0EA] line-clamp-1">{svc.name}</h4>
                 </div>
                 <span
                   className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${getRiskColor(
@@ -173,23 +173,23 @@ export default function EconomicRiskHeatmap({
                 </span>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs border-t border-zinc-800/60 pt-2.5">
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs border-t border-[#222222] pt-2.5">
                 <div>
-                  <span className="text-zinc-500 text-[11px] block">Projected Cost</span>
-                  <span className="font-semibold text-zinc-200 font-mono">
+                  <span className="text-[#85827B] text-[11px] block">Projected Cost</span>
+                  <span className="font-semibold text-[#F2F0EA] font-mono">
                     ${svc.priceUsdc.toFixed(2)} USDC
                   </span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 text-[11px] block">Reliability SLA</span>
-                  <span className="font-semibold text-zinc-200 font-mono">
+                  <span className="text-[#85827B] text-[11px] block">Reliability SLA</span>
+                  <span className="font-semibold text-[#F2F0EA] font-mono">
                     {(svc.reliabilityBps / 100).toFixed(1)}%
                   </span>
                 </div>
               </div>
 
               <div className="mt-2.5">
-                <div className="h-1.5 w-full rounded-full bg-zinc-800 overflow-hidden">
+                <div className="h-1.5 w-full rounded-full bg-[#181818] overflow-hidden">
                   <div className={`h-full ${rel.color}`} style={{ width: rel.width }} />
                 </div>
               </div>
@@ -199,16 +199,16 @@ export default function EconomicRiskHeatmap({
       </div>
 
       {selectedService && (
-        <div className="mt-4 rounded-lg border border-zinc-800/80 bg-zinc-900/60 p-3.5 text-xs">
+        <div className="mt-4 rounded-lg border border-[#222222] bg-[#141414]/60 p-3.5 text-xs">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
+            <span className="font-semibold text-[#F2F0EA] flex items-center gap-1.5">
               <span>Why Was This Service {selectedService.isSelected ? 'Selected' : 'Rejected'}?</span>
             </span>
-            <span className="text-zinc-500 font-mono text-[11px]">
+            <span className="text-[#85827B] font-mono text-[11px]">
               Selector Reason Code: DETERMINISTIC_RANK_{selectedService.selectionRank}
             </span>
           </div>
-          <p className="text-zinc-300 leading-relaxed">{selectedService.reason}</p>
+          <p className="text-[#B0ADA5] leading-relaxed">{selectedService.reason}</p>
         </div>
       )}
     </div>

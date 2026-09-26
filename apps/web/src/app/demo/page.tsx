@@ -64,7 +64,7 @@ export default function DemoPage() {
     }
   }, [logMessages]);
 
-  const appendLog = (tag: string, msg: string, color: string = 'text-slate-300') => {
+  const appendLog = (tag: string, msg: string, color: string = 'text-[#B0ADA5]') => {
     const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
     setLogMessages((prev) => [...prev, { time, tag, msg, color }]);
   };
@@ -89,12 +89,12 @@ export default function DemoPage() {
     resetPipeline();
     setScenario('HAPPY_PATH');
     setIsRunning(true);
-    appendLog('[SYSTEM]', 'Starting Deterministic Happy Path Demonstration (0.18 USDC)...', 'text-teal-400');
+    appendLog('[SYSTEM]', 'Starting Deterministic Happy Path Demonstration (0.18 USDC)...', 'text-[#D6A83A]');
 
     try {
       // STEP 1: Agent creates intent
       setActiveStepIndex(1);
-      appendLog('[AI_AGENT]', 'Agent "research-agent" evaluating task: "Retrieve external web research data."', 'text-indigo-400');
+      appendLog('[AI_AGENT]', 'Agent "research-agent" evaluating task: "Retrieve external web research data."', 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 600));
 
       let intentId = 'pi_' + Math.random().toString(36).substring(2, 10);
@@ -128,11 +128,11 @@ export default function DemoPage() {
           amountBaseUnits = res.payment_intent.amount;
           serviceId = res.payment_intent.service;
           setBackendMode('LIVE');
-          appendLog('[GATEWAY]', `Connected to live Go Gateway: task_id=${res.task_id}`, 'text-amber-400');
+          appendLog('[GATEWAY]', `Connected to live Go Gateway: task_id=${res.task_id}`, 'text-[#D6A83A]');
         }
       } catch {
         setBackendMode('DEMO_FALLBACK');
-        appendLog('[GATEWAY]', 'Backend offline / fallback mode: executing with verified deterministic parameters', 'text-slate-400');
+        appendLog('[GATEWAY]', 'Backend offline / fallback mode: executing with verified deterministic parameters', 'text-[#716F69]');
       }
 
       setStep1Details({
@@ -144,14 +144,14 @@ export default function DemoPage() {
         'Intent ID': intentId,
         'Status': 'CREATED',
       });
-      appendLog('[AI_AGENT]', `Structured Payment Intent emitted: ${intentId} for 0.18 USDC`, 'text-indigo-300');
+      appendLog('[AI_AGENT]', `Structured Payment Intent emitted: ${intentId} for 0.18 USDC`, 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 700));
 
       // STEP 2: Service Registry
       setActiveStepIndex(2);
-      appendLog('[REGISTRY]', `Verifying service "${serviceId}" against Service Registry catalog...`, 'text-cyan-400');
+      appendLog('[REGISTRY]', `Verifying service "${serviceId}" against Service Registry catalog...`, 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 500));
-      appendLog('[REGISTRY]', `Service verified: recipient ${recipient} matches approved provider`, 'text-cyan-300');
+      appendLog('[REGISTRY]', `Service verified: recipient ${recipient} matches approved provider`, 'text-[#B0ADA5]');
 
       setStep2Details({
         'Service ID': serviceId,
@@ -165,7 +165,7 @@ export default function DemoPage() {
 
       // STEP 3: Rust Policy Engine
       setActiveStepIndex(3);
-      appendLog('[RUST_POLICY]', 'Dispatching intent to Rust Policy Engine (Port 8081)...', 'text-teal-400');
+      appendLog('[RUST_POLICY]', 'Dispatching intent to Rust Policy Engine (Port 8081)...', 'text-[#D6A83A]');
 
       const authReqPayload = {
         intent_id: intentId,
@@ -217,7 +217,7 @@ export default function DemoPage() {
         'Remaining Daily Cap': '2.41 USDC',
         'Status': 'POLICY PASSED',
       });
-      appendLog('[RUST_POLICY]', `Decision: ${policyDecision} (${policyReason}) in 0.12ms`, 'text-emerald-400 font-bold');
+      appendLog('[RUST_POLICY]', `Decision: ${policyDecision} (${policyReason}) in 0.12ms`, 'text-[#2FB36F] font-bold');
       await new Promise((r) => setTimeout(r, 700));
 
       // STEP 4: Go Gateway / Execution Service
@@ -255,13 +255,13 @@ export default function DemoPage() {
         'Concurrency Guard': 'Atomic CAS (AUTHORIZED -> EXECUTING)',
         'Execution Status': execStatus,
       });
-      appendLog('[GO_GATEWAY]', `Execution prepared for AgentVault: ${execStatus}`, 'text-amber-300');
+      appendLog('[GO_GATEWAY]', `Execution prepared for AgentVault: ${execStatus}`, 'text-[#D6A83A]');
       await new Promise((r) => setTimeout(r, 700));
 
       // STEP 5: Arc Mainnet Settlement
       setActiveStepIndex(5);
-      appendLog('[ARC_MAINNET]', 'Target Settlement Network: Arc Mainnet (Chain ID 5042)', 'text-cyan-400');
-      appendLog('[ARC_MAINNET]', 'Native Gas Asset: Canonical USDC (0x3600000000000000000000000000000000000000)', 'text-cyan-400');
+      appendLog('[ARC_MAINNET]', 'Target Settlement Network: Arc Mainnet (Chain ID 5042)', 'text-[#716F69]');
+      appendLog('[ARC_MAINNET]', 'Native Gas Asset: Canonical USDC (0x3600000000000000000000000000000000000000)', 'text-[#716F69]');
 
       setStep5Details({
         'Settlement Network': 'Arc Mainnet (Chain ID 5042)',
@@ -286,7 +286,7 @@ export default function DemoPage() {
         onChainTxCount: 1,
       });
 
-      appendLog('[SYSTEM]', 'Happy Path demonstration finished successfully.', 'text-emerald-400 font-bold');
+      appendLog('[SYSTEM]', 'Happy Path demonstration finished successfully.', 'text-[#2FB36F] font-bold');
     } finally {
       setIsRunning(false);
     }
@@ -297,12 +297,12 @@ export default function DemoPage() {
     resetPipeline();
     setScenario('DENIAL_PATH');
     setIsRunning(true);
-    appendLog('[SYSTEM]', 'Starting Safety Policy Denial Demonstration (6.00 USDC Over-Limit)...', 'text-rose-400');
+    appendLog('[SYSTEM]', 'Starting Safety Policy Denial Demonstration (6.00 USDC Over-Limit)...', 'text-[#D85C5C]');
 
     try {
       // STEP 1: Agent creates over-limit intent
       setActiveStepIndex(1);
-      appendLog('[AI_AGENT]', 'Agent requests bulk archive retrieval exceeding policy limits: 6.00 USDC', 'text-indigo-400');
+      appendLog('[AI_AGENT]', 'Agent requests bulk archive retrieval exceeding policy limits: 6.00 USDC', 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 600));
 
       const intentId = 'pi_deny_' + Math.random().toString(36).substring(2, 10);
@@ -318,12 +318,12 @@ export default function DemoPage() {
         'Intent ID': intentId,
         'Status': 'CREATED',
       });
-      appendLog('[AI_AGENT]', `Intent emitted: ${intentId} for 6.00 USDC (Daily limit: 5.00 USDC)`, 'text-indigo-300');
+      appendLog('[AI_AGENT]', `Intent emitted: ${intentId} for 6.00 USDC (Daily limit: 5.00 USDC)`, 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 700));
 
       // STEP 2: Service Registry
       setActiveStepIndex(2);
-      appendLog('[REGISTRY]', 'Service resolved: "web-research". Price check flagged: 6.00 USDC > 0.50 USDC service limit.', 'text-cyan-400');
+      appendLog('[REGISTRY]', 'Service resolved: "web-research". Price check flagged: 6.00 USDC > 0.50 USDC service limit.', 'text-[#D85C5C]');
       setStep2Details({
         'Service ID': 'web-research',
         'Catalog Recipient': recipient,
@@ -335,7 +335,7 @@ export default function DemoPage() {
 
       // STEP 3: Rust Policy Engine evaluates and DENIES
       setActiveStepIndex(3);
-      appendLog('[RUST_POLICY]', 'Rust Policy Engine evaluating spending invariants...', 'text-teal-400');
+      appendLog('[RUST_POLICY]', 'Rust Policy Engine evaluating spending invariants...', 'text-[#D6A83A]');
 
       const authReqPayload = {
         intent_id: intentId,
@@ -386,13 +386,13 @@ export default function DemoPage() {
         'Evaluated Daily Limit': '6.00 USDC > 2.59 USDC Remaining (FAIL)',
         'Status': 'DENIED BY POLICY',
       });
-      appendLog('[RUST_POLICY]', `POLICY VIOLATION DETECTED: ${reason}. Returning DENY.`, 'text-rose-400 font-bold');
+      appendLog('[RUST_POLICY]', `POLICY VIOLATION DETECTED: ${reason}. Returning DENY.`, 'text-[#D85C5C] font-bold');
       await new Promise((r) => setTimeout(r, 700));
 
       // STEP 4: Execution ABORTED
       setActiveStepIndex(4);
-      appendLog('[GO_GATEWAY]', 'POLICY DENIAL RECEIVED: Execution immediately terminated off-chain.', 'text-rose-400');
-      appendLog('[GO_GATEWAY]', 'CRITICAL INVARIANT: Zero calls dispatched to AgentVault.sol.', 'text-rose-300 font-bold');
+      appendLog('[GO_GATEWAY]', 'POLICY DENIAL RECEIVED: Execution immediately terminated off-chain.', 'text-[#D85C5C]');
+      appendLog('[GO_GATEWAY]', 'CRITICAL INVARIANT: Zero calls dispatched to AgentVault.sol.', 'text-[#D85C5C] font-bold');
 
       setStep4Details({
         'Smart Contract Call': 'NONE (Execution Aborted Before Broadcast)',
@@ -405,7 +405,7 @@ export default function DemoPage() {
 
       // STEP 5: Arc Blockchain: NONE
       setActiveStepIndex(5);
-      appendLog('[ARC_MAINNET]', 'Arc Blockchain State: UNTOUCHED. 0 transactions mined.', 'text-slate-400');
+      appendLog('[ARC_MAINNET]', 'Arc Blockchain State: UNTOUCHED. 0 transactions mined.', 'text-[#85827B]');
 
       setStep5Details({
         'Settlement Network': 'Arc Mainnet (Chain ID 5042)',
@@ -429,7 +429,7 @@ export default function DemoPage() {
         onChainTxCount: 0,
       });
 
-      appendLog('[SYSTEM]', 'Safety Denial demonstration complete. Zero funds moved.', 'text-rose-400 font-bold');
+      appendLog('[SYSTEM]', 'Safety Denial demonstration complete. Zero funds moved.', 'text-[#D85C5C] font-bold');
     } finally {
       setIsRunning(false);
     }
@@ -440,12 +440,12 @@ export default function DemoPage() {
     resetPipeline();
     setScenario('UNAUTHORIZED_RECIPIENT');
     setIsRunning(true);
-    appendLog('[SYSTEM]', 'Starting Untrusted Recipient Injection Demonstration...', 'text-rose-400');
+    appendLog('[SYSTEM]', 'Starting Untrusted Recipient Injection Demonstration...', 'text-[#D85C5C]');
 
     try {
       setActiveStepIndex(1);
       const untrustedAddr = '0x9999999999999999999999999999999999999999';
-      appendLog('[AI_AGENT]', `Adversarial prompt injection attempting transfer to external address: ${untrustedAddr}`, 'text-indigo-400');
+      appendLog('[AI_AGENT]', `Adversarial prompt injection attempting transfer to external address: ${untrustedAddr}`, 'text-[#6B8FD6]');
       await new Promise((r) => setTimeout(r, 600));
 
       const intentId = 'pi_inject_' + Math.random().toString(36).substring(2, 10);
@@ -461,7 +461,7 @@ export default function DemoPage() {
       await new Promise((r) => setTimeout(r, 600));
 
       setActiveStepIndex(2);
-      appendLog('[REGISTRY]', `Target address ${untrustedAddr} not found in Service Registry!`, 'text-rose-400');
+      appendLog('[REGISTRY]', `Target address ${untrustedAddr} not found in Service Registry!`, 'text-[#D85C5C]');
       setStep2Details({
         'Service ID': 'UNREGISTERED',
         'Catalog Recipient': 'NOT FOUND',
@@ -470,7 +470,7 @@ export default function DemoPage() {
       await new Promise((r) => setTimeout(r, 600));
 
       setActiveStepIndex(3);
-      appendLog('[RUST_POLICY]', 'Rust Policy Engine: Address NOT on allowlist. DENIED: RECIPIENT_NOT_ALLOWED.', 'text-rose-400 font-bold');
+      appendLog('[RUST_POLICY]', 'Rust Policy Engine: Address NOT on allowlist. DENIED: RECIPIENT_NOT_ALLOWED.', 'text-[#D85C5C] font-bold');
 
       const checks: PolicyCheckResult[] = [
         { name: 'Positive Amount', evaluated: '0.50 USDC', threshold: '> 0 units', passed: true, code: 'AMOUNT_POSITIVE' },
@@ -492,7 +492,7 @@ export default function DemoPage() {
       await new Promise((r) => setTimeout(r, 600));
 
       setActiveStepIndex(4);
-      appendLog('[GO_GATEWAY]', 'Execution aborted. Zero calldata generated.', 'text-rose-400');
+      appendLog('[GO_GATEWAY]', 'Execution aborted. Zero calldata generated.', 'text-[#D85C5C]');
       setStep4Details({
         'Smart Contract Call': 'NONE',
         'Blockchain Transaction': 'NONE',
@@ -502,7 +502,7 @@ export default function DemoPage() {
       await new Promise((r) => setTimeout(r, 600));
 
       setActiveStepIndex(5);
-      appendLog('[ARC_MAINNET]', 'Arc Blockchain: UNTOUCHED. Untrusted recipient received 0 USDC.', 'text-slate-400');
+      appendLog('[ARC_MAINNET]', 'Arc Blockchain: UNTOUCHED. Untrusted recipient received 0 USDC.', 'text-[#85827B]');
       setStep5Details({
         'Settlement Network': 'Arc Mainnet (Chain ID 5042)',
         'Blockchain Transaction': 'NONE',
@@ -522,7 +522,7 @@ export default function DemoPage() {
         vaultStatus: 'PROTECTED (ZERO ON-CHAIN CALLS)',
         onChainTxCount: 0,
       });
-      appendLog('[SYSTEM]', 'Untrusted recipient injection neutralized completely.', 'text-rose-400 font-bold');
+      appendLog('[SYSTEM]', 'Untrusted recipient injection neutralized completely.', 'text-[#D85C5C] font-bold');
     } finally {
       setIsRunning(false);
     }
@@ -533,7 +533,7 @@ export default function DemoPage() {
     resetPipeline();
     setScenario('CUSTOM');
     setIsRunning(true);
-    appendLog('[SYSTEM]', `Evaluating Custom Intent: ${customAmount} USDC to ${customService}...`, 'text-teal-400');
+    appendLog('[SYSTEM]', `Evaluating Custom Intent: ${customAmount} USDC to ${customService}...`, 'text-[#D6A83A]');
 
     try {
       const amountNum = parseFloat(customAmount) || 0;
@@ -548,7 +548,7 @@ export default function DemoPage() {
         'Intent ID': intentId,
         'Status': 'CREATED',
       });
-      appendLog('[AI_AGENT]', `Custom Intent created: ${customAmount} USDC`, 'text-indigo-400');
+      appendLog('[AI_AGENT]', `Custom Intent created: ${customAmount} USDC`, 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 400));
 
       setActiveStepIndex(2);
@@ -557,11 +557,11 @@ export default function DemoPage() {
         'Recipient': customRecipient,
         'Status': 'RESOLVED',
       });
-      appendLog('[REGISTRY]', `Resolved recipient: ${customRecipient}`, 'text-cyan-400');
+      appendLog('[REGISTRY]', `Resolved recipient: ${customRecipient}`, 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 400));
 
       setActiveStepIndex(3);
-      appendLog('[RUST_POLICY]', 'Calling /v1/payments/authorize against Rust Policy Engine...', 'text-teal-400');
+      appendLog('[RUST_POLICY]', 'Calling /v1/payments/authorize against Rust Policy Engine...', 'text-[#D6A83A]');
 
       const authReqPayload = {
         intent_id: intentId,
@@ -623,7 +623,7 @@ export default function DemoPage() {
         'Reason Code': reason,
         'Status': isAllowed ? 'POLICY APPROVED' : 'POLICY DENIED',
       });
-      appendLog('[RUST_POLICY]', `Evaluation Result: ${decision} (${reason})`, isAllowed ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold');
+      appendLog('[RUST_POLICY]', `Evaluation Result: ${decision} (${reason})`, isAllowed ? 'text-[#2FB36F] font-bold' : 'text-[#D85C5C] font-bold');
       await new Promise((r) => setTimeout(r, 400));
 
       setActiveStepIndex(4);
@@ -655,7 +655,7 @@ export default function DemoPage() {
         onChainTxCount: isAllowed ? 1 : 0,
       });
 
-      appendLog('[SYSTEM]', `Custom evaluation complete: ${decision}`, isAllowed ? 'text-emerald-400' : 'text-rose-400');
+      appendLog('[SYSTEM]', `Custom evaluation complete: ${decision}`, isAllowed ? 'text-[#2FB36F]' : 'text-[#D85C5C]');
     } finally {
       setIsRunning(false);
     }
@@ -664,70 +664,66 @@ export default function DemoPage() {
   return (
     <div className="space-y-8 pb-20">
       {/* 1. HERO & ARC NETWORK TELEMETRY BANNER */}
-      <div className="relative rounded-2xl bg-gradient-to-b from-[#0e1626] to-[#070b14] border border-slate-800/90 shadow-2xl overflow-hidden p-6 sm:p-8">
-        {/* Ambient subtle glow */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -z-0" />
-
+      <div className="relative rounded-xl bg-[#101010] border border-[#222222] p-6 sm:p-8">
         <div className="relative z-10">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#141414] border border-[#222222] text-[#B0ADA5] text-xs font-mono">
+              <span className="w-2 h-2 rounded-full bg-[#D6A83A] animate-pulse" />
               <span>ARC MICROGRANTS SUBMISSION & REVIEWER DEMO</span>
             </div>
 
             {/* Live Infrastructure Pills */}
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
-              <span className="px-2.5 py-1 rounded-md bg-slate-900/80 border border-slate-800 text-slate-300 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>Arc Mainnet: <strong>5042</strong></span>
+              <span className="px-2.5 py-1 rounded-md bg-[#141414] border border-[#222222] text-[#B0ADA5] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#716F69]" />
+                <span>Arc Mainnet: <strong className="text-[#F2F0EA]">5042</strong></span>
               </span>
-              <span className="px-2.5 py-1 rounded-md bg-slate-900/80 border border-slate-800 text-slate-300 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                <span>Gas: <strong>USDC (Native)</strong></span>
+              <span className="px-2.5 py-1 rounded-md bg-[#141414] border border-[#222222] text-[#B0ADA5] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+                <span>Gas: <strong className="text-[#F2F0EA]">USDC (Native)</strong></span>
               </span>
-              <span className="px-2.5 py-1 rounded-md bg-slate-900/80 border border-slate-800 text-slate-300 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                <span>Policy Engine: <strong>Rust (:8081)</strong></span>
+              <span className="px-2.5 py-1 rounded-md bg-[#141414] border border-[#222222] text-[#B0ADA5] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
+                <span>Policy Engine: <strong className="text-[#F2F0EA]">Rust (:8081)</strong></span>
               </span>
-              <span className="px-2.5 py-1 rounded-md bg-slate-900/80 border border-slate-800 text-slate-300 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                <span>Gateway: <strong>Go (:8080)</strong></span>
+              <span className="px-2.5 py-1 rounded-md bg-[#141414] border border-[#222222] text-[#B0ADA5] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#6B8FD6]" />
+                <span>Gateway: <strong className="text-[#F2F0EA]">Go (:8080)</strong></span>
               </span>
             </div>
           </div>
 
           <div className="max-w-3xl">
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-none">
-              AgentPay <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-300">Execution Engine</span>
+            <h1 className="text-3xl sm:text-5xl font-extrabold text-[#F2F0EA] tracking-tight leading-none">
+              AgentPay <span className="text-[#D6A83A]">Execution Engine</span>
             </h1>
-            <p className="mt-3 text-base sm:text-lg text-slate-300 font-normal leading-relaxed">
+            <p className="mt-3 text-base sm:text-lg text-[#B0ADA5] font-normal leading-relaxed">
               Deterministic, off-chain policy enforcement & on-chain Arc USDC settlement for autonomous AI agents.
             </p>
-            <p className="mt-1 text-xs sm:text-sm text-slate-400 leading-relaxed">
-              AI agents are untrusted and cannot hold signing keys. AgentPay enforces mathematical policy checks before any transaction reaches <code className="text-teal-300 font-mono">AgentVault.sol</code> on Arc.
+            <p className="mt-1 text-xs sm:text-sm text-[#716F69] leading-relaxed">
+              AI agents are untrusted and cannot hold signing keys. AgentPay enforces mathematical policy checks before any transaction reaches <code className="text-[#D6A83A] font-mono">AgentVault.sol</code> on Arc.
             </p>
           </div>
 
           {/* Quick Scenario Navigation Bar */}
-          <div className="mt-6 pt-6 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
+          <div className="mt-6 pt-6 border-t border-[#222222] flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setActiveTab('SCENARIOS')}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                className={`px-4 py-2 rounded-lg text-xs font-mono font-medium tracking-wide transition-all ${
                   activeTab === 'SCENARIOS'
-                    ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20 font-bold'
-                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                    ? 'bg-[#181818] text-[#F2F0EA] border border-[#2D2D2D]'
+                    : 'bg-[#101010] text-[#716F69] hover:text-[#B0ADA5] border border-[#222222]'
                 }`}
               >
                 1-Click Preset Scenarios
               </button>
               <button
                 onClick={() => setActiveTab('PLAYGROUND')}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                className={`px-4 py-2 rounded-lg text-xs font-mono font-medium tracking-wide transition-all ${
                   activeTab === 'PLAYGROUND'
-                    ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20 font-bold'
-                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                    ? 'bg-[#181818] text-[#F2F0EA] border border-[#2D2D2D]'
+                    : 'bg-[#101010] text-[#716F69] hover:text-[#B0ADA5] border border-[#222222]'
                 }`}
               >
                 Interactive Policy Playground
@@ -738,7 +734,7 @@ export default function DemoPage() {
               <button
                 onClick={resetPipeline}
                 disabled={isRunning}
-                className="px-3 py-1.5 rounded bg-slate-900 hover:bg-slate-800 text-xs font-mono text-slate-400 hover:text-white border border-slate-800 transition-colors"
+                className="px-3 py-1.5 rounded bg-[#141414] hover:bg-[#181818] text-xs font-mono text-[#716F69] hover:text-[#F2F0EA] border border-[#222222] transition-colors"
               >
                 ↻ Reset Pipeline
               </button>
@@ -754,35 +750,35 @@ export default function DemoPage() {
           <div
             className={`rounded-xl p-5 border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
               scenario === 'HAPPY_PATH'
-                ? 'bg-[#0b1726] border-teal-500/60 shadow-lg shadow-teal-500/10'
-                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                ? 'bg-[#141414] border-[#D6A83A]'
+                : 'bg-[#101010] border-[#222222] hover:border-[#2D2D2D]'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222]">
                   SCENARIO 1
                 </span>
-                <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                <span className="text-[10px] font-mono text-[#2FB36F] font-semibold">
                   EXPECTED: ALLOW
                 </span>
               </div>
-              <h3 className="text-base font-bold text-white">Valid Agent Payment</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              <h3 className="text-base font-bold text-[#F2F0EA]">Valid Agent Payment</h3>
+              <p className="text-xs text-[#B0ADA5] mt-1 leading-relaxed">
                 Research Agent pays <strong>0.18 USDC</strong> for web intelligence. Amount is within $0.50 per-tx cap & $5.00 daily budget.
               </p>
-              <div className="mt-4 p-3 rounded-lg bg-slate-950 border border-slate-800/80 space-y-1 text-[11px] font-mono">
-                <div className="flex justify-between text-slate-400">
+              <div className="mt-4 p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1 text-[11px] font-mono">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Agent:</span>
-                  <span className="text-slate-200">research-agent</span>
+                  <span className="text-[#B0ADA5]">research-agent</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Amount:</span>
-                  <span className="text-teal-400 font-bold">0.18 USDC</span>
+                  <span className="text-[#F2F0EA] font-bold">0.18 USDC</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Target:</span>
-                  <span className="text-slate-200">web-research</span>
+                  <span className="text-[#B0ADA5]">web-research</span>
                 </div>
               </div>
             </div>
@@ -790,11 +786,11 @@ export default function DemoPage() {
             <button
               onClick={runHappyPathDemo}
               disabled={isRunning}
-              className="mt-5 w-full py-2.5 px-4 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-teal-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="mt-5 w-full py-2.5 px-4 rounded-lg bg-[#F2F0EA] hover:bg-[#E2DFD7] text-[#080808] font-semibold text-xs tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isRunning && scenario === 'HAPPY_PATH' ? (
                 <>
-                  <span className="w-3 h-3 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
+                  <span className="w-3 h-3 rounded-full border-2 border-[#080808] border-t-transparent animate-spin" />
                   <span>Executing Pipeline...</span>
                 </>
               ) : (
@@ -807,35 +803,35 @@ export default function DemoPage() {
           <div
             className={`rounded-xl p-5 border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
               scenario === 'DENIAL_PATH'
-                ? 'bg-[#1a0f16] border-rose-500/60 shadow-lg shadow-rose-500/10'
-                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                ? 'bg-[#141414] border-[#D85C5C]'
+                : 'bg-[#101010] border-[#222222] hover:border-[#2D2D2D]'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222]">
                   SCENARIO 2
                 </span>
-                <span className="text-[10px] font-mono text-rose-400 font-semibold">
+                <span className="text-[10px] font-mono text-[#D85C5C] font-semibold">
                   EXPECTED: DENY
                 </span>
               </div>
-              <h3 className="text-base font-bold text-white">Policy Denial (Over Budget)</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              <h3 className="text-base font-bold text-[#F2F0EA]">Policy Denial (Over Budget)</h3>
+              <p className="text-xs text-[#B0ADA5] mt-1 leading-relaxed">
                 Agent attempts to spend <strong>6.00 USDC</strong> for bulk archives. Violates $0.50 per-tx limit & $5.00 daily budget.
               </p>
-              <div className="mt-4 p-3 rounded-lg bg-slate-950 border border-slate-800/80 space-y-1 text-[11px] font-mono">
-                <div className="flex justify-between text-slate-400">
+              <div className="mt-4 p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1 text-[11px] font-mono">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Agent:</span>
-                  <span className="text-slate-200">research-agent</span>
+                  <span className="text-[#B0ADA5]">research-agent</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Amount:</span>
-                  <span className="text-rose-400 font-bold">6.00 USDC</span>
+                  <span className="text-[#D85C5C] font-bold">6.00 USDC</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Violation:</span>
-                  <span className="text-rose-300">DAILY_LIMIT_EXCEEDED</span>
+                  <span className="text-[#D85C5C]">DAILY_LIMIT_EXCEEDED</span>
                 </div>
               </div>
             </div>
@@ -843,11 +839,11 @@ export default function DemoPage() {
             <button
               onClick={runDenialDemo}
               disabled={isRunning}
-              className="mt-5 w-full py-2.5 px-4 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="mt-5 w-full py-2.5 px-4 rounded-lg bg-[#181818] hover:bg-[#222222] text-[#D85C5C] border border-[#D85C5C]/40 font-semibold text-xs tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isRunning && scenario === 'DENIAL_PATH' ? (
                 <>
-                  <span className="w-3 h-3 rounded-full border-2 border-rose-400 border-t-transparent animate-spin" />
+                  <span className="w-3 h-3 rounded-full border-2 border-[#D85C5C] border-t-transparent animate-spin" />
                   <span>Evaluating Denial...</span>
                 </>
               ) : (
@@ -860,35 +856,35 @@ export default function DemoPage() {
           <div
             className={`rounded-xl p-5 border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
               scenario === 'UNAUTHORIZED_RECIPIENT'
-                ? 'bg-[#1a0f16] border-rose-500/60 shadow-lg shadow-rose-500/10'
-                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                ? 'bg-[#141414] border-[#D85C5C]'
+                : 'bg-[#101010] border-[#222222] hover:border-[#2D2D2D]'
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222]">
                   SCENARIO 3
                 </span>
-                <span className="text-[10px] font-mono text-rose-400 font-semibold">
+                <span className="text-[10px] font-mono text-[#D85C5C] font-semibold">
                   EXPECTED: DENY
                 </span>
               </div>
-              <h3 className="text-base font-bold text-white">Prompt Injection Defense</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              <h3 className="text-base font-bold text-[#F2F0EA]">Prompt Injection Defense</h3>
+              <p className="text-xs text-[#B0ADA5] mt-1 leading-relaxed">
                 Adversarial agent attempts transfer to unapproved external recipient. Blocked by Service Registry allowlist.
               </p>
-              <div className="mt-4 p-3 rounded-lg bg-slate-950 border border-slate-800/80 space-y-1 text-[11px] font-mono">
-                <div className="flex justify-between text-slate-400">
+              <div className="mt-4 p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1 text-[11px] font-mono">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Agent:</span>
-                  <span className="text-slate-200">untrusted-agent</span>
+                  <span className="text-[#B0ADA5]">untrusted-agent</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Recipient:</span>
-                  <span className="text-rose-400">0x9999...9999</span>
+                  <span className="text-[#D85C5C]">0x9999...9999</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-[#716F69]">
                   <span>Violation:</span>
-                  <span className="text-rose-300">RECIPIENT_NOT_ALLOWED</span>
+                  <span className="text-[#D85C5C]">RECIPIENT_NOT_ALLOWED</span>
                 </div>
               </div>
             </div>
@@ -896,11 +892,11 @@ export default function DemoPage() {
             <button
               onClick={runUntrustedRecipientDemo}
               disabled={isRunning}
-              className="mt-5 w-full py-2.5 px-4 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="mt-5 w-full py-2.5 px-4 rounded-lg bg-[#181818] hover:bg-[#222222] text-[#D85C5C] border border-[#D85C5C]/40 font-semibold text-xs tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isRunning && scenario === 'UNAUTHORIZED_RECIPIENT' ? (
                 <>
-                  <span className="w-3 h-3 rounded-full border-2 border-rose-400 border-t-transparent animate-spin" />
+                  <span className="w-3 h-3 rounded-full border-2 border-[#D85C5C] border-t-transparent animate-spin" />
                   <span>Blocking Injection...</span>
                 </>
               ) : (
@@ -911,26 +907,26 @@ export default function DemoPage() {
         </div>
       ) : (
         /* PLAYGROUND FORM */
-        <div className="rounded-xl border border-slate-800/90 bg-slate-900/70 p-6">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <div className="rounded-xl border border-[#222222] bg-[#101010] p-6">
+          <div className="flex items-center justify-between border-b border-[#222222] pb-3 mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white">Interactive Policy Engine Playground</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-sm font-bold text-[#F2F0EA]">Interactive Policy Engine Playground</h3>
+              <p className="text-xs text-[#B0ADA5]">
                 Test arbitrary values directly against the live running Rust Policy Engine (/v1/payments/authorize).
               </p>
             </div>
-            <span className="text-xs font-mono text-teal-400 bg-teal-500/10 px-2.5 py-1 rounded border border-teal-500/20">
+            <span className="text-xs font-mono text-[#D6A83A] bg-[#141414] px-2.5 py-1 rounded border border-[#222222]">
               Live Evaluation
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-400 mb-1">Agent ID</label>
+              <label className="block text-xs font-mono text-[#716F69] mb-1">Agent ID</label>
               <select
                 value={customAgent}
                 onChange={(e) => setCustomAgent(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-teal-400"
+                className="w-full bg-[#0B0B0B] border border-[#222222] rounded-lg px-3 py-2 text-xs font-mono text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
               >
                 <option value="research-agent">research-agent (Active, $5.00 limit)</option>
                 <option value="compute-agent">compute-agent (Active, $10.00 limit)</option>
@@ -939,7 +935,7 @@ export default function DemoPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-slate-400 mb-1">Amount (USDC)</label>
+              <label className="block text-xs font-mono text-[#716F69] mb-1">Amount (USDC)</label>
               <div className="relative">
                 <input
                   type="number"
@@ -947,15 +943,15 @@ export default function DemoPage() {
                   min="0"
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-teal-400"
+                  className="w-full bg-[#0B0B0B] border border-[#222222] rounded-lg px-3 py-2 text-xs font-mono text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
                   placeholder="0.25"
                 />
-                <span className="absolute right-3 top-2 text-[10px] font-mono text-slate-400">USDC</span>
+                <span className="absolute right-3 top-2 text-[10px] font-mono text-[#716F69]">USDC</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-slate-400 mb-1">Service</label>
+              <label className="block text-xs font-mono text-[#716F69] mb-1">Service</label>
               <select
                 value={customService}
                 onChange={(e) => {
@@ -968,7 +964,7 @@ export default function DemoPage() {
                     setCustomRecipient('0x9999999999999999999999999999999999999999');
                   }
                 }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-teal-400"
+                className="w-full bg-[#0B0B0B] border border-[#222222] rounded-lg px-3 py-2 text-xs font-mono text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
               >
                 <option value="web-research">web-research (Allowed)</option>
                 <option value="compute-cluster">compute-cluster (Allowed)</option>
@@ -980,7 +976,7 @@ export default function DemoPage() {
               <button
                 onClick={runCustomPlayground}
                 disabled={isRunning}
-                className="w-full py-2 px-4 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50"
+                className="w-full py-2 px-4 rounded-lg bg-[#F2F0EA] hover:bg-[#E2DFD7] text-[#080808] font-semibold text-xs tracking-wider transition-all disabled:opacity-50"
               >
                 {isRunning ? 'Evaluating...' : '⚡ Test Against Rust Engine'}
               </button>
@@ -993,18 +989,18 @@ export default function DemoPage() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-[#B0ADA5] font-bold">
               Live Authorization & Execution Pipeline
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141414] text-[#716F69] border border-[#222222]">
               5 Deterministic Stages
             </span>
           </div>
 
           {scenario !== 'IDLE' && (
             <div className="text-xs font-mono flex items-center gap-2">
-              <span className="text-slate-400">Scenario:</span>
-              <span className={scenario === 'HAPPY_PATH' ? 'text-teal-400 font-bold' : 'text-rose-400 font-bold'}>
+              <span className="text-[#716F69]">Scenario:</span>
+              <span className={scenario === 'HAPPY_PATH' ? 'text-[#2FB36F] font-bold' : 'text-[#D85C5C] font-bold'}>
                 {scenario === 'HAPPY_PATH'
                   ? 'Valid Payment Flow'
                   : scenario === 'DENIAL_PATH'
@@ -1028,7 +1024,7 @@ export default function DemoPage() {
             isCompleted={activeStepIndex > 1}
             isDenied={false}
             statusBadge="UNTRUSTED CLIENT"
-            badgeVariant="indigo"
+            badgeVariant="amber"
             details={step1Details}
           />
 
@@ -1041,7 +1037,7 @@ export default function DemoPage() {
             isCompleted={activeStepIndex > 2}
             isDenied={scenario === 'UNAUTHORIZED_RECIPIENT' && activeStepIndex >= 2}
             statusBadge="CURATED CATALOG"
-            badgeVariant="cyan"
+            badgeVariant="amber"
             details={step2Details}
           />
 
@@ -1054,7 +1050,7 @@ export default function DemoPage() {
             isCompleted={activeStepIndex > 3}
             isDenied={Boolean((scenario === 'DENIAL_PATH' || scenario === 'UNAUTHORIZED_RECIPIENT' || executionResult?.decision === 'DENY') && activeStepIndex >= 3)}
             statusBadge="OFF-CHAIN GATEWAY"
-            badgeVariant="teal"
+            badgeVariant="amber"
             details={step3Details}
           />
 
@@ -1096,40 +1092,40 @@ export default function DemoPage() {
 
       {/* 4. EVIDENCE, AUDIT & TELEMETRY PANEL */}
       {executionResult && (
-        <div className="rounded-xl border border-slate-800 bg-[#0a0f1d] p-6 shadow-xl space-y-6">
-          <div className="flex flex-wrap items-center justify-between border-b border-slate-800/80 pb-4 gap-4">
+        <div className="rounded-xl border border-[#222222] bg-[#101010] p-6 shadow-xl space-y-6">
+          <div className="flex flex-wrap items-center justify-between border-b border-[#222222] pb-4 gap-4">
             <div className="flex items-center gap-3">
               <div
                 className={`w-3 h-3 rounded-full ${
-                  executionResult.decision === 'ALLOW' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500 animate-pulse'
+                  executionResult.decision === 'ALLOW' ? 'bg-[#2FB36F] animate-pulse' : 'bg-[#D85C5C] animate-pulse'
                 }`}
               />
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-[#F2F0EA] flex items-center gap-2">
                   <span>Execution Evidence & Policy Audit Record</span>
                   <span
                     className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                       executionResult.decision === 'ALLOW'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                        ? 'bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30'
+                        : 'bg-[#141414] text-[#D85C5C] border border-[#D85C5C]/30'
                     }`}
                   >
                     {executionResult.decision}
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Intent ID: <code className="text-slate-200 font-mono">{executionResult.intentId}</code> • Reason:{' '}
-                  <code className="text-slate-200 font-mono">{executionResult.reason}</code>
+                <p className="text-xs text-[#716F69] mt-0.5">
+                  Intent ID: <code className="text-[#B0ADA5] font-mono">{executionResult.intentId}</code> • Reason:{' '}
+                  <code className="text-[#B0ADA5] font-mono">{executionResult.reason}</code>
                 </p>
               </div>
             </div>
 
             {/* Evidence Tab Buttons */}
-            <div className="flex items-center space-x-1 text-xs font-mono bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <div className="flex items-center space-x-1 text-xs font-mono bg-[#0B0B0B] p-1 rounded-lg border border-[#222222]">
               <button
                 onClick={() => setEvidenceTab('OVERVIEW')}
                 className={`px-3 py-1 rounded transition-colors ${
-                  evidenceTab === 'OVERVIEW' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400 hover:text-white'
+                  evidenceTab === 'OVERVIEW' ? 'bg-[#181818] text-[#F2F0EA] font-semibold border border-[#2D2D2D]' : 'text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 Overview
@@ -1137,7 +1133,7 @@ export default function DemoPage() {
               <button
                 onClick={() => setEvidenceTab('POLICY_CHECKS')}
                 className={`px-3 py-1 rounded transition-colors ${
-                  evidenceTab === 'POLICY_CHECKS' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400 hover:text-white'
+                  evidenceTab === 'POLICY_CHECKS' ? 'bg-[#181818] text-[#F2F0EA] font-semibold border border-[#2D2D2D]' : 'text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 Policy Rules ({policyChecks.length})
@@ -1145,7 +1141,7 @@ export default function DemoPage() {
               <button
                 onClick={() => setEvidenceTab('EVIDENCE')}
                 className={`px-3 py-1 rounded transition-colors ${
-                  evidenceTab === 'EVIDENCE' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400 hover:text-white'
+                  evidenceTab === 'EVIDENCE' ? 'bg-[#181818] text-[#F2F0EA] font-semibold border border-[#2D2D2D]' : 'text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 On-Chain Record
@@ -1153,7 +1149,7 @@ export default function DemoPage() {
               <button
                 onClick={() => setEvidenceTab('RAW_PAYLOADS')}
                 className={`px-3 py-1 rounded transition-colors ${
-                  evidenceTab === 'RAW_PAYLOADS' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400 hover:text-white'
+                  evidenceTab === 'RAW_PAYLOADS' ? 'bg-[#181818] text-[#F2F0EA] font-semibold border border-[#2D2D2D]' : 'text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 Raw Protocol JSON
@@ -1164,47 +1160,47 @@ export default function DemoPage() {
           {/* TAB 1: OVERVIEW */}
           {evidenceTab === 'OVERVIEW' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-                <span className="text-slate-400 text-[10px] font-mono block">Amount & Currency</span>
-                <span className="text-white font-bold text-lg font-mono">{executionResult.amountUSDC} USDC</span>
-                <span className="text-slate-400 text-[10px] font-mono block mt-1">
+              <div className="p-4 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+                <span className="text-[#716F69] text-[10px] font-mono block">Amount & Currency</span>
+                <span className="text-[#F2F0EA] font-bold text-lg font-mono">{executionResult.amountUSDC} USDC</span>
+                <span className="text-[#716F69] text-[10px] font-mono block mt-1">
                   {executionResult.amountBaseUnits} base units (micro-USDC)
                 </span>
               </div>
 
-              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-                <span className="text-slate-400 text-[10px] font-mono block">Recipient Service</span>
+              <div className="p-4 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+                <span className="text-[#716F69] text-[10px] font-mono block">Recipient Service</span>
                 <AddressDisplay address={executionResult.recipient} truncate={true} copyable={true} />
-                <span className="text-slate-400 text-[10px] font-mono block mt-1">
+                <span className="text-[#716F69] text-[10px] font-mono block mt-1">
                   Service ID: {executionResult.service}
                 </span>
               </div>
 
-              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-                <span className="text-slate-400 text-[10px] font-mono block">Gas & Vault Impact</span>
-                <span className="text-slate-200 font-bold text-sm font-mono">{executionResult.gasSpent}</span>
-                <span className="text-slate-400 text-[10px] font-mono block mt-1">
+              <div className="p-4 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+                <span className="text-[#716F69] text-[10px] font-mono block">Gas & Vault Impact</span>
+                <span className="text-[#B0ADA5] font-bold text-sm font-mono">{executionResult.gasSpent}</span>
+                <span className="text-[#716F69] text-[10px] font-mono block mt-1">
                   Vault State: {executionResult.vaultStatus}
                 </span>
               </div>
 
-              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800/80">
-                <span className="text-slate-400 text-[10px] font-mono block">On-Chain Settlement Proof</span>
+              <div className="p-4 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+                <span className="text-[#716F69] text-[10px] font-mono block">On-Chain Settlement Proof</span>
                 {executionResult.decision === 'ALLOW' ? (
                   <>
-                    <span className="text-amber-400 text-xs font-mono font-semibold block">
+                    <span className="text-[#D6A83A] text-xs font-mono font-semibold block">
                       DEMO_MODE / BROADCAST_DISABLED
                     </span>
-                    <span className="text-slate-400 text-[10px] font-mono block mt-1">
+                    <span className="text-[#716F69] text-[10px] font-mono block mt-1">
                       Truthful state: No fake hashes generated
                     </span>
                   </>
                 ) : (
                   <>
-                    <span className="text-rose-400 text-xs font-mono font-semibold block">
+                    <span className="text-[#D85C5C] text-xs font-mono font-semibold block">
                       ZERO BLOCKCHAIN INTERACTION
                     </span>
-                    <span className="text-slate-400 text-[10px] font-mono block mt-1">
+                    <span className="text-[#716F69] text-[10px] font-mono block mt-1">
                       Halted off-chain by Rust policy engine
                     </span>
                   </>
@@ -1218,7 +1214,7 @@ export default function DemoPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-mono">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400">
+                  <tr className="border-b border-[#222222] text-[#716F69]">
                     <th className="pb-2 font-semibold">Policy Check</th>
                     <th className="pb-2 font-semibold">Evaluated Value</th>
                     <th className="pb-2 font-semibold">Rule Threshold</th>
@@ -1226,20 +1222,20 @@ export default function DemoPage() {
                     <th className="pb-2 font-semibold text-right">Result</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#222222]">
                   {policyChecks.map((chk, idx) => (
-                    <tr key={idx} className="hover:bg-slate-900/40">
-                      <td className="py-2.5 text-white font-medium">{chk.name}</td>
-                      <td className="py-2.5 text-slate-300">{chk.evaluated}</td>
-                      <td className="py-2.5 text-slate-400">{chk.threshold}</td>
-                      <td className="py-2.5 text-slate-400">{chk.code}</td>
+                    <tr key={idx} className="hover:bg-[#141414]">
+                      <td className="py-2.5 text-[#F2F0EA] font-medium">{chk.name}</td>
+                      <td className="py-2.5 text-[#B0ADA5]">{chk.evaluated}</td>
+                      <td className="py-2.5 text-[#716F69]">{chk.threshold}</td>
+                      <td className="py-2.5 text-[#716F69]">{chk.code}</td>
                       <td className="py-2.5 text-right">
                         {chk.passed ? (
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30 text-[10px] font-bold">
                             PASS
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded bg-[#141414] text-[#D85C5C] border border-[#D85C5C]/30 text-[10px] font-bold">
                             FAIL (DENY)
                           </span>
                         )}
@@ -1254,30 +1250,30 @@ export default function DemoPage() {
           {/* TAB 3: ON-CHAIN RECORD */}
           {evidenceTab === 'EVIDENCE' && (
             <div className="space-y-4 text-xs font-mono">
-              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
-                <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                  <span className="text-slate-400">Settlement Network:</span>
-                  <span className="text-white font-bold">Arc Mainnet (Chain ID 5042 / 0x13b2)</span>
+              <div className="p-4 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-2">
+                <div className="flex justify-between border-b border-[#222222] pb-2">
+                  <span className="text-[#716F69]">Settlement Network:</span>
+                  <span className="text-[#F2F0EA] font-bold">Arc Mainnet (Chain ID 5042 / 0x13b2)</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                  <span className="text-slate-400">Canonical USDC Contract:</span>
-                  <span className="text-teal-300">0x3600000000000000000000000000000000000000 (3,598 bytes verified bytecode)</span>
+                <div className="flex justify-between border-b border-[#222222] pb-2">
+                  <span className="text-[#716F69]">Canonical USDC Contract:</span>
+                  <span className="text-[#D6A83A]">0x3600000000000000000000000000000000000000 (3,598 bytes verified bytecode)</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                  <span className="text-slate-400">AgentVault Contract:</span>
-                  <span className="text-slate-200">0x1111111111111111111111111111111111111111 (Compiled / Test Suite Passed)</span>
+                <div className="flex justify-between border-b border-[#222222] pb-2">
+                  <span className="text-[#716F69]">AgentVault Contract:</span>
+                  <span className="text-[#B0ADA5]">0x1111111111111111111111111111111111111111 (Compiled / Test Suite Passed)</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                  <span className="text-slate-400">Transaction Hash:</span>
-                  <span className="text-slate-400">
+                <div className="flex justify-between border-b border-[#222222] pb-2">
+                  <span className="text-[#716F69]">Transaction Hash:</span>
+                  <span className="text-[#716F69]">
                     {executionResult.txHash || 'DATA UNAVAILABLE (Broadcast disabled to prevent unverified transactions)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Arc Explorer Verification:</span>
-                  <span className="text-slate-400">
+                  <span className="text-[#716F69]">Arc Explorer Verification:</span>
+                  <span className="text-[#716F69]">
                     {executionResult.txHash ? (
-                      <a href={`https://explorer.arc.io/tx/${executionResult.txHash}`} target="_blank" rel="noreferrer" className="text-teal-400 underline">
+                      <a href={`https://explorer.arc.io/tx/${executionResult.txHash}`} target="_blank" rel="noreferrer" className="text-[#D6A83A] underline">
                         View on Explorer →
                       </a>
                     ) : (
@@ -1293,21 +1289,21 @@ export default function DemoPage() {
           {evidenceTab === 'RAW_PAYLOADS' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-1">
+                <div className="flex items-center justify-between text-xs font-mono text-[#716F69] mb-1">
                   <span>POST /v1/payments/authorize (Request)</span>
                   <CopyButton textToCopy={rawRequestPayload} label="Copy Request" />
                 </div>
-                <pre className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-teal-300 overflow-x-auto max-h-56">
+                <pre className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[11px] font-mono text-[#B0ADA5] overflow-x-auto max-h-56">
                   {rawRequestPayload || '// No request recorded'}
                 </pre>
               </div>
 
               <div>
-                <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-1">
+                <div className="flex items-center justify-between text-xs font-mono text-[#716F69] mb-1">
                   <span>Rust Policy Engine Response</span>
                   <CopyButton textToCopy={rawResponsePayload} label="Copy Response" />
                 </div>
-                <pre className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-cyan-300 overflow-x-auto max-h-56">
+                <pre className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[11px] font-mono text-[#B0ADA5] overflow-x-auto max-h-56">
                   {rawResponsePayload || '// No response recorded'}
                 </pre>
               </div>
@@ -1317,18 +1313,18 @@ export default function DemoPage() {
       )}
 
       {/* 5. EXECUTION TELEMETRY LOG CONSOLE */}
-      <div className="rounded-xl border border-slate-800/90 bg-[#060910] p-4 font-mono text-xs shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5 mb-2.5 text-slate-400">
+      <div className="rounded-xl border border-[#222222] bg-[#0B0B0B] p-4 font-mono text-xs shadow-xl">
+        <div className="flex items-center justify-between border-b border-[#222222] pb-2.5 mb-2.5 text-[#716F69]">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-teal-400" />
-            <span className="font-semibold text-slate-300">Live Execution Stream & Event Log</span>
+            <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
+            <span className="font-semibold text-[#B0ADA5]">Live Execution Stream & Event Log</span>
           </div>
           <div className="flex items-center gap-3 text-[11px]">
             <span>{logMessages.length} events logged</span>
             {logMessages.length > 0 && (
               <button
                 onClick={() => setLogMessages([])}
-                className="text-slate-400 hover:text-slate-200 transition-colors"
+                className="text-[#716F69] hover:text-[#F2F0EA] transition-colors"
               >
                 Clear
               </button>
@@ -1336,16 +1332,16 @@ export default function DemoPage() {
           </div>
         </div>
 
-        <div ref={logContainerRef} className="max-h-48 overflow-y-auto space-y-1 text-slate-300 pr-1">
+        <div ref={logContainerRef} className="max-h-48 overflow-y-auto space-y-1 text-[#B0ADA5] pr-1">
           {logMessages.length === 0 ? (
-            <div className="text-slate-400 py-3 italic">
+            <div className="text-[#716F69] py-3 italic">
               Select a scenario above or click &quot;Run Valid Flow&quot; to inspect real-time telemetry.
             </div>
           ) : (
             logMessages.map((entry, i) => (
               <div key={i} className="leading-relaxed flex items-start gap-2">
-                <span className="text-slate-400 text-[10px] select-none font-mono mt-0.5">{entry.time}</span>
-                <span className="font-bold text-[10px] select-none font-mono text-slate-400">{entry.tag}</span>
+                <span className="text-[#716F69] text-[10px] select-none font-mono mt-0.5">{entry.time}</span>
+                <span className="font-bold text-[10px] select-none font-mono text-[#716F69]">{entry.tag}</span>
                 <span className={`${entry.color} break-all`}>{entry.msg}</span>
               </div>
             ))
@@ -1354,16 +1350,16 @@ export default function DemoPage() {
       </div>
 
       {/* 6. BOTTOM ARCHITECTURE LINK */}
-      <div className="flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 pt-4 border-t border-slate-800/60 gap-3">
+      <div className="flex flex-wrap items-center justify-between text-xs font-mono text-[#716F69] pt-4 border-t border-[#222222] gap-3">
         <span>Architectural Pipeline: AI (Untrusted) → Registry → Rust Policy → Go Executor → AgentVault → Arc (5042)</span>
         <div className="flex items-center space-x-4">
-          <Link href="/dashboard" className="text-teal-400 hover:underline">
+          <Link href="/dashboard" className="text-[#D6A83A] hover:underline">
             Dashboard →
           </Link>
-          <Link href="/payment-intents" className="text-teal-400 hover:underline">
+          <Link href="/payment-intents" className="text-[#D6A83A] hover:underline">
             Payment Intents →
           </Link>
-          <Link href="/transactions" className="text-teal-400 hover:underline">
+          <Link href="/transactions" className="text-[#D6A83A] hover:underline">
             Transactions →
           </Link>
         </div>
@@ -1380,7 +1376,7 @@ interface PipelineCardProps {
   isCompleted: boolean;
   isDenied: boolean;
   statusBadge: string;
-  badgeVariant: 'indigo' | 'cyan' | 'teal' | 'amber' | 'emerald';
+  badgeVariant: 'amber' | 'emerald';
   details: Record<string, string> | null;
 }
 
@@ -1395,29 +1391,29 @@ function PipelineCard({
   badgeVariant,
   details,
 }: PipelineCardProps) {
-  let borderColor = 'border-slate-800/80';
-  let cardBg = 'bg-[#0b101c]/80';
-  let badgeClasses = 'bg-slate-800 text-slate-400 border-slate-700';
+  let borderColor = 'border-[#222222]';
+  let cardBg = 'bg-[#101010]';
+  let badgeClasses = 'bg-[#141414] text-[#716F69] border-[#222222]';
 
   if (isActive) {
     if (isDenied) {
-      borderColor = 'border-rose-500 animate-glow-rose';
-      cardBg = 'bg-[#180d14]';
-      badgeClasses = 'bg-rose-500 text-slate-950 font-bold border-rose-400';
+      borderColor = 'border-[#D85C5C]';
+      cardBg = 'bg-[#141414]';
+      badgeClasses = 'bg-[#141414] text-[#D85C5C] font-bold border-[#D85C5C]/40';
     } else {
-      borderColor = 'border-teal-400 animate-glow-teal';
-      cardBg = 'bg-[#0a1824]';
-      badgeClasses = 'bg-teal-400 text-slate-950 font-bold border-teal-300';
+      borderColor = 'border-[#D6A83A]';
+      cardBg = 'bg-[#141414]';
+      badgeClasses = 'bg-[#141414] text-[#D6A83A] font-bold border-[#D6A83A]/40';
     }
   } else if (isCompleted) {
     if (isDenied) {
-      borderColor = 'border-rose-800/70';
-      cardBg = 'bg-[#140b10]';
-      badgeClasses = 'bg-rose-950 text-rose-300 border-rose-800';
+      borderColor = 'border-[#D85C5C]/40';
+      cardBg = 'bg-[#101010]';
+      badgeClasses = 'bg-[#141414] text-[#D85C5C] border-[#222222]';
     } else {
-      borderColor = 'border-emerald-500/50';
-      cardBg = 'bg-[#08151a]';
-      badgeClasses = 'bg-emerald-950 text-emerald-300 border-emerald-800';
+      borderColor = 'border-[#2FB36F]/40';
+      cardBg = 'bg-[#101010]';
+      badgeClasses = 'bg-[#141414] text-[#2FB36F] border-[#222222]';
     }
   }
 
@@ -1425,18 +1421,18 @@ function PipelineCard({
     <div
       className={`rounded-xl p-4 border ${borderColor} ${cardBg} transition-all duration-300 flex flex-col justify-between min-h-[300px] relative overflow-hidden`}
     >
-      {/* Connector glow indicator on top */}
+      {/* Connector indicator on top */}
       {isActive && (
         <div
-          className={`absolute top-0 left-0 right-0 h-1 ${
-            isDenied ? 'bg-gradient-to-r from-rose-500 to-amber-500' : 'bg-gradient-to-r from-teal-400 to-cyan-400'
+          className={`absolute top-0 left-0 right-0 h-0.5 ${
+            isDenied ? 'bg-[#D85C5C]' : 'bg-[#D6A83A]'
           }`}
         />
       )}
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-mono text-slate-400 font-bold tracking-widest">
+          <span className="text-[10px] font-mono text-[#716F69] font-bold tracking-widest">
             STAGE {stageNum}
           </span>
           <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${badgeClasses}`}>
@@ -1444,26 +1440,26 @@ function PipelineCard({
           </span>
         </div>
 
-        <h3 className="text-sm font-bold text-white tracking-tight mt-1">{title}</h3>
-        <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">{subtitle}</p>
+        <h3 className="text-sm font-bold text-[#F2F0EA] tracking-tight mt-1">{title}</h3>
+        <p className="text-[11px] text-[#B0ADA5] mt-0.5 leading-snug">{subtitle}</p>
 
         {/* Dynamic Detail Parameters */}
         {details && (
-          <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-1.5 text-[10px] font-mono">
+          <div className="mt-3 pt-3 border-t border-[#222222] space-y-1.5 text-[10px] font-mono">
             {Object.entries(details).map(([k, v]) => {
               const isDenialValue = v.includes('DENY') || v.includes('FAIL') || v.includes('REJECTED') || v.includes('ABORTED');
               const isAllowValue = v.includes('ALLOW') || v.includes('PASS') || v.includes('APPROVED');
 
               return (
                 <div key={k} className="flex flex-col">
-                  <span className="text-slate-400">{k}:</span>
+                  <span className="text-[#716F69]">{k}:</span>
                   <span
                     className={`break-all ${
                       isDenialValue
-                        ? 'text-rose-400 font-bold'
+                        ? 'text-[#D85C5C] font-bold'
                         : isAllowValue
-                        ? 'text-emerald-400 font-bold'
-                        : 'text-slate-200'
+                        ? 'text-[#2FB36F] font-bold'
+                        : 'text-[#F2F0EA]'
                     }`}
                   >
                     {v}
@@ -1476,33 +1472,33 @@ function PipelineCard({
       </div>
 
       {!details && (
-        <div className="text-[10px] font-mono text-slate-400 italic mt-6 flex items-center gap-1.5">
-          <span className="w-1 h-1 rounded-full bg-slate-600" />
+        <div className="text-[10px] font-mono text-[#716F69] italic mt-6 flex items-center gap-1.5">
+          <span className="w-1 h-1 rounded-full bg-[#50504C]" />
           <span>Awaiting execution trigger...</span>
         </div>
       )}
 
       {/* Completion Marker */}
-      <div className="mt-3 pt-2 border-t border-slate-800/40 flex items-center justify-between text-[10px] font-mono">
+      <div className="mt-3 pt-2 border-t border-[#222222] flex items-center justify-between text-[10px] font-mono">
         {isCompleted && !isDenied && (
-          <span className="text-emerald-400 flex items-center gap-1">
+          <span className="text-[#2FB36F] flex items-center gap-1">
             <span>✓</span>
             <span>Completed</span>
           </span>
         )}
         {isDenied && (
-          <span className="text-rose-400 flex items-center gap-1 font-bold">
+          <span className="text-[#D85C5C] flex items-center gap-1 font-bold">
             <span>✕</span>
             <span>Halted Off-Chain</span>
           </span>
         )}
         {isActive && (
-          <span className={isDenied ? 'text-rose-400 font-bold animate-pulse' : 'text-teal-400 font-bold animate-pulse'}>
+          <span className={isDenied ? 'text-[#D85C5C] font-bold' : 'text-[#D6A83A] font-bold'}>
             ● Active
           </span>
         )}
         {!isActive && !isCompleted && !isDenied && (
-          <span className="text-slate-400">Idle</span>
+          <span className="text-[#716F69]">Idle</span>
         )}
       </div>
     </div>

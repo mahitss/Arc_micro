@@ -19,25 +19,25 @@ export function MetricCard({
 }: MetricCardProps) {
   if (loading) {
     return (
-      <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 animate-pulse">
-        <div className="h-3 w-20 bg-slate-800 rounded mb-2" />
-        <div className="h-7 w-32 bg-slate-800 rounded mb-1" />
-        <div className="h-3 w-28 bg-slate-800/60 rounded" />
+      <div className="p-4 rounded-xl bg-[#101010] border border-[#222222] animate-pulse">
+        <div className="h-3 w-20 bg-[#181818] rounded mb-2" />
+        <div className="h-7 w-32 bg-[#181818] rounded mb-1" />
+        <div className="h-3 w-28 bg-[#141414] rounded" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-colors">
+    <div className="p-4 rounded-xl bg-[#101010] border border-[#222222] hover:border-[#2D2D2D] transition-colors">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">{title}</span>
+        <span className="text-xs font-mono text-[#85827B] uppercase tracking-wider">{title}</span>
         {badge}
       </div>
-      <div className="text-2xl font-bold text-white mt-1.5 flex items-baseline gap-1.5">
+      <div className="text-2xl font-bold text-[#F2F0EA] mt-1.5 flex items-baseline gap-1.5">
         <span>{value}</span>
-        {unit && <span className="text-xs font-normal text-teal-400 font-mono">{unit}</span>}
+        {unit && <span className="text-xs font-normal text-[#B0ADA5] font-mono">{unit}</span>}
       </div>
-      {subtitle && <div className="text-[11px] text-slate-400 mt-1">{subtitle}</div>}
+      {subtitle && <div className="text-[11px] text-[#716F69] mt-1">{subtitle}</div>}
     </div>
   );
 }

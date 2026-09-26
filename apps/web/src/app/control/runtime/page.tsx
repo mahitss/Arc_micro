@@ -53,21 +53,21 @@ export default function RuntimeOverviewPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/20 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-xl bg-[#101010] border border-[#222222]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
+            <span className="px-2.5 py-0.5 rounded text-xs font-mono font-semibold bg-[#141414] text-[#B0ADA5] border border-[#222222]">
               DURABLE EXECUTION RUNTIME
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="px-2.5 py-0.5 rounded text-xs font-mono font-semibold bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] animate-pulse" />
               DURABLE EXECUTION
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F2F0EA] tracking-tight mt-2">
             Autonomous Operations & Durable Runtime
           </h1>
-          <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+          <p className="text-sm text-[#B0ADA5] mt-1 max-w-2xl">
             Deterministic crash recovery, distributed worker fencing, and financial barrier enforcement (INV-101 through INV-120).
           </p>
         </div>
@@ -76,32 +76,32 @@ export default function RuntimeOverviewPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/control/runtime/workflows"
-            className="px-3.5 py-2 rounded-xl text-xs font-mono font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 transition-colors"
+            className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
           >
             Workflows ({workflows.length})
           </Link>
           <Link
             href="/control/runtime/workers"
-            className="px-3.5 py-2 rounded-xl text-xs font-mono font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 transition-colors"
+            className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
           >
             Workers ({workers.length})
           </Link>
           <Link
             href="/control/runtime/queues"
-            className="px-3.5 py-2 rounded-xl text-xs font-mono font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 transition-colors"
+            className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
           >
             Queues ({queues?.queue_depth ?? 0})
           </Link>
           <Link
             href="/control/runtime/recovery"
-            className="px-3.5 py-2 rounded-xl text-xs font-mono font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-[#141414] hover:bg-[#181818] text-[#D6A83A] border border-[#D6A83A]/30 transition-colors flex items-center gap-1.5"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
             Recovery Center
           </Link>
           <Link
             href="/control/runtime/incidents"
-            className="px-3.5 py-2 rounded-xl text-xs font-mono font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-colors"
+            className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-[#141414] hover:bg-[#181818] text-[#D85C5C] border border-[#D85C5C]/30 transition-colors"
           >
             Incidents ({incidents.length})
           </Link>
@@ -110,117 +110,117 @@ export default function RuntimeOverviewPage() {
 
       {/* Primary Invariants Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
-          <div className="text-xs font-mono text-slate-400 uppercase tracking-wider">Active Workflows</div>
-          <div className="text-2xl font-bold font-mono text-white mt-1">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-xs font-mono text-[#716F69] uppercase tracking-wider">Active Workflows</div>
+          <div className="text-2xl font-bold font-mono text-[#F2F0EA] mt-1">
             {metrics?.active_workflows ?? (loading ? '...' : 0)}
           </div>
-          <div className="text-[11px] font-mono text-indigo-400 mt-1">
+          <div className="text-[11px] font-mono text-[#B0ADA5] mt-1">
             Waiting: {metrics?.waiting_workflows ?? 0}
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
-          <div className="text-xs font-mono text-slate-400 uppercase tracking-wider">Recovery Success Rate</div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-xs font-mono text-[#716F69] uppercase tracking-wider">Recovery Success Rate</div>
+          <div className="text-2xl font-bold font-mono text-[#2FB36F] mt-1">
             {metrics ? `${((metrics.recovery_rate_bps || 0) / 100).toFixed(2)}%` : (loading ? '...' : '100%')}
           </div>
-          <div className="text-[11px] font-mono text-slate-400 mt-1">
+          <div className="text-[11px] font-mono text-[#716F69] mt-1">
             Avg Duration: {metrics?.average_step_duration_ms ?? 0}ms
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
-          <div className="text-xs font-mono text-slate-400 uppercase tracking-wider">Lease Fencing / Stale</div>
-          <div className="text-2xl font-bold font-mono text-amber-400 mt-1">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-xs font-mono text-[#716F69] uppercase tracking-wider">Lease Fencing / Stale</div>
+          <div className="text-2xl font-bold font-mono text-[#D6A83A] mt-1">
             {metrics?.lease_expirations_count ?? 0} Exp / {metrics?.stale_worker_count ?? 0} Stale
           </div>
-          <div className="text-[11px] font-mono text-slate-400 mt-1">
+          <div className="text-[11px] font-mono text-[#716F69] mt-1">
             INV-101 Monotonic Token Fencing Active
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
-          <div className="text-xs font-mono text-slate-400 uppercase tracking-wider">Financial Barrier Status</div>
-          <div className="text-2xl font-bold font-mono text-cyan-400 mt-1">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
+          <div className="text-xs font-mono text-[#716F69] uppercase tracking-wider">Financial Barrier Status</div>
+          <div className="text-2xl font-bold font-mono text-[#F2F0EA] mt-1">
             {metrics?.ambiguous_operations ?? 0} Ambiguous
           </div>
-          <div className="text-[11px] font-mono text-cyan-300/80 mt-1">
+          <div className="text-[11px] font-mono text-[#716F69] mt-1">
             INV-106 Zero Blind Rebroadcast
           </div>
         </div>
       </div>
 
       {/* Live Runtime Graph Visualization */}
-      <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl">
+      <div className="p-6 rounded-xl bg-[#101010] border border-[#222222]">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" />
+            <h2 className="text-lg font-bold text-[#F2F0EA] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
               Live Runtime Execution & Financial Barrier Graph
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-[#B0ADA5] mt-0.5">
               Flow of authority: Domain requests pass 12-point invariant check before payment pipeline invocation.
             </p>
           </div>
-          <span className="text-xs font-mono text-slate-400">
-            Node Identity: <span className="text-indigo-400 font-semibold">COORDINATOR:active</span>
+          <span className="text-xs font-mono text-[#716F69]">
+            Node Identity: <span className="text-[#D6A83A] font-semibold">COORDINATOR:active</span>
           </span>
         </div>
 
         {/* Visual Graph Pipeline */}
-        <div className="p-6 rounded-xl bg-slate-950/90 border border-slate-800/80 overflow-x-auto">
+        <div className="p-6 rounded-lg bg-[#0B0B0B] border border-[#222222] overflow-x-auto">
           <div className="flex items-center min-w-[900px] justify-between text-center font-mono text-xs">
             {/* Stage 1: Mission */}
-            <div className="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-700/80">
-              <div className="text-[10px] text-slate-400 font-bold uppercase">1. INTENT</div>
-              <div className="text-sm font-semibold text-white mt-1">Mission / Swarm</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">DAG Task Node</div>
+            <div className="flex-1 p-3 rounded-lg bg-[#141414] border border-[#222222]">
+              <div className="text-[10px] text-[#716F69] font-bold uppercase">1. INTENT</div>
+              <div className="text-sm font-semibold text-[#F2F0EA] mt-1">Mission / Swarm</div>
+              <div className="text-[10px] text-[#716F69] mt-0.5">DAG Task Node</div>
             </div>
 
-            <div className="text-slate-600 px-2 font-bold">→</div>
+            <div className="text-[#50504C] px-2 font-bold">→</div>
 
             {/* Stage 2: Workflow */}
-            <div className="flex-1 p-3 rounded-xl bg-indigo-950/40 border border-indigo-700/60">
-              <div className="text-[10px] text-indigo-300 font-bold uppercase">2. RUNTIME</div>
-              <div className="text-sm font-semibold text-indigo-200 mt-1">Durable Workflow</div>
-              <div className="text-[10px] text-indigo-400 mt-0.5">Version Checking</div>
+            <div className="flex-1 p-3 rounded-lg bg-[#141414] border border-[#222222]">
+              <div className="text-[10px] text-[#B0ADA5] font-bold uppercase">2. RUNTIME</div>
+              <div className="text-sm font-semibold text-[#F2F0EA] mt-1">Durable Workflow</div>
+              <div className="text-[10px] text-[#716F69] mt-0.5">Version Checking</div>
             </div>
 
-            <div className="text-slate-600 px-2 font-bold">→</div>
+            <div className="text-[#50504C] px-2 font-bold">→</div>
 
             {/* Stage 3: Step & Lease */}
-            <div className="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-700/80">
-              <div className="text-[10px] text-slate-400 font-bold uppercase">3. DISPATCH</div>
-              <div className="text-sm font-semibold text-white mt-1">Leased Step</div>
-              <div className="text-[10px] text-amber-400 mt-0.5">Fencing Token</div>
+            <div className="flex-1 p-3 rounded-lg bg-[#141414] border border-[#222222]">
+              <div className="text-[10px] text-[#716F69] font-bold uppercase">3. DISPATCH</div>
+              <div className="text-sm font-semibold text-[#F2F0EA] mt-1">Leased Step</div>
+              <div className="text-[10px] text-[#D6A83A] mt-0.5">Fencing Token</div>
             </div>
 
-            <div className="text-slate-600 px-2 font-bold">→</div>
+            <div className="text-[#50504C] px-2 font-bold">→</div>
 
             {/* Stage 4: Financial Barrier */}
-            <div className="flex-1 p-3 rounded-xl bg-purple-950/40 border border-purple-700/60">
-              <div className="text-[10px] text-purple-300 font-bold uppercase">4. BARRIER</div>
-              <div className="text-sm font-semibold text-purple-200 mt-1">12 Invariant Checks</div>
-              <div className="text-[10px] text-purple-400 mt-0.5">Zero Vault Bypass</div>
+            <div className="flex-1 p-3 rounded-lg bg-[#181818] border border-[#D6A83A]/40">
+              <div className="text-[10px] text-[#D6A83A] font-bold uppercase">4. BARRIER</div>
+              <div className="text-sm font-semibold text-[#F2F0EA] mt-1">12 Invariant Checks</div>
+              <div className="text-[10px] text-[#D6A83A] mt-0.5">Zero Vault Bypass</div>
             </div>
 
-            <div className="text-slate-600 px-2 font-bold">→</div>
+            <div className="text-[#50504C] px-2 font-bold">→</div>
 
             {/* Stage 5: Domain Engine */}
-            <div className="flex-1 p-3 rounded-xl bg-emerald-950/40 border border-emerald-700/60">
-              <div className="text-[10px] text-emerald-300 font-bold uppercase">5. SETTLEMENT</div>
-              <div className="text-sm font-semibold text-emerald-200 mt-1">Payment Pipeline</div>
-              <div className="text-[10px] text-emerald-400 mt-0.5">Arc Settlement</div>
+            <div className="flex-1 p-3 rounded-lg bg-[#141414] border border-[#222222]">
+              <div className="text-[10px] text-[#2FB36F] font-bold uppercase">5. SETTLEMENT</div>
+              <div className="text-sm font-semibold text-[#F2F0EA] mt-1">Payment Pipeline</div>
+              <div className="text-[10px] text-[#2FB36F] mt-0.5">Arc Settlement</div>
             </div>
 
-            <div className="text-slate-600 px-2 font-bold">→</div>
+            <div className="text-[#50504C] px-2 font-bold">→</div>
 
             {/* Stage 6: Checkpoint */}
-            <div className="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-700/80">
-              <div className="text-[10px] text-slate-400 font-bold uppercase">6. CHECKPOINT</div>
-              <div className="text-sm font-semibold text-white mt-1">SHA-256 Snapshot</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">Crash Immune</div>
+            <div className="flex-1 p-3 rounded-lg bg-[#141414] border border-[#222222]">
+              <div className="text-[10px] text-[#716F69] font-bold uppercase">6. CHECKPOINT</div>
+              <div className="text-sm font-semibold text-[#F2F0EA] mt-1">SHA-256 Snapshot</div>
+              <div className="text-[10px] text-[#716F69] mt-0.5">Crash Immune</div>
             </div>
           </div>
         </div>
@@ -229,12 +229,12 @@ export default function RuntimeOverviewPage() {
       {/* Two Column Section: Recent Workflows & Worker Nodes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Workflows */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+        <div className="p-6 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-white">Active Durable Workflows</h3>
+            <h3 className="text-base font-bold text-[#F2F0EA]">Active Durable Workflows</h3>
             <Link
               href="/control/runtime/workflows"
-              className="text-xs font-mono text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs font-mono text-[#D6A83A] hover:underline transition-colors"
             >
               View All →
             </Link>
@@ -244,38 +244,38 @@ export default function RuntimeOverviewPage() {
             {workflows.map((wf) => (
               <div
                 key={wf.workflow_id}
-                className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-4"
+                className="p-3.5 rounded-lg bg-[#0B0B0B] border border-[#222222] flex items-center justify-between gap-4"
               >
                 <div>
                   <div className="flex items-center gap-2">
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
                         wf.state === 'RUNNING'
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          ? 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30'
                           : wf.state === 'PAUSED'
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          ? 'bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30'
                           : wf.state === 'COMPLETED'
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                          : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          ? 'bg-[#181818] text-[#B0ADA5] border border-[#222222]'
+                          : 'bg-[#D85C5C]/15 text-[#D85C5C] border border-[#D85C5C]/30'
                       }`}
                     >
                       {wf.state}
                     </span>
-                    <span className="font-mono text-xs font-semibold text-slate-200">
+                    <span className="font-mono text-xs font-semibold text-[#F2F0EA]">
                       {wf.workflow_id}
                     </span>
                   </div>
-                  <div className="text-xs text-slate-400 mt-1 font-mono">
-                    Type: <span className="text-slate-300">{wf.workflow_type}</span> | Step:{' '}
-                    <span className="text-indigo-400">{wf.current_step || 'INIT'}</span>
+                  <div className="text-xs text-[#716F69] mt-1 font-mono">
+                    Type: <span className="text-[#B0ADA5]">{wf.workflow_type}</span> | Step:{' '}
+                    <span className="text-[#D6A83A]">{wf.current_step || 'INIT'}</span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-xs font-mono text-slate-400">v{wf.version}</div>
+                  <div className="text-xs font-mono text-[#716F69]">v{wf.version}</div>
                   <Link
                     href={`/control/runtime/workflows/${wf.workflow_id}`}
-                    className="text-xs font-mono text-indigo-400 hover:underline mt-1 inline-block"
+                    className="text-xs font-mono text-[#D6A83A] hover:underline mt-1 inline-block"
                   >
                     Inspect →
                   </Link>
@@ -286,12 +286,12 @@ export default function RuntimeOverviewPage() {
         </div>
 
         {/* Worker Fleet Health */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+        <div className="p-6 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-white">Registered Worker Fleet</h3>
+            <h3 className="text-base font-bold text-[#F2F0EA]">Registered Worker Fleet</h3>
             <Link
               href="/control/runtime/workers"
-              className="text-xs font-mono text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs font-mono text-[#D6A83A] hover:underline transition-colors"
             >
               Inspect Fleet →
             </Link>
@@ -301,32 +301,32 @@ export default function RuntimeOverviewPage() {
             {workers.map((w) => (
               <div
                 key={w.worker_id}
-                className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-4"
+                className="p-3.5 rounded-lg bg-[#0B0B0B] border border-[#222222] flex items-center justify-between gap-4"
               >
                 <div>
                   <div className="flex items-center gap-2">
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
                         w.status === 'HEALTHY'
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          ? 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30'
+                          : 'bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30'
                       }`}
                     >
                       {w.status}
                     </span>
-                    <span className="font-mono text-xs font-semibold text-slate-200">
+                    <span className="font-mono text-xs font-semibold text-[#F2F0EA]">
                       {w.worker_id}
                     </span>
                   </div>
-                  <div className="text-xs text-slate-400 mt-1 font-mono">
-                    Host: <span className="text-slate-300">{w.hostname}</span> | Type:{' '}
-                    <span className="text-slate-300">{w.worker_type}</span>
+                  <div className="text-xs text-[#716F69] mt-1 font-mono">
+                    Host: <span className="text-[#B0ADA5]">{w.hostname}</span> | Type:{' '}
+                    <span className="text-[#B0ADA5]">{w.worker_type}</span>
                   </div>
                 </div>
 
-                <div className="text-right font-mono text-xs text-slate-400">
-                  <div className="text-emerald-400">Heartbeat OK</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">{w.version}</div>
+                <div className="text-right font-mono text-xs text-[#716F69]">
+                  <div className="text-[#2FB36F]">Heartbeat OK</div>
+                  <div className="text-[10px] text-[#716F69] mt-0.5">{w.version}</div>
                 </div>
               </div>
             ))}

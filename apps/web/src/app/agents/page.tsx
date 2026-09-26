@@ -41,10 +41,10 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#222222]">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Autonomous Agents</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA]">Autonomous Agents</h1>
+          <p className="text-xs text-[#716F69] mt-1">
             Registered AI agents authorized to request economic payments through AgentPay.
           </p>
         </div>
@@ -54,8 +54,8 @@ export default function AgentsPage() {
           onClick={() => setIsDemoMode(!isDemoMode)}
           className={`px-2.5 py-1 rounded-md text-[11px] font-mono border self-start sm:self-auto transition-colors ${
             isDemoMode
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-              : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-300'
+              ? 'bg-[#141414] text-[#D6A83A] border-[#D6A83A]/40'
+              : 'bg-[#101010] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
           }`}
         >
           {isDemoMode ? '● DEMO MODE ACTIVE' : '○ Enable Demo Mode'}
@@ -74,7 +74,7 @@ export default function AgentsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-44 rounded-xl bg-slate-900/60 border border-slate-800/80" />
+            <div key={i} className="h-44 rounded-xl bg-[#101010] border border-[#222222]" />
           ))}
         </div>
       ) : agents.length === 0 ? (

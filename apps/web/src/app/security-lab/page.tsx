@@ -73,9 +73,9 @@ export default function SecurityLabPage() {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-10 w-96 bg-slate-800 rounded-lg" />
-        <div className="grid grid-cols-4 gap-4 h-24 bg-slate-800/40 rounded-xl" />
-        <div className="h-96 bg-slate-900/60 rounded-2xl" />
+        <div className="h-10 w-96 bg-[#141414] border border-[#222222] rounded-lg" />
+        <div className="grid grid-cols-4 gap-4 h-24 bg-[#101010] border border-[#222222] rounded-xl" />
+        <div className="h-96 bg-[#101010] border border-[#222222] rounded-2xl" />
       </div>
     );
   }
@@ -89,19 +89,19 @@ export default function SecurityLabPage() {
   return (
     <div className="space-y-8">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#222222]">
         <div>
           <div className="flex items-center gap-3">
-            <span className="w-3 h-3 rounded-full bg-rose-500 animate-pulse" />
-            <h1 className="text-xl font-bold text-white font-mono tracking-tight">
+            <span className="w-3 h-3 rounded-full bg-[#D85C5C] animate-pulse" />
+            <h1 className="text-xl font-bold text-[#F2F0EA] font-mono tracking-tight">
               Adversarial Agent Lab
             </h1>
-            <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+            <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-[#141414] text-[#D85C5C] border border-[#D85C5C]/40">
               RED-TEAM TEST HARNESS
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1 font-mono">
-            Automated adversarial attacks against AgentPay&apos;s financial control plane. Core Thesis: <span className="text-amber-300 font-bold">THE AGENT IS UNTRUSTED</span>.
+          <p className="text-xs text-[#716F69] mt-1 font-mono">
+            Automated adversarial attacks against AgentPay&apos;s financial control plane. Core Thesis: <span className="text-[#D6A83A] font-bold">THE AGENT IS UNTRUSTED</span>.
           </p>
         </div>
 
@@ -111,8 +111,8 @@ export default function SecurityLabPage() {
             onClick={() => setIsDemoMode(!isDemoMode)}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-mono border transition-colors ${
               isDemoMode
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-300'
+                ? 'bg-[#141414] text-[#D6A83A] border-[#D6A83A]/40'
+                : 'bg-[#141414] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
             }`}
           >
             {isDemoMode ? '● DEMO FIXTURES' : '○ Live Mode'}
@@ -122,11 +122,11 @@ export default function SecurityLabPage() {
             type="button"
             disabled={isRunning}
             onClick={handleRunSuite}
-            className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold text-xs shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-mono font-bold text-xs shadow-sm transition-all flex items-center gap-2 disabled:opacity-50"
           >
             {isRunning ? (
               <>
-                <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="w-3 h-3 border-2 border-[#080808] border-t-transparent rounded-full animate-spin" />
                 Executing Attack Suite...
               </>
             ) : (
@@ -140,65 +140,65 @@ export default function SecurityLabPage() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+        <div className="p-4 rounded-xl bg-[#141414] border border-[#D85C5C]/30 text-[#D85C5C] text-xs font-mono">
           Execution Error: {error}
         </div>
       )}
 
       {/* Overview Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-          <div className="text-[11px] text-slate-500 uppercase">Attack Scenarios</div>
-          <div className="text-2xl font-bold text-emerald-400 flex items-center gap-2">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222] space-y-1">
+          <div className="text-[11px] text-[#716F69] uppercase">Attack Scenarios</div>
+          <div className="text-2xl font-bold text-[#F2F0EA] flex items-center gap-2">
             <span>{report?.passed_scenarios} / {report?.total_scenarios}</span>
-            <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="text-xs px-2 py-0.5 rounded bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30">
               100% DEFENDED
             </span>
           </div>
-          <div className="text-[10px] text-slate-400">All 20 attack vectors contained</div>
+          <div className="text-[10px] text-[#716F69]">All 20 attack vectors contained</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-          <div className="text-[11px] text-slate-500 uppercase">Security Invariants</div>
-          <div className="text-2xl font-bold text-teal-400 flex items-center gap-2">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222] space-y-1">
+          <div className="text-[11px] text-[#716F69] uppercase">Security Invariants</div>
+          <div className="text-2xl font-bold text-[#F2F0EA] flex items-center gap-2">
             <span>{report?.invariants_verified} / {report?.invariants_total}</span>
-            <span className="text-xs px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
+            <span className="text-xs px-2 py-0.5 rounded bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30">
               VERIFIED
             </span>
           </div>
-          <div className="text-[10px] text-slate-400">Mathematical assertions held</div>
+          <div className="text-[10px] text-[#716F69]">Mathematical assertions held</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-          <div className="text-[11px] text-slate-500 uppercase">Control Plane Mode</div>
-          <div className="text-lg font-bold text-white mt-1">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222] space-y-1">
+          <div className="text-[11px] text-[#716F69] uppercase">Control Plane Mode</div>
+          <div className="text-lg font-bold text-[#F2F0EA] mt-1">
             FAIL-CLOSED
           </div>
-          <div className="text-[10px] text-slate-400">Rust deterministic engine</div>
+          <div className="text-[10px] text-[#716F69]">Rust deterministic engine</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
-          <div className="text-[11px] text-slate-500 uppercase">Agent Trust Level</div>
-          <div className="text-lg font-bold text-amber-400 mt-1">
+        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222] space-y-1">
+          <div className="text-[11px] text-[#716F69] uppercase">Agent Trust Level</div>
+          <div className="text-lg font-bold text-[#D6A83A] mt-1">
             ZERO TRUST
           </div>
-          <div className="text-[10px] text-slate-400">Proposer only; zero key access</div>
+          <div className="text-[10px] text-[#716F69]">Proposer only; zero key access</div>
         </div>
       </div>
 
       {/* 12 Core Security Invariants Table */}
-      <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="p-5 rounded-2xl bg-[#101010] border border-[#222222] space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[#222222]">
           <div>
-            <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
-              <span className="text-teal-400">§</span>
+            <h2 className="text-sm font-bold text-[#F2F0EA] font-mono uppercase tracking-wider flex items-center gap-2">
+              <span className="text-[#D6A83A]">§</span>
               12 Core Financial Invariants (Machine-Checkable)
             </h2>
-            <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+            <p className="text-[11px] text-[#716F69] font-mono mt-0.5">
               Strict formal properties enforced across the AgentPay gateway, policy engine, and executor.
             </p>
           </div>
-          <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+          <span className="text-xs font-mono text-[#2FB36F] font-bold bg-[#141414] px-2.5 py-1 rounded-md border border-[#2FB36F]/20">
             12/12 INVARIANTS PASS
           </span>
         </div>
@@ -207,16 +207,16 @@ export default function SecurityLabPage() {
           {report?.invariants.map((inv) => (
             <div
               key={inv.id}
-              className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1 flex items-start gap-2.5"
+              className="p-3 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-1 flex items-start gap-2.5"
             >
-              <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold mt-0.5 shrink-0">
+              <span className="w-5 h-5 rounded-full bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/40 flex items-center justify-center text-[10px] font-bold mt-0.5 shrink-0">
                 ✓
               </span>
               <div className="space-y-0.5">
-                <div className="font-semibold text-white">
+                <div className="font-semibold text-[#F2F0EA]">
                   Invariant #{inv.id}: {inv.description}
                 </div>
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-[#716F69]">
                   {inv.details}
                 </div>
               </div>
@@ -235,15 +235,15 @@ export default function SecurityLabPage() {
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg border transition-colors ${
                 selectedCategory === cat
-                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  ? 'bg-[#D6A83A] text-[#080808] border-[#D6A83A] font-bold'
+                  : 'bg-[#141414] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
               }`}
             >
               {cat}
             </button>
           ))}
         </div>
-        <div className="text-slate-500 text-[11px]">
+        <div className="text-[#716F69] text-[11px]">
           Showing {filteredScenarios.length} of {scenarios.length} Scenarios
         </div>
       </div>
@@ -255,7 +255,7 @@ export default function SecurityLabPage() {
           return (
             <div
               key={sc.id}
-              className="rounded-xl border border-slate-800/80 bg-slate-900/60 hover:border-slate-700 transition-all text-xs"
+              className="rounded-xl border border-[#222222] bg-[#101010] hover:border-[#2D2D2D] transition-all text-xs"
             >
               {/* Scenario Row Header */}
               <div
@@ -263,25 +263,25 @@ export default function SecurityLabPage() {
                 className="p-4 flex items-center justify-between cursor-pointer select-none"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold text-[11px]">
+                  <span className="px-2 py-0.5 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222] font-bold text-[11px]">
                     {sc.id}
                   </span>
-                  <span className="font-bold text-white tracking-wide">
+                  <span className="font-bold text-[#F2F0EA] tracking-wide">
                     {sc.name}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#141414] text-[#716F69] border border-[#222222]">
                     {sc.category}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-[11px] text-slate-500 hidden sm:inline">
+                  <span className="text-[11px] text-[#716F69] hidden sm:inline">
                     {sc.execution_time_ms}ms
                   </span>
-                  <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30">
                     PASS
                   </span>
-                  <span className="text-slate-500 text-[10px]">
+                  <span className="text-[#716F69] text-[10px]">
                     {isExpanded ? '▲' : '▼'}
                   </span>
                 </div>
@@ -289,24 +289,24 @@ export default function SecurityLabPage() {
 
               {/* Expandable Details Drawer */}
               {isExpanded && (
-                <div className="px-4 pb-4 pt-1 border-t border-slate-800/60 space-y-3 text-[11px]">
+                <div className="px-4 pb-4 pt-1 border-t border-[#222222] space-y-3 text-[11px]">
                   <div>
-                    <span className="text-rose-400 font-bold block mb-0.5">Attack Vector:</span>
-                    <p className="text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800/60">
+                    <span className="text-[#D85C5C] font-bold block mb-0.5">Attack Vector:</span>
+                    <p className="text-[#B0ADA5] bg-[#0B0B0B] p-2.5 rounded-lg border border-[#222222]">
                       {sc.attack_vector}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <span className="text-slate-500 block mb-0.5">Expected Defense:</span>
-                      <div className="text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800/60">
+                      <span className="text-[#716F69] block mb-0.5">Expected Defense:</span>
+                      <div className="text-[#B0ADA5] bg-[#0B0B0B] p-2.5 rounded-lg border border-[#222222]">
                         {sc.expected_behavior}
                       </div>
                     </div>
                     <div>
-                      <span className="text-emerald-400 font-bold block mb-0.5">Actual Behavior:</span>
-                      <div className="text-emerald-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800/60">
+                      <span className="text-[#2FB36F] font-bold block mb-0.5">Actual Behavior:</span>
+                      <div className="text-[#2FB36F] bg-[#0B0B0B] p-2.5 rounded-lg border border-[#222222]">
                         {sc.actual_behavior}
                       </div>
                     </div>
@@ -314,8 +314,8 @@ export default function SecurityLabPage() {
 
                   {sc.evidence && Object.keys(sc.evidence).length > 0 && (
                     <div>
-                      <span className="text-slate-500 block mb-1">Safe Evidence &amp; Audit Trail:</span>
-                      <pre className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-[10px] text-teal-300 overflow-x-auto">
+                      <span className="text-[#716F69] block mb-1">Safe Evidence &amp; Audit Trail:</span>
+                      <pre className="p-2.5 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[10px] text-[#D6A83A] overflow-x-auto">
                         {JSON.stringify(sc.evidence, null, 2)}
                       </pre>
                     </div>

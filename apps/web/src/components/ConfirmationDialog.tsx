@@ -59,7 +59,7 @@ export function ConfirmationDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isConfirming) {
           onClose();
@@ -72,60 +72,60 @@ export function ConfirmationDialog({
     >
       <div
         ref={dialogRef}
-        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 text-slate-100"
+        className="w-full max-w-md bg-[#101010] border border-[#222222] rounded-2xl shadow-2xl p-6 text-[#F2F0EA]"
       >
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-4 border-b border-[#222222]">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-teal-400" />
-            <h2 id="dialog-title" className="text-base font-semibold text-white">
+            <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
+            <h2 id="dialog-title" className="text-base font-semibold text-[#F2F0EA]">
               Confirm Payment Execution
             </h2>
           </div>
           <button
             onClick={onClose}
             disabled={isConfirming}
-            className="text-slate-400 hover:text-white text-sm disabled:opacity-50"
+            className="text-[#716F69] hover:text-[#F2F0EA] text-sm disabled:opacity-50"
             aria-label="Close dialog"
           >
             ✕
           </button>
         </div>
 
-        <p id="dialog-description" className="text-xs text-slate-400 mt-3">
+        <p id="dialog-description" className="text-xs text-[#B0ADA5] mt-3">
           The following payment intent was evaluated and approved by the deterministic Rust Policy Engine. Explicit operator confirmation is required before on-chain execution.
         </p>
 
-        <div className="my-5 p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2.5 text-xs font-mono">
+        <div className="my-5 p-4 rounded-xl bg-[#141414] border border-[#222222] space-y-2.5 text-xs font-mono">
           <div className="flex justify-between items-center">
-            <span className="text-slate-500">Agent:</span>
-            <span className="text-slate-200 font-semibold">{intent.agent_id}</span>
+            <span className="text-[#85827B]">Agent:</span>
+            <span className="text-[#F2F0EA] font-semibold">{intent.agent_id}</span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-slate-500">Service:</span>
-            <span className="text-teal-400">{intent.service}</span>
+            <span className="text-[#85827B]">Service:</span>
+            <span className="text-[#F2F0EA]">{intent.service}</span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-slate-500">Amount:</span>
-            <span className="text-white font-bold text-sm">
-              {formattedAmount} <span className="text-xs text-teal-400 font-normal">USDC</span>
+            <span className="text-[#85827B]">Amount:</span>
+            <span className="text-[#F2F0EA] font-bold text-sm">
+              {formattedAmount} <span className="text-xs text-[#B0ADA5] font-normal">USDC</span>
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-slate-500">Recipient:</span>
+            <span className="text-[#85827B]">Recipient:</span>
             <AddressDisplay address={intent.recipient} truncate={true} copyable={false} />
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-slate-500">Policy Check:</span>
+            <span className="text-[#85827B]">Policy Check:</span>
             <StatusBadge status="AUTHORIZED" size="sm" />
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-slate-500">Network:</span>
-            <span className="text-slate-300">Arc Network</span>
+            <span className="text-[#85827B]">Network:</span>
+            <span className="text-[#B0ADA5]">Arc Network</span>
           </div>
         </div>
 
@@ -134,7 +134,7 @@ export function ConfirmationDialog({
             type="button"
             onClick={onClose}
             disabled={isConfirming}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] text-xs font-medium transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -142,11 +142,11 @@ export function ConfirmationDialog({
             type="button"
             onClick={onConfirm}
             disabled={isConfirming}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-semibold shadow-md shadow-teal-500/20 transition-all disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] text-xs font-semibold transition-all disabled:opacity-50"
           >
             {isConfirming ? (
               <>
-                <span className="w-3 h-3 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                <span className="w-3 h-3 border-2 border-[#080808] border-t-transparent rounded-full animate-spin" />
                 <span>Executing on Arc...</span>
               </>
             ) : (

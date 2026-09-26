@@ -151,12 +151,12 @@ export default function RecoveryCenterPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Link href="/control/runtime" className="text-xs font-mono text-indigo-400 hover:underline">
+            <Link href="/control/runtime" className="text-xs font-mono text-[#D6A83A] hover:underline">
               ← Runtime Overview
             </Link>
           </div>
           <h1 className="text-2xl font-bold text-white mt-1">Runtime Recovery Center</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#85827B] mt-0.5">
             Durable crash recovery, ambiguous payment reconciliation, and strict safety boundaries.
           </p>
         </div>
@@ -165,7 +165,7 @@ export default function RecoveryCenterPage() {
           <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300">
             {recoverySteps.length} Steps in Recovery Queue
           </span>
-          <span className="px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300">
+          <span className="px-3 py-1.5 rounded-lg bg-[#141414] border border-[#D85C5C]/30 text-[#D85C5C]">
             {incidents.filter((i) => i.state === 'OPEN').length} Open Incidents
           </span>
         </div>
@@ -175,12 +175,12 @@ export default function RecoveryCenterPage() {
         <div
           className={`p-4 rounded-xl border text-xs font-mono flex items-center justify-between ${
             message.type === 'success'
-              ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-              : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+              ? 'bg-[#141414] border border-[#2FB36F]/30 text-[#2FB36F]'
+              : 'bg-[#141414] border border-[#D85C5C]/30 text-[#D85C5C]'
           }`}
         >
           <span>{message.text}</span>
-          <button onClick={() => setMessage(null)} className="text-slate-400 hover:text-white">
+          <button onClick={() => setMessage(null)} className="text-[#85827B] hover:text-white">
             ✕
           </button>
         </div>
@@ -196,19 +196,19 @@ export default function RecoveryCenterPage() {
           {recoveryScenarios.map((sc) => (
             <div
               key={sc.id}
-              className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-3 font-mono text-xs"
+              className="p-5 rounded-2xl bg-[#101010] border border-[#222222] space-y-3 font-mono text-xs"
             >
               <div className="flex items-center justify-between">
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#141414] text-[#B0ADA5] border border-[#222222]">
                   {sc.category}
                 </span>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                     sc.severity === 'CRITICAL'
-                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                      ? 'bg-[#141414] text-[#D85C5C] border border-[#222222]'
                       : sc.severity === 'HIGH'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                      ? 'bg-[#141414] text-[#D6A83A] border border-[#222222]'
+                      : 'bg-[#141414] text-[#6B8FD6] border border-[#222222]'
                   }`}
                 >
                   {sc.severity}
@@ -217,31 +217,31 @@ export default function RecoveryCenterPage() {
 
               <h3 className="font-bold text-white text-sm">{sc.title}</h3>
 
-              <div className="space-y-2 text-slate-300 pt-1">
+              <div className="space-y-2 text-[#B0ADA5] pt-1">
                 <div>
-                  <span className="text-slate-400 font-bold">WHAT HAPPENED:</span> {sc.whatHappened}
+                  <span className="text-[#85827B] font-bold">WHAT HAPPENED:</span> {sc.whatHappened}
                 </div>
                 <div>
-                  <span className="text-slate-400 font-bold">WHY:</span> {sc.why}
+                  <span className="text-[#85827B] font-bold">WHY:</span> {sc.why}
                 </div>
                 <div>
-                  <span className="text-slate-400 font-bold">CURRENT STATE:</span>{' '}
-                  <span className="text-indigo-300">{sc.currentState}</span>
+                  <span className="text-[#85827B] font-bold">CURRENT STATE:</span>{' '}
+                  <span className="text-[#6B8FD6]">{sc.currentState}</span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/20 text-emerald-300">
+                <div className="p-2.5 rounded-lg bg-[#141414] border border-[#2FB36F]/30 text-[#2FB36F]">
                   <span className="font-bold">✓ WHAT IS SAFE TO DO:</span> {sc.safeToDo}
                 </div>
-                <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/20 text-rose-300">
+                <div className="p-2.5 rounded-lg bg-[#141414] border border-[#D85C5C]/30 text-[#D85C5C]">
                   <span className="font-bold">✗ WHAT IS NOT SAFE TO DO:</span> {sc.notSafeToDo}
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-2 border-t border-[#222222] flex items-center justify-end gap-2">
                 {sc.actionableIncidentId && (
                   <button
                     disabled={actionLoading}
                     onClick={() => handleReconcile(sc.actionableIncidentId!)}
-                    className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-semibold transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] font-semibold transition-colors"
                   >
                     Force Safe Reconciliation
                   </button>
@@ -250,7 +250,7 @@ export default function RecoveryCenterPage() {
                   <button
                     disabled={actionLoading}
                     onClick={() => handleSafeRetry(sc.actionableWorkflowId!, sc.actionableStepId!)}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-semibold transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] text-[#2FB36F] border border-[#2A2A2A] font-semibold transition-colors"
                   >
                     Safe Step Retry
                   </button>

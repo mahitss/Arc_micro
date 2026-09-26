@@ -13,17 +13,17 @@ interface TransactionTableProps {
 export function TransactionTable({ transactions, explorerUrl }: TransactionTableProps) {
   if (transactions.length === 0) {
     return (
-      <div className="p-8 text-center text-xs font-mono text-slate-500 bg-slate-900/30 rounded-xl border border-slate-800/80">
+      <div className="p-8 text-center text-xs font-mono text-[#716F69] bg-[#101010] rounded-xl border border-[#222222]">
         No transactions recorded yet.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-900/50">
+    <div className="overflow-x-auto rounded-xl border border-[#222222] bg-[#101010]">
       <table className="w-full text-left border-collapse text-xs">
         <thead>
-          <tr className="border-b border-slate-800/80 bg-slate-950/60 text-slate-400 font-mono">
+          <tr className="border-b border-[#222222] bg-[#141414] text-[#85827B] font-mono">
             <th className="py-3 px-4 font-medium">Tx Hash</th>
             <th className="py-3 px-4 font-medium">Intent ID</th>
             <th className="py-3 px-4 font-medium">Amount</th>
@@ -33,7 +33,7 @@ export function TransactionTable({ transactions, explorerUrl }: TransactionTable
             <th className="py-3 px-4 font-medium text-right">Explorer</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800/60 font-mono">
+        <tbody className="divide-y divide-[#222222] font-mono">
           {transactions.map((tx) => {
             const amountNum = tx.amount ? Number(tx.amount) / 1_000_000 : null;
             const amountStr = amountNum !== null ? `$${amountNum.toFixed(2)} USDC` : '—';
@@ -48,12 +48,12 @@ export function TransactionTable({ transactions, explorerUrl }: TransactionTable
                 : tx.transaction_hash || 'Pending';
 
             return (
-              <tr key={tx.intent_id} className="hover:bg-slate-850/50 transition-colors">
-                <td className="py-3 px-4 font-semibold text-slate-200">
+              <tr key={tx.intent_id} className="hover:bg-[#141414] transition-colors">
+                <td className="py-3 px-4 font-semibold text-[#F2F0EA]">
                   <div className="flex items-center gap-1.5">
                     <Link
                       href={`/transactions/${encodeURIComponent(tx.transaction_hash || tx.intent_id)}`}
-                      className="hover:text-teal-400 transition-colors hover:underline"
+                      className="hover:text-[#D6A83A] transition-colors hover:underline"
                     >
                       {truncatedHash}
                     </Link>
@@ -62,38 +62,38 @@ export function TransactionTable({ transactions, explorerUrl }: TransactionTable
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-4 text-slate-400">
+                <td className="py-3 px-4 text-[#B0ADA5]">
                   <Link
                     href={`/payment-intents/${encodeURIComponent(tx.intent_id)}`}
-                    className="hover:text-teal-400 hover:underline"
+                    className="hover:text-[#D6A83A] hover:underline"
                   >
                     {tx.intent_id}
                   </Link>
                 </td>
-                <td className="py-3 px-4 font-bold text-white">{amountStr}</td>
+                <td className="py-3 px-4 font-bold text-[#F2F0EA]">{amountStr}</td>
                 <td className="py-3 px-4">
                   {tx.recipient ? (
                     <AddressDisplay address={tx.recipient} truncate={true} copyable={true} />
                   ) : (
-                    <span className="text-slate-500">—</span>
+                    <span className="text-[#716F69]">—</span>
                   )}
                 </td>
                 <td className="py-3 px-4">
                   <StatusBadge status={tx.status} size="sm" />
                 </td>
-                <td className="py-3 px-4 text-slate-500">{formattedTime}</td>
+                <td className="py-3 px-4 text-[#716F69]">{formattedTime}</td>
                 <td className="py-3 px-4 text-right">
                   {explorerUrl && tx.transaction_hash && !tx.intent_id.includes('demo') && !tx.transaction_hash.includes('demo') ? (
                     <a
                       href={`${explorerUrl}/tx/${tx.transaction_hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-teal-400 hover:underline text-[11px] font-sans font-medium"
+                      className="text-[#D6A83A] hover:underline text-[11px] font-sans font-medium"
                     >
                       Arc Explorer ↗
                     </a>
                   ) : (
-                    <span className="text-slate-600 font-sans text-[11px]">DATA UNAVAILABLE (Demo)</span>
+                    <span className="text-[#716F69] font-sans text-[11px]">DATA UNAVAILABLE (Demo)</span>
                   )}
                 </td>
               </tr>

@@ -30,40 +30,40 @@ export default function RuntimeTopologyPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-xl bg-[#101010] border border-[#222222]">
         <div>
           <div className="flex items-center gap-2">
             <Link
               href="/control/operations"
-              className="text-xs font-mono text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs font-mono text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
             >
               ← Operations Command Center
             </Link>
-            <span className="text-slate-600">/</span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            <span className="text-[#50504C]">/</span>
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#141414] text-[#B0ADA5] border border-[#222222]">
               RUNTIME TOPOLOGY
             </span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight mt-2">
+          <h1 className="text-2xl font-black text-[#F2F0EA] tracking-tight mt-2">
             Operations & Runtime Topology
           </h1>
-          <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+          <p className="text-xs text-[#B0ADA5] mt-1 max-w-3xl">
             Physical and logical infrastructure topology. Explicitly separates RPC infrastructure availability from verified on-chain smart contract deployment (INV-135).
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-900 border border-slate-700 text-slate-300">
+          <span className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#141414] border border-[#222222] text-[#716F69]">
             PROBED: {health ? new Date(health.generated_at).toLocaleTimeString() : '...'}
           </span>
         </div>
       </div>
 
       {/* Critical Invariant Callout: INV-135 */}
-      <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-start gap-3 text-amber-200">
-        <span className="text-lg">🛡️</span>
+      <div className="p-4 rounded-xl bg-[#101010] border border-[#D6A83A]/30 flex items-start gap-3 text-[#B0ADA5]">
+        <span className="text-base text-[#D6A83A]">🛡️</span>
         <div className="text-xs font-mono">
-          <strong className="text-amber-300 font-bold block mb-0.5">
+          <strong className="text-[#D6A83A] font-bold block mb-0.5">
             INV-135 STRICT ZERO-FABRICATION GUARANTEE
           </strong>
           Arc RPC connectivity does not equal on-chain verification. AgentVault contract status is only verified through cryptographic deployment and settlement proofs. Unverified contracts are never presented as verified.
@@ -73,100 +73,100 @@ export default function RuntimeTopologyPage() {
       {/* Topology Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Tier 1: Core Gateway & Database */}
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-4">
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-mono font-bold text-[#716F69] uppercase tracking-wider">
               DATA & PERSISTENCE
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30">
               CONNECTED
             </span>
           </div>
           <div className="space-y-3">
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <div className="text-sm font-bold text-white">PostgreSQL State Store</div>
-              <div className="text-xs text-slate-400">Durable snapshots, checkpoint logs, causal links</div>
-              <div className="text-[10px] font-mono text-emerald-400 pt-1">LATENCY: 1.2ms</div>
+            <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+              <div className="text-sm font-bold text-[#F2F0EA]">PostgreSQL State Store</div>
+              <div className="text-xs text-[#716F69]">Durable snapshots, checkpoint logs, causal links</div>
+              <div className="text-[10px] font-mono text-[#2FB36F] pt-1">LATENCY: 1.2ms</div>
             </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <div className="text-sm font-bold text-white">Durable Queues</div>
-              <div className="text-xs text-slate-400">8 isolated queues with visibility leases</div>
-              <div className="text-[10px] font-mono text-emerald-400 pt-1">STATUS: OPERATIONAL</div>
+            <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+              <div className="text-sm font-bold text-[#F2F0EA]">Durable Queues</div>
+              <div className="text-xs text-[#716F69]">8 isolated queues with visibility leases</div>
+              <div className="text-[10px] font-mono text-[#2FB36F] pt-1">STATUS: OPERATIONAL</div>
             </div>
           </div>
         </div>
 
         {/* Tier 2: Domain Engines */}
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-4">
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-mono font-bold text-[#716F69] uppercase tracking-wider">
               AUTHORITATIVE DOMAIN
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30">
               AVAILABLE
             </span>
           </div>
           <div className="space-y-3">
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <div className="text-sm font-bold text-white">Policy / Risk Engine</div>
-              <div className="text-xs text-slate-400">Rust Deterministic Microsecond Engine</div>
-              <div className="text-[10px] font-mono text-emerald-400 pt-1">P99 EVAL: 4.8µs</div>
+            <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+              <div className="text-sm font-bold text-[#F2F0EA]">Policy / Risk Engine</div>
+              <div className="text-xs text-[#716F69]">Rust Deterministic Microsecond Engine</div>
+              <div className="text-[10px] font-mono text-[#2FB36F] pt-1">P99 EVAL: 4.8µs</div>
             </div>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <div className="text-sm font-bold text-white">Treasury & Clearinghouse</div>
-              <div className="text-xs text-slate-400">Ledger reservations & multilateral netting</div>
-              <div className="text-[10px] font-mono text-emerald-400 pt-1">RESERVATIONS: LOCKED</div>
+            <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+              <div className="text-sm font-bold text-[#F2F0EA]">Treasury & Clearinghouse</div>
+              <div className="text-xs text-[#716F69]">Ledger reservations & multilateral netting</div>
+              <div className="text-[10px] font-mono text-[#2FB36F] pt-1">RESERVATIONS: LOCKED</div>
             </div>
           </div>
         </div>
 
         {/* Tier 3: Settlement & Blockchain (INV-135 Strict Truth) */}
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-4">
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-mono font-bold text-[#716F69] uppercase tracking-wider">
               SETTLEMENT LAYER
             </span>
             <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
               arc?.vault_deployed
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                ? 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30'
+                : 'bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30'
             }`}>
               {arc?.vault_deployed ? 'DEPLOYED' : 'UNVERIFIED'}
             </span>
           </div>
           <div className="space-y-3">
             {/* Arc RPC */}
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+            <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-white">Arc RPC Node</span>
+                <span className="text-sm font-bold text-[#F2F0EA]">Arc RPC Node</span>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                  arc?.rpc_connected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                  arc?.rpc_connected ? 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30' : 'bg-[#D85C5C]/15 text-[#D85C5C] border border-[#D85C5C]/30'
                 }`}>
                   {arc?.rpc_connected ? 'AVAILABLE' : 'OFFLINE'}
                 </span>
               </div>
-              <div className="text-xs text-slate-400">HTTP/WebSocket RPC communication</div>
-              <div className="text-[10px] font-mono text-slate-500 pt-1">
+              <div className="text-xs text-[#716F69]">HTTP/WebSocket RPC communication</div>
+              <div className="text-[10px] font-mono text-[#716F69] pt-1">
                 Checked: {arc?.last_checked_at ? new Date(arc.last_checked_at).toLocaleTimeString() : 'N/A'}
               </div>
             </div>
 
             {/* AgentVault */}
-            <div className={`p-3 rounded-xl bg-slate-950 border space-y-1 ${
-              arc?.vault_deployed ? 'border-emerald-500/30' : 'border-amber-500/30'
+            <div className={`p-3 rounded-lg bg-[#0B0B0B] border space-y-1 ${
+              arc?.vault_deployed ? 'border-[#2FB36F]/30' : 'border-[#D6A83A]/30'
             }`}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-white">Solidity AgentVault</span>
+                <span className="text-sm font-bold text-[#F2F0EA]">Solidity AgentVault</span>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                  arc?.vault_deployed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                  arc?.vault_deployed ? 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30' : 'bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30'
                 }`}>
                   {arc?.vault_deployed ? 'VERIFIED' : 'NOT DEPLOYED'}
                 </span>
               </div>
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-[#716F69]">
                 {arc?.status_text || 'NOT VERIFIED / NOT DEPLOYED'}
               </div>
-              <div className="text-[10px] font-mono text-amber-400/90 pt-1">
+              <div className="text-[10px] font-mono text-[#D6A83A] pt-1">
                 {arc?.vault_deployed ? 'VAULT ACTIVE' : 'LIVE SETTLEMENT GATED'}
               </div>
             </div>

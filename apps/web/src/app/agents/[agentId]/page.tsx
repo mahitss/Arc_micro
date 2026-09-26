@@ -58,16 +58,16 @@ export default function AgentDetailPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+      <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
         <div className="flex items-center gap-3">
           <Link
             href="/agents"
-            className="text-xs font-mono text-slate-400 hover:text-teal-400 transition-colors"
+            className="text-xs font-mono text-[#716F69] hover:text-[#D6A83A] transition-colors"
           >
             ← Agents
           </Link>
-          <span className="text-slate-600">/</span>
-          <h1 className="text-xl font-bold text-white font-mono">{agentId}</h1>
+          <span className="text-[#50504C]">/</span>
+          <h1 className="text-xl font-bold text-[#F2F0EA] font-mono">{agentId}</h1>
         </div>
 
         <button
@@ -75,8 +75,8 @@ export default function AgentDetailPage() {
           onClick={() => setIsDemoMode(!isDemoMode)}
           className={`px-2.5 py-1 rounded-md text-[11px] font-mono border transition-colors ${
             isDemoMode
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-              : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-300'
+              ? 'bg-[#141414] text-[#D6A83A] border-[#D6A83A]/40'
+              : 'bg-[#101010] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
           }`}
         >
           {isDemoMode ? '● DEMO MODE' : '○ Demo Mode'}
@@ -94,23 +94,23 @@ export default function AgentDetailPage() {
 
       {loading ? (
         <div className="space-y-6 animate-pulse">
-          <div className="h-32 rounded-2xl bg-slate-900/60 border border-slate-800" />
-          <div className="h-64 rounded-2xl bg-slate-900/60 border border-slate-800" />
+          <div className="h-32 rounded-2xl bg-[#101010] border border-[#222222]" />
+          <div className="h-64 rounded-2xl bg-[#101010] border border-[#222222]" />
         </div>
       ) : agent ? (
         <>
           {/* Identity & Balance Banner */}
-          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <div className="text-xs font-mono text-slate-500 uppercase">Agent Name</div>
-              <div className="text-lg font-bold text-white mt-1">{agent.name}</div>
+              <div className="text-xs font-mono text-[#716F69] uppercase">Agent Name</div>
+              <div className="text-lg font-bold text-[#F2F0EA] mt-1">{agent.name}</div>
               <div className="mt-2">
                 <StatusBadge status={agent.status} size="sm" />
               </div>
             </div>
 
             <div>
-              <div className="text-xs font-mono text-slate-500 uppercase">Custodial Vault</div>
+              <div className="text-xs font-mono text-[#716F69] uppercase">Custodial Vault</div>
               <div className="mt-1">
                 <AddressDisplay
                   address={agent.vault_address || ''}
@@ -119,29 +119,29 @@ export default function AgentDetailPage() {
                   label="Vault Address"
                 />
               </div>
-              <div className="text-[11px] font-mono text-slate-500 mt-1">{agent.network}</div>
+              <div className="text-[11px] font-mono text-[#50504C] mt-1">{agent.network}</div>
             </div>
 
             <div>
-              <div className="text-xs font-mono text-slate-500 uppercase">USDC Balance</div>
-              <div className="text-2xl font-bold text-white mt-1">
+              <div className="text-xs font-mono text-[#716F69] uppercase">USDC Balance</div>
+              <div className="text-2xl font-bold text-[#F2F0EA] mt-1">
                 {agent.usdc_balance ? (
                   <>
-                    {agent.usdc_balance} <span className="text-xs font-normal text-teal-400">USDC</span>
+                    {agent.usdc_balance} <span className="text-xs font-normal text-[#D6A83A]">USDC</span>
                   </>
                 ) : (
-                  <span className="text-xs text-slate-400 font-normal">Balance unavailable</span>
+                  <span className="text-xs text-[#716F69] font-normal">Balance unavailable</span>
                 )}
               </div>
-              <div className="text-[11px] text-slate-500 mt-1">AgentVault ERC-20 contract</div>
+              <div className="text-[11px] text-[#50504C] mt-1">AgentVault ERC-20 contract</div>
             </div>
 
             <div>
-              <div className="text-xs font-mono text-slate-500 uppercase">Registered At</div>
-              <div className="text-xs font-mono text-slate-300 mt-1">
+              <div className="text-xs font-mono text-[#716F69] uppercase">Registered At</div>
+              <div className="text-xs font-mono text-[#B0ADA5] mt-1">
                 {new Date(agent.created_at).toLocaleString()}
               </div>
-              <div className="text-[11px] text-teal-400 font-mono mt-2">Zero-Float Invariant Active</div>
+              <div className="text-[11px] text-[#2FB36F] font-mono mt-2">Zero-Float Invariant Active</div>
             </div>
           </div>
 
@@ -150,7 +150,7 @@ export default function AgentDetailPage() {
 
           {/* Recent Intents for Agent */}
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-white">Payment Intents for {agent.name}</h2>
+            <h2 className="text-base font-semibold text-[#F2F0EA]">Payment Intents for {agent.name}</h2>
             <IntentTable intents={intents} />
           </div>
         </>

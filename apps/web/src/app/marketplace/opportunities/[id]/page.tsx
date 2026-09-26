@@ -62,17 +62,17 @@ export default function OpportunityDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 p-8 flex items-center justify-center">
-        <div className="text-cyan-400 font-mono animate-pulse">Loading opportunity detail...</div>
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8 flex items-center justify-center">
+        <div className="text-[#D6A83A] font-mono animate-pulse">Loading opportunity detail...</div>
       </div>
     );
   }
 
   if (!opp) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-        <div className="text-red-400">Opportunity not found.</div>
-        <Link href="/marketplace" className="text-cyan-400 underline mt-4 block">← Back to Marketplace</Link>
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8">
+        <div className="text-[#D85C5C]">Opportunity not found.</div>
+        <Link href="/marketplace" className="text-[#B0ADA5] hover:text-[#F2F0EA] underline mt-4 block">← Back to Marketplace</Link>
       </div>
     );
   }
@@ -81,24 +81,24 @@ export default function OpportunityDetailPage() {
   const explanation = candidateSet?.explanation;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10 space-y-8">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-10 space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-[#222222]">
         <div>
           <div className="flex items-center gap-3">
-            <Link href="/marketplace" className="text-xs text-slate-400 hover:text-slate-200">
+            <Link href="/marketplace" className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors">
               ← Marketplace
             </Link>
-            <span className="text-slate-600">/</span>
-            <span className="font-mono text-xs text-cyan-400">{opp.opportunity_id}</span>
+            <span className="text-[#50504C]">/</span>
+            <span className="font-mono text-xs text-[#D6A83A]">{opp.opportunity_id}</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mt-1.5">{opp.title}</h1>
-          <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
-            <span>Requester: <strong className="text-slate-200 font-mono">{opp.requester_id}</strong></span>
+          <h1 className="text-2xl font-bold text-[#F2F0EA] mt-1.5">{opp.title}</h1>
+          <div className="flex items-center gap-3 mt-2 text-xs text-[#716F69]">
+            <span>Requester: <strong className="text-[#F2F0EA] font-mono">{opp.requester_id}</strong></span>
             <span>•</span>
-            <span>Capability: <strong className="text-slate-200">{opp.capability}</strong></span>
+            <span>Capability: <strong className="text-[#F2F0EA]">{opp.capability}</strong></span>
             <span>•</span>
-            <span>Budget Cap: <strong className="text-emerald-400">{opp.budget_constraint_usdc} USDC</strong></span>
+            <span>Budget Cap: <strong className="text-[#2FB36F]">{opp.budget_constraint_usdc} USDC</strong></span>
           </div>
         </div>
 
@@ -106,14 +106,14 @@ export default function OpportunityDetailPage() {
           <span
             className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${
               opp.status === 'AWARDED'
-                ? 'bg-purple-950/80 text-purple-300 border border-purple-800'
-                : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
+                ? 'bg-[#141414] text-[#D6A83A] border border-[#222222]'
+                : 'bg-[#141414] text-[#2FB36F] border border-[#222222]'
             }`}
           >
             {opp.status}
           </span>
           {awardedContract && (
-            <div className="text-xs font-mono text-slate-300 bg-slate-900 px-3 py-1 rounded border border-slate-800">
+            <div className="text-xs font-mono text-[#B0ADA5] bg-[#141414] px-3 py-1 rounded border border-[#222222]">
               Contract: {awardedContract}
             </div>
           )}
@@ -125,78 +125,78 @@ export default function OpportunityDetailPage() {
         {/* Left: Requirements, Policy, Workflow */}
         <div className="lg:col-span-7 space-y-6">
           {/* Work Requirements & Constraints */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+          <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#716F69]">
               Opportunity Requirements & Constraints
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-              <div className="bg-slate-950/60 p-3 rounded border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">Deadline</span>
-                <span className="font-medium text-slate-200">{new Date(opp.deadline).toLocaleString()}</span>
+              <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
+                <span className="text-[#716F69] block text-[10px]">Deadline</span>
+                <span className="font-medium text-[#F2F0EA]">{new Date(opp.deadline).toLocaleString()}</span>
               </div>
-              <div className="bg-slate-950/60 p-3 rounded border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">Max Risk Requirement</span>
-                <span className="font-medium text-cyan-300">LOW (Score &lt; 25)</span>
+              <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
+                <span className="text-[#716F69] block text-[10px]">Max Risk Requirement</span>
+                <span className="font-medium text-[#F2F0EA]">LOW (Score &lt; 25)</span>
               </div>
-              <div className="bg-slate-950/60 p-3 rounded border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">Quality Standard</span>
-                <span className="font-medium text-purple-300">Confidence &gt; 95%</span>
+              <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
+                <span className="text-[#716F69] block text-[10px]">Quality Standard</span>
+                <span className="font-medium text-[#D6A83A]">Confidence &gt; 95%</span>
               </div>
             </div>
 
-            <div className="bg-slate-950/80 p-3.5 rounded border border-slate-800/80">
-              <span className="text-[10px] text-slate-500 uppercase block font-semibold mb-1">Specification Payload</span>
-              <pre className="text-xs font-mono text-cyan-200/90 whitespace-pre-wrap">
+            <div className="bg-[#0B0B0B] p-3.5 rounded-lg border border-[#222222]">
+              <span className="text-[10px] text-[#716F69] uppercase block font-semibold mb-1">Specification Payload</span>
+              <pre className="text-xs font-mono text-[#F2F0EA] whitespace-pre-wrap">
                 {JSON.stringify(opp.requirements || { task: '10,000 security logs deep scan' }, null, 2)}
               </pre>
             </div>
           </div>
 
           {/* Policy & Risk Boundaries */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+          <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#716F69]">
               AgentPay Financial Controls Envelope
             </h2>
             <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded border border-slate-800">
-                <span className="text-slate-300">INV-181: Matching Payment Invariant</span>
-                <span className="text-emerald-400 font-mono font-medium">ENFORCED (No Direct Authority)</span>
+              <div className="flex items-center justify-between p-2.5 bg-[#0B0B0B] rounded-lg border border-[#222222]">
+                <span className="text-[#B0ADA5]">INV-181: Matching Payment Invariant</span>
+                <span className="text-[#2FB36F] font-mono font-medium">ENFORCED (No Direct Authority)</span>
               </div>
-              <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded border border-slate-800">
-                <span className="text-slate-300">INV-182: Constitution Policy Rule</span>
-                <span className="text-emerald-400 font-mono font-medium">ALLOWED (Within daily envelope)</span>
+              <div className="flex items-center justify-between p-2.5 bg-[#0B0B0B] rounded-lg border border-[#222222]">
+                <span className="text-[#B0ADA5]">INV-182: Constitution Policy Rule</span>
+                <span className="text-[#2FB36F] font-mono font-medium">ALLOWED (Within daily envelope)</span>
               </div>
-              <div className="flex items-center justify-between p-2.5 bg-slate-950/50 rounded border border-slate-800">
-                <span className="text-slate-300">INV-185: Budget Hard Ceiling</span>
-                <span className="text-emerald-400 font-mono font-medium">LOCKED (Max {opp.budget_constraint_usdc} USDC)</span>
+              <div className="flex items-center justify-between p-2.5 bg-[#0B0B0B] rounded-lg border border-[#222222]">
+                <span className="text-[#B0ADA5]">INV-185: Budget Hard Ceiling</span>
+                <span className="text-[#2FB36F] font-mono font-medium">LOCKED (Max {opp.budget_constraint_usdc} USDC)</span>
               </div>
             </div>
           </div>
 
           {/* Workflow Milestones */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+          <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#716F69]">
               Contract Milestones & Result Verification
             </h2>
             <div className="space-y-2 text-xs">
-              <div className="p-3 bg-slate-950/60 rounded border border-slate-800 flex items-center justify-between">
+              <div className="p-3 bg-[#0B0B0B] rounded-lg border border-[#222222] flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-slate-200">Milestone 1: Preliminary Static Scan</div>
-                  <div className="text-[11px] text-slate-400">Hash attestation submission</div>
+                  <div className="font-semibold text-[#F2F0EA]">Milestone 1: Preliminary Static Scan</div>
+                  <div className="text-[11px] text-[#716F69]">Hash attestation submission</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-white">15.00 USDC</div>
-                  <div className="text-[10px] text-slate-500">Payable post-verification</div>
+                  <div className="font-bold text-[#F2F0EA]">15.00 USDC</div>
+                  <div className="text-[10px] text-[#716F69]">Payable post-verification</div>
                 </div>
               </div>
-              <div className="p-3 bg-slate-950/60 rounded border border-slate-800 flex items-center justify-between">
+              <div className="p-3 bg-[#0B0B0B] rounded-lg border border-[#222222] flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-slate-200">Milestone 2: Final Formal Verification Report</div>
-                  <div className="text-[11px] text-slate-400">Cryptographic audit proof verification</div>
+                  <div className="font-semibold text-[#F2F0EA]">Milestone 2: Final Formal Verification Report</div>
+                  <div className="text-[11px] text-[#716F69]">Cryptographic audit proof verification</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-white">25.00 USDC</div>
-                  <div className="text-[10px] text-slate-500">Settles on Arc via AgentVault</div>
+                  <div className="font-bold text-[#F2F0EA]">25.00 USDC</div>
+                  <div className="text-[10px] text-[#716F69]">Settles on Arc via AgentVault</div>
                 </div>
               </div>
             </div>
@@ -207,49 +207,49 @@ export default function OpportunityDetailPage() {
         <div className="lg:col-span-5 space-y-6">
           {/* Explainer Panel (Section 47) */}
           {explanation && (
-            <div className="bg-gradient-to-br from-cyan-950/50 via-slate-900/90 to-blue-950/40 border border-cyan-500/40 rounded-xl p-5 shadow-xl space-y-4">
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-[#F2F0EA] flex items-center gap-1.5">
                   <span>💡 Why This Provider?</span>
                 </h3>
-                <span className="text-[10px] font-mono text-cyan-300/80 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">
+                <span className="text-[10px] font-mono text-[#D6A83A] bg-[#141414] px-2 py-0.5 rounded border border-[#222222]">
                   Deterministic Match
                 </span>
               </div>
 
               <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between py-1 border-b border-cyan-900/40">
-                  <span className="text-slate-400">Selected Provider:</span>
-                  <span className="font-mono font-bold text-white">{explanation.selected_provider_id}</span>
+                <div className="flex items-center justify-between py-1 border-b border-[#222222]">
+                  <span className="text-[#716F69]">Selected Provider:</span>
+                  <span className="font-mono font-bold text-[#F2F0EA]">{explanation.selected_provider_id}</span>
                 </div>
-                <div className="flex items-center justify-between py-1 border-b border-cyan-900/40">
-                  <span className="text-slate-400">Capability Compatibility:</span>
-                  <span className="font-semibold text-emerald-400">{explanation.capability_match}</span>
+                <div className="flex items-center justify-between py-1 border-b border-[#222222]">
+                  <span className="text-[#716F69]">Capability Compatibility:</span>
+                  <span className="font-semibold text-[#2FB36F]">{explanation.capability_match}</span>
                 </div>
-                <div className="flex items-center justify-between py-1 border-b border-cyan-900/40">
-                  <span className="text-slate-400">Deadline Feasibility:</span>
-                  <span className="font-semibold text-emerald-400">{explanation.deadline_feasibility}</span>
+                <div className="flex items-center justify-between py-1 border-b border-[#222222]">
+                  <span className="text-[#716F69]">Deadline Feasibility:</span>
+                  <span className="font-semibold text-[#2FB36F]">{explanation.deadline_feasibility}</span>
                 </div>
-                <div className="flex items-center justify-between py-1 border-b border-cyan-900/40">
-                  <span className="text-slate-400">Constitutional Policy:</span>
-                  <span className="font-semibold text-emerald-400">{explanation.policy_status}</span>
+                <div className="flex items-center justify-between py-1 border-b border-[#222222]">
+                  <span className="text-[#716F69]">Constitutional Policy:</span>
+                  <span className="font-semibold text-[#2FB36F]">{explanation.policy_status}</span>
                 </div>
-                <div className="flex items-center justify-between py-1 border-b border-cyan-900/40">
-                  <span className="text-slate-400">Risk Assessment:</span>
-                  <span className="font-semibold text-emerald-400">{explanation.risk_status}</span>
+                <div className="flex items-center justify-between py-1 border-b border-[#222222]">
+                  <span className="text-[#716F69]">Risk Assessment:</span>
+                  <span className="font-semibold text-[#2FB36F]">{explanation.risk_status}</span>
                 </div>
-                <div className="flex items-center justify-between py-1 border-b border-cyan-900/40">
-                  <span className="text-slate-400">Historical Performance:</span>
-                  <span className="text-white font-medium">
+                <div className="flex items-center justify-between py-1 border-b border-[#222222]">
+                  <span className="text-[#716F69]">Historical Performance:</span>
+                  <span className="text-[#F2F0EA] font-medium">
                     {explanation.historical_success} (Sample: N={explanation.sample_size})
                   </span>
                 </div>
-                <div className="flex items-center justify-between py-1 border-b border-cyan-900/40">
-                  <span className="text-slate-400">Price Quote:</span>
-                  <span className="text-emerald-300 font-bold">{explanation.quote_amount_usdc} USDC</span>
+                <div className="flex items-center justify-between py-1 border-b border-[#222222]">
+                  <span className="text-[#716F69]">Price Quote:</span>
+                  <span className="text-[#2FB36F] font-bold">{explanation.quote_amount_usdc} USDC</span>
                 </div>
-                <div className="pt-2 text-slate-300">
-                  <span className="text-slate-500 block text-[10px]">Deterministic Tie-Break Reason</span>
+                <div className="pt-2 text-[#B0ADA5]">
+                  <span className="text-[#716F69] block text-[10px]">Deterministic Tie-Break Reason</span>
                   <span className="italic">{explanation.tie_break_reason}</span>
                 </div>
               </div>
@@ -257,8 +257,8 @@ export default function OpportunityDetailPage() {
           )}
 
           {/* Ranked Candidates */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+          <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#716F69]">
               Evaluated Candidate Quotes ({candidateSet?.candidates?.length || 0})
             </h3>
 
@@ -268,48 +268,48 @@ export default function OpportunityDetailPage() {
                   key={cand.provider_id}
                   className={`p-4 rounded-lg border transition-all ${
                     cand.rank === 1
-                      ? 'bg-slate-900/90 border-cyan-500/60 shadow-md shadow-cyan-950/20'
-                      : 'bg-slate-950/60 border-slate-800'
+                      ? 'bg-[#141414] border-[#D6A83A]'
+                      : 'bg-[#0B0B0B] border-[#222222]'
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-[#181818] text-[#D6A83A] border border-[#222222]">
                           Rank #{cand.rank}
                         </span>
-                        <span className="font-mono text-xs font-semibold text-slate-200">
+                        <span className="font-mono text-xs font-semibold text-[#F2F0EA]">
                           {cand.provider_id}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-1">
+                      <div className="text-[11px] text-[#716F69] mt-1">
                         Historical: {((cand.historical_success_rate || 0.95) * 100).toFixed(1)}% (N={cand.sample_size})
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-base font-bold text-emerald-400 block">
+                      <span className="text-base font-bold text-[#2FB36F] block">
                         {cand.estimated_cost_usdc} USDC
                       </span>
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[10px] text-[#716F69]">
                         Risk: {cand.risk_score}/100
                       </span>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-800/60">
-                    <span className="text-[10px] text-slate-400">
+                  <div className="mt-3 flex items-center justify-between pt-2 border-t border-[#222222]">
+                    <span className="text-[10px] text-[#716F69]">
                       Policy: {cand.policy_compatible ? '✅ COMPATIBLE' : '❌ DENIED'}
                     </span>
                     {opp.status !== 'AWARDED' ? (
                       <button
                         onClick={() => handleAward(cand.provider_id, cand.estimated_cost_usdc)}
                         disabled={awarding}
-                        className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded shadow transition-all disabled:opacity-50"
+                        className="px-3 py-1 bg-[#F2F0EA] hover:bg-white text-[#080808] text-xs font-bold rounded transition-colors disabled:opacity-50"
                       >
                         {awarding ? 'Awarding...' : 'Award Contract'}
                       </button>
                     ) : (
-                      <span className="text-xs text-purple-400 font-semibold">
+                      <span className="text-xs text-[#D6A83A] font-semibold">
                         {opp.awarded_provider_id === cand.provider_id ? '★ Awarded Winner' : 'Alternative'}
                       </span>
                     )}

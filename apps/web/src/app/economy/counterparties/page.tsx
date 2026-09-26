@@ -39,34 +39,34 @@ export default function CounterpartiesPage() {
   const verifiedCount = counterparties.filter(c => c.identity_status === 'VERIFIED').length;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10 space-y-8">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-10 space-y-8">
       {/* Header Banner */}
-      <div className="border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900/60 to-purple-950/40 rounded-xl p-6 shadow-2xl backdrop-blur-md">
+      <div className="border border-[#222222] bg-[#101010] rounded-xl p-6 shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-semibold tracking-wider text-[#a3a3a3] uppercase font-mono">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#D6A83A]" />
+              <span className="text-xs font-semibold tracking-wider text-[#B0ADA5] uppercase font-mono">
                 Economic Clearing Network
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#F2F0EA]">
               Economic Counterparties Directory
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-[#716F69] mt-1">
               Authoritative counterparty exposure limits, capability credentials, identity statuses, and active contract relations.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/economy/network"
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors shadow-lg shadow-indigo-600/20"
+              className="px-4 py-2 bg-[#F2F0EA] hover:bg-white text-[#080808] text-xs font-semibold font-mono rounded-lg transition-colors"
             >
               Network Graph View →
             </Link>
             <Link
               href="/control/economy"
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition-colors"
+              className="px-4 py-2 bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] text-xs font-semibold font-mono rounded-lg border border-[#222222] transition-colors"
             >
               Control Tower
             </Link>
@@ -76,45 +76,45 @@ export default function CounterpartiesPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg">
-          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Registered Counterparties</div>
-          <div className="text-2xl font-bold text-white mt-1">{counterparties.length}</div>
-          <div className="text-xs text-indigo-400 mt-2 font-mono">{verifiedCount} verified identities</div>
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-medium text-[#716F69] uppercase tracking-wider font-mono">Registered Counterparties</div>
+          <div className="text-2xl font-bold text-[#F2F0EA] mt-1 font-mono">{counterparties.length}</div>
+          <div className="text-xs text-[#716F69] mt-2 font-mono">{verifiedCount} verified identities</div>
         </div>
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg">
-          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Gross Network Exposure</div>
-          <div className="text-2xl font-bold text-emerald-400 mt-1 font-mono">{formatUsdc(String(totalExposure))}</div>
-          <div className="text-xs text-slate-400 mt-2">Aggregated active obligations</div>
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-medium text-[#716F69] uppercase tracking-wider font-mono">Gross Network Exposure</div>
+          <div className="text-2xl font-bold text-[#2FB36F] mt-1 font-mono">{formatUsdc(String(totalExposure))}</div>
+          <div className="text-xs text-[#716F69] mt-2 font-mono">Aggregated active obligations</div>
         </div>
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg">
-          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Identity Assurance</div>
-          <div className="text-2xl font-bold text-cyan-400 mt-1">INV-201 Checked</div>
-          <div className="text-xs text-slate-400 mt-2">Zero financial authority granted by identity</div>
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-medium text-[#716F69] uppercase tracking-wider font-mono">Identity Assurance</div>
+          <div className="text-2xl font-bold text-[#F2F0EA] mt-1 font-mono">INV-201 Checked</div>
+          <div className="text-xs text-[#716F69] mt-2 font-mono">Zero financial authority granted by identity</div>
         </div>
-        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg">
-          <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Policy Boundaries</div>
-          <div className="text-2xl font-bold text-purple-400 mt-1 font-mono">100% Bound</div>
-          <div className="text-xs text-slate-400 mt-2">Exposure limits strictly machine-enforced</div>
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-medium text-[#716F69] uppercase tracking-wider font-mono">Policy Boundaries</div>
+          <div className="text-2xl font-bold text-[#F2F0EA] mt-1 font-mono">100% Bound</div>
+          <div className="text-xs text-[#716F69] mt-2 font-mono">Exposure limits strictly machine-enforced</div>
         </div>
       </div>
 
       {/* Filter and Table */}
-      <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-6 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#222222] pb-4">
           <div>
-            <h2 className="text-lg font-bold text-white">Active Counterparty Participants</h2>
-            <p className="text-xs text-slate-400">Deterministic balance exposure derived from authoritative obligations.</p>
+            <h2 className="text-lg font-bold text-[#F2F0EA]">Active Counterparty Participants</h2>
+            <p className="text-xs text-[#716F69]">Deterministic balance exposure derived from authoritative obligations.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">Identity:</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-[#716F69] font-mono">Identity:</span>
             {['ALL', 'VERIFIED', 'IDENTIFIED', 'UNVERIFIED', 'SUSPENDED'].map((st) => (
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
                 className={`px-2.5 py-1 text-xs rounded-md font-mono transition-colors ${
                   statusFilter === st
-                    ? 'bg-indigo-600 text-white font-semibold'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-[#D6A83A] text-[#080808] font-bold'
+                    : 'bg-[#141414] text-[#716F69] hover:text-[#F2F0EA] border border-[#222222]'
                 }`}
               >
                 {st}
@@ -124,13 +124,13 @@ export default function CounterpartiesPage() {
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-slate-500 font-mono text-sm">Loading counterparty telemetry...</div>
+          <div className="py-12 text-center text-[#716F69] font-mono text-sm">Loading counterparty telemetry...</div>
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-slate-500 font-mono text-sm">No counterparties found matching criteria.</div>
+          <div className="py-12 text-center text-[#716F69] font-mono text-sm">No counterparties found matching criteria.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-slate-950/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <thead className="bg-[#0B0B0B] text-[#716F69] uppercase text-[10px] tracking-wider border-b border-[#222222]">
                 <tr>
                   <th className="py-3 px-4">Counterparty ID</th>
                   <th className="py-3 px-4">Agent ID</th>
@@ -143,57 +143,57 @@ export default function CounterpartiesPage() {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#222222]">
                 {filtered.map((cp) => {
                   const currExp = Number(cp.current_exposure || 0);
                   const limit = Number(cp.exposure_limit || 1);
                   const pct = Math.min(100, Math.round((currExp / limit) * 100));
 
                   return (
-                    <tr key={cp.counterparty_id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3 px-4 font-bold text-indigo-300">{cp.counterparty_id}</td>
-                      <td className="py-3 px-4 text-slate-200">{cp.agent_id}</td>
-                      <td className="py-3 px-4 text-slate-400">{cp.organization_id}</td>
+                    <tr key={cp.counterparty_id} className="hover:bg-[#141414] transition-colors">
+                      <td className="py-3 px-4 font-bold text-[#D6A83A]">{cp.counterparty_id}</td>
+                      <td className="py-3 px-4 text-[#F2F0EA]">{cp.agent_id}</td>
+                      <td className="py-3 px-4 text-[#716F69]">{cp.organization_id}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
                             cp.identity_status === 'VERIFIED'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/30'
                               : cp.identity_status === 'IDENTIFIED'
-                              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                              ? 'bg-[#6B8FD6]/10 text-[#6B8FD6] border border-[#6B8FD6]/30'
                               : cp.identity_status === 'SUSPENDED'
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                              : 'bg-slate-700 text-slate-300'
+                              ? 'bg-[#D85C5C]/10 text-[#D85C5C] border border-[#D85C5C]/30'
+                              : 'bg-[#141414] text-[#716F69] border border-[#222222]'
                           }`}
                         >
                           {cp.identity_status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-bold text-emerald-400">{formatUsdc(cp.current_exposure)}</td>
+                      <td className="py-3 px-4 font-bold text-[#2FB36F]">{formatUsdc(cp.current_exposure)}</td>
                       <td className="py-3 px-4">
                         <div className="w-28 space-y-1">
-                          <div className="flex justify-between text-[10px] text-slate-400">
+                          <div className="flex justify-between text-[10px] text-[#716F69]">
                             <span>{pct}%</span>
                             <span>{formatUsdc(cp.exposure_limit)}</span>
                           </div>
-                          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-[#0B0B0B] border border-[#222222] rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full ${
-                                pct > 85 ? 'bg-red-500' : pct > 60 ? 'bg-amber-400' : 'bg-emerald-400'
+                                pct > 85 ? 'bg-[#D85C5C]' : pct > 60 ? 'bg-[#D6A83A]' : 'bg-[#2FB36F]'
                               }`}
                               style={{ width: `${pct}%` }}
                             />
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-slate-300">{cp.active_contracts} active</td>
+                      <td className="py-3 px-4 text-[#B0ADA5]">{cp.active_contracts} active</td>
                       <td className="py-3 px-4">
-                        <span className="text-slate-400">{cp.risk_reference}</span>
+                        <span className="text-[#716F69]">{cp.risk_reference}</span>
                       </td>
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/control/economy/counterparties/${cp.counterparty_id}`}
-                          className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline"
+                          className="text-[#D6A83A] hover:underline font-medium"
                         >
                           Detail →
                         </Link>

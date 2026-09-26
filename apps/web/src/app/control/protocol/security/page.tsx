@@ -78,27 +78,27 @@ export default function ProtocolSecurityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-8">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
       {/* Header */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
             <Link
               href="/control/protocol"
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition"
             >
               ← Back to Protocol Overview
             </Link>
-            <span className="text-xs font-mono text-slate-500">/</span>
-            <span className="text-xs font-mono text-indigo-400">security</span>
+            <span className="text-xs font-mono text-[#50504C]">/</span>
+            <span className="text-xs font-mono text-[#D6A83A]">security</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mt-2">Protocol Security Incident Center</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-2xl font-bold text-[#F2F0EA] mt-2">Protocol Security Incident Center</h1>
+          <p className="text-xs text-[#716F69]">
             Automated defense against malicious external AI agents. Deterministic invariant enforcement.
           </p>
         </div>
 
-        <div className="px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/50 text-emerald-400 text-xs font-mono font-semibold">
+        <div className="px-4 py-2 rounded-xl bg-[#141414] border border-[#2FB36F]/40 text-[#2FB36F] text-xs font-mono font-semibold">
           ● 0 Financial Breaches / 100% Invariants Verified
         </div>
       </div>
@@ -116,12 +116,12 @@ export default function ProtocolSecurityPage() {
           { id: 'INV-173', title: 'Quality Gate Before Payment', status: 'ACTIVE' },
           { id: 'INV-178', title: 'Dispute Ledger Quarantine', status: 'ACTIVE' },
         ].map((inv) => (
-          <div key={inv.id} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center">
+          <div key={inv.id} className="p-4 rounded-xl bg-[#101010] border border-[#222222] flex justify-between items-center">
             <div>
-              <div className="text-xs font-mono font-bold text-indigo-400">{inv.id}</div>
-              <div className="text-xs text-white mt-0.5">{inv.title}</div>
+              <div className="text-xs font-mono font-bold text-[#D6A83A]">{inv.id}</div>
+              <div className="text-xs text-[#F2F0EA] mt-0.5">{inv.title}</div>
             </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800/40">
+            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/40">
               {inv.status}
             </span>
           </div>
@@ -129,11 +129,11 @@ export default function ProtocolSecurityPage() {
       </div>
 
       {/* Interactive Adversarial Attack Lab */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm mb-8">
-        <h2 className="text-base font-bold text-white mb-1">
+      <div className="rounded-xl border border-[#222222] bg-[#101010] p-6 mb-8">
+        <h2 className="text-base font-bold text-[#F2F0EA] mb-1">
           Interactive Adversarial Attack Verification Lab
         </h2>
-        <p className="text-xs text-slate-400 mb-6">
+        <p className="text-xs text-[#716F69] mb-6">
           Test real-time deterministic interception across known adversarial attack vectors.
         </p>
 
@@ -145,33 +145,33 @@ export default function ProtocolSecurityPage() {
                 onClick={() => runAttackSimulation(v)}
                 className={`p-4 rounded-xl border transition cursor-pointer ${
                   selectedVector === v.id
-                    ? 'bg-indigo-950/40 border-indigo-500 shadow-md'
-                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                    ? 'bg-[#141414] border-[#D6A83A] shadow-md'
+                    : 'bg-[#0B0B0B] border-[#222222] hover:border-[#2D2D2D]'
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-white text-xs">{v.name}</h3>
-                  <span className="text-[10px] font-mono text-rose-400 border border-rose-900/40 bg-rose-950/40 px-2 py-0.5 rounded">
+                  <h3 className="font-semibold text-[#F2F0EA] text-xs">{v.name}</h3>
+                  <span className="text-[10px] font-mono text-[#D85C5C] border border-[#D85C5C]/30 bg-[#141414] px-2 py-0.5 rounded">
                     {v.invariant}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">{v.description}</p>
+                <p className="text-[11px] text-[#716F69] mt-1">{v.description}</p>
               </div>
             ))}
           </div>
 
-          <div className="rounded-xl bg-slate-950 border border-slate-800 p-5 flex flex-col justify-between">
+          <div className="rounded-xl bg-[#0B0B0B] border border-[#222222] p-5 flex flex-col justify-between">
             <div>
-              <div className="flex justify-between items-center pb-3 border-b border-slate-800 text-xs font-mono text-slate-400">
+              <div className="flex justify-between items-center pb-3 border-b border-[#222222] text-xs font-mono text-[#716F69]">
                 <span>GATEWAY INTERCEPTION CONSOLE</span>
-                <span className="text-emerald-400">STATUS: PROTECTED</span>
+                <span className="text-[#2FB36F]">STATUS: PROTECTED</span>
               </div>
-              <pre className="mt-4 text-xs font-mono text-emerald-400 whitespace-pre-wrap leading-relaxed">
+              <pre className="mt-4 text-xs font-mono text-[#2FB36F] whitespace-pre-wrap leading-relaxed">
                 {simulationOutput ||
                   'Select an adversarial attack vector from the left to simulate automated real-time gateway defense and invariant interception.'}
               </pre>
             </div>
-            <div className="text-[10px] text-slate-500 font-mono pt-4 border-t border-slate-900">
+            <div className="text-[10px] text-[#50504C] font-mono pt-4 border-t border-[#222222]">
               AgentPay Protocol Gateway Pipeline enforces zero-trust boundary. All actions fail closed.
             </div>
           </div>

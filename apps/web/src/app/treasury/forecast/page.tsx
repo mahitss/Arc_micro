@@ -40,46 +40,46 @@ export default function TreasuryForecastPage() {
   const getSurvivalBadge = (state?: string) => {
     switch (state) {
       case 'SAFE':
-        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">SAFE (SURVIVABLE)</span>;
+        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/30">SAFE (SURVIVABLE)</span>;
       case 'CONSTRAINED':
-        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">CONSTRAINED</span>;
+        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30">CONSTRAINED</span>;
       case 'CRITICAL':
-        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">CRITICAL</span>;
+        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#D85C5C]/10 text-[#D85C5C] border border-[#D85C5C]/30">CRITICAL</span>;
       case 'UNAVAILABLE':
-        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-red-600/30 text-red-400 border border-red-500/40">UNAVAILABLE</span>;
+        return <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#D85C5C]/20 text-[#D85C5C] border border-[#D85C5C]/50">UNAVAILABLE</span>;
       default:
-        return <span className="px-3 py-1 rounded-full text-xs font-mono bg-slate-800 text-slate-400">UNKNOWN</span>;
+        return <span className="px-3 py-1 rounded-full text-xs font-mono bg-[#141414] text-[#716F69] border border-[#222222]">UNKNOWN</span>;
     }
   };
 
   return (
     <div className="space-y-8">
       {/* Navigation & Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#222222] pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <Link href="/treasury" className="text-xs font-mono text-cyan-400 hover:underline">
+            <Link href="/treasury" className="text-xs font-mono text-[#D6A83A] hover:underline">
               ← Treasury Dashboard
             </Link>
-            <span className="text-slate-600">/</span>
-            <span className="text-xs font-mono text-slate-400">Forecasting Engine</span>
+            <span className="text-[#222222]">/</span>
+            <span className="text-xs font-mono text-[#716F69]">Forecasting Engine</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mt-2 flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA] mt-2 flex items-center gap-2">
             Predictive Liquidity Forecasting
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-[#716F69]">
             Temporal liquidity simulations across configurable horizons (1h to 30d) with multi-agent perturbation curves.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="bg-slate-900 border border-slate-800 rounded-lg p-1 flex items-center">
+          <div className="bg-[#0B0B0B] border border-[#222222] rounded-lg p-1 flex items-center">
             <button
               onClick={() => setMode('REAL')}
               className={`px-3 py-1.5 rounded text-xs font-mono font-bold transition-all ${
                 mode === 'REAL'
-                  ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#D6A83A] text-[#080808]'
+                  : 'text-[#716F69] hover:text-[#F2F0EA]'
               }`}
             >
               REAL
@@ -88,8 +88,8 @@ export default function TreasuryForecastPage() {
               onClick={() => setMode('SIMULATION')}
               className={`px-3 py-1.5 rounded text-xs font-mono font-bold transition-all ${
                 mode === 'SIMULATION'
-                  ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#F2F0EA] text-[#080808]'
+                  : 'text-[#716F69] hover:text-[#F2F0EA]'
               }`}
             >
               SIMULATION
@@ -99,10 +99,10 @@ export default function TreasuryForecastPage() {
       </div>
 
       {/* Control Strip: Horizon & Scenario Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#101010] border border-[#222222] rounded-xl p-4">
         {/* Horizon Tabs */}
         <div>
-          <label className="text-xs font-mono text-slate-400 block mb-2">FORECAST HORIZON</label>
+          <label className="text-xs font-mono text-[#716F69] block mb-2">FORECAST HORIZON</label>
           <div className="flex items-center gap-2">
             {(['1h', '6h', '24h', '7d', '30d'] as const).map((h) => (
               <button
@@ -110,8 +110,8 @@ export default function TreasuryForecastPage() {
                 onClick={() => setHorizon(h)}
                 className={`flex-1 py-2 rounded-lg text-xs font-mono font-bold transition ${
                   horizon === h
-                    ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300'
-                    : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-[#D6A83A] text-[#080808]'
+                    : 'bg-[#0B0B0B] border border-[#222222] text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 {h}
@@ -122,11 +122,11 @@ export default function TreasuryForecastPage() {
 
         {/* Stress Scenario Selector */}
         <div>
-          <label className="text-xs font-mono text-slate-400 block mb-2">STRESS SCENARIO OVERLAY</label>
+          <label className="text-xs font-mono text-[#716F69] block mb-2">STRESS SCENARIO OVERLAY</label>
           <select
             value={scenario}
             onChange={(e) => setScenario(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-3 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+            className="w-full bg-[#0B0B0B] border border-[#222222] rounded-lg py-2 px-3 text-xs font-mono text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
           >
             <option value="BASELINE">BASELINE (Historic Mean Distribution)</option>
             <option value="OUTFLOW_SPIKE">OUTFLOW SPIKE (+50% Settlement Velocity)</option>
@@ -140,68 +140,68 @@ export default function TreasuryForecastPage() {
 
       {/* Forecast Highlights Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
-          <div className="text-xs font-mono text-slate-400">Starting Balance</div>
-          <div className="mt-2 text-2xl font-bold text-white font-mono">
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-mono text-[#716F69]">Starting Balance</div>
+          <div className="mt-2 text-2xl font-bold text-[#F2F0EA] font-mono">
             {forecast ? formatUsdc(forecast.starting_balance) : '---'}
           </div>
-          <div className="mt-1 text-[11px] text-slate-500 font-mono">Verified Base State</div>
+          <div className="mt-1 text-[11px] text-[#716F69] font-mono">Verified Base State</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
-          <div className="text-xs font-mono text-emerald-400">Expected Inflows</div>
-          <div className="mt-2 text-2xl font-bold text-emerald-400 font-mono">
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-mono text-[#2FB36F]">Expected Inflows</div>
+          <div className="mt-2 text-2xl font-bold text-[#2FB36F] font-mono">
             +{forecast ? formatUsdc(forecast.expected_inflows) : '---'}
           </div>
-          <div className="mt-1 text-[11px] text-slate-500 font-mono">Confidence: 85%-95%</div>
+          <div className="mt-1 text-[11px] text-[#716F69] font-mono">Confidence: 85%-95%</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
-          <div className="text-xs font-mono text-rose-400">Worst-Case Outflow</div>
-          <div className="mt-2 text-2xl font-bold text-rose-400 font-mono">
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-mono text-[#D85C5C]">Worst-Case Outflow</div>
+          <div className="mt-2 text-2xl font-bold text-[#D85C5C] font-mono">
             -{forecast ? formatUsdc(forecast.worst_case_outflows) : '---'}
           </div>
-          <div className="mt-1 text-[11px] text-slate-500 font-mono">Peak Drawdown Stress</div>
+          <div className="mt-1 text-[11px] text-[#716F69] font-mono">Peak Drawdown Stress</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
-          <div className="text-xs font-mono text-cyan-400">Projected Closing</div>
-          <div className="mt-2 text-2xl font-bold text-cyan-300 font-mono">
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
+          <div className="text-xs font-mono text-[#B0ADA5]">Projected Closing</div>
+          <div className="mt-2 text-2xl font-bold text-[#F2F0EA] font-mono">
             {forecast ? formatUsdc(forecast.projected_closing_balance) : '---'}
           </div>
-          <div className="mt-1 text-[11px] text-slate-500 font-mono">Horizon End Target</div>
+          <div className="mt-1 text-[11px] text-[#716F69] font-mono">Horizon End Target</div>
         </div>
       </div>
 
       {/* Survival State & Policy Gating Verdict */}
-      <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="text-sm font-mono text-slate-300">
+          <div className="text-sm font-mono text-[#B0ADA5]">
             Survival Assessment: <span className="ml-2">{getSurvivalBadge(forecast?.survival_state)}</span>
           </div>
-          <div className="text-sm font-mono text-slate-300">
-            Gating Mode: <span className="ml-2 font-bold text-cyan-300">{forecast?.gating_decision || '---'}</span>
+          <div className="text-sm font-mono text-[#B0ADA5]">
+            Gating Mode: <span className="ml-2 font-bold text-[#D6A83A]">{forecast?.gating_decision || '---'}</span>
           </div>
         </div>
-        <div className="text-xs font-mono text-slate-400">
-          Confidence Level: <span className="text-emerald-400 font-bold">{forecast ? `${(forecast.confidence * 100).toFixed(0)}%` : '---'}</span> (Sample: {forecast?.sample_size || 0} runs)
+        <div className="text-xs font-mono text-[#716F69]">
+          Confidence Level: <span className="text-[#2FB36F] font-bold">{forecast ? `${(forecast.confidence * 100).toFixed(0)}%` : '---'}</span> (Sample: {forecast?.sample_size || 0} runs)
         </div>
       </div>
 
       {/* Temporal Trajectory Breakdown */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm">
-        <div className="px-6 py-4 border-b border-slate-800">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
+      <div className="bg-[#101010] border border-[#222222] rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#222222]">
+          <h2 className="text-base font-bold text-[#F2F0EA] flex items-center gap-2">
             Temporal Liquidity Trajectory
           </h2>
-          <p className="text-xs text-slate-400 font-mono">
+          <p className="text-xs text-[#716F69] font-mono">
             Stepped intervals displaying projected available liquidity, commitments, and safety buffers.
           </p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-950/60 text-slate-400 border-b border-slate-800">
+            <thead className="bg-[#0B0B0B] text-[#716F69] border-b border-[#222222]">
               <tr>
                 <th className="py-3 px-4">Time Interval</th>
                 <th className="py-3 px-4">Available Liquidity</th>
@@ -212,18 +212,18 @@ export default function TreasuryForecastPage() {
                 <th className="py-3 px-4">Safe Capacity</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-[#222222] text-[#B0ADA5]">
               {forecast?.points.map((pt, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/30 transition">
-                  <td className="py-3 px-4 text-cyan-300 font-bold">
+                <tr key={idx} className="hover:bg-[#141414] transition">
+                  <td className="py-3 px-4 text-[#D6A83A] font-bold">
                     {new Date(pt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </td>
-                  <td className="py-3 px-4 font-bold text-white">{formatUsdc(pt.available_liquidity)}</td>
-                  <td className="py-3 px-4 text-purple-300">{formatUsdc(pt.committed_liquidity)}</td>
-                  <td className="py-3 px-4 text-emerald-400">+{formatUsdc(pt.expected_inflow)}</td>
-                  <td className="py-3 px-4 text-rose-400">-{formatUsdc(pt.expected_outflow)}</td>
-                  <td className="py-3 px-4 text-amber-400">{formatUsdc(pt.buffer)}</td>
-                  <td className="py-3 px-4 text-cyan-400 font-bold">{formatUsdc(pt.safe_capacity)}</td>
+                  <td className="py-3 px-4 font-bold text-[#F2F0EA]">{formatUsdc(pt.available_liquidity)}</td>
+                  <td className="py-3 px-4 text-[#B0ADA5]">{formatUsdc(pt.committed_liquidity)}</td>
+                  <td className="py-3 px-4 text-[#2FB36F]">+{formatUsdc(pt.expected_inflow)}</td>
+                  <td className="py-3 px-4 text-[#D85C5C]">-{formatUsdc(pt.expected_outflow)}</td>
+                  <td className="py-3 px-4 text-[#D6A83A]">{formatUsdc(pt.buffer)}</td>
+                  <td className="py-3 px-4 text-[#2FB36F] font-bold">{formatUsdc(pt.safe_capacity)}</td>
                 </tr>
               ))}
             </tbody>
@@ -232,16 +232,16 @@ export default function TreasuryForecastPage() {
       </div>
 
       {/* Assumptions & Mathematical Rules */}
-      <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-5 space-y-2">
-        <h3 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+      <div className="bg-[#0B0B0B] border border-[#222222] rounded-xl p-5 space-y-2">
+        <h3 className="text-xs font-mono font-bold text-[#B0ADA5] uppercase tracking-wider">
           Forecast Assumptions & Invariant Guarantees
         </h3>
-        <ul className="text-xs font-mono text-slate-400 space-y-1 list-disc list-inside">
+        <ul className="text-xs font-mono text-[#716F69] space-y-1 list-disc list-inside">
           {forecast?.assumptions.map((assump, i) => (
             <li key={i}>{assump}</li>
           ))}
-          <li>Deterministic invariant <span className="text-cyan-400">INV-79</span>: Forecasts strictly model worst-case exposure with 0-overdraft tolerance.</li>
-          <li>Deterministic invariant <span className="text-cyan-400">INV-80</span>: Temporal forecasts never assume speculative or unverified inflows.</li>
+          <li>Deterministic invariant <span className="text-[#D6A83A]">INV-79</span>: Forecasts strictly model worst-case exposure with 0-overdraft tolerance.</li>
+          <li>Deterministic invariant <span className="text-[#D6A83A]">INV-80</span>: Temporal forecasts never assume speculative or unverified inflows.</li>
         </ul>
       </div>
     </div>

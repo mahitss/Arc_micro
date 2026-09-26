@@ -17,19 +17,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#070707] text-[#f5f5f5] antialiased selection:bg-[#202020] selection:text-white">
-        <header className="border-b border-[#202020] bg-[#070707] sticky top-0 z-40">
+      <body className="min-h-screen bg-[#080808] text-[#F2F0EA] antialiased selection:bg-[#1A1A1A] selection:text-white">
+        <header className="border-b border-[#222222] bg-[#080808] sticky top-0 z-40">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center space-x-6">
               <Link href="/control" className="flex items-center space-x-3 group">
-                <div className="w-8 h-8 rounded bg-[#121212] border border-[#262626] flex items-center justify-center font-bold text-[#f5f5f5] text-xs tracking-wider">
+                <div className="w-8 h-8 rounded bg-[#101010] border border-[#222222] flex items-center justify-center font-bold text-[#F2F0EA] text-xs tracking-wider">
                   AP
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-sm tracking-tight text-[#f5f5f5]">
+                  <span className="font-bold text-sm tracking-tight text-[#F2F0EA]">
                     AgentPay
                   </span>
-                  <span className="text-[10px] text-[#a1a1a1] leading-none">
+                  <span className="text-[10px] text-[#B0ADA5] leading-none">
                     Financial Control Plane
                   </span>
                 </div>

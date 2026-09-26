@@ -95,27 +95,27 @@ export default function WorkflowsListPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/control/runtime"
-              className="text-xs font-mono text-indigo-400 hover:underline"
+              className="text-xs font-mono text-[#D6A83A] hover:underline"
             >
               ← Runtime Overview
             </Link>
           </div>
           <h1 className="text-2xl font-bold text-white mt-1">Durable Workflows</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#85827B] mt-0.5">
             Recoverable state machines executing mission tasks with optimistic version control.
           </p>
         </div>
 
         {/* State Filter */}
-        <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800">
+        <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-[#141414] border border-[#222222]">
           {states.map((s) => (
             <button
               key={s.value}
               onClick={() => setSelectedState(s.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
                 selectedState === s.value
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-[#141414] text-[#F2F0EA] border border-[#222222]'
+                  : 'text-[#85827B] hover:text-[#F2F0EA] hover:bg-[#181818]'
               }`}
             >
               {s.label}
@@ -128,22 +128,22 @@ export default function WorkflowsListPage() {
         <div
           className={`p-4 rounded-xl border text-xs font-mono flex items-center justify-between ${
             message.type === 'success'
-              ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-              : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+              ? 'bg-[#141414] border border-[#2FB36F]/30 text-[#2FB36F]'
+              : 'bg-[#141414] border border-[#D85C5C]/30 text-[#D85C5C]'
           }`}
         >
           <span>{message.text}</span>
-          <button onClick={() => setMessage(null)} className="text-slate-400 hover:text-white">
+          <button onClick={() => setMessage(null)} className="text-[#85827B] hover:text-white">
             ✕
           </button>
         </div>
       )}
 
       {/* Workflows Table */}
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl overflow-hidden">
+      <div className="rounded-2xl bg-[#101010] border border-[#222222] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider border-b border-slate-800">
+            <thead className="bg-[#0B0B0B] text-[#85827B] uppercase tracking-wider border-b border-[#222222]">
               <tr>
                 <th className="py-3 px-4">Workflow ID</th>
                 <th className="py-3 px-4">Type & Aggregate</th>
@@ -155,27 +155,27 @@ export default function WorkflowsListPage() {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-[#222222] text-[#B0ADA5]">
               {workflows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500">
+                  <td colSpan={8} className="py-8 text-center text-[#50504C]">
                     {loading ? 'Loading workflows...' : 'No workflows found for the selected state.'}
                   </td>
                 </tr>
               ) : (
                 workflows.map((wf) => (
-                  <tr key={wf.workflow_id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={wf.workflow_id} className="hover:bg-[#141414] transition-colors">
                     <td className="py-3.5 px-4 font-semibold text-white">
                       <Link
                         href={`/control/runtime/workflows/${wf.workflow_id}`}
-                        className="text-indigo-400 hover:underline"
+                        className="text-[#D6A83A] hover:underline"
                       >
                         {wf.workflow_id}
                       </Link>
                     </td>
                     <td className="py-3.5 px-4">
                       <div>{wf.workflow_type}</div>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[10px] text-[#50504C]">
                         {wf.aggregate_type}:{wf.aggregate_id}
                       </div>
                     </td>
@@ -183,21 +183,21 @@ export default function WorkflowsListPage() {
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           wf.state === 'RUNNING'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            ? 'bg-[#141414] text-[#2FB36F] border border-[#222222]'
                             : wf.state === 'PAUSED'
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            ? 'bg-[#141414] text-[#D6A83A] border border-[#222222]'
                             : wf.state === 'COMPLETED'
                             ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                            : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            : 'bg-[#141414] text-[#D85C5C] border border-[#222222]'
                         }`}
                       >
                         {wf.state}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400">v{wf.version}</td>
-                    <td className="py-3.5 px-4 text-slate-300">{wf.current_step || '—'}</td>
-                    <td className="py-3.5 px-4 text-slate-400">{wf.retry_count}</td>
-                    <td className="py-3.5 px-4 text-slate-500 text-[11px]">
+                    <td className="py-3.5 px-4 text-[#85827B]">v{wf.version}</td>
+                    <td className="py-3.5 px-4 text-[#B0ADA5]">{wf.current_step || '—'}</td>
+                    <td className="py-3.5 px-4 text-[#85827B]">{wf.retry_count}</td>
+                    <td className="py-3.5 px-4 text-[#50504C] text-[11px]">
                       <div>{new Date(wf.created_at).toLocaleTimeString()}</div>
                       <div>{new Date(wf.updated_at).toLocaleTimeString()}</div>
                     </td>
@@ -206,7 +206,7 @@ export default function WorkflowsListPage() {
                         <button
                           disabled={actionInProgress === wf.workflow_id}
                           onClick={() => handlePause(wf.workflow_id)}
-                          className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] transition-colors"
+                          className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-[#141414] text-[#D6A83A] border border-[#222222] text-[10px] transition-colors"
                         >
                           Pause
                         </button>
@@ -215,7 +215,7 @@ export default function WorkflowsListPage() {
                         <button
                           disabled={actionInProgress === wf.workflow_id}
                           onClick={() => handleResume(wf.workflow_id)}
-                          className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] transition-colors"
+                          className="px-2.5 py-1 rounded bg-[#141414] hover:bg-[#1C1C1C] text-[#2FB36F] border border-[#222222] text-[10px] transition-colors"
                         >
                           Resume
                         </button>
@@ -224,14 +224,14 @@ export default function WorkflowsListPage() {
                         <button
                           disabled={actionInProgress === wf.workflow_id}
                           onClick={() => handleCancel(wf.workflow_id)}
-                          className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] transition-colors"
+                          className="px-2.5 py-1 rounded bg-[#141414] hover:bg-[#1C1C1C] text-[#D85C5C] border border-[#222222] text-[10px] transition-colors"
                         >
                           Cancel
                         </button>
                       )}
                       <Link
                         href={`/control/runtime/workflows/${wf.workflow_id}`}
-                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] transition-colors inline-block"
+                        className="px-2.5 py-1 rounded bg-[#141414] hover:bg-[#1C1C1C] text-[#B0ADA5] border border-[#222222] text-[10px] transition-colors inline-block"
                       >
                         Inspect
                       </Link>

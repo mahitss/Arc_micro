@@ -58,39 +58,34 @@ export function LiveAdaptationVisualizer({
   const activeIndex = determineActiveIndex();
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 p-6 shadow-2xl relative overflow-hidden">
-      {/* Background glowing ambient gradient */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
-
+    <div className="rounded-xl bg-[#101010] border border-[#222222] p-6 relative overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#222222] pb-4 mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-3 w-3 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+            <span className="flex h-2 w-2 relative">
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D6A83A]"></span>
             </span>
-            <h3 className="text-base font-semibold text-white tracking-wide">
+            <h3 className="text-base font-semibold text-[#F2F0EA] tracking-wide">
               Live Autonomous Adaptation Pipeline
             </h3>
-            <span className="text-xs px-2 py-0.5 rounded-full font-mono bg-cyan-950 text-cyan-300 border border-cyan-800/50">
+            <span className="text-xs px-2 py-0.5 rounded font-mono bg-[#181818] text-[#B0ADA5] border border-[#2D2D2D]">
               NON-INVASIVE AI
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#B0ADA5] mt-1">
             Real-time deterministic recovery progression without financial authority elevation
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-mono">
+            <span className="text-[10px] text-[#716F69] uppercase tracking-wider block font-mono">
               Recovery Status
             </span>
             <span
               className={`text-xs font-mono font-bold ${
-                hasRecovery ? 'text-amber-400' : 'text-emerald-400'
+                hasRecovery ? 'text-[#D6A83A]' : 'text-[#2FB36F]'
               }`}
             >
               {hasRecovery ? `ADAPTED (${recoveryHistory.length}x)` : 'NOMINAL'}
@@ -114,33 +109,33 @@ export function LiveAdaptationVisualizer({
           return (
             <div
               key={step.id}
-              className={`relative rounded-xl p-3.5 border transition-all duration-300 flex flex-col justify-between ${
+              className={`relative rounded-lg p-3.5 border transition-all duration-200 flex flex-col justify-between ${
                 state === 'active'
-                  ? 'bg-cyan-950/40 border-cyan-400/80 shadow-[0_0_15px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/50 scale-[1.02]'
+                  ? 'bg-[#181818] border-[#D6A83A] ring-1 ring-[#D6A83A]/30'
                   : state === 'completed'
-                  ? 'bg-slate-800/50 border-slate-700/60 text-slate-300'
-                  : 'bg-slate-900/40 border-slate-800/40 text-slate-500 opacity-60'
+                  ? 'bg-[#141414] border-[#222222] text-[#B0ADA5]'
+                  : 'bg-[#101010]/60 border-[#1A1A1A] text-[#716F69] opacity-60'
               }`}
             >
               {/* Connector line between steps */}
               {idx < ADAPTATION_STEPS.length - 1 && (
-                <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-slate-600 font-bold text-xs pointer-events-none">
+                <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-[#50504C] font-bold text-xs pointer-events-none">
                   →
                 </div>
               )}
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xl">{step.icon}</span>
+                  <span className="text-lg">{step.icon}</span>
                   <span
                     className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
                       state === 'active'
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 animate-pulse'
+                        ? 'bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30'
                         : state === 'completed'
                         ? isFailedStep
-                          ? 'bg-rose-500/20 text-rose-300'
-                          : 'bg-emerald-500/20 text-emerald-300'
-                        : 'bg-slate-800 text-slate-500'
+                          ? 'bg-[#D85C5C]/15 text-[#D85C5C] border border-[#D85C5C]/30'
+                          : 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30'
+                        : 'bg-[#181818] text-[#716F69] border border-[#222222]'
                     }`}
                   >
                     0{idx + 1}
@@ -149,27 +144,27 @@ export function LiveAdaptationVisualizer({
                 <h4
                   className={`text-xs font-bold font-mono tracking-tight ${
                     state === 'active'
-                      ? 'text-cyan-200'
+                      ? 'text-[#F2F0EA]'
                       : state === 'completed'
-                      ? 'text-slate-200'
-                      : 'text-slate-500'
+                      ? 'text-[#F2F0EA]'
+                      : 'text-[#716F69]'
                   }`}
                 >
                   {step.label}
                 </h4>
-                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-tight">
+                <p className="text-[11px] text-[#716F69] mt-1 line-clamp-2 leading-tight">
                   {step.sublabel}
                 </p>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-slate-800/50 flex items-center justify-between text-[10px] font-mono">
+              <div className="mt-3 pt-2 border-t border-[#222222] flex items-center justify-between text-[10px] font-mono">
                 <span
                   className={
                     state === 'active'
-                      ? 'text-cyan-400 font-semibold'
+                      ? 'text-[#D6A83A] font-semibold'
                       : state === 'completed'
-                      ? 'text-emerald-400'
-                      : 'text-slate-600'
+                      ? 'text-[#2FB36F]'
+                      : 'text-[#50504C]'
                   }
                 >
                   {state === 'active'
@@ -186,12 +181,12 @@ export function LiveAdaptationVisualizer({
 
       {/* Latest Trace Details Box */}
       {latestTrace && (
-        <div className="mt-4 p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
+        <div className="mt-4 p-3.5 rounded-lg bg-[#0B0B0B] border border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center gap-2">
-            <span className="text-cyan-400 font-bold">[{latestTrace.stage}]</span>
-            <span className="text-slate-300">{latestTrace.details}</span>
+            <span className="text-[#D6A83A] font-bold">[{latestTrace.stage}]</span>
+            <span className="text-[#B0ADA5]">{latestTrace.details}</span>
           </div>
-          <div className="text-slate-500 text-[11px] flex-shrink-0">
+          <div className="text-[#716F69] text-[11px] flex-shrink-0">
             {new Date(latestTrace.timestamp).toLocaleTimeString()}
           </div>
         </div>

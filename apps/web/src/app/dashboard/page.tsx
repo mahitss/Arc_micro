@@ -102,10 +102,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#222222]">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">AgentPay Web Control Center</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA]">AgentPay Web Control Center</h1>
+          <p className="text-xs text-[#716F69] mt-1">
             Infrastructure monitor for autonomous agents, deterministic spending policies, and Arc USDC settlement.
           </p>
         </div>
@@ -116,8 +116,8 @@ export default function DashboardPage() {
             onClick={() => setIsDemoMode(!isDemoMode)}
             className={`px-2.5 py-1 rounded-md text-[11px] font-mono border transition-colors ${
               isDemoMode
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-300'
+                ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30'
+                : 'bg-[#141414] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
             }`}
           >
             {isDemoMode ? '● DEMO MODE ACTIVE' : '○ Enable Demo Mode'}
@@ -190,14 +190,14 @@ export default function DashboardPage() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold text-white">Recent Payment Intents</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-base font-semibold text-[#F2F0EA]">Recent Payment Intents</h2>
+            <p className="text-xs text-[#716F69]">
               Autonomous requests evaluated by the Rust Policy Engine.
             </p>
           </div>
           <Link
             href="/payment-intents"
-            className="text-xs font-mono text-teal-400 hover:text-teal-300 transition-colors"
+            className="text-xs font-mono text-[#D6A83A] hover:text-[#F2F0EA] transition-colors"
           >
             View all intents →
           </Link>
@@ -210,14 +210,14 @@ export default function DashboardPage() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold text-white">Recent Arc Transactions</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-base font-semibold text-[#F2F0EA]">Recent Arc Transactions</h2>
+            <p className="text-xs text-[#716F69]">
               On-chain settlement records executed via AgentVault.
             </p>
           </div>
           <Link
             href="/transactions"
-            className="text-xs font-mono text-teal-400 hover:text-teal-300 transition-colors"
+            className="text-xs font-mono text-[#D6A83A] hover:text-[#F2F0EA] transition-colors"
           >
             View all transactions →
           </Link>

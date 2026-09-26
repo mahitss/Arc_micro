@@ -47,15 +47,15 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
   return (
-    <div className="relative bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+    <div className="relative bg-[#101010] border border-[#222222] rounded-2xl overflow-hidden shadow-2xl">
       {/* Header Bar */}
-      <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3">
+      <div className="px-6 py-4 border-b border-[#222222] flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-          <h3 className="text-sm font-semibold text-white tracking-wide">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2FB36F]" />
+          <h3 className="text-sm font-semibold text-[#F2F0EA] tracking-wide">
             Autonomous Economic Topology Graph
           </h3>
-          <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-700/60">
+          <span className="text-[11px] font-mono text-[#716F69] bg-[#141414] px-2 py-0.5 rounded-full border border-[#222222]">
             {filteredNodes.length} Nodes · {edges.length} Edges
           </span>
         </div>
@@ -68,8 +68,8 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
               onClick={() => setFilterType(t)}
               className={`px-2.5 py-1 rounded-lg transition-all ${
                 filterType === t
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-[#181818] text-[#F2F0EA] border border-[#2D2D2D] font-semibold'
+                  : 'text-[#A5A29A] hover:text-[#F2F0EA] hover:bg-[#141414]'
               }`}
             >
               {t}
@@ -79,20 +79,12 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
       </div>
 
       {/* SVG Canvas Area */}
-      <div className="relative w-full h-[480px] bg-gradient-to-b from-slate-950/60 via-slate-900/40 to-slate-950/80 flex items-center justify-center">
+      <div className="relative w-full h-[480px] bg-[#0B0B0B] flex items-center justify-center">
         <svg
           viewBox="0 0 720 480"
           className="w-full h-full select-none"
         >
           <defs>
-            <linearGradient id="edgeGradHired" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
-            </linearGradient>
-            <linearGradient id="edgeGradDel" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.9" />
-            </linearGradient>
             <marker
               id="arrowhead"
               markerWidth="8"
@@ -101,7 +93,7 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
               refY="3"
               orient="auto"
             >
-              <polygon points="0 0, 8 3, 0 6" fill="#06b6d4" />
+              <polygon points="0 0, 8 3, 0 6" fill="#8F7028" />
             </marker>
           </defs>
 
@@ -112,7 +104,7 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
             if (!src || !tgt) return null;
 
             const isDelegation = e.type === 'DELEGATED_TO';
-            const strokeColor = isDelegation ? '#f59e0b' : '#06b6d4';
+            const strokeColor = isDelegation ? '#D6A83A' : '#2D2D2D';
             const midX = (src.x + tgt.x) / 2;
             const midY = (src.y + tgt.y) / 2;
 
@@ -124,17 +116,17 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
                   x2={tgt.x}
                   y2={tgt.y}
                   stroke={strokeColor}
-                  strokeWidth={isDelegation ? '2' : '1.5'}
+                  strokeWidth={isDelegation ? '1.5' : '1'}
                   strokeDasharray={isDelegation ? '4 3' : undefined}
-                  strokeOpacity="0.6"
-                  className="transition-all group-hover:stroke-opacity-100 group-hover:stroke-width-2"
+                  strokeOpacity="0.8"
+                  className="transition-all group-hover:stroke-[#D6A83A] group-hover:stroke-width-2"
                   markerEnd="url(#arrowhead)"
                 />
                 {e.label && (
                   <text
                     x={midX}
                     y={midY - 4}
-                    fill="#94a3b8"
+                    fill="#716F69"
                     fontSize="9"
                     fontFamily="monospace"
                     textAnchor="middle"
@@ -158,9 +150,9 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
 
             const fillColor = isAgent
               ? isBusy
-                ? '#f59e0b'
-                : '#10b981'
-              : '#8b5cf6';
+                ? '#D6A83A'
+                : '#2FB36F'
+              : '#6B8FD6';
 
             return (
               <g
@@ -168,17 +160,16 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
                 onClick={() => handleNodeClick(n)}
                 className="cursor-pointer group"
               >
-                {/* Outer Glow Ring when selected */}
+                {/* Outer Ring when selected */}
                 {isSelected && (
                   <circle
                     cx={pos.x}
                     cy={pos.y}
                     r="24"
                     fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
+                    stroke="#D6A83A"
+                    strokeWidth="1.5"
                     strokeDasharray="3 3"
-                    className="animate-spin-slow"
                   />
                 )}
 
@@ -187,9 +178,9 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
                   cx={pos.x}
                   cy={pos.y}
                   r="16"
-                  fill="#0f172a"
+                  fill="#101010"
                   stroke={fillColor}
-                  strokeWidth="2.5"
+                  strokeWidth="2"
                   className="transition-transform group-hover:scale-125"
                 />
 
@@ -197,7 +188,7 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
                 <circle
                   cx={pos.x}
                   cy={pos.y}
-                  r="5"
+                  r="4"
                   fill={fillColor}
                 />
 
@@ -205,12 +196,12 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
                 <text
                   x={pos.x}
                   y={pos.y + 26}
-                  fill="#f8fafc"
+                  fill="#F2F0EA"
                   fontSize="10"
                   fontFamily="sans-serif"
                   fontWeight="600"
                   textAnchor="middle"
-                  className="transition-colors group-hover:fill-emerald-400"
+                  className="transition-colors group-hover:fill-[#D6A83A]"
                 >
                   {n.label.length > 20 ? n.label.slice(0, 18) + '...' : n.label}
                 </text>
@@ -221,26 +212,26 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
 
         {/* Selected Node Flyout Info Card */}
         {selectedNode && (
-          <div className="absolute bottom-4 right-4 bg-slate-950/90 border border-slate-700/80 rounded-xl p-4 w-72 shadow-2xl backdrop-blur-md animate-fade-in text-xs">
+          <div className="absolute bottom-4 right-4 bg-[#141414] border border-[#222222] rounded-xl p-4 w-72 shadow-2xl text-xs">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+              <span className="font-mono text-[10px] text-[#D6A83A] font-bold uppercase tracking-wider">
                 {selectedNode.type}
               </span>
               <button
                 onClick={() => setSelectedNodeId(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#716F69] hover:text-[#F2F0EA]"
               >
                 ✕
               </button>
             </div>
-            <div className="font-semibold text-white text-sm mb-1">{selectedNode.label}</div>
-            <div className="font-mono text-[11px] text-slate-400 mb-2 truncate">ID: {selectedNode.id}</div>
+            <div className="font-semibold text-[#F2F0EA] text-sm mb-1">{selectedNode.label}</div>
+            <div className="font-mono text-[11px] text-[#716F69] mb-2 truncate">ID: {selectedNode.id}</div>
             <div className="flex items-center gap-2 font-mono text-[11px]">
-              <span className="text-slate-400">Status:</span>
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+              <span className="text-[#B0ADA5]">Status:</span>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
                 selectedNode.status === 'BUSY'
-                  ? 'bg-amber-500/20 text-amber-300'
-                  : 'bg-emerald-500/20 text-emerald-300'
+                  ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30'
+                  : 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30'
               }`}>
                 {selectedNode.status || 'ACTIVE'}
               </span>

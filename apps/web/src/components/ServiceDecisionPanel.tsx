@@ -28,15 +28,15 @@ export function ServiceDecisionPanel({
   candidates,
 }: ServiceDecisionPanelProps) {
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-xl space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+    <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#222222] pb-3">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#D6A83A]" />
           <h2 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
             Service Decision Matrix — {stepId}
           </h2>
         </div>
-        <span className="text-xs font-mono text-cyan-300">
+        <span className="text-xs font-mono text-[#B0ADA5]">
           Capability: <span className="font-bold">{requiredCapability}</span>
         </span>
       </div>
@@ -50,20 +50,20 @@ export function ServiceDecisionPanel({
               key={cand.service_id}
               className={`p-4 rounded-xl border transition-all space-y-3 font-mono text-xs ${
                 isSelected
-                  ? 'bg-teal-950/20 border-teal-500/50 shadow-md shadow-teal-500/10'
-                  : 'bg-slate-950/60 border-slate-800/80 opacity-80'
+                  ? 'bg-[#141414] border border-[#2D2D2D]'
+                  : 'bg-[#101010] border border-[#222222] opacity-80'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-bold text-white text-sm">{cand.service_name || cand.service_id}</h3>
-                  <span className="text-[10px] text-slate-500">{cand.service_id}</span>
+                  <span className="text-[10px] text-[#85827B]">{cand.service_id}</span>
                 </div>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                     isSelected
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                      ? 'bg-[#141414] text-[#2FB36F] border border-[#222222]'
+                      : 'bg-[#141414] text-[#D85C5C] border border-[#222222]'
                   }`}
                 >
                   {cand.status}
@@ -72,35 +72,35 @@ export function ServiceDecisionPanel({
 
               {/* Metric Breakdown Grid */}
               <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-500 block">PRICE</span>
+                <div className="p-2 rounded bg-[#0B0B0B] border border-[#222222]">
+                  <span className="text-[#85827B] block">PRICE</span>
                   <span className="text-white font-bold">{cand.price_usdc}</span>
                 </div>
-                <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-500 block">RELIABILITY</span>
-                  <span className="text-emerald-400 font-bold">
+                <div className="p-2 rounded bg-[#0B0B0B] border border-[#222222]">
+                  <span className="text-[#85827B] block">RELIABILITY</span>
+                  <span className="text-[#2FB36F] font-bold">
                     {(cand.reliability_score_bps / 100).toFixed(1)}%
                   </span>
                 </div>
-                <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-500 block">LATENCY</span>
-                  <span className="text-cyan-300 font-bold">{cand.latency_ms} ms</span>
+                <div className="p-2 rounded bg-[#0B0B0B] border border-[#222222]">
+                  <span className="text-[#85827B] block">LATENCY</span>
+                  <span className="text-[#B0ADA5] font-bold">{cand.latency_ms} ms</span>
                 </div>
-                <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-500 block">QUALITY</span>
-                  <span className="text-teal-300 font-bold">
+                <div className="p-2 rounded bg-[#0B0B0B] border border-[#222222]">
+                  <span className="text-[#85827B] block">QUALITY</span>
+                  <span className="text-[#F2F0EA] font-bold">
                     {(cand.quality_score_bps / 100).toFixed(1)}
                   </span>
                 </div>
-                <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-500 block">REPUTATION</span>
-                  <span className="text-indigo-300 font-bold">
+                <div className="p-2 rounded bg-[#0B0B0B] border border-[#222222]">
+                  <span className="text-[#85827B] block">REPUTATION</span>
+                  <span className="text-[#F2F0EA] font-bold">
                     {(cand.reputation_score_bps / 100).toFixed(1)}
                   </span>
                 </div>
-                <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-500 block">RISK</span>
-                  <span className={cand.risk_score > 20 ? 'text-amber-400 font-bold' : 'text-slate-300'}>
+                <div className="p-2 rounded bg-[#0B0B0B] border border-[#222222]">
+                  <span className="text-[#85827B] block">RISK</span>
+                  <span className={cand.risk_score > 20 ? 'text-[#D6A83A] font-bold' : 'text-[#B0ADA5]'}>
                     {cand.risk_score}
                   </span>
                 </div>
@@ -108,7 +108,7 @@ export function ServiceDecisionPanel({
 
               {/* Rejection reason callout if not selected */}
               {!isSelected && cand.rejection_reason && (
-                <div className="p-2 rounded bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-300">
+                <div className="p-2 rounded bg-[#141414] border border-[#D85C5C]/30 text-[11px] text-[#D85C5C]">
                   Reason: {cand.rejection_reason}
                 </div>
               )}

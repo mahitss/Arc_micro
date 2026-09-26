@@ -98,9 +98,9 @@ export default function ObjectiveDetailPage() {
 
   if (loading && !objective) {
     return (
-      <div className="min-h-screen bg-[#060911] text-slate-100 p-8 font-mono flex items-center justify-center">
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8 font-mono flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <span className="w-3 h-3 rounded-full bg-teal-400 animate-pulse" />
+          <span className="w-3 h-3 rounded-full bg-[#D6A83A] animate-pulse" />
           <span>Loading Economic Fabric Objective...</span>
         </div>
       </div>
@@ -108,53 +108,53 @@ export default function ObjectiveDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#060911] text-slate-100 p-6 lg:p-8 font-sans">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 lg:p-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Navigation & Breadcrumbs */}
-        <div className="flex items-center justify-between text-xs font-mono text-slate-400 border-b border-slate-800/80 pb-4">
+        <div className="flex items-center justify-between text-xs font-mono text-[#716F69] border-b border-[#222222] pb-4">
           <div className="flex items-center gap-2">
-            <Link href="/control/objectives" className="hover:text-teal-300">
+            <Link href="/control/objectives" className="hover:text-[#D6A83A]">
               ← Economic Objectives
             </Link>
             <span>/</span>
-            <span className="text-white font-bold">{id}</span>
+            <span className="text-[#F2F0EA] font-bold">{id}</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-slate-500">Chain: <strong className="text-cyan-400">Arc (5042)</strong></span>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-500">Security Gate: <strong className="text-emerald-400">ACTIVE</strong></span>
+            <span className="text-[#716F69]">Chain: <strong className="text-[#6B8FD6]">Arc (5042)</strong></span>
+            <span className="text-[#50504C]">|</span>
+            <span className="text-[#716F69]">Security Gate: <strong className="text-[#2FB36F]">ACTIVE</strong></span>
           </div>
         </div>
 
         {/* Action Feedback Banner */}
         {actionFeedback && (
-          <div className="p-3 bg-teal-950/40 border border-teal-500/30 rounded-xl flex items-center justify-between text-xs font-mono text-teal-300">
+          <div className="p-3 bg-[#141414] border border-[#2FB36F]/30 rounded-xl flex items-center justify-between text-xs font-mono text-[#2FB36F]">
             <span>{actionFeedback}</span>
-            <button onClick={() => setActionFeedback(null)} className="text-teal-400 hover:text-white">✕</button>
+            <button onClick={() => setActionFeedback(null)} className="text-[#716F69] hover:text-[#F2F0EA]">✕</button>
           </div>
         )}
 
         {/* Header Hero Banner */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div className="bg-[#101010] border border-[#222222] rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span
                   className={`text-xs font-mono px-3 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                     objective?.status === 'RUNNING'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/40'
                       : objective?.status === 'SIMULATED'
-                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                      ? 'bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/40'
+                      : 'bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/40'
                   }`}
                 >
                   {objective?.status}
                 </span>
-                <span className="text-xs font-mono text-slate-400">Tenant: {objective?.tenant_id}</span>
+                <span className="text-xs font-mono text-[#716F69]">Tenant: {objective?.tenant_id}</span>
               </div>
-              <h1 className="text-2xl font-black text-white tracking-tight">{objective?.objective_id}</h1>
-              <p className="text-sm text-slate-300 mt-1 max-w-3xl leading-relaxed">
+              <h1 className="text-2xl font-black text-[#F2F0EA] tracking-tight">{objective?.objective_id}</h1>
+              <p className="text-sm text-[#B0ADA5] mt-1 max-w-3xl leading-relaxed">
                 {objective?.description}
               </p>
             </div>
@@ -164,7 +164,7 @@ export default function ObjectiveDetailPage() {
               {objective?.status === 'DRAFT' && (
                 <button
                   onClick={() => handleAction('plan')}
-                  className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
                 >
                   Compile Blueprint
                 </button>
@@ -172,7 +172,7 @@ export default function ObjectiveDetailPage() {
               {['PLANNED', 'DRAFT'].includes(objective?.status || '') && (
                 <button
                   onClick={() => handleAction('simulate')}
-                  className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#D6A83A] border border-[#D6A83A]/40 transition-colors"
                 >
                   Simulate
                 </button>
@@ -180,7 +180,7 @@ export default function ObjectiveDetailPage() {
               {['SIMULATED', 'PLANNED'].includes(objective?.status || '') && (
                 <button
                   onClick={() => handleAction('start')}
-                  className="px-4 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-all shadow-md shadow-emerald-500/20"
+                  className="px-4 py-1.5 rounded-lg bg-[#F2F0EA] text-[#080808] font-bold hover:bg-white transition-all shadow-sm"
                 >
                   Start Execution →
                 </button>
@@ -189,13 +189,13 @@ export default function ObjectiveDetailPage() {
                 <>
                   <button
                     onClick={() => setShowReplanModal(true)}
-                    className="px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#D6A83A] border border-[#D6A83A]/40 transition-colors"
                   >
                     Replan (v{(objective?.blueprint_version || 1) + 1})
                   </button>
                   <button
                     onClick={() => handleAction('pause')}
-                    className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#716F69] border border-[#222222] transition-colors"
                   >
                     Pause
                   </button>
@@ -204,7 +204,7 @@ export default function ObjectiveDetailPage() {
               {objective?.status === 'WAITING' && (
                 <button
                   onClick={() => handleAction('resume')}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold transition-colors"
                 >
                   Resume
                 </button>
@@ -213,67 +213,67 @@ export default function ObjectiveDetailPage() {
           </div>
 
           {/* Core Metrics Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 pt-3 border-t border-slate-800 text-xs font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 pt-3 border-t border-[#222222] text-xs font-mono">
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">Economic Budget</span>
-              <strong className="text-emerald-400 text-sm">{objective?.economic_budget} USDC</strong>
+              <span className="text-[#716F69] block text-[10px] uppercase">Economic Budget</span>
+              <strong className="text-[#2FB36F] text-sm">{objective?.economic_budget} USDC</strong>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">Compute Slots</span>
-              <strong className="text-cyan-400 text-sm">{objective?.operational_budget} units</strong>
+              <span className="text-[#716F69] block text-[10px] uppercase">Compute Slots</span>
+              <strong className="text-[#B0ADA5] text-sm">{objective?.operational_budget} units</strong>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">Risk Class</span>
-              <strong className="text-amber-400 text-sm">{objective?.risk_tolerance}</strong>
+              <span className="text-[#716F69] block text-[10px] uppercase">Risk Class</span>
+              <strong className="text-[#D6A83A] text-sm">{objective?.risk_tolerance}</strong>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">Blueprint Version</span>
-              <strong className="text-teal-300 text-sm">v{objective?.blueprint_version || 1}</strong>
+              <span className="text-[#716F69] block text-[10px] uppercase">Blueprint Version</span>
+              <strong className="text-[#B0ADA5] text-sm">v{objective?.blueprint_version || 1}</strong>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">Replans Used</span>
-              <strong className="text-indigo-400 text-sm">{objective?.replan_count || 0} / 3 max</strong>
+              <span className="text-[#716F69] block text-[10px] uppercase">Replans Used</span>
+              <strong className="text-[#B0ADA5] text-sm">{objective?.replan_count || 0} / 3 max</strong>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">Financial Authority</span>
-              <strong className="text-rose-400 text-xs font-bold">RESERVED (INV-141)</strong>
+              <span className="text-[#716F69] block text-[10px] uppercase">Financial Authority</span>
+              <strong className="text-[#D85C5C] text-xs font-bold">RESERVED (INV-141)</strong>
             </div>
           </div>
         </div>
 
         {/* Section 22: High-Level Fabric State vs Authoritative Financial State */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm">
+        <div className="bg-[#101010] border border-[#222222] rounded-xl p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3 text-xs font-mono">
-            <span className="font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+            <span className="font-bold text-[#F2F0EA] uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
               State Layer Synchronization Matrix (Section 22 & INV-152)
             </span>
-            <span className="text-slate-400 text-[11px]">Fabric State cannot overwrite Financial Truth</span>
+            <span className="text-[#716F69] text-[11px]">Fabric State cannot overwrite Financial Truth</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
-            <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">Fabric Objective State</span>
-              <strong className="text-teal-300 text-sm mt-0.5 block">{objective?.status}</strong>
-              <span className="text-[10px] text-slate-500 mt-1 block">Source: Fabric Database</span>
+            <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
+              <span className="text-[#716F69] block text-[10px]">Fabric Objective State</span>
+              <strong className="text-[#F2F0EA] text-sm mt-0.5 block">{objective?.status}</strong>
+              <span className="text-[10px] text-[#50504C] mt-1 block">Source: Fabric Database</span>
             </div>
 
-            <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">Durable Workflow State</span>
-              <strong className="text-indigo-300 text-sm mt-0.5 block">{syncState?.workflow_status || 'RUNNING'}</strong>
-              <span className="text-[10px] text-slate-500 mt-1 block">Source: Durable Checkpoints</span>
+            <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
+              <span className="text-[#716F69] block text-[10px]">Durable Workflow State</span>
+              <strong className="text-[#F2F0EA] text-sm mt-0.5 block">{syncState?.workflow_status || 'RUNNING'}</strong>
+              <span className="text-[10px] text-[#50504C] mt-1 block">Source: Durable Checkpoints</span>
             </div>
 
-            <div className="bg-slate-950 p-3 rounded-lg border border-emerald-500/20">
-              <span className="text-slate-500 block text-[10px]">Authoritative Financial State</span>
-              <strong className="text-emerald-400 text-sm mt-0.5 block">{syncState?.financial_status || 'RESERVED'}</strong>
-              <span className="text-[10px] text-emerald-500/80 mt-1 block">Source: Treasury & Clearinghouse</span>
+            <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
+              <span className="text-[#716F69] block text-[10px]">Authoritative Financial State</span>
+              <strong className="text-[#2FB36F] text-sm mt-0.5 block">{syncState?.financial_status || 'RESERVED'}</strong>
+              <span className="text-[10px] text-[#2FB36F]/80 mt-1 block">Source: Treasury & Clearinghouse</span>
             </div>
 
-            <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">Arc On-Chain Verification</span>
-              <strong className="text-cyan-400 text-sm mt-0.5 block">{syncState?.arc_settlement_status || 'CONFIRMED'}</strong>
-              <span className="text-[10px] text-cyan-500/80 mt-1 block">Source: Arc Blockchain (5042)</span>
+            <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
+              <span className="text-[#716F69] block text-[10px]">Arc On-Chain Verification</span>
+              <strong className="text-[#6B8FD6] text-sm mt-0.5 block">{syncState?.arc_settlement_status || 'CONFIRMED'}</strong>
+              <span className="text-[10px] text-[#6B8FD6]/80 mt-1 block">Source: Arc Blockchain (5042)</span>
             </div>
           </div>
         </div>
@@ -283,43 +283,43 @@ export default function ObjectiveDetailPage() {
           {/* Left Col: Explainability */}
           <div className="space-y-6">
             {/* Why This Panel (Section 38) */}
-            <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 space-y-3 font-mono text-xs">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                <span className="text-teal-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-teal-400" />
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-between border-b border-[#222222] pb-2">
+                <span className="text-[#D6A83A] font-bold uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
                   &quot;Why This?&quot; Provider Selection Rationale
                 </span>
-                <span className="text-[10px] text-slate-400">Section 38</span>
+                <span className="text-[10px] text-[#716F69]">Section 38</span>
               </div>
 
               <div>
-                <span className="text-slate-500">Selected Provider:</span>
-                <div className="text-white font-bold text-sm mt-0.5">{why?.selected_provider}</div>
+                <span className="text-[#716F69]">Selected Provider:</span>
+                <div className="text-[#F2F0EA] font-bold text-sm mt-0.5">{why?.selected_provider}</div>
               </div>
 
               <div>
-                <span className="text-slate-500">Selection Criteria Match:</span>
-                <p className="text-slate-300 mt-0.5 font-sans leading-relaxed">{why?.selection_rationale}</p>
+                <span className="text-[#716F69]">Selection Criteria Match:</span>
+                <p className="text-[#B0ADA5] mt-0.5 font-sans leading-relaxed">{why?.selection_rationale}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
+              <div className="grid grid-cols-2 gap-3 bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
                 <div>
-                  <span className="text-slate-500">Policy Evaluation:</span>
-                  <div className="text-emerald-400 font-bold">{why?.policy_decision} ({why?.policy_rule})</div>
+                  <span className="text-[#716F69]">Policy Evaluation:</span>
+                  <div className="text-[#2FB36F] font-bold">{why?.policy_decision} ({why?.policy_rule})</div>
                 </div>
                 <div>
-                  <span className="text-slate-500">Approved Budget:</span>
-                  <div className="text-teal-300 font-bold">{why?.budget_approved}</div>
+                  <span className="text-[#716F69]">Approved Budget:</span>
+                  <div className="text-[#F2F0EA] font-bold">{why?.budget_approved}</div>
                 </div>
               </div>
 
               {why?.rejected_candidates && why.rejected_candidates.length > 0 && (
                 <div>
-                  <span className="text-slate-500 block mb-1">Rejected Candidates:</span>
+                  <span className="text-[#716F69] block mb-1">Rejected Candidates:</span>
                   <div className="space-y-1.5">
                     {why.rejected_candidates.map((c, i) => (
-                      <div key={i} className="bg-slate-950 p-2 rounded border border-slate-800 text-[11px]">
-                        <strong className="text-rose-300">{c.provider_id}</strong>: {c.reason}
+                      <div key={i} className="bg-[#0B0B0B] p-2 rounded border border-[#222222] text-[11px]">
+                        <strong className="text-[#D85C5C]">{c.provider_id}</strong>: <span className="text-[#716F69]">{c.reason}</span>
                       </div>
                     ))}
                   </div>
@@ -328,25 +328,25 @@ export default function ObjectiveDetailPage() {
             </div>
 
             {/* Why Not Panel (Section 37) */}
-            <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 space-y-3 font-mono text-xs">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                <span className="text-rose-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-between border-b border-[#222222] pb-2">
+                <span className="text-[#D85C5C] font-bold uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#D85C5C]" />
                   &quot;Why Not?&quot; Blocked Actions & Guardrails
                 </span>
-                <span className="text-[10px] text-slate-400">Section 37</span>
+                <span className="text-[10px] text-[#716F69]">Section 37</span>
               </div>
 
               <div>
-                <span className="text-slate-500">Blocked Forbidden Action:</span>
-                <div className="text-rose-300 font-bold text-sm mt-0.5">{whyNot?.blocked_action}</div>
+                <span className="text-[#716F69]">Blocked Forbidden Action:</span>
+                <div className="text-[#D85C5C] font-bold text-sm mt-0.5">{whyNot?.blocked_action}</div>
               </div>
 
               <div>
-                <span className="text-slate-500 block mb-1">Denial Invariants Enforced:</span>
+                <span className="text-[#716F69] block mb-1">Denial Invariants Enforced:</span>
                 <div className="space-y-1.5">
                   {whyNot?.reasons.map((r, i) => (
-                    <div key={i} className="bg-rose-950/20 border border-rose-500/30 p-2 rounded text-rose-300 text-[11px]">
+                    <div key={i} className="bg-[#141414] border border-[#D85C5C]/30 p-2 rounded text-[#D85C5C] text-[11px]">
                       [DENIED] {r}
                     </div>
                   ))}
@@ -354,10 +354,10 @@ export default function ObjectiveDetailPage() {
               </div>
 
               <div>
-                <span className="text-slate-500 block mb-1">Permitted Safe Alternatives:</span>
+                <span className="text-[#716F69] block mb-1">Permitted Safe Alternatives:</span>
                 <div className="space-y-1">
                   {whyNot?.safe_alternatives.map((a, i) => (
-                    <div key={i} className="bg-slate-950 p-2 rounded border border-slate-800 text-slate-300 text-[11px]">
+                    <div key={i} className="bg-[#0B0B0B] p-2 rounded border border-[#222222] text-[#B0ADA5] text-[11px]">
                       → {a}
                     </div>
                   ))}
@@ -367,16 +367,16 @@ export default function ObjectiveDetailPage() {
           </div>
 
           {/* Right Col: Section 20 Unified Economic Trace */}
-          <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-5 space-y-4 font-mono text-xs">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-              <span className="text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4 font-mono text-xs">
+            <div className="flex items-center justify-between border-b border-[#222222] pb-2">
+              <span className="text-[#F2F0EA] font-bold uppercase tracking-wider flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
                 Unified Economic Trace (18-Stage Causality)
               </span>
-              <span className="text-[10px] text-slate-400">Section 20</span>
+              <span className="text-[10px] text-[#716F69]">Section 20</span>
             </div>
 
-            <p className="text-slate-400 font-sans text-xs">
+            <p className="text-[#716F69] font-sans text-xs">
               Every stage from human objective to Arc settlement to economic learning is cryptographically linked with causation and correlation IDs.
             </p>
 
@@ -384,18 +384,18 @@ export default function ObjectiveDetailPage() {
               {trace?.nodes.map((node, idx) => (
                 <div
                   key={idx}
-                  className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 flex items-start justify-between gap-3 text-xs"
+                  className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222] flex items-start justify-between gap-3 text-xs"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-slate-800 text-teal-400 font-bold flex items-center justify-center text-[10px]">
+                      <span className="w-5 h-5 rounded-full bg-[#141414] text-[#D6A83A] border border-[#222222] font-bold flex items-center justify-center text-[10px]">
                         {idx + 1}
                       </span>
-                      <strong className="text-white text-xs">{node.stage}</strong>
-                      <span className="text-[10px] text-slate-500 font-sans">({node.source_of_truth})</span>
+                      <strong className="text-[#F2F0EA] text-xs">{node.stage}</strong>
+                      <span className="text-[10px] text-[#716F69] font-sans">({node.source_of_truth})</span>
                     </div>
-                    <div className="text-[11px] text-slate-400 ml-7">
-                      ID: <span className="text-slate-200">{node.id}</span>
+                    <div className="text-[11px] text-[#716F69] ml-7">
+                      ID: <span className="text-[#B0ADA5]">{node.id}</span>
                     </div>
                   </div>
 
@@ -403,15 +403,15 @@ export default function ObjectiveDetailPage() {
                     <span
                       className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
                         node.status.includes('CONFIRMED') || node.status === 'ALLOW' || node.status === 'SUCCEEDED'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          ? 'bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30'
                           : node.status === 'RUNNING' || node.status === 'ACTIVE'
-                          ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                          : 'bg-slate-800 text-slate-300'
+                          ? 'bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30'
+                          : 'bg-[#141414] text-[#716F69] border border-[#222222]'
                       }`}
                     >
                       {node.status}
                     </span>
-                    <div className="text-[10px] text-slate-500">
+                    <div className="text-[10px] text-[#50504C]">
                       {new Date(node.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
@@ -427,44 +427,44 @@ export default function ObjectiveDetailPage() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <form
             onSubmit={handleReplanSubmit}
-            className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl font-mono text-xs"
+            className="bg-[#101010] border border-[#222222] rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl font-mono text-xs"
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="font-bold text-base text-white font-sans">Controlled Replan Engine</h3>
+            <div className="flex items-center justify-between border-b border-[#222222] pb-3">
+              <h3 className="font-bold text-base text-[#F2F0EA] font-sans">Controlled Replan Engine</h3>
               <button
                 type="button"
                 onClick={() => setShowReplanModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#716F69] hover:text-[#F2F0EA]"
               >
                 ✕
               </button>
             </div>
 
             <div className="space-y-1">
-              <label className="text-slate-400">Replan Reason (Audited)</label>
+              <label className="text-[#716F69]">Replan Reason (Audited)</label>
               <textarea
                 value={replanReason}
                 onChange={(e) => setReplanReason(e.target.value)}
                 rows={3}
                 required
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-teal-500"
+                className="w-full bg-[#0B0B0B] border border-[#222222] rounded-lg p-2.5 text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
               />
             </div>
 
-            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-2 text-[11px] text-slate-400">
+            <div className="p-3 bg-[#0B0B0B] rounded-lg border border-[#222222] space-y-2 text-[11px] text-[#716F69]">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="dryRunCheck"
                   checked={isDryRun}
                   onChange={(e) => setIsDryRun(e.target.checked)}
-                  className="rounded bg-slate-900 border-slate-700 text-teal-500 focus:ring-0"
+                  className="rounded bg-[#141414] border-[#222222] text-[#D6A83A] focus:ring-0"
                 />
-                <label htmlFor="dryRunCheck" className="text-slate-300 cursor-pointer">
+                <label htmlFor="dryRunCheck" className="text-[#B0ADA5] cursor-pointer">
                   --dry-run (Evaluate delta without mutating production blueprint)
                 </label>
               </div>
-              <div className="text-[10px] text-amber-400/90">
+              <div className="text-[10px] text-[#D6A83A]">
                 Notice: Replanning can substitute degraded providers or adapt tasks, but can NEVER increase budget or relax policy (INV-145/148).
               </div>
             </div>
@@ -473,13 +473,13 @@ export default function ObjectiveDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowReplanModal(false)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-[#141414] hover:bg-[#181818] text-[#716F69] border border-[#222222] rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-lg transition-all"
+                className="px-4 py-1.5 bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold rounded-lg transition-all"
               >
                 {isDryRun ? 'Evaluate Dry-Run' : 'Execute Replan'}
               </button>

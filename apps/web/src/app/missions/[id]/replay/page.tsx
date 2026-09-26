@@ -199,31 +199,31 @@ export default function MissionReplayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans pb-24">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] font-sans pb-24">
       {/* Top Banner Navigation */}
-      <section className="bg-[#0b1220] border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-3 sticky top-16 z-30 shadow-md">
+      <section className="bg-[#080808] border-b border-[#222222] px-4 sm:px-6 lg:px-8 py-3 sticky top-16 z-30 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">MISSION:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+              <span className="text-[#716F69] font-semibold tracking-wider">MISSION:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
                 {missionId}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">REPLAY STAGE:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-teal-500/10 text-teal-400 border border-teal-500/30">
+              <span className="text-[#716F69] font-semibold tracking-wider">REPLAY STAGE:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-[#141414] text-[#B0ADA5] border border-[#222222]">
                 {currentStep.stage} ({currentIndex + 1} / {REPLAY_STEPS.length})
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">STATUS:</span>
-              <span className={`px-2 py-0.5 rounded font-bold ${
+              <span className="text-[#716F69] font-semibold tracking-wider">STATUS:</span>
+              <span className={`px-2 py-0.5 rounded font-bold border ${
                 currentStep.status === 'FAILED'
-                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                  ? 'bg-[#D85C5C]/10 text-[#D85C5C] border-[#D85C5C]/30'
                   : currentStep.status === 'RECOVERING'
-                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                  ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30'
+                  : 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30'
               }`}>
                 {currentStep.status}
               </span>
@@ -233,13 +233,13 @@ export default function MissionReplayPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/control"
-              className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
+              className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#E5E2DA] hover:bg-[#1C1C1C] transition-colors border border-[#2A2A2A]"
             >
               &larr; Control Tower
             </Link>
             <Link
               href={`/missions/${missionId}`}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
+              className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#E5E2DA] hover:bg-[#1C1C1C] transition-colors border border-[#2A2A2A]"
             >
               Live Mission View
             </Link>
@@ -249,25 +249,25 @@ export default function MissionReplayPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
         {/* Hero Title & Description */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#222222] pb-6">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-amber-400 animate-pulse" />
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
+              <div className="w-3 h-3 rounded-full bg-[#D6A83A]" />
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F2F0EA] font-mono">
                 MISSION FAILURE & RECOVERY REPLAY
               </h1>
             </div>
-            <p className="mt-1 text-slate-400 text-sm">
+            <p className="mt-1 text-[#B0ADA5] text-sm">
               Deterministic step-by-step playback of autonomous failure detection, plan adaptation, and financial containment.
             </p>
           </div>
 
           {/* VCR Style Replay Controls */}
-          <div className="bg-[#0e1626] border border-slate-700 rounded-xl p-2.5 flex items-center gap-2 shadow-lg">
+          <div className="bg-[#101010] border border-[#222222] rounded-xl p-2.5 flex items-center gap-2 shadow-lg">
             <button
               onClick={handleStepBack}
               disabled={currentIndex === 0}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-mono text-xs font-bold transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] disabled:opacity-40 text-[#F2F0EA] font-mono text-xs font-bold border border-[#2A2A2A] transition-colors"
               title="Step backward"
             >
               &larr; STEP
@@ -275,11 +275,7 @@ export default function MissionReplayPage() {
 
             <button
               onClick={handlePlayPause}
-              className={`px-4 py-1.5 rounded-lg font-mono text-xs font-bold transition-all shadow-md ${
-                isPlaying
-                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
-                  : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
-              }`}
+              className="px-4 py-1.5 rounded-lg font-mono text-xs font-bold transition-all bg-[#F2F0EA] hover:bg-white text-[#080808]"
             >
               {isPlaying ? '❚❚ PAUSE' : '▶ PLAY'}
             </button>
@@ -287,7 +283,7 @@ export default function MissionReplayPage() {
             <button
               onClick={handleStepForward}
               disabled={currentIndex === REPLAY_STEPS.length - 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-mono text-xs font-bold transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] disabled:opacity-40 text-[#F2F0EA] font-mono text-xs font-bold border border-[#2A2A2A] transition-colors"
               title="Step forward"
             >
               STEP &rarr;
@@ -295,24 +291,24 @@ export default function MissionReplayPage() {
 
             <button
               onClick={handleReset}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] text-[#B0ADA5] font-mono text-xs border border-[#2A2A2A] transition-colors"
               title="Reset replay to step 1"
             >
               RESET
             </button>
 
-            <div className="h-6 w-px bg-slate-700 mx-1" />
+            <div className="h-6 w-px bg-[#222222] mx-1" />
 
             <div className="flex items-center gap-1 font-mono text-[11px]">
-              <span className="text-slate-500 text-[10px] uppercase mr-1">Speed:</span>
+              <span className="text-[#716F69] text-[10px] uppercase mr-1">Speed:</span>
               {[0.5, 1, 2, 5].map((spd) => (
                 <button
                   key={spd}
                   onClick={() => setPlaybackSpeed(spd)}
                   className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${
                     playbackSpeed === spd
-                      ? 'bg-cyan-500 text-slate-950'
-                      : 'text-slate-400 hover:text-white bg-slate-900'
+                      ? 'bg-[#141414] text-[#F2F0EA] border border-[#2D2D2D]'
+                      : 'text-[#716F69] hover:text-[#F2F0EA] bg-[#0B0B0B]'
                   }`}
                 >
                   {spd}x
@@ -323,7 +319,7 @@ export default function MissionReplayPage() {
         </div>
 
         {/* Replay Timeline Progress Strip */}
-        <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm">
+        <section className="bg-[#101010] border border-[#222222] rounded-xl p-4 shadow-sm">
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
             {REPLAY_STEPS.map((step, idx) => {
               const isCurrent = idx === currentIndex;
@@ -337,18 +333,18 @@ export default function MissionReplayPage() {
                   }}
                   className={`p-2.5 rounded-lg border text-left font-mono transition-all text-xs ${
                     isCurrent
-                      ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md shadow-amber-500/10'
+                      ? 'bg-[#141414] border-[#D6A83A] text-[#F2F0EA]'
                       : isPast
-                      ? 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:border-slate-600'
-                      : 'bg-slate-950/40 border-slate-800/40 text-slate-600 hover:text-slate-400'
+                      ? 'bg-[#0B0B0B] border-[#222222] text-[#B0ADA5] hover:border-[#2D2D2D]'
+                      : 'bg-[#080808] border-[#1A1A1A] text-[#50504C] hover:text-[#716F69]'
                   }`}
                 >
                   <div className="flex items-center justify-between text-[10px] mb-1">
                     <span className="font-bold">0{step.id}</span>
-                    <span className="text-[9px] text-slate-500">{step.timestamp}</span>
+                    <span className="text-[9px] text-[#716F69]">{step.timestamp}</span>
                   </div>
                   <div className="font-bold truncate text-[11px]">{step.stage}</div>
-                  <div className="text-[10px] text-slate-400 truncate mt-0.5">{step.action}</div>
+                  <div className="text-[10px] text-[#716F69] truncate mt-0.5">{step.action}</div>
                 </button>
               );
             })}
@@ -358,61 +354,61 @@ export default function MissionReplayPage() {
         {/* Current Replay Step Detail Card */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Stage Information (7 cols) */}
-          <section className="lg:col-span-7 bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <section className="lg:col-span-7 bg-[#101010] border border-[#222222] rounded-xl p-6 shadow-sm space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#222222] pb-4">
               <div>
-                <span className="text-xs font-mono text-amber-400 font-bold uppercase tracking-wider">
+                <span className="text-xs font-mono text-[#D6A83A] font-bold uppercase tracking-wider">
                   STAGE {currentStep.id} OF {REPLAY_STEPS.length} &bull; {currentStep.timestamp}
                 </span>
-                <h2 className="text-xl font-bold font-mono text-white mt-1">
+                <h2 className="text-xl font-bold font-mono text-[#F2F0EA] mt-1">
                   {currentStep.title}
                 </h2>
               </div>
 
-              <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold ${
+              <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold border ${
                 currentStep.status === 'FAILED'
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                  ? 'bg-[#D85C5C]/10 text-[#D85C5C] border-[#D85C5C]/30'
                   : currentStep.status === 'RECOVERING'
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                  ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30'
+                  : 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30'
               }`}>
                 {currentStep.status}
               </span>
             </div>
 
-            <p className="text-sm text-slate-300 leading-relaxed font-sans">
+            <p className="text-sm text-[#B0ADA5] leading-relaxed font-sans">
               {currentStep.details}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-500 block text-[10px] uppercase">Actor</span>
-                <strong className="text-white mt-0.5 block">{currentStep.actor}</strong>
+              <div className="p-3 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                <span className="text-[#716F69] block text-[10px] uppercase">Actor</span>
+                <strong className="text-[#F2F0EA] mt-0.5 block">{currentStep.actor}</strong>
               </div>
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-500 block text-[10px] uppercase">Domain & Action</span>
-                <strong className="text-cyan-300 mt-0.5 block">{currentStep.domain} &bull; {currentStep.action}</strong>
+              <div className="p-3 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                <span className="text-[#716F69] block text-[10px] uppercase">Domain & Action</span>
+                <strong className="text-[#F2F0EA] mt-0.5 block">{currentStep.domain} &bull; {currentStep.action}</strong>
               </div>
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-500 block text-[10px] uppercase">Economic Impact</span>
-                <strong className="text-amber-300 mt-0.5 block">{currentStep.economicImpact}</strong>
+              <div className="p-3 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                <span className="text-[#716F69] block text-[10px] uppercase">Economic Impact</span>
+                <strong className="text-[#D6A83A] mt-0.5 block">{currentStep.economicImpact}</strong>
               </div>
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-500 block text-[10px] uppercase">Policy Gate</span>
-                <strong className="text-emerald-400 mt-0.5 block">{currentStep.policyDecision}</strong>
+              <div className="p-3 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                <span className="text-[#716F69] block text-[10px] uppercase">Policy Gate</span>
+                <strong className="text-[#2FB36F] mt-0.5 block">{currentStep.policyDecision}</strong>
               </div>
             </div>
 
             {/* Why Panel (Section 6) */}
             {currentStep.whyExplanation && (
-              <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-2">
+              <div className="p-4 bg-[#0B0B0B] border border-[#2FB36F]/30 rounded-xl space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
+                  <span className="text-xs font-mono font-bold text-[#2FB36F] uppercase tracking-wider">
                     WHY THIS DECISION? (STRUCTURED EXPLANATION)
                   </span>
                 </div>
-                <p className="text-xs text-emerald-200/90 font-mono leading-relaxed pl-4">
+                <p className="text-xs text-[#B0ADA5] font-mono leading-relaxed pl-4">
                   {currentStep.whyExplanation}
                 </p>
               </div>
@@ -420,14 +416,14 @@ export default function MissionReplayPage() {
 
             {/* Why Not Panel (Section 7) */}
             {currentStep.whyNotExplanation && (
-              <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+              <div className="p-4 bg-[#0B0B0B] border border-[#D85C5C]/30 rounded-xl space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
-                  <span className="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-[#D85C5C]" />
+                  <span className="text-xs font-mono font-bold text-[#D85C5C] uppercase tracking-wider">
                     WHY NOT THE ALTERNATIVES?
                   </span>
                 </div>
-                <ul className="text-xs text-slate-300 font-mono space-y-1 pl-4 list-disc list-inside">
+                <ul className="text-xs text-[#B0ADA5] font-mono space-y-1 pl-4 list-disc list-inside">
                   {currentStep.whyNotExplanation.map((whyNot, i) => (
                     <li key={i}>{whyNot}</li>
                   ))}
@@ -437,55 +433,55 @@ export default function MissionReplayPage() {
           </section>
 
           {/* Financial Authority Boundary Invariant (5 cols) */}
-          <section className="lg:col-span-5 bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-5">
-            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <section className="lg:col-span-5 bg-[#101010] border border-[#222222] rounded-xl p-6 shadow-sm space-y-5">
+            <div className="border-b border-[#222222] pb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold font-mono text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-teal-400" />
+                <h3 className="text-sm font-bold font-mono text-[#F2F0EA] flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
                   FINANCIAL AUTHORITY INVARIANT
                 </h3>
-                <p className="text-xs text-slate-400">Non-negotiable constitutional containment</p>
+                <p className="text-xs text-[#716F69]">Non-negotiable constitutional containment</p>
               </div>
-              <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/30 text-[10px] font-mono font-bold">
+              <span className="px-2 py-0.5 rounded bg-[#141414] text-[#D6A83A] border border-[#2D2D2D] text-[10px] font-mono font-bold">
                 ENFORCED
               </span>
             </div>
 
-            <div className="p-4 bg-slate-900/90 border border-teal-500/20 rounded-xl space-y-3 font-mono text-xs">
-              <span className="text-teal-400 font-bold block text-[11px] uppercase">
+            <div className="p-4 bg-[#0B0B0B] border border-[#222222] rounded-xl space-y-3 font-mono text-xs">
+              <span className="text-[#D6A83A] font-bold block text-[11px] uppercase">
                 Active Authority State at Stage {currentStep.id}:
               </span>
-              <p className="text-slate-200 leading-relaxed font-sans text-xs">
+              <p className="text-[#B0ADA5] leading-relaxed font-sans text-xs">
                 {currentStep.financialBoundaryState}
               </p>
             </div>
 
             <div className="space-y-2 text-xs font-mono">
-              <span className="text-slate-400 text-[10px] uppercase font-bold block">
+              <span className="text-[#716F69] text-[10px] uppercase font-bold block">
                 Constitutional Guardrails Status:
               </span>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg">
-                  <span className="text-slate-300">Agent Private Keys:</span>
-                  <span className="text-emerald-400 font-bold">NEVER HELD</span>
+                <div className="flex items-center justify-between p-2.5 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                  <span className="text-[#B0ADA5]">Agent Private Keys:</span>
+                  <span className="text-[#2FB36F] font-bold">NEVER HELD</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg">
-                  <span className="text-slate-300">Budget Expansion:</span>
-                  <span className="text-emerald-400 font-bold">BLOCKED (CAP: 25.00 USDC)</span>
+                <div className="flex items-center justify-between p-2.5 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                  <span className="text-[#B0ADA5]">Budget Expansion:</span>
+                  <span className="text-[#2FB36F] font-bold">BLOCKED (CAP: 25.00 USDC)</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg">
-                  <span className="text-slate-300">Arbitrary Recipient:</span>
-                  <span className="text-emerald-400 font-bold">BLOCKED</span>
+                <div className="flex items-center justify-between p-2.5 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                  <span className="text-[#B0ADA5]">Arbitrary Recipient:</span>
+                  <span className="text-[#2FB36F] font-bold">BLOCKED</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg">
-                  <span className="text-slate-300">Arbitrary Calldata:</span>
-                  <span className="text-emerald-400 font-bold">BLOCKED</span>
+                <div className="flex items-center justify-between p-2.5 bg-[#0B0B0B] border border-[#222222] rounded-lg">
+                  <span className="text-[#B0ADA5]">Arbitrary Calldata:</span>
+                  <span className="text-[#2FB36F] font-bold">BLOCKED</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-400 space-y-1">
-              <div className="text-white font-bold">The Core Thesis Demonstrated:</div>
+            <div className="p-4 bg-[#0B0B0B] rounded-xl border border-[#222222] text-[11px] font-mono text-[#716F69] space-y-1">
+              <div className="text-[#F2F0EA] font-bold">The Core Thesis Demonstrated:</div>
               <div>&ldquo;Autonomy changes the plan. AgentPay controls the money. Arc settles authorized value.&rdquo;</div>
             </div>
           </section>

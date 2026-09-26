@@ -72,22 +72,22 @@ export default function ControlApprovalsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans pb-24">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] font-sans pb-24">
       {/* HEADER */}
-      <section className="bg-[#0b1220] border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-4">
+      <section className="bg-[#080808] border-b border-[#222222] px-4 sm:px-6 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/control"
-              className="text-xs font-mono text-slate-400 hover:text-amber-400 transition-colors"
+              className="text-xs font-mono text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
             >
               &larr; CONTROL TOWER
             </Link>
-            <span className="text-slate-600">/</span>
-            <span className="text-xs font-mono text-amber-400 font-bold">APPROVAL CENTER</span>
+            <span className="text-[#50504C]">/</span>
+            <span className="text-xs font-mono text-[#D6A83A] font-bold">APPROVAL CENTER</span>
           </div>
 
-          <span className="px-2.5 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/30 text-xs font-mono font-bold">
+          <span className="px-2.5 py-1 rounded bg-[#141414] text-[#D6A83A] border border-[#2D2D2D] text-xs font-mono font-bold">
             HUMAN OVERSIGHT GATEWAY
           </span>
         </div>
@@ -95,18 +95,18 @@ export default function ControlApprovalsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-white font-mono">
+          <h1 className="text-2xl font-extrabold text-[#F2F0EA] font-mono">
             FINANCIAL APPROVAL CENTER
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-[#B0ADA5] mt-1">
             Review and resolve payment requests requiring human authorization under Constitution policy rules.
           </p>
         </div>
 
         {notification && (
-          <div className="p-3 bg-amber-950/40 border border-amber-500/40 rounded-lg text-xs font-mono text-amber-300 flex justify-between items-center">
+          <div className="p-3 bg-[#141414] border border-[#D6A83A]/40 rounded-lg text-xs font-mono text-[#D6A83A] flex justify-between items-center">
             <span>{notification}</span>
-            <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-white">
+            <button onClick={() => setNotification(null)} className="text-[#716F69] hover:text-[#F2F0EA]">
               &times;
             </button>
           </div>
@@ -118,42 +118,42 @@ export default function ControlApprovalsPage() {
               key={req.id}
               className={`p-5 rounded-xl border transition-all ${
                 req.eligible_for_approval
-                  ? 'bg-[#0e1626] border-slate-800'
-                  : 'bg-rose-950/10 border-rose-900/40'
+                  ? 'bg-[#101010] border-[#222222]'
+                  : 'bg-[#101010] border-[#D85C5C]/40'
               }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-4 font-mono">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-white font-bold text-base">{req.id}</span>
+                    <span className="text-[#F2F0EA] font-bold text-base">{req.id}</span>
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         req.policy_decision === 'REQUIRE_APPROVAL'
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          ? 'bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/20'
+                          : 'bg-[#D85C5C]/10 text-[#D85C5C] border border-[#D85C5C]/20'
                       }`}
                     >
                       {req.policy_decision}
                     </span>
-                    <span className="text-slate-400 text-xs">
-                      Risk Score: <strong className={req.risk_score > 50 ? 'text-rose-400' : 'text-teal-300'}>{req.risk_score}/100</strong>
+                    <span className="text-[#716F69] text-xs">
+                      Risk Score: <strong className={req.risk_score > 50 ? 'text-[#D85C5C]' : 'text-[#2FB36F]'}>{req.risk_score}/100</strong>
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-300 mt-2">{req.reason}</p>
+                  <p className="text-xs text-[#B0ADA5] mt-2">{req.reason}</p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3 text-xs text-slate-400 pt-3 border-t border-slate-800/60">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3 text-xs text-[#716F69] pt-3 border-t border-[#222222]">
                     <div>
-                      Requester: <span className="text-slate-200 block">{req.requester_agent}</span>
+                      Requester: <span className="text-[#F2F0EA] block">{req.requester_agent}</span>
                     </div>
                     <div>
-                      Mission: <span className="text-slate-200 block">{req.mission_id}</span>
+                      Mission: <span className="text-[#F2F0EA] block">{req.mission_id}</span>
                     </div>
                     <div>
-                      Amount: <span className="text-amber-400 font-bold block">{formatMicroUSDC(req.amount)}</span>
+                      Amount: <span className="text-[#F2F0EA] font-bold block">{formatMicroUSDC(req.amount)}</span>
                     </div>
                     <div>
-                      Recipient: <span className="text-cyan-300 truncate block">{req.recipient}</span>
+                      Recipient: <span className="text-[#F2F0EA] truncate block">{req.recipient}</span>
                     </div>
                   </div>
                 </div>
@@ -166,8 +166,8 @@ export default function ControlApprovalsPage() {
                         disabled={!req.eligible_for_approval}
                         className={`px-4 py-2 rounded-lg text-xs font-mono font-bold transition-colors ${
                           req.eligible_for_approval
-                            ? 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-md shadow-emerald-500/20'
-                            : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                            ? 'bg-[#F2F0EA] text-[#080808] hover:bg-white'
+                            : 'bg-[#151515] text-[#50504C] cursor-not-allowed border border-[#222222]'
                         }`}
                         title={!req.eligible_for_approval ? req.block_reason : 'Approve payment request'}
                       >
@@ -176,13 +176,13 @@ export default function ControlApprovalsPage() {
 
                       <button
                         onClick={() => handleReject(req.id)}
-                        className="px-4 py-2 rounded-lg text-xs font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20 transition-colors"
+                        className="px-4 py-2 rounded-lg text-xs font-mono font-bold bg-[#151515] text-[#D85C5C] border border-[#D85C5C]/30 hover:bg-[#1C1C1C] transition-colors"
                       >
                         REJECT
                       </button>
                     </>
                   ) : (
-                    <span className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-xs font-bold">
+                    <span className="px-3 py-1.5 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222] text-xs font-bold">
                       RESOLVED: {req.status}
                     </span>
                   )}
@@ -190,7 +190,7 @@ export default function ControlApprovalsPage() {
               </div>
 
               {!req.eligible_for_approval && (
-                <div className="mt-3 p-2.5 bg-rose-900/20 border border-rose-800/40 rounded-lg text-[11px] font-mono text-rose-300">
+                <div className="mt-3 p-2.5 bg-[#0B0B0B] border border-[#D85C5C]/40 rounded-lg text-[11px] font-mono text-[#D85C5C]">
                   <strong>SECURITY ENFORCEMENT (INV-97):</strong> {req.block_reason}
                 </div>
               )}

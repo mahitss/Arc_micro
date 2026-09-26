@@ -7,16 +7,16 @@ interface NetworkBadgeProps {
 export function NetworkBadge({ isVerifiedMainnet = false }: NetworkBadgeProps) {
   if (isVerifiedMainnet) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium uppercase bg-[#141414] text-[#F2F0EA] border border-[#222222]">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
         <span>Arc Mainnet</span>
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium uppercase bg-[#101010] text-[#B0ADA5] border border-[#222222]">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
       <span>Local / Test Environment</span>
     </span>
   );

@@ -53,20 +53,20 @@ export function MissionReplayController({ trace }: MissionReplayControllerProps)
   const activeStep = REPLAY_STEPS[currentStepIndex];
 
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-xl space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+    <div className="p-6 rounded-xl bg-[#101010] border border-[#222222] space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#222222] pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold text-sm border border-teal-500/30">
+          <div className="w-8 h-8 rounded-lg bg-[#181818] text-[#F2F0EA] flex items-center justify-center font-bold text-sm border border-[#222222]">
             ▶
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-white">Mission Replay Controller</h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+              <h2 className="text-base font-bold text-[#F2F0EA]">Mission Replay Controller</h2>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#D6A83A] border border-[#222222]">
                 REPLAY / READ ONLY
               </span>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#B0ADA5] mt-0.5">
               Interactive visual playback of the mission execution trace without mutating state.
             </p>
           </div>
@@ -78,8 +78,8 @@ export function MissionReplayController({ trace }: MissionReplayControllerProps)
             onClick={() => setIsPlaying(!isPlaying)}
             className={`px-4 py-2 rounded-lg font-bold border transition-colors ${
               isPlaying
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                : 'bg-teal-500/20 text-teal-300 border-teal-500/40 hover:bg-teal-500/30'
+                ? 'bg-[#181818] text-[#D6A83A] border-[#D6A83A]/60'
+                : 'bg-[#F2F0EA] hover:bg-white text-[#080808] border-transparent'
             }`}
           >
             {isPlaying ? 'Pause ⏸' : 'Play Sequence ▶'}
@@ -87,13 +87,13 @@ export function MissionReplayController({ trace }: MissionReplayControllerProps)
           <button
             onClick={handleStepForward}
             disabled={isPlaying || currentStepIndex >= REPLAY_STEPS.length - 1}
-            className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 disabled:opacity-50"
+            className="px-3 py-2 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] disabled:opacity-40 transition-colors"
           >
             Step ⏭
           </button>
           <button
             onClick={handleReset}
-            className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700"
+            className="px-3 py-2 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] text-[#B0ADA5] border border-[#2A2A2A] transition-colors"
           >
             Reset ↺
           </button>
@@ -101,28 +101,28 @@ export function MissionReplayController({ trace }: MissionReplayControllerProps)
       </div>
 
       {/* Replay Stage Display */}
-      <div className="p-6 rounded-xl bg-slate-950 border border-teal-500/30 space-y-3 font-mono text-xs">
-        <div className="flex items-center justify-between text-slate-400">
-          <span className="text-teal-400 font-bold text-sm tracking-wide">{activeStep.label}</span>
-          <span className="text-slate-500">
+      <div className="p-6 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-3 font-mono text-xs">
+        <div className="flex items-center justify-between text-[#B0ADA5]">
+          <span className="text-[#F2F0EA] font-bold text-sm tracking-wide">{activeStep.label}</span>
+          <span className="text-[#716F69]">
             Step {currentStepIndex + 1} of {REPLAY_STEPS.length}
           </span>
         </div>
-        <p className="text-slate-300 text-sm">{activeStep.desc}</p>
+        <p className="text-[#B0ADA5] text-sm font-sans">{activeStep.desc}</p>
 
         {/* Trace Evidence Snippet */}
-        <div className="pt-2 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] text-slate-400">
+        <div className="pt-3 border-t border-[#222222] grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] text-[#B0ADA5]">
           <div>
-            <span className="text-slate-500 block">MISSION ID:</span>
-            <span className="text-white font-bold">{trace.mission_id}</span>
+            <span className="text-[#716F69] block">MISSION ID:</span>
+            <span className="text-[#F2F0EA] font-bold">{trace.mission_id}</span>
           </div>
           <div>
-            <span className="text-slate-500 block">AGENT:</span>
-            <span className="text-teal-300 font-bold">{trace.agent_id}</span>
+            <span className="text-[#716F69] block">AGENT:</span>
+            <span className="text-[#F2F0EA] font-bold">{trace.agent_id}</span>
           </div>
           <div>
-            <span className="text-slate-500 block">SIMULATION GUARD:</span>
-            <span className="text-emerald-400 font-bold">INV-E8 VERIFIED (ZERO BROADCAST)</span>
+            <span className="text-[#716F69] block">SIMULATION GUARD:</span>
+            <span className="text-[#2FB36F] font-bold">INV-E8 VERIFIED (ZERO BROADCAST)</span>
           </div>
         </div>
       </div>

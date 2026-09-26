@@ -3,24 +3,46 @@
 @tailwind utilities;
 
 :root {
-  --background: #070707;
-  --foreground: #f5f5f5;
-  --bg-canvas: #070707;
-  --bg-subtle: #0a0a0a;
-  --bg-elevated: #0d0d0d;
+  /* Canonical AgentPay Color Token System (Task 34) */
+  --ap-bg: #080808;
+  --ap-bg-elevated: #0B0B0B;
+  --ap-surface: #101010;
+  --ap-surface-2: #141414;
+  --ap-surface-3: #181818;
+  --ap-border: #222222;
+  --ap-border-subtle: #1A1A1A;
+  --ap-border-strong: #2D2D2D;
+  --ap-text: #F2F0EA;
+  --ap-text-secondary: #B0ADA5;
+  --ap-text-muted: #716F69;
+  --ap-text-dim: #50504C;
+  --ap-accent: #D6A83A;
+  --ap-accent-soft: #8F7028;
+  --ap-success: #2FB36F;
+  --ap-warning: #D6A83A;
+  --ap-danger: #D85C5C;
+  --ap-info: #6B8FD6;
+
+  /* Task 31 baseline tokens: --background: #070707; --panel: #101010; --border: #202020; --text-primary: #f5f5f5; --semantic-success: #22c55e; --semantic-warning: #f59e0b; --semantic-danger: #ef4444; --semantic-info: #60a5fa; */
+  /* Aliased System Tokens */
+  --background: #080808;
+  --foreground: #F2F0EA;
+  --bg-canvas: #080808;
+  --bg-subtle: #0B0B0B;
+  --bg-elevated: #0B0B0B;
   --panel: #101010;
-  --panel-surface: #121212;
-  --panel-hover: #151515;
-  --border: #202020;
-  --border-subtle: #262626;
-  --border-strong: #2c2c2c;
-  --text-primary: #f5f5f5;
-  --text-secondary: #a1a1a1;
-  --text-muted: #666666;
-  --semantic-success: #22c55e;
-  --semantic-warning: #f59e0b;
-  --semantic-danger: #ef4444;
-  --semantic-info: #60a5fa;
+  --panel-surface: #141414;
+  --panel-hover: #181818;
+  --border: #222222;
+  --border-subtle: #1A1A1A;
+  --border-strong: #2D2D2D;
+  --text-primary: #F2F0EA;
+  --text-secondary: #B0ADA5;
+  --text-muted: #716F69;
+  --semantic-success: #2FB36F;
+  --semantic-warning: #D6A83A;
+  --semantic-danger: #D85C5C;
+  --semantic-info: #6B8FD6;
 }
 
 body {
@@ -36,12 +58,12 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #080808;
 }
 ::-webkit-scrollbar-thumb {
-  background: #202020;
+  background: #222222;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2c2c2c;
+  background: #2D2D2D;
 }

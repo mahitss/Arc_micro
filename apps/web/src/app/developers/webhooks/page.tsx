@@ -129,32 +129,32 @@ export default function WebhooksPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-[#F2F0EA]">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
-          <span className="p-2 rounded-lg bg-teal-500/10 border border-teal-500/20 text-teal-400">
+        <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA] flex items-center gap-3">
+          <span className="p-2 rounded-lg bg-[#141414] border border-[#222222] text-[#D6A83A]">
             ⚡
           </span>
           Webhook Endpoints & Real-Time Events
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[#716F69]">
           Subscribe external services to cryptographically signed (HMAC-SHA256) domain events across the complete payment lifecycle.
         </p>
       </div>
 
       {/* New Secret Banner */}
       {newSecret && (
-        <div className="p-4 rounded-xl border border-teal-500/30 bg-teal-950/40 space-y-2">
-          <div className="flex items-center gap-2 text-teal-400 font-semibold text-sm">
+        <div className="p-4 rounded-xl border border-[#222222] bg-[#0B0B0B] space-y-2">
+          <div className="flex items-center gap-2 text-[#D6A83A] font-semibold text-sm font-mono">
             <span>🔐</span>
             <span>Webhook Signing Secret Generated (Shown Only Once)</span>
           </div>
-          <p className="text-xs text-slate-300 font-mono break-all bg-black/40 p-3 rounded-lg border border-teal-500/20 select-all">
+          <p className="text-xs text-[#F2F0EA] font-mono break-all bg-[#141414] p-3 rounded-lg border border-[#222222] select-all">
             {newSecret}
           </p>
-          <p className="text-xs text-amber-400">
-            ⚠️ Store this secret safely. It will never be displayed again. Use it to verify <code className="font-mono text-white">AgentPay-Signature</code> headers.
+          <p className="text-xs text-[#D6A83A] font-mono">
+            ⚠️ Store this secret safely. It will never be displayed again. Use it to verify <code className="font-mono text-[#F2F0EA]">AgentPay-Signature</code> headers.
           </p>
         </div>
       )}
@@ -162,48 +162,48 @@ export default function WebhooksPage() {
       {/* Grid: Create Endpoint + Endpoint List */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Create Endpoint Form */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-          <h2 className="text-base font-semibold text-white">Register Endpoint</h2>
+        <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] space-y-4">
+          <h2 className="text-base font-semibold text-[#F2F0EA]">Register Endpoint</h2>
           <form onSubmit={handleCreate} className="space-y-4 text-xs font-mono">
             <div>
-              <label className="block text-slate-400 mb-1">Destination URL (HTTPS only)</label>
+              <label className="block text-[#716F69] mb-1">Destination URL (HTTPS only)</label>
               <input
                 type="url"
                 required
                 placeholder="https://api.yourdomain.com/webhooks"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
+                className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] placeholder-[#716F69] focus:outline-none focus:border-[#D6A83A]"
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Description</label>
+              <label className="block text-[#716F69] mb-1">Description</label>
               <input
                 type="text"
                 placeholder="Production Billing Service"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
+                className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] placeholder-[#716F69] focus:outline-none focus:border-[#D6A83A]"
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Subscribed Events (comma-separated)</label>
+              <label className="block text-[#716F69] mb-1">Subscribed Events (comma-separated)</label>
               <input
                 type="text"
                 placeholder="payment_intent.*,test.ping"
                 value={subscribedEvents}
                 onChange={(e) => setSubscribedEvents(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
+                className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] placeholder-[#716F69] focus:outline-none focus:border-[#D6A83A]"
               />
-              <span className="text-[10px] text-slate-500">Supports wildcards like <code className="text-teal-400">payment_intent.*</code> or <code className="text-teal-400">*</code></span>
+              <span className="text-[10px] text-[#716F69]">Supports wildcards like <code className="text-[#B0ADA5]">payment_intent.*</code> or <code className="text-[#B0ADA5]">*</code></span>
             </div>
 
             <button
               type="submit"
               disabled={creating}
-              className="w-full py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold transition-colors disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold text-xs font-mono transition-colors disabled:opacity-50"
             >
               {creating ? 'Registering...' : 'Register Endpoint'}
             </button>
@@ -213,41 +213,41 @@ export default function WebhooksPage() {
         {/* Endpoints List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-white">Configured Endpoints ({endpoints.length})</h2>
+            <h2 className="text-base font-semibold text-[#F2F0EA]">Configured Endpoints ({endpoints.length})</h2>
             <button
               onClick={fetchEndpoints}
-              className="text-xs text-teal-400 hover:underline"
+              className="text-xs text-[#D6A83A] hover:underline font-mono"
             >
               Refresh
             </button>
           </div>
 
           {testResult && (
-            <div className="p-3 rounded-lg bg-slate-800/80 border border-slate-700 text-xs font-mono text-teal-300">
+            <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] text-xs font-mono text-[#F2F0EA]">
               {testResult}
             </div>
           )}
 
           {loading ? (
-            <div className="p-8 text-center text-slate-500 text-xs font-mono">Loading endpoints...</div>
+            <div className="p-8 text-center text-[#716F69] text-xs font-mono">Loading endpoints...</div>
           ) : endpoints.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-slate-900/40 border border-slate-800 text-slate-500 text-xs font-mono">
+            <div className="p-8 text-center rounded-2xl bg-[#101010] border border-[#222222] text-[#716F69] text-xs font-mono">
               No webhook endpoints configured. Register an HTTPS endpoint on the left to receive domain events.
             </div>
           ) : (
             <div className="space-y-4">
               {endpoints.map((ep) => (
-                <div key={ep.id} className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+                <div key={ep.id} className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-3">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2 font-mono text-xs">
-                        <span className="text-white font-semibold">{ep.description || 'Webhook Endpoint'}</span>
-                        <span className="text-slate-500">({ep.id})</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] ${ep.enabled ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                        <span className="text-[#F2F0EA] font-semibold">{ep.description || 'Webhook Endpoint'}</span>
+                        <span className="text-[#716F69]">({ep.id})</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] ${ep.enabled ? 'bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/20' : 'bg-[#D85C5C]/10 text-[#D85C5C] border border-[#D85C5C]/20'}`}>
                           {ep.enabled ? 'ACTIVE' : 'DISABLED'}
                         </span>
                       </div>
-                      <div className="text-xs font-mono text-slate-300 mt-1 break-all">
+                      <div className="text-xs font-mono text-[#B0ADA5] mt-1 break-all">
                         {ep.url}
                       </div>
                     </div>
@@ -255,34 +255,34 @@ export default function WebhooksPage() {
                     <button
                       onClick={() => handleTest(ep.id)}
                       disabled={testingId === ep.id}
-                      className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                      className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors disabled:opacity-50 whitespace-nowrap"
                     >
                       {testingId === ep.id ? 'Sending...' : '⚡ Test Ping'}
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-[#716F69]">
                     <span>Events:</span>
                     {ep.subscribed_events.map((ev, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-slate-800 text-teal-300">
+                      <span key={i} className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#B0ADA5]">
                         {ev}
                       </span>
                     ))}
-                    <span className="ml-auto text-slate-500">
+                    <span className="ml-auto text-[#716F69]">
                       Failures: {ep.failure_count}
                     </span>
                   </div>
 
                   {/* Delivery History Toggle */}
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                  <div className="pt-2 border-t border-[#222222] flex items-center justify-between text-xs font-mono">
                     <button
                       onClick={() => loadDeliveries(ep.id)}
-                      className="text-teal-400 hover:underline"
+                      className="text-[#D6A83A] hover:underline"
                     >
                       View Delivery History
                     </button>
                     {ep.last_delivery_at && (
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[10px] text-[#716F69]">
                         Last delivery: {new Date(ep.last_delivery_at).toLocaleString()}
                       </span>
                     )}
@@ -291,19 +291,19 @@ export default function WebhooksPage() {
                   {/* Deliveries Drawer */}
                   {deliveries[ep.id] && (
                     <div className="mt-3 space-y-2">
-                      <div className="text-[11px] font-mono text-slate-400">Recent Deliveries:</div>
+                      <div className="text-[11px] font-mono text-[#716F69]">Recent Deliveries:</div>
                       {deliveries[ep.id].length === 0 ? (
-                        <div className="text-xs text-slate-500 font-mono italic">No deliveries recorded yet.</div>
+                        <div className="text-xs text-[#716F69] font-mono italic">No deliveries recorded yet.</div>
                       ) : (
                         <div className="space-y-1.5 max-h-48 overflow-y-auto">
                           {deliveries[ep.id].map((del) => (
-                            <div key={del.id} className="p-2 rounded bg-slate-950/80 border border-slate-800 flex items-center justify-between text-[11px] font-mono">
-                              <span className="text-slate-300">{del.event_type}</span>
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] ${del.status === 'DELIVERED' ? 'text-emerald-400 bg-emerald-500/10' : del.status === 'RETRYING' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'}`}>
+                            <div key={del.id} className="p-2 rounded bg-[#0B0B0B] border border-[#222222] flex items-center justify-between text-[11px] font-mono">
+                              <span className="text-[#B0ADA5]">{del.event_type}</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] ${del.status === 'DELIVERED' ? 'text-[#2FB36F] bg-[#2FB36F]/10 border border-[#2FB36F]/30' : del.status === 'RETRYING' ? 'text-[#D6A83A] bg-[#D6A83A]/10 border border-[#D6A83A]/30' : 'text-[#D85C5C] bg-[#D85C5C]/10 border border-[#D85C5C]/30'}`}>
                                 {del.status} {del.http_status ? `(${del.http_status})` : ''}
                               </span>
-                              <span className="text-slate-500">{del.latency_ms ? `${del.latency_ms}ms` : ''}</span>
-                              <span className="text-slate-600 text-[10px]">{new Date(del.created_at).toLocaleTimeString()}</span>
+                              <span className="text-[#716F69]">{del.latency_ms ? `${del.latency_ms}ms` : ''}</span>
+                              <span className="text-[#716F69] text-[10px]">{new Date(del.created_at).toLocaleTimeString()}</span>
                             </div>
                           ))}
                         </div>

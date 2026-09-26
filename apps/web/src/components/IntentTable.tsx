@@ -12,17 +12,17 @@ interface IntentTableProps {
 export function IntentTable({ intents, onSelectIntent }: IntentTableProps) {
   if (intents.length === 0) {
     return (
-      <div className="p-8 text-center text-xs font-mono text-slate-500 bg-slate-900/30 rounded-xl border border-slate-800/80">
+      <div className="p-8 text-center text-xs font-mono text-[#716F69] bg-[#101010] rounded-xl border border-[#222222]">
         No payment intents matching the current filter.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-900/50">
+    <div className="overflow-x-auto rounded-xl border border-[#222222] bg-[#101010]">
       <table className="w-full text-left border-collapse text-xs">
         <thead>
-          <tr className="border-b border-slate-800/80 bg-slate-950/60 text-slate-400 font-mono">
+          <tr className="border-b border-[#222222] bg-[#141414] text-[#85827B] font-mono">
             <th className="py-3 px-4 font-medium">Intent ID</th>
             <th className="py-3 px-4 font-medium">Agent</th>
             <th className="py-3 px-4 font-medium">Service</th>
@@ -33,7 +33,7 @@ export function IntentTable({ intents, onSelectIntent }: IntentTableProps) {
             <th className="py-3 px-4 font-medium text-right">Action</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800/60 font-mono">
+        <tbody className="divide-y divide-[#222222] font-mono">
           {intents.map((intent) => {
             const amountNum = Number(intent.amount) / 1_000_000;
             const amountStr = isNaN(amountNum) ? intent.amount : `$${amountNum.toFixed(2)}`;
@@ -46,30 +46,30 @@ export function IntentTable({ intents, onSelectIntent }: IntentTableProps) {
             return (
               <tr
                 key={intent.intent_id}
-                className="hover:bg-slate-850/50 transition-colors group cursor-pointer"
+                className="hover:bg-[#141414] transition-colors group cursor-pointer"
                 onClick={() => onSelectIntent?.(intent)}
               >
-                <td className="py-3 px-4 font-semibold text-slate-200">
+                <td className="py-3 px-4 font-semibold text-[#F2F0EA]">
                   <div className="flex items-center gap-1.5">
                     <span>{intent.intent_id}</span>
                     <CopyButton textToCopy={intent.intent_id} label="Intent ID" />
                   </div>
                 </td>
-                <td className="py-3 px-4 text-slate-300">{intent.agent_id}</td>
-                <td className="py-3 px-4 text-teal-400">{intent.service}</td>
-                <td className="py-3 px-4 font-bold text-white">
-                  {amountStr} <span className="text-[10px] text-teal-400 font-normal">USDC</span>
+                <td className="py-3 px-4 text-[#B0ADA5]">{intent.agent_id}</td>
+                <td className="py-3 px-4 text-[#F2F0EA]">{intent.service}</td>
+                <td className="py-3 px-4 font-bold text-[#F2F0EA]">
+                  {amountStr} <span className="text-[10px] text-[#B0ADA5] font-normal">USDC</span>
                 </td>
-                <td className="py-3 px-4 text-slate-400 truncate max-w-[120px]">{intent.purpose}</td>
+                <td className="py-3 px-4 text-[#B0ADA5] truncate max-w-[120px]">{intent.purpose}</td>
                 <td className="py-3 px-4">
                   <StatusBadge status={intent.status} size="sm" />
                 </td>
-                <td className="py-3 px-4 text-slate-500">{createdDate}</td>
+                <td className="py-3 px-4 text-[#716F69]">{createdDate}</td>
                 <td className="py-3 px-4 text-right">
                   <Link
                     href={`/payment-intents/${encodeURIComponent(intent.intent_id)}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 text-[11px] text-teal-400 hover:text-teal-300 font-sans font-medium hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] text-[#D6A83A] hover:text-[#F2F0EA] font-sans font-medium hover:underline"
                   >
                     View →
                   </Link>

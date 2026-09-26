@@ -50,25 +50,25 @@ export default function IncidentsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Link href="/control/runtime" className="text-xs font-mono text-indigo-400 hover:underline">
+            <Link href="/control/runtime" className="text-xs font-mono text-[#D6A83A] hover:underline">
               ← Runtime Overview
             </Link>
           </div>
           <h1 className="text-2xl font-bold text-white mt-1">Operational Incidents</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#85827B] mt-0.5">
             Actionable runtime incidents requiring automated or operator-guided reconciliation.
           </p>
         </div>
 
-        <div className="flex gap-2 p-1 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs">
+        <div className="flex gap-2 p-1 rounded-xl bg-[#101010] border border-[#222222] font-mono text-xs">
           {['ALL', 'OPEN', 'RESOLVED'].map((s) => (
             <button
               key={s}
               onClick={() => setSelectedState(s)}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
                 selectedState === s
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#141414] text-[#F2F0EA] font-semibold border border-[#222222]'
+                  : 'text-[#85827B] hover:text-white'
               }`}
             >
               {s}
@@ -81,12 +81,12 @@ export default function IncidentsPage() {
         <div
           className={`p-4 rounded-xl border text-xs font-mono flex items-center justify-between ${
             message.type === 'success'
-              ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-              : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+              ? 'bg-[#141414] border border-[#2FB36F]/30 text-[#2FB36F]'
+              : 'bg-[#141414] border border-[#D85C5C]/30 text-[#D85C5C]'
           }`}
         >
           <span>{message.text}</span>
-          <button onClick={() => setMessage(null)} className="text-slate-400 hover:text-white">
+          <button onClick={() => setMessage(null)} className="text-[#85827B] hover:text-white">
             ✕
           </button>
         </div>
@@ -94,63 +94,63 @@ export default function IncidentsPage() {
 
       <div className="space-y-4">
         {incidents.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 font-mono text-xs rounded-2xl bg-slate-900/60 border border-slate-800">
+          <div className="p-12 text-center text-[#50504C] font-mono text-xs rounded-2xl bg-[#101010] border border-[#222222]">
             {loading ? 'Loading incidents...' : 'No incidents matching criteria.'}
           </div>
         ) : (
           incidents.map((inc) => (
             <div
               key={inc.incident_id}
-              className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-3 font-mono text-xs"
+              className="p-5 rounded-2xl bg-[#101010] border border-[#222222] space-y-3 font-mono text-xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span
                     className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       inc.state === 'OPEN'
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        ? 'bg-[#141414] text-[#D85C5C] border border-[#222222]'
+                        : 'bg-[#141414] text-[#2FB36F] border border-[#222222]'
                     }`}
                   >
                     {inc.state}
                   </span>
                   <span className="font-bold text-white text-sm">{inc.incident_id}</span>
-                  <span className="text-slate-400">({inc.category})</span>
+                  <span className="text-[#85827B]">({inc.category})</span>
                 </div>
 
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                     inc.severity === 'CRITICAL'
-                      ? 'bg-rose-500/20 text-rose-300'
+                      ? 'bg-[#141414] text-[#D85C5C] border border-[#222222]'
                       : inc.severity === 'HIGH'
-                      ? 'bg-amber-500/20 text-amber-300'
-                      : 'bg-indigo-500/20 text-indigo-300'
+                      ? 'bg-[#141414] text-[#D6A83A] border border-[#222222]'
+                      : 'bg-[#141414] text-[#6B8FD6] border border-[#222222]'
                   }`}
                 >
                   {inc.severity}
                 </span>
               </div>
 
-              <div className="text-slate-300 space-y-1">
+              <div className="text-[#B0ADA5] space-y-1">
                 <div>
-                  <span className="text-slate-400">Root Cause:</span> {inc.root_cause}
+                  <span className="text-[#85827B]">Root Cause:</span> {inc.root_cause}
                 </div>
                 {inc.remediation && (
                   <div>
-                    <span className="text-emerald-400">Remediation:</span> {inc.remediation}
+                    <span className="text-[#2FB36F]">Remediation:</span> {inc.remediation}
                   </div>
                 )}
-                <div className="text-[11px] text-slate-500 pt-1">
+                <div className="text-[11px] text-[#50504C] pt-1">
                   Workflow: {inc.workflow_id} | Detected: {new Date(inc.detected_at).toLocaleString()}
                 </div>
               </div>
 
               {inc.state === 'OPEN' && (
-                <div className="pt-2 border-t border-slate-800 flex justify-end">
+                <div className="pt-2 border-t border-[#222222] flex justify-end">
                   <button
                     disabled={actionLoading}
                     onClick={() => handleReconcile(inc.incident_id)}
-                    className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-semibold transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] font-semibold transition-colors"
                   >
                     Reconcile Incident
                   </button>

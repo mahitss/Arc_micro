@@ -27,12 +27,12 @@ export function CopyButton({ textToCopy, label = 'Copy' }: CopyButtonProps) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono text-slate-400 hover:text-teal-400 hover:bg-slate-800/80 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-500"
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono text-[#716F69] hover:text-[#F2F0EA] hover:bg-[#141414] transition-colors focus:outline-none focus:ring-1 focus:ring-[#D6A83A]"
       aria-label={`Copy ${label}: ${textToCopy}`}
       title={`Copy ${label}`}
     >
       {copied ? (
-        <span className="text-teal-400 font-semibold">Copied!</span>
+        <span className="text-[#2FB36F] font-semibold">Copied!</span>
       ) : (
         <svg
           className="w-3.5 h-3.5"

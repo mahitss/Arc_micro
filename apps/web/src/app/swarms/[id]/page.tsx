@@ -102,7 +102,7 @@ export default function SwarmDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 p-8 flex items-center justify-center font-mono text-sm animate-pulse">
+      <div className="min-h-screen bg-[#080808] text-[#716F69] p-8 flex items-center justify-center font-mono text-sm animate-pulse">
         Loading Swarm DAG, Subcontracts, and Risk Telemetry...
       </div>
     );
@@ -110,11 +110,11 @@ export default function SwarmDetailPage() {
 
   if (error || !swarm) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-        <Link href="/swarms" className="text-sm font-mono text-cyan-400 hover:underline mb-4 inline-block">
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8">
+        <Link href="/swarms" className="text-sm font-mono text-[#D6A83A] hover:underline mb-4 inline-block">
           ← Back to Swarms
         </Link>
-        <div className="rounded-xl bg-rose-950/40 border border-rose-800 p-6 text-rose-300">
+        <div className="rounded-xl bg-[#141414] border border-[#D85C5C]/40 p-6 text-[#D85C5C]">
           <h2 className="text-lg font-bold mb-2">Error Loading Swarm</h2>
           <p className="text-sm">{error || 'Swarm not found'}</p>
         </div>
@@ -123,17 +123,17 @@ export default function SwarmDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 lg:p-8 space-y-8">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 lg:p-8 space-y-8">
       {/* Navigation Breadcrumb */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-[#222222] pb-4">
         <Link
           href="/swarms"
-          className="text-xs font-mono text-slate-400 hover:text-cyan-400 transition-colors flex items-center gap-1.5"
+          className="text-xs font-mono text-[#716F69] hover:text-[#F2F0EA] transition-colors flex items-center gap-1.5"
         >
           <span>←</span>
           <span>Back to Swarms Control Plane</span>
         </Link>
-        <span className="text-xs font-mono text-slate-500">ID: {swarm.id}</span>
+        <span className="text-xs font-mono text-[#50504C]">ID: {swarm.id}</span>
       </div>
 
       {/* Live Swarm DAG Visualizer */}
@@ -149,57 +149,57 @@ export default function SwarmDetailPage() {
       {/* Intelligence & Analytics Split Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cost Intelligence Panel */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="rounded-2xl bg-[#101010] border border-[#222222] p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#222222] pb-3">
+            <h3 className="text-base font-bold text-[#F2F0EA] flex items-center gap-2">
               <span>💳</span>
               <span>Autonomous Cost Intelligence</span>
             </h3>
-            <span className="text-xs font-mono text-emerald-400 font-bold">
+            <span className="text-xs font-mono text-[#2FB36F] font-bold">
               CONCURRENCY-SAFE
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">Total Budget</span>
-              <span className="font-bold text-white">{formatUsdc(swarm.max_budget)}</span>
+            <div className="bg-[#0B0B0B] p-3 rounded-xl border border-[#222222]">
+              <span className="text-[#716F69] block text-[10px]">Total Budget</span>
+              <span className="font-bold text-[#F2F0EA]">{formatUsdc(swarm.max_budget)}</span>
             </div>
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">Committed Spend</span>
-              <span className="font-bold text-emerald-400">
+            <div className="bg-[#0B0B0B] p-3 rounded-xl border border-[#222222]">
+              <span className="text-[#716F69] block text-[10px]">Committed Spend</span>
+              <span className="font-bold text-[#2FB36F]">
                 {formatUsdc(swarm.total_spent)}
               </span>
             </div>
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">Active Reservations</span>
-              <span className="font-bold text-cyan-400">
+            <div className="bg-[#0B0B0B] p-3 rounded-xl border border-[#222222]">
+              <span className="text-[#716F69] block text-[10px]">Active Reservations</span>
+              <span className="font-bold text-[#D6A83A]">
                 {formatUsdc(swarm.total_reserved)}
               </span>
             </div>
           </div>
 
           {swarm.cost_intelligence && (
-            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-2 text-xs font-mono">
+            <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-2 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-slate-400">Budget Utilization:</span>
-                <span className="text-white font-bold">
+                <span className="text-[#716F69]">Budget Utilization:</span>
+                <span className="text-[#F2F0EA] font-bold">
                   {swarm.cost_intelligence.budget_utilization_pct.toFixed(1)}%
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Projected Final Cost:</span>
-                <span className="text-cyan-400 font-bold">
+                <span className="text-[#716F69]">Projected Final Cost:</span>
+                <span className="text-[#D6A83A] font-bold">
                   {formatUsdc(swarm.cost_intelligence.projected_final_cost)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Budget Overrun Risk:</span>
+                <span className="text-[#716F69]">Budget Overrun Risk:</span>
                 <span
                   className={
                     swarm.cost_intelligence.is_over_budget_risk
-                      ? 'text-rose-400 font-bold'
-                      : 'text-emerald-400 font-bold'
+                      ? 'text-[#D85C5C] font-bold'
+                      : 'text-[#2FB36F] font-bold'
                   }
                 >
                   {swarm.cost_intelligence.is_over_budget_risk ? 'RISK DETECTED' : 'NOMINAL (0.0%)'}
@@ -210,9 +210,9 @@ export default function SwarmDetailPage() {
         </div>
 
         {/* Risk Intelligence Panel */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="rounded-2xl bg-[#101010] border border-[#222222] p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#222222] pb-3">
+            <h3 className="text-base font-bold text-[#F2F0EA] flex items-center gap-2">
               <span>🛡️</span>
               <span>Economic & DAG Risk Radar</span>
             </h3>
@@ -220,8 +220,8 @@ export default function SwarmDetailPage() {
               <span
                 className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full border ${
                   risk.risk_level === 'LOW'
-                    ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
-                    : 'bg-amber-950 text-amber-400 border-amber-800'
+                    ? 'bg-[#141414] text-[#2FB36F] border-[#2FB36F]/40'
+                    : 'bg-[#141414] text-[#D6A83A] border-[#D6A83A]/40'
                 }`}
               >
                 {risk.risk_level} ({risk.overall_score}/100)
@@ -232,52 +232,52 @@ export default function SwarmDetailPage() {
           {risk && (
             <div className="space-y-3 font-mono text-xs">
               <div>
-                <div className="flex justify-between text-slate-400 mb-1">
+                <div className="flex justify-between text-[#716F69] mb-1">
                   <span>Budget Exhaustion Risk</span>
-                  <span className="text-white">{risk.budget_exhaustion_risk}/100</span>
+                  <span className="text-[#F2F0EA]">{risk.budget_exhaustion_risk}/100</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-[#141414] overflow-hidden">
                   <div
-                    className="h-full bg-cyan-400"
+                    className="h-full bg-[#D6A83A]"
                     style={{ width: `${risk.budget_exhaustion_risk}%` }}
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-400 mb-1">
+                <div className="flex justify-between text-[#716F69] mb-1">
                   <span>Dependency Bottleneck Risk</span>
-                  <span className="text-white">{risk.dependency_bottleneck_risk}/100</span>
+                  <span className="text-[#F2F0EA]">{risk.dependency_bottleneck_risk}/100</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-[#141414] overflow-hidden">
                   <div
-                    className="h-full bg-purple-400"
+                    className="h-full bg-[#B0ADA5]"
                     style={{ width: `${risk.dependency_bottleneck_risk}%` }}
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-400 mb-1">
+                <div className="flex justify-between text-[#716F69] mb-1">
                   <span>Agent Reliability Risk</span>
-                  <span className="text-white">{risk.agent_reliability_risk}/100</span>
+                  <span className="text-[#F2F0EA]">{risk.agent_reliability_risk}/100</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-[#141414] overflow-hidden">
                   <div
-                    className="h-full bg-emerald-400"
+                    className="h-full bg-[#2FB36F]"
                     style={{ width: `${risk.agent_reliability_risk}%` }}
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-400 mb-1">
+                <div className="flex justify-between text-[#716F69] mb-1">
                   <span>Data Tampering Risk</span>
-                  <span className="text-white">{risk.data_tampering_risk}/100</span>
+                  <span className="text-[#F2F0EA]">{risk.data_tampering_risk}/100</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-[#141414] overflow-hidden">
                   <div
-                    className="h-full bg-teal-400"
+                    className="h-full bg-[#D85C5C]"
                     style={{ width: `${risk.data_tampering_risk}%` }}
                   />
                 </div>
@@ -289,13 +289,13 @@ export default function SwarmDetailPage() {
 
       {/* Append-Only Audit Trace Stream */}
       {trace && (
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-6 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
+        <div className="rounded-2xl bg-[#101010] border border-[#222222] p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-[#222222] pb-3 mb-4">
+            <h3 className="text-base font-bold text-[#F2F0EA] flex items-center gap-2">
               <span>📜</span>
               <span>Append-Only Swarm Audit Flight Recorder</span>
             </h3>
-            <span className="text-xs font-mono text-slate-500">
+            <span className="text-xs font-mono text-[#716F69]">
               {trace.events.length} Events Logged
             </span>
           </div>
@@ -304,18 +304,18 @@ export default function SwarmDetailPage() {
             {trace.events.map((ev, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800/80 text-xs font-mono"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-[#0B0B0B] border border-[#222222] text-xs font-mono"
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                  <span className="text-cyan-300 font-bold">{ev.event_type}</span>
+                  <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
+                  <span className="text-[#F2F0EA] font-bold">{ev.event_type}</span>
                   {ev.task_id && (
-                    <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">
+                    <span className="px-1.5 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#716F69]">
                       Task: {ev.task_id}
                     </span>
                   )}
                 </div>
-                <span className="text-slate-500">{new Date(ev.timestamp).toLocaleTimeString()}</span>
+                <span className="text-[#716F69]">{new Date(ev.timestamp).toLocaleTimeString()}</span>
               </div>
             ))}
           </div>

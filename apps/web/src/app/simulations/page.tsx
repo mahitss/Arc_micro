@@ -58,67 +58,67 @@ export default function SimulationsPage() {
   const getOutcomeBadge = (outcome: string) => {
     switch (outcome) {
       case 'WOULD_EXECUTE':
-        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        return 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30';
       case 'APPROVAL_REQUIRED':
-        return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+        return 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30';
       case 'WOULD_DENY':
-        return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+        return 'bg-[#D85C5C]/10 text-[#D85C5C] border-[#D85C5C]/30';
       case 'INSUFFICIENT_TREASURY':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/40';
+        return 'bg-[#D85C5C]/10 text-[#D85C5C] border-[#D85C5C]/30';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-[#141414] text-[#716F69] border-[#222222]';
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="pb-2 border-b border-slate-800/80">
-        <h1 className="text-2xl font-bold tracking-tight text-white">Financial Simulation Workbench</h1>
-        <p className="text-xs text-slate-400 mt-1">
+      <div className="pb-2 border-b border-[#222222]">
+        <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA]">Financial Simulation Workbench</h1>
+        <p className="text-xs text-[#716F69] mt-1">
           Predict policy decisions, deterministic risk scoring, approval thresholds, and treasury feasibility without broadcasting transactions.
         </p>
       </div>
 
       {/* Invariant Banner */}
-      <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20 text-xs">
-        <div className="font-semibold text-cyan-300 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+      <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] text-xs">
+        <div className="font-semibold text-[#D6A83A] flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
           <span>Zero-Balance Mutation Simulation Invariant</span>
         </div>
-        <p className="text-slate-400 mt-1 leading-relaxed">
+        <p className="text-[#716F69] mt-1 leading-relaxed">
           Simulations evaluate the authoritative Rust Policy Engine and database spending limits. They strictly never broadcast transactions to the Arc network, create live payment intents, or debit treasury funds.
         </p>
       </div>
 
       {/* Quick Scenario Presets */}
       <div className="space-y-2">
-        <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Quick Test Scenarios</div>
+        <div className="text-xs font-semibold text-[#B0ADA5] uppercase tracking-wider font-mono">Quick Test Scenarios</div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
             type="button"
             onClick={() => setScenario('1.00', 'research-api', 'Low-cost autonomous check')}
-            className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-emerald-500/40 text-left transition-colors"
+            className="p-3 rounded-xl bg-[#101010] border border-[#222222] hover:border-[#2D2D2D] text-left transition-colors"
           >
-            <div className="text-xs font-bold text-emerald-400">Scenario 1: Low Cost</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">1.00 USDC • Auto-Execution Expected</div>
+            <div className="text-xs font-bold text-[#2FB36F] font-mono">Scenario 1: Low Cost</div>
+            <div className="text-[11px] text-[#716F69] mt-0.5 font-mono">1.00 USDC • Auto-Execution Expected</div>
           </button>
 
           <button
             type="button"
             onClick={() => setScenario('25.00', 'research-api', 'High-cost autonomous check')}
-            className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-amber-500/40 text-left transition-colors"
+            className="p-3 rounded-xl bg-[#101010] border border-[#222222] hover:border-[#2D2D2D] text-left transition-colors"
           >
-            <div className="text-xs font-bold text-amber-400">Scenario 2: High Cost</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">25.00 USDC • Approval Required Expected</div>
+            <div className="text-xs font-bold text-[#D6A83A] font-mono">Scenario 2: High Cost</div>
+            <div className="text-[11px] text-[#716F69] mt-0.5 font-mono">25.00 USDC • Approval Required Expected</div>
           </button>
 
           <button
             type="button"
             onClick={() => setScenario('150.00', 'research-api', 'Over-limit autonomous check')}
-            className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-rose-500/40 text-left transition-colors"
+            className="p-3 rounded-xl bg-[#101010] border border-[#222222] hover:border-[#2D2D2D] text-left transition-colors"
           >
-            <div className="text-xs font-bold text-rose-400">Scenario 3: Over Limit</div>
-            <div className="text-[11px] text-slate-400 mt-0.5">150.00 USDC • Policy Denial Expected</div>
+            <div className="text-xs font-bold text-[#D85C5C] font-mono">Scenario 3: Over Limit</div>
+            <div className="text-[11px] text-[#716F69] mt-0.5 font-mono">150.00 USDC • Policy Denial Expected</div>
           </button>
         </div>
       </div>
@@ -126,27 +126,27 @@ export default function SimulationsPage() {
       {/* Simulation Form & Results */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input Parameters */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-          <h2 className="text-sm font-semibold text-white">Simulation Parameters</h2>
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+          <h2 className="text-sm font-semibold text-[#F2F0EA]">Simulation Parameters</h2>
 
           <div className="space-y-3 text-xs">
             <div>
-              <label className="block text-slate-400 mb-1">Agent ID</label>
+              <label className="block text-[#716F69] mb-1 font-mono">Agent ID</label>
               <input
                 type="text"
                 value={agentId}
                 onChange={(e) => setAgentId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-teal-500 focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] font-mono focus:border-[#D6A83A] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Service</label>
+              <label className="block text-[#716F69] mb-1 font-mono">Service</label>
               {services.length > 0 ? (
                 <select
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-teal-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] font-mono focus:border-[#D6A83A] focus:outline-none"
                 >
                   {services.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -159,29 +159,29 @@ export default function SimulationsPage() {
                   type="text"
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-teal-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] font-mono focus:border-[#D6A83A] focus:outline-none"
                 />
               )}
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Amount (USDC)</label>
+              <label className="block text-[#716F69] mb-1 font-mono">Amount (USDC)</label>
               <input
                 type="number"
                 step="0.01"
                 value={amountUsdc}
                 onChange={(e) => setAmountUsdc(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono focus:border-teal-500 focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] font-mono focus:border-[#D6A83A] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 mb-1">Purpose / Justification</label>
+              <label className="block text-[#716F69] mb-1 font-mono">Purpose / Justification</label>
               <input
                 type="text"
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-teal-500 focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] focus:border-[#D6A83A] focus:outline-none"
               />
             </div>
 
@@ -189,7 +189,7 @@ export default function SimulationsPage() {
               type="button"
               onClick={() => handleSimulate()}
               disabled={loading}
-              className="w-full mt-4 py-2.5 px-4 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs transition-colors disabled:opacity-50"
+              className="w-full mt-4 py-2.5 px-4 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold text-xs font-mono transition-colors disabled:opacity-50"
             >
               {loading ? 'Evaluating Policy & Treasury...' : 'Run Simulation'}
             </button>
@@ -197,65 +197,65 @@ export default function SimulationsPage() {
         </div>
 
         {/* Output Panel */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex flex-col justify-between">
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] flex flex-col justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-white mb-4">Predicted Outcome</h2>
+            <h2 className="text-sm font-semibold text-[#F2F0EA] mb-4">Predicted Outcome</h2>
 
             {error && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+              <div className="p-3 rounded-lg bg-[#D85C5C]/10 border border-[#D85C5C]/30 text-[#D85C5C] text-xs font-mono">
                 {error}
               </div>
             )}
 
             {!result && !error && (
-              <div className="text-xs text-slate-500 py-12 text-center">
+              <div className="text-xs text-[#716F69] font-mono py-12 text-center">
                 Configure parameters and click &quot;Run Simulation&quot; or choose a preset above.
               </div>
             )}
 
             {result && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/80 border border-slate-800">
-                  <span className="text-xs text-slate-400">Outcome:</span>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+                  <span className="text-xs text-[#716F69] font-mono">Outcome:</span>
                   <span className={`px-2.5 py-1 rounded text-xs font-mono font-bold border ${getOutcomeBadge(result.predicted_outcome)}`}>
                     {result.predicted_outcome}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                  <div className="p-3 rounded-lg bg-slate-950/50 border border-slate-800/60 space-y-1">
-                    <div className="text-slate-500 text-[10px]">POLICY DECISION</div>
-                    <div className="text-white font-bold">{result.policy_decision}</div>
+                  <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+                    <div className="text-[#716F69] text-[10px]">POLICY DECISION</div>
+                    <div className="text-[#F2F0EA] font-bold">{result.policy_decision}</div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-slate-950/50 border border-slate-800/60 space-y-1">
-                    <div className="text-slate-500 text-[10px]">RISK SCORING</div>
-                    <div className="text-teal-300 font-bold">{result.risk_level}</div>
+                  <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+                    <div className="text-[#716F69] text-[10px]">RISK SCORING</div>
+                    <div className="text-[#F2F0EA] font-bold">{result.risk_level}</div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-slate-950/50 border border-slate-800/60 space-y-1">
-                    <div className="text-slate-500 text-[10px]">APPROVAL REQUIRED</div>
-                    <div className={result.approval_required ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
+                  <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+                    <div className="text-[#716F69] text-[10px]">APPROVAL REQUIRED</div>
+                    <div className={result.approval_required ? 'text-[#D6A83A] font-bold' : 'text-[#2FB36F] font-bold'}>
                       {result.approval_required ? 'YES' : 'NO'}
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-slate-950/50 border border-slate-800/60 space-y-1">
-                    <div className="text-slate-500 text-[10px]">TREASURY FEASIBLE</div>
-                    <div className={result.treasury_sufficient ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                  <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+                    <div className="text-[#716F69] text-[10px]">TREASURY FEASIBLE</div>
+                    <div className={result.treasury_sufficient ? 'text-[#2FB36F] font-bold' : 'text-[#D85C5C] font-bold'}>
                       {result.treasury_sufficient ? 'YES' : 'NO'}
                     </div>
                   </div>
                 </div>
 
                 {result.reason && (
-                  <div className="p-3 rounded-lg bg-slate-950/50 border border-slate-800/60 text-xs font-mono text-slate-300">
-                    <div className="text-slate-500 text-[10px] mb-1">EVALUATION NOTES</div>
+                  <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] text-xs font-mono text-[#B0ADA5]">
+                    <div className="text-[#716F69] text-[10px] mb-1">EVALUATION NOTES</div>
                     {result.reason}
                   </div>
                 )}
 
-                <div className="text-[10px] text-slate-500 font-mono">
+                <div className="text-[10px] text-[#716F69] font-mono">
                   Simulation ID: {result.simulation_id} • {new Date(result.evaluated_at).toLocaleTimeString()}
                 </div>
               </div>

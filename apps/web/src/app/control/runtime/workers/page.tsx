@@ -30,18 +30,18 @@ export default function WorkersFleetPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Link href="/control/runtime" className="text-xs font-mono text-indigo-400 hover:underline">
+            <Link href="/control/runtime" className="text-xs font-mono text-[#D6A83A] hover:underline">
               ← Runtime Overview
             </Link>
           </div>
           <h1 className="text-2xl font-bold text-white mt-1">Runtime Worker Fleet</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#85827B] mt-0.5">
             Distributed execution nodes operating under monotonic lease fencing (INV-101).
           </p>
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
-          <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+          <div className="px-3 py-1.5 rounded-lg bg-[#141414] border border-[#2FB36F]/30 text-[#2FB36F]">
             {workers.filter((w) => w.status === 'HEALTHY').length} Healthy
           </div>
           <div className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300">
@@ -52,34 +52,34 @@ export default function WorkersFleetPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {workers.map((worker) => (
-          <div key={worker.worker_id} className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-3 font-mono text-xs">
+          <div key={worker.worker_id} className="p-5 rounded-2xl bg-[#101010] border border-[#222222] space-y-3 font-mono text-xs">
             <div className="flex items-center justify-between">
               <span className="font-bold text-white text-sm">{worker.worker_id}</span>
               <span
                 className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                   worker.status === 'HEALTHY'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    ? 'bg-[#141414] text-[#2FB36F] border border-[#222222]'
+                    : 'bg-[#141414] text-[#D85C5C] border border-[#222222]'
                 }`}
               >
                 {worker.status}
               </span>
             </div>
 
-            <div className="space-y-1 text-slate-400 pt-1">
-              <div>Type: <span className="text-slate-200">{worker.worker_type}</span></div>
-              <div>Host: <span className="text-slate-200">{worker.hostname}</span></div>
-              <div>Version: <span className="text-indigo-400">{worker.version}</span></div>
-              <div>Heartbeat: <span className="text-slate-300">{new Date(worker.heartbeat_at).toLocaleTimeString()}</span></div>
-              <div>Last Seen: <span className="text-slate-300">{new Date(worker.last_seen).toLocaleTimeString()}</span></div>
+            <div className="space-y-1 text-[#85827B] pt-1">
+              <div>Type: <span className="text-[#F2F0EA]">{worker.worker_type}</span></div>
+              <div>Host: <span className="text-[#F2F0EA]">{worker.hostname}</span></div>
+              <div>Version: <span className="text-[#D6A83A]">{worker.version}</span></div>
+              <div>Heartbeat: <span className="text-[#B0ADA5]">{new Date(worker.heartbeat_at).toLocaleTimeString()}</span></div>
+              <div>Last Seen: <span className="text-[#B0ADA5]">{new Date(worker.last_seen).toLocaleTimeString()}</span></div>
             </div>
 
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-              <span className="text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="pt-2 border-t border-[#222222]/80 flex items-center justify-between text-[11px]">
+              <span className="text-[#2FB36F] flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] animate-pulse" />
                 Heartbeat Verified
               </span>
-              <span className="text-slate-500">Node Active</span>
+              <span className="text-[#50504C]">Node Active</span>
             </div>
           </div>
         ))}

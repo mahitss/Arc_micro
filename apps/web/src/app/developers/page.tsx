@@ -7,23 +7,23 @@ export default function DevelopersPage() {
   const [activeTab, setActiveTab] = useState<'typescript' | 'python' | 'cli'>('typescript');
 
   return (
-    <div className="min-h-screen bg-[#0a0d14] text-slate-100 p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="border-b border-slate-800/80 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="border-b border-[#222222] pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded bg-[#141414] text-[#B0ADA5] border border-[#222222]">
                 DEVELOPER PLATFORM v1
               </span>
-              <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/30">
                 ARC CHAIN ID: 5042
               </span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#F2F0EA]">
               Give Your AI Agent Controlled Access to Payments
             </h1>
-            <p className="text-slate-400 mt-2 max-w-2xl text-sm md:text-base">
+            <p className="text-[#716F69] mt-2 max-w-2xl text-sm md:text-base">
               Integrate programmable payments into autonomous agents without handling blockchain private keys,
               transaction signing, arbitrary recipients, or contract calldata.
             </p>
@@ -31,13 +31,13 @@ export default function DevelopersPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/developers/quickstart"
-              className="px-4 py-2 text-sm font-medium bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-all shadow-lg shadow-cyan-900/30"
+              className="px-4 py-2 text-sm font-semibold font-mono bg-[#F2F0EA] hover:bg-white text-[#080808] rounded-lg transition-all"
             >
               Quickstart Guide →
             </Link>
             <Link
               href="/settings"
-              className="px-4 py-2 text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700/80 transition-all"
+              className="px-4 py-2 text-sm font-semibold font-mono bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] rounded-lg border border-[#222222] transition-all"
             >
               API Keys
             </Link>
@@ -46,56 +46,56 @@ export default function DevelopersPage() {
 
         {/* Core Principles Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition-all">
-            <div className="w-9 h-9 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold text-lg mb-3">
+          <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] hover:border-[#2D2D2D] transition-all">
+            <div className="w-9 h-9 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-center font-bold text-lg mb-3">
               🛡️
             </div>
-            <h3 className="text-base font-semibold text-white">Zero Private Key Exposure</h3>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            <h3 className="text-base font-semibold text-[#F2F0EA]">Zero Private Key Exposure</h3>
+            <p className="text-xs text-[#716F69] mt-1.5 leading-relaxed">
               Your agent code never touches private keys or signing logic. AgentPay functions as the isolated financial control plane.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition-all">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-lg mb-3">
+          <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] hover:border-[#2D2D2D] transition-all">
+            <div className="w-9 h-9 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-center font-bold text-lg mb-3">
               ⚖️
             </div>
-            <h3 className="text-base font-semibold text-white">Deterministic Policy Engine</h3>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            <h3 className="text-base font-semibold text-[#F2F0EA]">Deterministic Policy Engine</h3>
+            <p className="text-xs text-[#716F69] mt-1.5 leading-relaxed">
               Spending limits, daily velocity throttles, and recipient allowlists are enforced server-side before execution.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition-all">
-            <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold text-lg mb-3">
+          <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] hover:border-[#2D2D2D] transition-all">
+            <div className="w-9 h-9 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-center font-bold text-lg mb-3">
               🛰️
             </div>
-            <h3 className="text-base font-semibold text-white">Financial Flight Recorder</h3>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            <h3 className="text-base font-semibold text-[#F2F0EA]">Financial Flight Recorder</h3>
+            <p className="text-xs text-[#716F69] mt-1.5 leading-relaxed">
               Every payment generates an immutable, step-by-step audit trace with policy, human approval, and on-chain Arc evidence.
             </p>
           </div>
         </div>
 
         {/* Execution Modes Explanation */}
-        <div className="p-5 rounded-xl bg-gradient-to-br from-slate-900/90 via-slate-900/50 to-slate-950 border border-slate-800">
-          <h2 className="text-base font-semibold text-white mb-3">Execution Environments</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 rounded-lg bg-slate-950/60 border border-slate-800/60 space-y-1.5">
+        <div className="p-5 rounded-xl bg-[#101010] border border-[#222222]">
+          <h2 className="text-base font-semibold text-[#F2F0EA] mb-3">Execution Environments</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+            <div className="p-4 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                <span className="font-semibold text-amber-400">SIMULATION MODE</span>
+                <span className="w-2 h-2 rounded-full bg-[#D6A83A]"></span>
+                <span className="font-semibold text-[#D6A83A]">SIMULATION MODE</span>
               </div>
-              <p className="text-slate-400">
+              <p className="text-[#716F69]">
                 Ideal for agent development, testing, and dry-run policy evaluation. Zero real USDC is transferred and no on-chain state is altered.
               </p>
             </div>
-            <div className="p-4 rounded-lg bg-slate-950/60 border border-slate-800/60 space-y-1.5">
+            <div className="p-4 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span className="font-semibold text-emerald-400">LIVE ARC MAINNET</span>
+                <span className="w-2 h-2 rounded-full bg-[#2FB36F]"></span>
+                <span className="font-semibold text-[#2FB36F]">LIVE ARC MAINNET</span>
               </div>
-              <p className="text-slate-400">
+              <p className="text-[#716F69]">
                 Full production mode. Settles USDC directly on Arc Mainnet Chain ID 5042 from the enterprise-controlled AgentVault.
               </p>
             </div>
@@ -103,38 +103,38 @@ export default function DevelopersPage() {
         </div>
 
         {/* Code Snippet Tabs */}
-        <div className="rounded-xl bg-slate-900/80 border border-slate-800/90 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3 bg-slate-950/70">
+        <div className="rounded-xl bg-[#101010] border border-[#222222] overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#222222] px-4 py-3 bg-[#0B0B0B]">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveTab('typescript')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  activeTab === 'typescript' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 text-xs font-medium font-mono rounded-md transition-all ${
+                  activeTab === 'typescript' ? 'bg-[#D6A83A] text-[#080808] font-bold' : 'text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 TypeScript SDK
               </button>
               <button
                 onClick={() => setActiveTab('python')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  activeTab === 'python' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 text-xs font-medium font-mono rounded-md transition-all ${
+                  activeTab === 'python' ? 'bg-[#D6A83A] text-[#080808] font-bold' : 'text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 Python SDK
               </button>
               <button
                 onClick={() => setActiveTab('cli')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  activeTab === 'cli' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-slate-400 hover:text-white'
+                className={`px-3 py-1.5 text-xs font-medium font-mono rounded-md transition-all ${
+                  activeTab === 'cli' ? 'bg-[#D6A83A] text-[#080808] font-bold' : 'text-[#716F69] hover:text-[#F2F0EA]'
                 }`}
               >
                 AgentPay CLI
               </button>
             </div>
-            <span className="text-xs text-slate-500 font-mono">Package: @agentpay/sdk</span>
+            <span className="text-xs text-[#716F69] font-mono">Package: @agentpay/sdk</span>
           </div>
 
-          <div className="p-5 font-mono text-xs text-slate-300 overflow-x-auto bg-[#070a10]">
+          <div className="p-5 font-mono text-xs text-[#F2F0EA] overflow-x-auto bg-[#080808]">
             {activeTab === 'typescript' && (
               <pre>
 {`import { AgentPay } from '@agentpay/sdk';
@@ -224,17 +224,17 @@ agentpay payments trace pi_123 --json`}
         </div>
 
         {/* Quick Links Footer */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-800">
-          <Link href="/developers/quickstart" className="text-xs text-slate-400 hover:text-cyan-400 transition-colors">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-[#222222]">
+          <Link href="/developers/quickstart" className="text-xs text-[#716F69] hover:text-[#D6A83A] transition-colors font-mono">
             📖 Developer Quickstart →
           </Link>
-          <Link href="/developers/webhooks" className="text-xs text-slate-400 hover:text-cyan-400 transition-colors">
+          <Link href="/developers/webhooks" className="text-xs text-[#716F69] hover:text-[#D6A83A] transition-colors font-mono">
             🔔 Webhooks Management →
           </Link>
-          <Link href="/developers/events" className="text-xs text-slate-400 hover:text-cyan-400 transition-colors">
+          <Link href="/developers/events" className="text-xs text-[#716F69] hover:text-[#D6A83A] transition-colors font-mono">
             📜 Domain Audit Events →
           </Link>
-          <Link href="/security-lab" className="text-xs text-slate-400 hover:text-cyan-400 transition-colors">
+          <Link href="/security-lab" className="text-xs text-[#716F69] hover:text-[#D6A83A] transition-colors font-mono">
             🛡️ Adversarial Security Lab →
           </Link>
         </div>

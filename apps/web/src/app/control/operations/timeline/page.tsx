@@ -68,25 +68,25 @@ export default function OperationsTimelinePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 font-sans">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-xl bg-[#101010] border border-[#222222]">
         <div>
           <div className="flex items-center gap-2">
             <Link
               href="/control/operations"
-              className="text-xs font-mono text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs font-mono text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
             >
               ← Operations Command Center
             </Link>
-            <span className="text-slate-600">/</span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+            <span className="text-[#50504C]">/</span>
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#141414] text-[#B0ADA5] border border-[#222222]">
               CAUSAL TRACE STREAM
             </span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight mt-2">
+          <h1 className="text-2xl font-black text-[#F2F0EA] tracking-tight mt-2">
             Live Operations Timeline
           </h1>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-            Immutable audit of operational state transitions with causal lineage tracking (<code className="text-cyan-300">caused_by_event_id</code>).
+          <p className="text-xs text-[#B0ADA5] mt-1 max-w-2xl">
+            Immutable audit of operational state transitions with causal lineage tracking (<code className="text-[#D6A83A]">caused_by_event_id</code>).
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export default function OperationsTimelinePage() {
             placeholder="Search event ID, workflow, or title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-3 py-2 rounded-xl text-xs font-mono bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-64"
+            className="px-3 py-2 rounded-lg text-xs font-mono bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] placeholder-[#716F69] focus:outline-none focus:border-[#D6A83A] w-64"
           />
         </div>
       </div>
@@ -109,8 +109,8 @@ export default function OperationsTimelinePage() {
             onClick={() => setFilterCategory(cat)}
             className={`px-3 py-1.5 rounded-lg font-bold transition-colors uppercase tracking-wider ${
               filterCategory === cat
-                ? 'bg-cyan-500 text-slate-950'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                ? 'bg-[#F2F0EA] text-[#080808]'
+                : 'bg-[#101010] text-[#716F69] hover:text-[#F2F0EA] border border-[#222222]'
             }`}
           >
             {cat}
@@ -123,7 +123,7 @@ export default function OperationsTimelinePage() {
         {/* Timeline Events */}
         <div className="lg:col-span-2 space-y-3">
           {filteredEvents.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-slate-900/60 border border-slate-800 text-slate-500 font-mono text-xs">
+            <div className="p-8 text-center rounded-xl bg-[#101010] border border-[#222222] text-[#716F69] font-mono text-xs">
               No operational events match current filter.
             </div>
           ) : (
@@ -133,32 +133,32 @@ export default function OperationsTimelinePage() {
                 onClick={() => setSelectedEvent(evt)}
                 className={`p-4 rounded-xl border transition-all cursor-pointer ${
                   selectedEvent?.event_id === evt.event_id
-                    ? 'bg-slate-900 border-cyan-500 shadow-md shadow-cyan-500/10'
-                    : 'bg-slate-950/80 hover:bg-slate-900/60 border-slate-800'
+                    ? 'bg-[#141414] border-[#D6A83A]'
+                    : 'bg-[#101010] hover:bg-[#141414] border-[#222222]'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-cyan-300 border border-slate-700">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#181818] text-[#B0ADA5] border border-[#222222]">
                       {evt.category}
                     </span>
-                    <span className="font-mono text-xs font-bold text-white">{evt.event_id}</span>
+                    <span className="font-mono text-xs font-bold text-[#F2F0EA]">{evt.event_id}</span>
                   </div>
-                  <span className="text-[11px] font-mono text-slate-500">
+                  <span className="text-[11px] font-mono text-[#716F69]">
                     {new Date(evt.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
 
-                <div className="text-sm font-semibold text-slate-200 mt-2">{evt.title}</div>
+                <div className="text-sm font-semibold text-[#F2F0EA] mt-2">{evt.title}</div>
 
-                <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px] font-mono text-slate-400">
+                <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px] font-mono text-[#716F69]">
                   {evt.workflow_id && (
                     <span>
-                      Workflow: <span className="text-indigo-400">{evt.workflow_id}</span>
+                      Workflow: <span className="text-[#B0ADA5]">{evt.workflow_id}</span>
                     </span>
                   )}
                   {evt.caused_by_event_id && (
-                    <span className="flex items-center gap-1 text-amber-400/90">
+                    <span className="flex items-center gap-1 text-[#D6A83A]">
                       <span>↳ Caused by:</span>
                       <span className="underline">{evt.caused_by_event_id}</span>
                     </span>
@@ -171,47 +171,47 @@ export default function OperationsTimelinePage() {
 
         {/* Causal Inspector Panel */}
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-4 sticky top-6">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4 sticky top-6">
+            <h3 className="text-sm font-bold text-[#F2F0EA] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
               Event Causal Context
             </h3>
 
             {selectedEvent ? (
               <div className="space-y-3 font-mono text-xs">
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="text-[10px] text-slate-500 uppercase">Selected Event</div>
-                  <div className="text-cyan-300 font-bold">{selectedEvent.event_id}</div>
-                  <div className="text-white text-xs mt-1">{selectedEvent.title}</div>
+                <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+                  <div className="text-[10px] text-[#716F69] uppercase">Selected Event</div>
+                  <div className="text-[#D6A83A] font-bold">{selectedEvent.event_id}</div>
+                  <div className="text-[#F2F0EA] text-xs mt-1">{selectedEvent.title}</div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="text-[10px] text-slate-500 uppercase">Causal Lineage</div>
-                  <div className="text-xs text-slate-300">
+                <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+                  <div className="text-[10px] text-[#716F69] uppercase">Causal Lineage</div>
+                  <div className="text-xs text-[#B0ADA5]">
                     {selectedEvent.caused_by_event_id ? (
                       <div className="space-y-1">
-                        <div className="text-amber-400 font-bold">
+                        <div className="text-[#D6A83A] font-bold">
                           Direct Parent: {selectedEvent.caused_by_event_id}
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-[11px] text-[#716F69]">
                           Deterministic causal sequence registered in graph database.
                         </div>
                       </div>
                     ) : (
-                      <span className="text-slate-500">Root operational trigger (no prior event).</span>
+                      <span className="text-[#716F69]">Root operational trigger (no prior event).</span>
                     )}
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="text-[10px] text-slate-500 uppercase">Authoritative Separation</div>
-                  <div className="text-[11px] text-emerald-400">
+                <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] space-y-1">
+                  <div className="text-[10px] text-[#716F69] uppercase">Authoritative Separation</div>
+                  <div className="text-[11px] text-[#2FB36F]">
                     Financial truth bounded by domain engine.
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-xs text-slate-500 font-mono py-8 text-center">
+              <div className="text-xs text-[#716F69] font-mono py-8 text-center">
                 Select an operational event to trace causal lineage.
               </div>
             )}

@@ -44,7 +44,7 @@ export default function TransactionDetailPage() {
   }, [txHash]);
 
   if (loading) {
-    return <div className="h-64 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse" />;
+    return <div className="h-64 rounded-2xl bg-[#101010] border border-[#222222] animate-pulse" />;
   }
 
   if (!tx) return null;
@@ -54,38 +54,38 @@ export default function TransactionDetailPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+      <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
         <div className="flex items-center gap-3">
           <Link
             href="/transactions"
-            className="text-xs font-mono text-slate-400 hover:text-teal-400 transition-colors"
+            className="text-xs font-mono text-[#716F69] hover:text-[#F2F0EA] transition-colors"
           >
             ← Transactions
           </Link>
-          <span className="text-slate-600">/</span>
-          <h1 className="text-xl font-bold text-white font-mono truncate max-w-md">
+          <span className="text-[#50504C]">/</span>
+          <h1 className="text-xl font-bold text-[#F2F0EA] font-mono truncate max-w-md">
             {tx.transaction_hash || tx.intent_id}
           </h1>
         </div>
       </div>
 
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-6">
+      <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-slate-400">Transaction Hash:</span>
-              <span className="text-sm font-mono font-bold text-white truncate max-w-xs sm:max-w-md">
+              <span className="text-xs font-mono text-[#716F69]">Transaction Hash:</span>
+              <span className="text-sm font-mono font-bold text-[#F2F0EA] truncate max-w-xs sm:max-w-md">
                 {tx.transaction_hash || 'Pending On-Chain Confirmation'}
               </span>
               {tx.transaction_hash && (
                 <CopyButton textToCopy={tx.transaction_hash} label="Transaction Hash" />
               )}
             </div>
-            <div className="text-xs text-slate-400 mt-1">
+            <div className="text-xs text-[#716F69] mt-1">
               Intent Reference:{' '}
               <Link
                 href={`/payment-intents/${encodeURIComponent(tx.intent_id)}`}
-                className="text-teal-400 hover:underline font-mono"
+                className="text-[#D6A83A] hover:underline font-mono"
               >
                 {tx.intent_id}
               </Link>
@@ -96,14 +96,14 @@ export default function TransactionDetailPage() {
         </div>
 
         {/* Transaction Metadata Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs font-mono">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] text-xs font-mono">
           <div>
-            <div className="text-slate-500">Settled Amount</div>
-            <div className="text-white font-bold mt-1 text-sm">{amountStr}</div>
+            <div className="text-[#716F69]">Settled Amount</div>
+            <div className="text-[#F2F0EA] font-bold mt-1 text-sm">{amountStr}</div>
           </div>
 
           <div>
-            <div className="text-slate-500">Vault Contract</div>
+            <div className="text-[#716F69]">Vault Contract</div>
             <div className="mt-1">
               <AddressDisplay
                 address={tx.vault_address || '0x1111111111111111111111111111111111111111'}
@@ -115,7 +115,7 @@ export default function TransactionDetailPage() {
           </div>
 
           <div>
-            <div className="text-slate-500">Recipient</div>
+            <div className="text-[#716F69]">Recipient</div>
             <div className="mt-1">
               <AddressDisplay
                 address={tx.recipient || '0x1111111111111111111111111111111111111111'}
@@ -128,18 +128,18 @@ export default function TransactionDetailPage() {
         </div>
 
         {/* Timestamp & Explorer */}
-        <div className="pt-4 border-t border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-          <div className="text-slate-400">
+        <div className="pt-4 border-t border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
+          <div className="text-[#716F69]">
             Confirmed At:{' '}
-            <span className="text-slate-200">
+            <span className="text-[#B0ADA5]">
               {tx.confirmed_at
                 ? new Date(tx.confirmed_at).toLocaleString()
                 : 'Pending block confirmation'}
             </span>
           </div>
 
-          <div className="text-slate-500">
-            Network: <span className="text-slate-300">Arc Network (Chain ID 5042)</span>
+          <div className="text-[#716F69]">
+            Network: <span className="text-[#B0ADA5]">Arc Network (Chain ID 5042)</span>
           </div>
         </div>
       </div>

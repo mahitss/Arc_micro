@@ -9,8 +9,8 @@ interface StatusBadgeProps {
 export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
   const normalized = status.toUpperCase();
 
-  let colorClasses = 'bg-slate-800 text-slate-300 border-slate-700';
-  let dotColor = 'bg-slate-400';
+  let dotColor = 'bg-[#716F69]';
+  let textColor = 'text-[#B0ADA5]';
 
   switch (normalized) {
     case 'CONFIRMED':
@@ -18,27 +18,26 @@ export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
     case 'HEALTHY':
     case 'ENABLED':
     case 'APPROVED':
-      colorClasses = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      dotColor = 'bg-emerald-400';
+    case 'VERIFIED':
+    case 'ALLOWED':
+      dotColor = 'bg-[#2FB36F]';
+      textColor = 'text-[#F2F0EA]';
       break;
 
     case 'AUTHORIZED':
-      colorClasses = 'bg-teal-500/10 text-teal-400 border-teal-500/20';
-      dotColor = 'bg-teal-400';
-      break;
-
     case 'EXECUTING':
     case 'SUBMITTED':
-      colorClasses = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
-      dotColor = 'bg-cyan-400 animate-pulse';
+      dotColor = 'bg-[#6B8FD6]';
+      textColor = 'text-[#F2F0EA]';
       break;
 
     case 'CREATED':
     case 'PENDING':
     case 'DEGRADED':
     case 'APPROVAL_REQUIRED':
-      colorClasses = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      dotColor = 'bg-amber-400';
+    case 'SIMULATION':
+      dotColor = 'bg-[#D6A83A]';
+      textColor = 'text-[#F2F0EA]';
       break;
 
     case 'DENIED':
@@ -46,16 +45,18 @@ export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
     case 'OFFLINE':
     case 'DISABLED':
     case 'REJECTED':
-      colorClasses = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-      dotColor = 'bg-rose-400';
+    case 'BLOCKED':
+    case 'NOT DEPLOYED':
+      dotColor = 'bg-[#D85C5C]';
+      textColor = 'text-[#D85C5C]';
       break;
 
     case 'EXPIRED':
     case 'PAUSED':
     case 'INACTIVE':
     case 'CANCELLED':
-      colorClasses = 'bg-slate-800 text-slate-400 border-slate-700';
-      dotColor = 'bg-slate-500';
+      dotColor = 'bg-[#716F69]';
+      textColor = 'text-[#716F69]';
       break;
   }
 
@@ -63,7 +64,7 @@ export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono font-medium rounded-md border ${colorClasses} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1.5 font-mono font-medium rounded-md border border-[#222222] bg-[#101010] ${textColor} ${sizeClasses}`}
       role="status"
       aria-label={`Status: ${normalized}`}
     >

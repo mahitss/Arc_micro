@@ -46,29 +46,29 @@ export default function ControlSimulatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans pb-24">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] font-sans pb-24">
       {/* 1. VISUALLY IMPOSSIBLE TO MISS SIMULATION BOUNDARY BANNER (INV-92) */}
-      <div className="bg-amber-500/20 border-b border-amber-500/40 px-4 py-2.5 text-center font-mono text-xs text-amber-300 font-bold uppercase tracking-widest flex items-center justify-center gap-3">
-        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+      <div className="bg-[#141414] border-b border-[#D6A83A]/30 px-4 py-2.5 text-center font-mono text-xs text-[#D6A83A] font-bold uppercase tracking-widest flex items-center justify-center gap-3">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#D6A83A] animate-ping" />
         SIMULATION DIGITAL TWIN ENVIRONMENT — NO REAL FUNDS — NO BLOCKCHAIN TRANSACTION
-        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#D6A83A] animate-ping" />
       </div>
 
       {/* HEADER */}
-      <section className="bg-[#0b1220] border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-4">
+      <section className="bg-[#080808] border-b border-[#222222] px-4 sm:px-6 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/control"
-              className="text-xs font-mono text-slate-400 hover:text-amber-400 transition-colors"
+              className="text-xs font-mono text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
             >
               &larr; CONTROL TOWER
             </Link>
-            <span className="text-slate-600">/</span>
-            <span className="text-xs font-mono text-amber-400 font-bold">DIGITAL TWIN SIMULATION CENTER</span>
+            <span className="text-[#50504C]">/</span>
+            <span className="text-xs font-mono text-[#D6A83A] font-bold">DIGITAL TWIN SIMULATION CENTER</span>
           </div>
 
-          <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold">
+          <span className="px-2.5 py-1 rounded bg-[#141414] text-[#D6A83A] border border-[#2D2D2D] text-xs font-mono font-bold">
             COUNTERFACTUAL RUNTIME
           </span>
         </div>
@@ -76,23 +76,23 @@ export default function ControlSimulatorPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-white font-mono">
+          <h1 className="text-2xl font-extrabold text-[#F2F0EA] font-mono">
             ECONOMIC SIMULATOR & ADVERSARIAL STRESS TWIN
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-[#B0ADA5] mt-1">
             Simulate autonomous agent workflows, inject failure modes, and verify recovery without spending real treasury funds.
           </p>
         </div>
 
         {executionMessage && (
-          <div className="p-4 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-xs font-mono text-emerald-300">
+          <div className="p-4 bg-[#141414] border border-[#2FB36F]/40 rounded-xl text-xs font-mono text-[#2FB36F]">
             {executionMessage}
           </div>
         )}
 
         {/* SCENARIO SELECTOR */}
-        <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-5 space-y-4">
-          <h2 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+        <section className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
+          <h2 className="text-xs font-mono font-bold text-[#716F69] uppercase tracking-wider">
             1. CONFIGURE SIMULATION SCENARIO & FAILURE INJECTION
           </h2>
 
@@ -108,11 +108,11 @@ export default function ControlSimulatorPage() {
                 onClick={() => setScenario(sc.id)}
                 className={`p-3 rounded-lg border text-left transition-colors ${
                   scenario === sc.id
-                    ? 'bg-amber-500/10 border-amber-400 text-amber-300 font-bold'
-                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                    ? 'bg-[#141414] border-[#D6A83A] text-[#F2F0EA] font-bold'
+                    : 'bg-[#0B0B0B] border-[#222222] text-[#B0ADA5] hover:border-[#2D2D2D]'
                 }`}
               >
-                <span className="block text-[10px] text-slate-500 uppercase">{sc.id}</span>
+                <span className="block text-[10px] text-[#716F69] uppercase">{sc.id}</span>
                 {sc.label}
               </button>
             ))}
@@ -121,7 +121,7 @@ export default function ControlSimulatorPage() {
           <button
             onClick={runSimulation}
             disabled={running}
-            className="px-5 py-2.5 rounded-lg bg-amber-500 text-slate-950 font-bold font-mono text-xs hover:bg-amber-400 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold font-mono text-xs transition-colors disabled:opacity-50"
           >
             {running ? 'RUNNING DIGITAL TWIN...' : 'RUN SIMULATION'}
           </button>
@@ -131,29 +131,29 @@ export default function ControlSimulatorPage() {
         {simulationResult && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 font-mono text-xs">
             {/* PLAN & STEPS (7 cols) */}
-            <section className="lg:col-span-7 bg-[#0e1626] border border-slate-800 rounded-xl p-5 space-y-4">
-              <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
-                <span className="font-bold text-white uppercase">SIMULATED PLAN EXECUTION</span>
-                <span className="text-slate-500">ID: {simulationResult.simulation_id}</span>
+            <section className="lg:col-span-7 bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
+              <div className="border-b border-[#222222] pb-3 flex justify-between items-center">
+                <span className="font-bold text-[#F2F0EA] uppercase">SIMULATED PLAN EXECUTION</span>
+                <span className="text-[#716F69]">ID: {simulationResult.simulation_id}</span>
               </div>
 
               <div className="space-y-2">
                 {simulationResult.plan.map((st: any) => (
                   <div
                     key={st.step}
-                    className="p-3 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-between"
+                    className="p-3 bg-[#0B0B0B] border border-[#222222] rounded-lg flex items-center justify-between"
                   >
                     <div>
-                      <span className="text-amber-400 font-bold mr-2">Step {st.step}:</span>
-                      <span className="text-slate-200">{st.action}</span>
-                      {st.agent && <span className="text-slate-500 block text-[11px]">Agent: {st.agent}</span>}
+                      <span className="text-[#D6A83A] font-bold mr-2">Step {st.step}:</span>
+                      <span className="text-[#F2F0EA]">{st.action}</span>
+                      {st.agent && <span className="text-[#716F69] block text-[11px]">Agent: {st.agent}</span>}
                     </div>
                     {st.outcome && (
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                           st.outcome === 'FAILED'
-                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-[#D85C5C]/10 text-[#D85C5C] border-[#D85C5C]/20'
+                            : 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/20'
                         }`}
                       >
                         {st.outcome}
@@ -165,32 +165,32 @@ export default function ControlSimulatorPage() {
             </section>
 
             {/* PREDICTED OUTCOMES & REVALIDATION EXECUTE (5 cols) */}
-            <section className="lg:col-span-5 bg-[#0e1626] border border-slate-800 rounded-xl p-5 space-y-4">
-              <div className="border-b border-slate-800 pb-3">
-                <span className="font-bold text-white uppercase">PREDICTED SYSTEM BEHAVIOR</span>
+            <section className="lg:col-span-5 bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
+              <div className="border-b border-[#222222] pb-3">
+                <span className="font-bold text-[#F2F0EA] uppercase">PREDICTED SYSTEM BEHAVIOR</span>
               </div>
 
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg space-y-2">
+              <div className="p-3 bg-[#0B0B0B] border border-[#222222] rounded-lg space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Policy Evaluation:</span>
-                  <span className="text-emerald-400 font-bold">{simulationResult.policy_evaluation}</span>
+                  <span className="text-[#716F69]">Policy Evaluation:</span>
+                  <span className="text-[#2FB36F] font-bold">{simulationResult.policy_evaluation}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Predicted Risk:</span>
-                  <span className="text-teal-300 font-bold">{simulationResult.risk_level}</span>
+                  <span className="text-[#716F69]">Predicted Risk:</span>
+                  <span className="text-[#F2F0EA] font-bold">{simulationResult.risk_level}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Liquidity Impact:</span>
-                  <span className="text-purple-300 font-bold">{simulationResult.liquidity_impact}</span>
+                  <span className="text-[#716F69]">Liquidity Impact:</span>
+                  <span className="text-[#F2F0EA] font-bold">{simulationResult.liquidity_impact}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Projected Settlement:</span>
-                  <span className="text-amber-400 font-bold">{simulationResult.projected_settlement}</span>
+                  <span className="text-[#716F69]">Projected Settlement:</span>
+                  <span className="text-[#D6A83A] font-bold">{simulationResult.projected_settlement}</span>
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-950/20 border border-amber-800/40 rounded-lg text-[11px] text-amber-200">
-                <strong>CANONICAL REVALIDATION (INV-92):</strong> Clicking &quot;Execute Plan&quot; does NOT execute the
+              <div className="p-3 bg-[#141414] border border-[#222222] rounded-lg text-[11px] text-[#B0ADA5]">
+                <strong className="text-[#D6A83A]">CANONICAL REVALIDATION (INV-92):</strong> Clicking &quot;Execute Plan&quot; does NOT execute the
                 simulation snapshot directly. It executes 14 mandatory real-world verifications: fresh quotes,
                 real-time treasury balances, and live policy gating before any funds are moved.
               </div>
@@ -198,7 +198,7 @@ export default function ControlSimulatorPage() {
               <button
                 onClick={handleExecutePlan}
                 disabled={executingPlan}
-                className="w-full py-3 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                className="w-full py-3 rounded-lg bg-[#F2F0EA] text-[#080808] font-bold text-xs hover:bg-white transition-colors disabled:opacity-50"
               >
                 {executingPlan ? 'REVALIDATING & EXECUTING...' : 'EXECUTE PLAN (CANONICAL PIPELINE)'}
               </button>

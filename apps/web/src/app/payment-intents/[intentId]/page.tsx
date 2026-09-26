@@ -312,7 +312,7 @@ export default function PaymentIntentDetailPage() {
   };
 
   if (loading) {
-    return <div className="h-96 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse" />;
+    return <div className="h-96 rounded-2xl bg-[#101010] border border-[#222222] animate-pulse" />;
   }
 
   if (error && !isDemoMode) {
@@ -342,16 +342,16 @@ export default function PaymentIntentDetailPage() {
   return (
     <div className="space-y-8">
       {/* Top Breadcrumb & Controls */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+      <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
         <div className="flex items-center gap-3">
           <Link
             href="/payment-intents"
-            className="text-xs font-mono text-slate-400 hover:text-teal-400 transition-colors"
+            className="text-xs font-mono text-[#716F69] hover:text-[#F2F0EA] transition-colors"
           >
             ← Payment Intents
           </Link>
-          <span className="text-slate-600">/</span>
-          <h1 className="text-xl font-bold text-white font-mono">{intent.intent_id}</h1>
+          <span className="text-[#50504C]">/</span>
+          <h1 className="text-xl font-bold text-[#F2F0EA] font-mono">{intent.intent_id}</h1>
         </div>
 
         <button
@@ -359,8 +359,8 @@ export default function PaymentIntentDetailPage() {
           onClick={() => setIsDemoMode(!isDemoMode)}
           className={`px-2.5 py-1 rounded-md text-[11px] font-mono border transition-colors ${
             isDemoMode
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-              : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-300'
+              ? 'bg-[#141414] text-[#D6A83A] border-[#D6A83A]/40'
+              : 'bg-[#141414] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
           }`}
         >
           {isDemoMode ? '● DEMO MODE' : '○ Demo Mode'}
@@ -368,22 +368,22 @@ export default function PaymentIntentDetailPage() {
       </div>
 
       {actionMessage && (
-        <div className="p-3.5 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-300 text-xs font-mono">
+        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#2FB36F]/30 text-[#2FB36F] text-xs font-mono">
           {actionMessage}
         </div>
       )}
 
       {/* Main Intent Overview Card */}
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-6">
+      <div className="p-6 rounded-2xl bg-[#101010] border border-[#222222] space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-slate-400">Intent ID:</span>
-              <span className="text-sm font-mono font-bold text-white">{intent.intent_id}</span>
+              <span className="text-xs font-mono text-[#716F69]">Intent ID:</span>
+              <span className="text-sm font-mono font-bold text-[#F2F0EA]">{intent.intent_id}</span>
               <CopyButton textToCopy={intent.intent_id} label="Intent ID" />
             </div>
-            <div className="text-xs text-slate-400 mt-1">
-              Purpose: <span className="text-slate-200 font-mono">{intent.purpose}</span>
+            <div className="text-xs text-[#716F69] mt-1">
+              Purpose: <span className="text-[#B0ADA5] font-mono">{intent.purpose}</span>
             </div>
           </div>
 
@@ -393,7 +393,7 @@ export default function PaymentIntentDetailPage() {
               <button
                 type="button"
                 onClick={() => setIsDialogOpen(true)}
-                className="px-4 py-2 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold text-xs shadow-md shadow-teal-500/20 transition-all"
+                className="px-4 py-2 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold text-xs shadow-sm transition-all"
               >
                 Confirm Payment →
               </button>
@@ -403,13 +403,13 @@ export default function PaymentIntentDetailPage() {
 
         {/* Human Approval Required Box */}
         {isApprovalRequired && (
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#D6A83A]/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="font-semibold text-amber-300 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <div className="font-semibold text-[#D6A83A] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#D6A83A] animate-pulse" />
                 Human Approval Required
               </div>
-              <div className="text-slate-300 mt-1">
+              <div className="text-[#B0ADA5] mt-1">
                 This payment exceeded automatic threshold or risk limits and requires human review. Hard policy limits will still be enforced.
               </div>
             </div>
@@ -418,7 +418,7 @@ export default function PaymentIntentDetailPage() {
                 type="button"
                 disabled={isConfirming}
                 onClick={() => handleApprovalAction(true)}
-                className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-colors"
+                className="px-3.5 py-1.5 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold text-xs transition-colors"
               >
                 Approve Intent
               </button>
@@ -426,7 +426,7 @@ export default function PaymentIntentDetailPage() {
                 type="button"
                 disabled={isConfirming}
                 onClick={() => handleApprovalAction(false)}
-                className="px-3.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-semibold text-xs transition-colors"
+                className="px-3.5 py-1.5 rounded-lg bg-[#101010] hover:bg-[#181818] text-[#D85C5C] border border-[#D85C5C]/40 font-semibold text-xs transition-colors"
               >
                 Reject Intent
               </button>
@@ -436,19 +436,19 @@ export default function PaymentIntentDetailPage() {
 
         {/* Approval Granted Box */}
         {isApproved && (
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#2FB36F]/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="font-semibold text-emerald-300">
+              <div className="font-semibold text-[#2FB36F]">
                 Human Approval Granted — Ready for Execution
               </div>
-              <div className="text-slate-400 mt-0.5">
+              <div className="text-[#716F69] mt-0.5">
                 Authorized by compliance approver. Click confirm to broadcast payment transaction to Arc.
               </div>
             </div>
             <button
               type="button"
               onClick={() => setIsDialogOpen(true)}
-              className="px-3.5 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold text-xs whitespace-nowrap self-start sm:self-auto"
+              className="px-3.5 py-1.5 rounded-lg bg-[#F2F0EA] text-[#080808] hover:bg-white font-semibold text-xs whitespace-nowrap self-start sm:self-auto transition-colors"
             >
               Confirm Payment
             </button>
@@ -457,19 +457,19 @@ export default function PaymentIntentDetailPage() {
 
         {/* Approval Prompt Box if Authorized */}
         {!isApproved && isAuthorized && (
-          <div className="p-4 rounded-xl bg-teal-500/5 border border-teal-500/20 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#222222] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="font-semibold text-teal-300">
+              <div className="font-semibold text-[#F2F0EA]">
                 Authorization successful — payment requires confirmation.
               </div>
-              <div className="text-slate-400 mt-0.5">
+              <div className="text-[#716F69] mt-0.5">
                 The Rust Policy Engine approved this payment. Click confirm to broadcast the execution transaction.
               </div>
             </div>
             <button
               type="button"
               onClick={() => setIsDialogOpen(true)}
-              className="px-3.5 py-1.5 rounded-lg bg-teal-500 text-slate-950 font-semibold text-xs whitespace-nowrap self-start sm:self-auto"
+              className="px-3.5 py-1.5 rounded-lg bg-[#F2F0EA] text-[#080808] hover:bg-white font-semibold text-xs whitespace-nowrap self-start sm:self-auto transition-colors"
             >
               Confirm Payment
             </button>
@@ -478,9 +478,9 @@ export default function PaymentIntentDetailPage() {
 
         {/* Rejected Box if Rejected */}
         {isRejected && (
-          <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20 text-xs">
-            <div className="font-semibold text-rose-300">Payment Intent Rejected</div>
-            <div className="text-slate-400 mt-0.5">
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#D85C5C]/30 text-xs">
+            <div className="font-semibold text-[#D85C5C]">Payment Intent Rejected</div>
+            <div className="text-[#716F69] mt-0.5">
               A human approver rejected this payment request. It cannot be executed.
             </div>
           </div>
@@ -488,9 +488,9 @@ export default function PaymentIntentDetailPage() {
 
         {/* Denied Box if Denied */}
         {isDenied && (
-          <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20 text-xs">
-            <div className="font-semibold text-rose-300">Policy Authorization Denied</div>
-            <div className="text-slate-400 mt-0.5">
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#D85C5C]/30 text-xs">
+            <div className="font-semibold text-[#D85C5C]">Policy Authorization Denied</div>
+            <div className="text-[#716F69] mt-0.5">
               Reason: The requested payment violates configured agent spending policies (e.g. daily limit or unauthorized recipient). Execution is strictly blocked.
             </div>
           </div>
@@ -498,39 +498,39 @@ export default function PaymentIntentDetailPage() {
 
         {/* Expired Box if Expired */}
         {isExpired && (
-          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/80 text-xs">
-            <div className="font-semibold text-slate-300">Payment Intent Expired</div>
-            <div className="text-slate-400 mt-0.5">
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#222222] text-xs">
+            <div className="font-semibold text-[#716F69]">Payment Intent Expired</div>
+            <div className="text-[#50504C] mt-0.5">
               The time-to-live (TTL) window for this payment intent has elapsed. Expired intents cannot be authorized or executed.
             </div>
           </div>
         )}
 
         {/* Metadata Details Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs font-mono">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] text-xs font-mono">
           <div>
-            <div className="text-slate-500">Agent</div>
-            <div className="text-white font-semibold mt-1">
-              <Link href={`/agents/${encodeURIComponent(intent.agent_id)}`} className="hover:text-teal-400 hover:underline">
+            <div className="text-[#716F69]">Agent</div>
+            <div className="text-[#F2F0EA] font-semibold mt-1">
+              <Link href={`/agents/${encodeURIComponent(intent.agent_id)}`} className="hover:text-[#D6A83A] hover:underline">
                 {intent.agent_id}
               </Link>
             </div>
           </div>
 
           <div>
-            <div className="text-slate-500">Service</div>
-            <div className="text-teal-400 font-semibold mt-1">{intent.service}</div>
+            <div className="text-[#716F69]">Service</div>
+            <div className="text-[#D6A83A] font-semibold mt-1">{intent.service}</div>
           </div>
 
           <div>
-            <div className="text-slate-500">Amount</div>
-            <div className="text-white font-bold mt-1 text-sm">
-              {amountFormatted} <span className="text-xs text-teal-400 font-normal">USDC</span>
+            <div className="text-[#716F69]">Amount</div>
+            <div className="text-[#F2F0EA] font-bold mt-1 text-sm">
+              {amountFormatted} <span className="text-xs text-[#716F69] font-normal">USDC</span>
             </div>
           </div>
 
           <div>
-            <div className="text-slate-500">Recipient</div>
+            <div className="text-[#716F69]">Recipient</div>
             <div className="mt-1">
               <AddressDisplay address={intent.recipient} truncate={true} copyable={true} />
             </div>
@@ -540,8 +540,8 @@ export default function PaymentIntentDetailPage() {
         {/* Justification Text */}
         {intent.justification && (
           <div className="text-xs">
-            <div className="text-slate-500 font-mono mb-1">AI Agent Justification:</div>
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800/60 text-slate-300 italic">
+            <div className="text-[#716F69] font-mono mb-1">AI Agent Justification:</div>
+            <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] text-[#B0ADA5] italic">
               &ldquo;{intent.justification}&rdquo;
             </div>
           </div>
@@ -549,17 +549,17 @@ export default function PaymentIntentDetailPage() {
 
         {/* Blockchain Transaction Hash */}
         {transaction_hash && (
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+          <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] flex items-center justify-between text-xs font-mono">
             <div>
-              <div className="text-slate-500">On-Chain Transaction Hash:</div>
-              <div className="text-slate-200 font-semibold mt-1 flex items-center gap-1.5">
+              <div className="text-[#716F69]">On-Chain Transaction Hash:</div>
+              <div className="text-[#F2F0EA] font-semibold mt-1 flex items-center gap-1.5">
                 <span>{transaction_hash}</span>
                 <CopyButton textToCopy={transaction_hash} label="Tx Hash" />
               </div>
             </div>
             <Link
               href={`/transactions/${encodeURIComponent(transaction_hash)}`}
-              className="text-teal-400 hover:underline"
+              className="text-[#D6A83A] hover:underline"
             >
               View Tx Details →
             </Link>
@@ -567,21 +567,21 @@ export default function PaymentIntentDetailPage() {
         )}
 
         {/* Timestamps */}
-        <div className="pt-4 border-t border-slate-800/60 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[11px] font-mono text-slate-400">
+        <div className="pt-4 border-t border-[#222222] grid grid-cols-2 sm:grid-cols-4 gap-4 text-[11px] font-mono text-[#716F69]">
           <div>
-            <span className="text-slate-500 block">Created:</span>
+            <span className="text-[#50504C] block">Created:</span>
             {new Date(timestamps.created_at).toLocaleString()}
           </div>
           <div>
-            <span className="text-slate-500 block">Expires:</span>
+            <span className="text-[#50504C] block">Expires:</span>
             {new Date(timestamps.expires_at).toLocaleString()}
           </div>
           <div>
-            <span className="text-slate-500 block">Updated:</span>
+            <span className="text-[#50504C] block">Updated:</span>
             {new Date(timestamps.updated_at).toLocaleString()}
           </div>
           <div>
-            <span className="text-slate-500 block">Confirmed:</span>
+            <span className="text-[#50504C] block">Confirmed:</span>
             {timestamps.confirmed_at ? new Date(timestamps.confirmed_at).toLocaleString() : '—'}
           </div>
         </div>

@@ -181,24 +181,24 @@ export default function ConstitutionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 pb-20">
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] pb-20">
       {/* Top Banner Notice */}
       {actionNotice && (
         <div className={`py-2 px-4 text-center text-xs font-mono font-medium flex items-center justify-center gap-2 ${
-          actionNotice.type === 'success' ? 'bg-emerald-950/80 text-emerald-300 border-b border-emerald-800' : 'bg-rose-950/80 text-rose-300 border-b border-rose-800'
+          actionNotice.type === 'success' ? 'bg-[#141414] text-[#2FB36F] border-b border-[#2FB36F]/40' : 'bg-[#141414] text-[#D85C5C] border-b border-[#D85C5C]/40'
         }`}>
           <span>{actionNotice.message}</span>
-          <button onClick={() => setActionNotice(null)} className="ml-3 text-slate-400 hover:text-white">&times;</button>
+          <button onClick={() => setActionNotice(null)} className="ml-3 text-[#85827B] hover:text-white">&times;</button>
         </div>
       )}
 
       {/* Hero Header */}
-      <div className="border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md">
+      <div className="border-b border-[#222222] bg-[#080808] backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20 text-lg">
+                <div className="w-10 h-10 rounded-xl bg-[#141414] border border-[#222222] flex items-center justify-center text-[#D6A83A] font-bold text-lg">
                   ⚖
                 </div>
                 <div>
@@ -206,11 +206,11 @@ export default function ConstitutionPage() {
                     <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-mono">
                       Autonomous Economic Constitution
                     </h1>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
                       v{activeConstitution.version} ACTIVE
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-[#85827B] mt-1">
                     Deterministic spending boundaries, monotonic authority inheritance, and cryptographic flight recorder proofs.
                   </p>
                 </div>
@@ -221,7 +221,7 @@ export default function ConstitutionPage() {
               <button
                 onClick={handleRunTests}
                 disabled={isTesting}
-                className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-[#141414] hover:bg-[#141414] border border-[#2D2D2D] text-[#F2F0EA] transition-colors flex items-center gap-1.5"
               >
                 <span>🧪</span>
                 <span>{isTesting ? 'Verifying...' : 'Run Constitution Tests'}</span>
@@ -230,14 +230,14 @@ export default function ConstitutionPage() {
                 <button
                   onClick={() => handleRollback(activeConstitution.version - 1)}
                   disabled={isPending}
-                  className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 transition-colors flex items-center gap-1.5"
+                  className="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-[#151515] hover:bg-[#1C1C1C] border border-[#D85C5C]/30 text-[#D85C5C] transition-colors flex items-center gap-1.5"
                 >
                   <span>↺</span>
                   <span>Rollback to v{activeConstitution.version - 1}</span>
                 </button>
               )}
-              <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="px-3 py-1.5 rounded-lg bg-[#141414] border border-[#2FB36F]/30 text-[#2FB36F] font-mono text-xs flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#2FB36F] animate-pulse" />
                 <span>STATE: ZERO KEY ACCESS</span>
               </div>
             </div>
@@ -245,37 +245,37 @@ export default function ConstitutionPage() {
 
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mt-8">
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Active Version</div>
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-3">
+              <div className="text-[10px] font-mono text-[#85827B] uppercase tracking-wider">Active Version</div>
               <div className="text-sm font-mono font-bold text-white mt-1">v{activeConstitution.version}</div>
-              <div className="text-[10px] font-mono text-emerald-400 mt-0.5">● IMMUTABLE</div>
+              <div className="text-[10px] font-mono text-[#2FB36F] mt-0.5">● IMMUTABLE</div>
             </div>
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Max Single Spend</div>
-              <div className="text-sm font-mono font-bold text-amber-400 mt-1">$2,500.00 USDC</div>
-              <div className="text-[10px] font-mono text-slate-400 mt-0.5">Per Transaction</div>
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-3">
+              <div className="text-[10px] font-mono text-[#85827B] uppercase tracking-wider">Max Single Spend</div>
+              <div className="text-sm font-mono font-bold text-[#D6A83A] mt-1">$2,500.00 USDC</div>
+              <div className="text-[10px] font-mono text-[#85827B] mt-0.5">Per Transaction</div>
             </div>
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Daily Treasury Limit</div>
-              <div className="text-sm font-mono font-bold text-cyan-400 mt-1">$10,000.00 USDC</div>
-              <div className="text-[10px] font-mono text-slate-400 mt-0.5">Rolling 24 Hours</div>
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-3">
+              <div className="text-[10px] font-mono text-[#85827B] uppercase tracking-wider">Daily Treasury Limit</div>
+              <div className="text-sm font-mono font-bold text-[#F2F0EA] mt-1">$10,000.00 USDC</div>
+              <div className="text-[10px] font-mono text-[#85827B] mt-0.5">Rolling 24 Hours</div>
             </div>
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Human Approval</div>
-              <div className="text-sm font-mono font-bold text-purple-400 mt-1">&gt; $1,000.00 USDC</div>
-              <div className="text-[10px] font-mono text-slate-400 mt-0.5">Multi-Sig Sign-off</div>
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-3">
+              <div className="text-[10px] font-mono text-[#85827B] uppercase tracking-wider">Human Approval</div>
+              <div className="text-sm font-mono font-bold text-[#D6A83A] mt-1">&gt; $1,000.00 USDC</div>
+              <div className="text-[10px] font-mono text-[#85827B] mt-0.5">Multi-Sig Sign-off</div>
             </div>
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Max Delegation Depth</div>
-              <div className="text-sm font-mono font-bold text-emerald-400 mt-1">2 Hops</div>
-              <div className="text-[10px] font-mono text-slate-400 mt-0.5">Subcontractor Ceiling</div>
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-3">
+              <div className="text-[10px] font-mono text-[#85827B] uppercase tracking-wider">Max Delegation Depth</div>
+              <div className="text-sm font-mono font-bold text-[#2FB36F] mt-1">2 Hops</div>
+              <div className="text-[10px] font-mono text-[#85827B] mt-0.5">Subcontractor Ceiling</div>
             </div>
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Policy Hash</div>
-              <div className="text-xs font-mono font-bold text-slate-300 mt-1 truncate" title={activeConstitution.policy_hash}>
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-3">
+              <div className="text-[10px] font-mono text-[#85827B] uppercase tracking-wider">Policy Hash</div>
+              <div className="text-xs font-mono font-bold text-[#B0ADA5] mt-1 truncate" title={activeConstitution.policy_hash}>
                 {activeConstitution.policy_hash?.slice(0, 10)}...
               </div>
-              <div className="text-[10px] font-mono text-slate-400 mt-0.5">SHA-256 Digest</div>
+              <div className="text-[10px] font-mono text-[#85827B] mt-0.5">SHA-256 Digest</div>
             </div>
           </div>
         </div>
@@ -284,13 +284,13 @@ export default function ConstitutionPage() {
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 space-x-1 sm:space-x-4 mb-6 text-xs font-mono">
+        <div className="flex border-b border-[#222222] space-x-1 sm:space-x-4 mb-6 text-xs font-mono">
           <button
             onClick={() => setActiveTab('rules')}
             className={`pb-3 px-3 border-b-2 font-medium transition-colors ${
               activeTab === 'rules'
-                ? 'border-amber-400 text-amber-400 font-bold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-amber-400 text-[#D6A83A] font-bold'
+                : 'border-transparent text-[#85827B] hover:text-[#F2F0EA]'
             }`}
           >
             Active Rules ({activeConstitution.rules.length})
@@ -299,8 +299,8 @@ export default function ConstitutionPage() {
             onClick={() => setActiveTab('hierarchy')}
             className={`pb-3 px-3 border-b-2 font-medium transition-colors ${
               activeTab === 'hierarchy'
-                ? 'border-amber-400 text-amber-400 font-bold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-amber-400 text-[#D6A83A] font-bold'
+                : 'border-transparent text-[#85827B] hover:text-[#F2F0EA]'
             }`}
           >
             Monotonic Hierarchy
@@ -309,8 +309,8 @@ export default function ConstitutionPage() {
             onClick={() => setActiveTab('diff')}
             className={`pb-3 px-3 border-b-2 font-medium transition-colors ${
               activeTab === 'diff'
-                ? 'border-amber-400 text-amber-400 font-bold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-amber-400 text-[#D6A83A] font-bold'
+                : 'border-transparent text-[#85827B] hover:text-[#F2F0EA]'
             }`}
           >
             Policy Diff &amp; Delta
@@ -319,8 +319,8 @@ export default function ConstitutionPage() {
             onClick={() => setActiveTab('changes')}
             className={`pb-3 px-3 border-b-2 font-medium transition-colors ${
               activeTab === 'changes'
-                ? 'border-amber-400 text-amber-400 font-bold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-amber-400 text-[#D6A83A] font-bold'
+                : 'border-transparent text-[#85827B] hover:text-[#F2F0EA]'
             }`}
           >
             Change Requests ({changeRequests.length})
@@ -329,8 +329,8 @@ export default function ConstitutionPage() {
             onClick={() => setActiveTab('playground')}
             className={`pb-3 px-3 border-b-2 font-medium transition-colors ${
               activeTab === 'playground'
-                ? 'border-amber-400 text-amber-400 font-bold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-amber-400 text-[#D6A83A] font-bold'
+                : 'border-transparent text-[#85827B] hover:text-[#F2F0EA]'
             }`}
           >
             Evaluation Playground
@@ -348,48 +348,48 @@ export default function ConstitutionPage() {
                     key={rule.rule_id}
                     className={`rounded-xl p-5 border backdrop-blur-sm transition-all ${
                       isHard
-                        ? 'bg-rose-950/20 border-rose-500/40 hover:border-rose-400'
-                        : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                        ? 'bg-[#101010] border-[#D85C5C]/40 hover:border-[#D85C5C]'
+                        : 'bg-[#101010] border-[#222222] hover:border-[#2D2D2D]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-xs font-bold text-slate-200 truncate">
+                      <span className="font-mono text-xs font-bold text-[#F2F0EA] truncate">
                         {rule.rule_id}
                       </span>
                       <div className="flex items-center gap-1.5">
                         {isHard && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141414] text-[#D85C5C] border border-[#D85C5C]/40">
                             HARD DENY
                           </span>
                         )}
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#141414] text-[#B0ADA5]">
                           P{rule.priority}
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-[11px] font-mono text-amber-400 mb-2 uppercase">
+                    <div className="text-[11px] font-mono text-[#D6A83A] mb-2 uppercase">
                       TYPE: {rule.type} &bull; SCOPE: {rule.scope}
                     </div>
 
-                    <p className="text-xs text-slate-300 mb-4 line-clamp-3">
+                    <p className="text-xs text-[#B0ADA5] mb-4 line-clamp-3">
                       {rule.description}
                     </p>
 
                     {/* Rule specific metadata */}
-                    <div className="border-t border-slate-800/80 pt-3 text-[11px] font-mono space-y-1 text-slate-400">
+                    <div className="border-t border-[#222222] pt-3 text-[11px] font-mono space-y-1 text-[#85827B]">
                       {rule.spending_limit && (
                         <>
                           {rule.spending_limit.max_single_payment && (
                             <div className="flex justify-between">
                               <span>Max Single:</span>
-                              <span className="text-slate-200">{formatUsdc(rule.spending_limit.max_single_payment)}</span>
+                              <span className="text-[#F2F0EA]">{formatUsdc(rule.spending_limit.max_single_payment)}</span>
                             </div>
                           )}
                           {rule.spending_limit.daily_budget_limit && (
                             <div className="flex justify-between">
                               <span>Daily Budget:</span>
-                              <span className="text-slate-200">{formatUsdc(rule.spending_limit.daily_budget_limit)}</span>
+                              <span className="text-[#F2F0EA]">{formatUsdc(rule.spending_limit.daily_budget_limit)}</span>
                             </div>
                           )}
                         </>
@@ -397,25 +397,25 @@ export default function ConstitutionPage() {
                       {rule.asset_rule && (
                         <div className="flex justify-between">
                           <span>Allowed Assets:</span>
-                          <span className="text-emerald-400">{rule.asset_rule.allowed_assets.join(', ')}</span>
+                          <span className="text-[#2FB36F]">{rule.asset_rule.allowed_assets.join(', ')}</span>
                         </div>
                       )}
                       {rule.approval_rule && (
                         <div className="flex justify-between">
                           <span>Threshold:</span>
-                          <span className="text-purple-300">{formatUsdc(rule.approval_rule.amount_threshold)}</span>
+                          <span className="text-[#D6A83A]">{formatUsdc(rule.approval_rule.amount_threshold)}</span>
                         </div>
                       )}
                       {rule.delegation_rule && (
                         <div className="flex justify-between">
                           <span>Max Depth:</span>
-                          <span className="text-cyan-300">{rule.delegation_rule.max_delegation_depth} Hops</span>
+                          <span className="text-[#F2F0EA]">{rule.delegation_rule.max_delegation_depth} Hops</span>
                         </div>
                       )}
                       {rule.risk_rule && (
                         <div className="flex justify-between">
                           <span>Risk Ceiling:</span>
-                          <span className="text-amber-300">Score &le; {rule.risk_rule.max_risk_score}</span>
+                          <span className="text-[#D6A83A]">Score &le; {rule.risk_rule.max_risk_score}</span>
                         </div>
                       )}
                     </div>
@@ -440,8 +440,8 @@ export default function ConstitutionPage() {
         {activeTab === 'changes' && (
           <div className="space-y-4">
             {changeRequests.map((cr) => (
-              <div key={cr.request_id} className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div key={cr.request_id} className="bg-[#101010] border border-[#222222] rounded-xl p-6 backdrop-blur-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#222222]">
                   <div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-mono font-bold text-white">{cr.request_id}</span>
@@ -450,8 +450,8 @@ export default function ConstitutionPage() {
                       </span>
                       <AuthorityDeltaBadge delta={cr.authority_delta} />
                     </div>
-                    <p className="text-xs text-slate-300 mt-1 font-sans">
-                      Proposes revision from <span className="font-mono text-amber-400">v{cr.current_version}</span> to <span className="font-mono text-emerald-400">v{cr.proposed_version}</span> by <span className="font-mono text-slate-300">{cr.proposer}</span>
+                    <p className="text-xs text-[#B0ADA5] mt-1 font-sans">
+                      Proposes revision from <span className="font-mono text-[#D6A83A]">v{cr.current_version}</span> to <span className="font-mono text-[#2FB36F]">v{cr.proposed_version}</span> by <span className="font-mono text-[#B0ADA5]">{cr.proposer}</span>
                     </p>
                   </div>
 
@@ -459,15 +459,15 @@ export default function ConstitutionPage() {
                     <button
                       onClick={() => handleActivateChange(cr.request_id)}
                       disabled={isPending}
-                      className="px-4 py-2 rounded-lg text-xs font-mono font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors shadow-md shadow-emerald-500/20"
+                      className="px-4 py-2 rounded-lg text-xs font-mono font-bold bg-[#F2F0EA] hover:bg-[#FFFFFF] text-[#080808] transition-colors"
                     >
                       CAS Activate v{cr.proposed_version}
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-4 text-xs font-mono text-slate-400 bg-slate-950/60 p-3 rounded-lg border border-slate-800">
-                  <div className="text-slate-300 font-semibold mb-1">Explanation:</div>
+                <div className="mt-4 text-xs font-mono text-[#85827B] bg-[#080808] p-3 rounded-lg border border-[#222222]">
+                  <div className="text-[#B0ADA5] font-semibold mb-1">Explanation:</div>
                   <div>{cr.authority_delta?.explanation}</div>
                 </div>
               </div>
@@ -479,72 +479,72 @@ export default function ConstitutionPage() {
         {activeTab === 'playground' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Input Form */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 backdrop-blur-sm">
               <h3 className="text-sm font-semibold text-white tracking-wide uppercase font-mono mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
                 Zero-Side-Effect Policy Evaluator
               </h3>
-              <p className="text-xs text-slate-400 mb-6 font-sans">
+              <p className="text-xs text-[#85827B] mb-6 font-sans">
                 Simulate an autonomous financial transaction against the currently active constitution. No on-chain transactions or state mutations will occur.
               </p>
 
               <form onSubmit={handleEvaluate} className="space-y-4 text-xs font-mono">
                 <div>
-                  <label className="block text-slate-300 mb-1">Agent ID</label>
+                  <label className="block text-[#B0ADA5] mb-1">Agent ID</label>
                   <input
                     type="text"
                     value={evalAgentId}
                     onChange={(e) => setEvalAgentId(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-400"
+                    className="w-full bg-[#0F0F0F] border border-[#222222] rounded-lg px-3 py-2 text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-1">Amount (Base Units: 1 USDC = 1,000,000)</label>
+                  <label className="block text-[#B0ADA5] mb-1">Amount (Base Units: 1 USDC = 1,000,000)</label>
                   <input
                     type="text"
                     value={evalAmount}
                     onChange={(e) => setEvalAmount(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-400"
+                    className="w-full bg-[#0F0F0F] border border-[#222222] rounded-lg px-3 py-2 text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">Formatted: {formatUsdc(evalAmount)}</span>
+                  <span className="text-[10px] text-[#85827B] mt-1 block">Formatted: {formatUsdc(evalAmount)}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-300 mb-1">Currency</label>
+                    <label className="block text-[#B0ADA5] mb-1">Currency</label>
                     <input
                       type="text"
                       value={evalCurrency}
                       onChange={(e) => setEvalCurrency(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-400"
+                      className="w-full bg-[#0F0F0F] border border-[#222222] rounded-lg px-3 py-2 text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-300 mb-1">Risk Score (0 - 100)</label>
+                    <label className="block text-[#B0ADA5] mb-1">Risk Score (0 - 100)</label>
                     <input
                       type="number"
                       value={evalRiskScore}
                       onChange={(e) => setEvalRiskScore(Number(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-400"
+                      className="w-full bg-[#0F0F0F] border border-[#222222] rounded-lg px-3 py-2 text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-1">Recipient Agent / Service</label>
+                  <label className="block text-[#B0ADA5] mb-1">Recipient Agent / Service</label>
                   <input
                     type="text"
                     value={evalRecipient}
                     onChange={(e) => setEvalRecipient(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-400"
+                    className="w-full bg-[#0F0F0F] border border-[#222222] rounded-lg px-3 py-2 text-[#F2F0EA] focus:outline-none focus:border-[#D6A83A]"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isEvaluating}
-                  className="w-full mt-4 py-2.5 rounded-lg text-xs font-mono font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors shadow-lg shadow-amber-500/20"
+                  className="w-full mt-4 py-2.5 rounded-lg text-xs font-mono font-bold bg-[#F2F0EA] hover:bg-[#E2DFD7] text-[#080808] transition-colors"
                 >
                   {isEvaluating ? 'Evaluating against Constitution...' : 'Evaluate Against Constitution'}
                 </button>
@@ -552,9 +552,9 @@ export default function ConstitutionPage() {
             </div>
 
             {/* Decision Output */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
+            <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 backdrop-blur-sm">
               <h3 className="text-sm font-semibold text-white tracking-wide uppercase font-mono mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
                 Deterministic Constitutional Decision
               </h3>
 
@@ -562,36 +562,36 @@ export default function ConstitutionPage() {
                 <div className="space-y-4">
                   <div className={`p-4 rounded-xl border font-mono ${
                     evalDecision.decision === 'ALLOW'
-                      ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                      ? 'bg-[#141414] border-[#2FB36F]/40 text-[#2FB36F]'
                       : evalDecision.decision === 'APPROVAL_REQUIRED'
-                      ? 'bg-purple-950/20 border-purple-500/40 text-purple-300'
-                      : 'bg-rose-950/20 border-rose-500/40 text-rose-300'
+                      ? 'bg-[#141414] border border-[#D6A83A]/40 text-[#D6A83A]'
+                      : 'bg-[#141414] border-[#D85C5C]/40 text-[#D85C5C]'
                   }`}>
                     <div className="flex items-center justify-between text-sm font-bold mb-1">
                       <span>DECISION: {evalDecision.decision}</span>
-                      <span className="text-xs px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
+                      <span className="text-xs px-2 py-0.5 rounded bg-[#141414] border border-[#222222]">
                         {evalDecision.reason_code}
                       </span>
                     </div>
-                    <p className="text-xs mt-2 text-slate-200">{evalDecision.reason}</p>
-                    <p className="text-[11px] mt-1 text-slate-400">{evalDecision.explanation}</p>
+                    <p className="text-xs mt-2 text-[#F2F0EA]">{evalDecision.reason}</p>
+                    <p className="text-[11px] mt-1 text-[#85827B]">{evalDecision.explanation}</p>
                   </div>
 
-                  <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-4 font-mono text-xs space-y-2">
-                    <div className="flex justify-between text-slate-400">
+                  <div className="bg-[#0F0F0F]/70 border border-[#222222] rounded-lg p-4 font-mono text-xs space-y-2">
+                    <div className="flex justify-between text-[#85827B]">
                       <span>Constitution ID:</span>
-                      <span className="text-slate-200">{evalDecision.constitution_id} (v{evalDecision.version})</span>
+                      <span className="text-[#F2F0EA]">{evalDecision.constitution_id} (v{evalDecision.version})</span>
                     </div>
-                    <div className="flex justify-between text-slate-400">
+                    <div className="flex justify-between text-[#85827B]">
                       <span>Evaluation Hash:</span>
-                      <span className="text-slate-200 truncate ml-4">{evalDecision.evaluation_hash}</span>
+                      <span className="text-[#F2F0EA] truncate ml-4">{evalDecision.evaluation_hash}</span>
                     </div>
                     {evalDecision.matched_rules?.length > 0 && (
-                      <div className="border-t border-slate-800/80 pt-2">
-                        <span className="text-slate-400 block mb-1">Matched Rules:</span>
+                      <div className="border-t border-[#222222] pt-2">
+                        <span className="text-[#85827B] block mb-1">Matched Rules:</span>
                         <div className="flex flex-wrap gap-1.5">
                           {evalDecision.matched_rules.map((r) => (
-                            <span key={r} className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 text-[10px]">
+                            <span key={r} className="px-2 py-0.5 rounded bg-[#141414] text-[#B0ADA5] text-[10px]">
                               {r}
                             </span>
                           ))}
@@ -601,9 +601,9 @@ export default function ConstitutionPage() {
                   </div>
                 </div>
               ) : (
-                <div className="h-64 flex flex-col items-center justify-center text-slate-500 text-xs font-mono text-center p-6 border border-dashed border-slate-800 rounded-xl">
+                <div className="h-64 flex flex-col items-center justify-center text-[#50504C] text-xs font-mono text-center p-6 border border-dashed border-[#222222] rounded-xl">
                   <span>No evaluation executed yet.</span>
-                  <span className="mt-1 text-slate-600">Configure parameters on the left and click &quot;Evaluate Against Constitution&quot;.</span>
+                  <span className="mt-1 text-[#50504C]">Configure parameters on the left and click &quot;Evaluate Against Constitution&quot;.</span>
                 </div>
               )}
             </div>
