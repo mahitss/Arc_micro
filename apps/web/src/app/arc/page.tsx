@@ -145,39 +145,52 @@ export default function ArcPanelPage() {
         </div>
       </div>
 
-      {/* Prioritized 5-Column Financial Status Strip */}
+      {/* Prioritized 7-Card Financial Settlement Status Strip */}
       <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 sm:p-6 space-y-3">
         <div className="text-[11px] font-semibold text-[#737373] uppercase tracking-wider">
           Settlement Infrastructure Status
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
-          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs">
+          <div className="p-3.5 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
             <span className="text-[#737373] text-[10px] uppercase block font-medium">Chain</span>
             <span className="text-[#f5f5f5] font-bold text-base mt-1 block">5042</span>
             <span className="text-[#666666] text-[11px] block mt-0.5">Arc Mainnet</span>
           </div>
-          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+          <div className="p-3.5 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
             <span className="text-[#737373] text-[10px] uppercase block font-medium">RPC</span>
             <span className="text-[#22c55e] font-bold text-base mt-1 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
               CONNECTED
             </span>
-            <span className="text-[#666666] text-[11px] block mt-0.5 font-mono">Block #22,572,770</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5 font-mono">Block #22.5M</span>
           </div>
-          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+          <div className="p-3.5 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+            <span className="text-[#737373] text-[10px] uppercase block font-medium">NATIVE USDC</span>
+            <span className="text-[#22c55e] font-bold text-base mt-1 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+              VERIFIED
+            </span>
+            <span className="text-[#666666] text-[11px] block mt-0.5">6 Decimals</span>
+          </div>
+          <div className="p-3.5 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
             <span className="text-[#737373] text-[10px] uppercase block font-medium">AGENTVAULT</span>
             <span className="text-[#a3a3a3] font-bold text-base mt-1 block">NOT DEPLOYED</span>
-            <span className="text-[#666666] text-[11px] block mt-0.5">0x bytecode pending</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5">0x pending</span>
           </div>
-          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+          <div className="p-3.5 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
             <span className="text-[#737373] text-[10px] uppercase block font-medium">LIVE EXECUTION</span>
             <span className="text-[#a3a3a3] font-bold text-base mt-1 block">DISABLED</span>
             <span className="text-[#666666] text-[11px] block mt-0.5">Operator gated</span>
           </div>
-          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c] col-span-2 sm:col-span-1">
+          <div className="p-3.5 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
             <span className="text-[#737373] text-[10px] uppercase block font-medium">REAL SETTLEMENTS</span>
             <span className="text-[#f5f5f5] font-bold text-base mt-1 block">0 VERIFIED</span>
-            <span className="text-[#666666] text-[11px] block mt-0.5 font-mono">0 BROADCASTS</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5 font-mono">Simulation</span>
+          </div>
+          <div className="p-3.5 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c] col-span-2 sm:col-span-1">
+            <span className="text-[#737373] text-[10px] uppercase block font-medium">BROADCASTS</span>
+            <span className="text-[#f5f5f5] font-bold text-base mt-1 block">0</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5">Zero broadcast</span>
           </div>
         </div>
       </div>
