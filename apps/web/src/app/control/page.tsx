@@ -12,6 +12,7 @@ import {
   UniversalFinancialTrace,
   ControlSearchResult,
 } from '../../lib/api/control';
+import { formatRate, formatPercent, formatCurrency } from '../../lib/utils/format';
 
 interface EconomicTraceEvent {
   timestamp: string;
@@ -462,51 +463,43 @@ export default function ControlTowerPage() {
 
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans pb-24">
-      {/* 1. PERSISTENT ECONOMIC STATE STRIP */}
-      <section className="bg-[#0b1220] border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-3 sticky top-16 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
-          <div className="flex items-center gap-6 flex-wrap">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">TREASURY:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                HEALTHY
+      {/* 1. SECTION 9: PERSISTENT COMPACT STATUS STRIP */}
+      <section className="bg-[#0a0f1d] border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-2.5 sticky top-16 z-30 shadow-md">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-semibold">MODE:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                SIMULATION
               </span>
             </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">POLICY:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                v8 ACTIVE (6.36µs)
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">RISK:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-teal-500/10 text-teal-400 border border-teal-500/30">
-                LOW (SCORE: 12/100)
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">EXECUTION:</span>
-              <span className={`px-2 py-0.5 rounded font-bold ${
-                execMode === 'REAL'
-                  ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-              }`}>
-                {execMode === 'REAL' ? 'LIVE ON-CHAIN (OPERATOR-GATED)' : 'SIMULATION MODE (INV-156)'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-semibold tracking-wider">ARC:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-semibold">ARC:</span>
               <span className="px-2 py-0.5 rounded font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-                VERIFIED RPC (5042)
+                CONNECTED
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-semibold">VAULT:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">
+                NOT DEPLOYED
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-semibold">EXECUTION:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                DISABLED
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-semibold">REAL SETTLEMENTS:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                0 VERIFIED
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleResetDemo}
               className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded text-[11px] font-bold font-mono transition-colors"
@@ -529,9 +522,15 @@ export default function ControlTowerPage() {
                   execMode === 'REAL' ? 'bg-teal-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                LIVE
+                PROJECTED
               </button>
             </div>
+            <Link
+              href="/demo"
+              className="px-3 py-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 rounded text-[11px] font-bold font-mono transition-all shadow-sm shadow-teal-500/20"
+            >
+              RUN SIMULATION →
+            </Link>
           </div>
         </div>
       </section>
@@ -545,18 +544,26 @@ export default function ControlTowerPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
-        {/* 2. SECTION 4: CONTROL TOWER HERO & SYSTEM STATUS (ABOVE THE FOLD) */}
-        <div className="bg-gradient-to-r from-[#0c1427] via-[#0f1d38] to-[#0c1427] border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-7">
+        {/* 2. SECTION 4: CONTROL TOWER HERO (ABOVE THE FOLD) */}
+        <div className="bg-gradient-to-r from-[#0c1427] via-[#0f1d38] to-[#0c1427] border border-slate-800 rounded-2xl p-6 sm:p-7 shadow-xl">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-3">
-                <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold tracking-widest uppercase">
-                  FINANCIAL CONTROL PLANE
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-mono font-bold tracking-widest uppercase">
+                  SIMULATION MODE
                 </span>
-                <span className="text-xs font-mono text-cyan-400">ARC MAINNET INTEGRATION (5042)</span>
+                <span className="px-2.5 py-1 rounded bg-cyan-950/60 text-cyan-400 border border-cyan-800/40 text-xs font-mono">
+                  ARC MAINNET · CONNECTED (5042)
+                </span>
+                <span className="px-2.5 py-1 rounded bg-slate-900 text-rose-400 border border-slate-800 text-xs font-mono">
+                  AGENTVAULT · NOT DEPLOYED
+                </span>
+                <span className="px-2.5 py-1 rounded bg-slate-900 text-slate-400 border border-slate-800 text-xs font-mono">
+                  LIVE EXECUTION · DISABLED
+                </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-mono mt-2">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-mono mt-1">
                 AGENTPAY
               </h1>
               <p className="text-slate-300 text-base sm:text-lg font-medium mt-1">
@@ -572,79 +579,126 @@ export default function ControlTowerPage() {
               </div>
             </div>
 
-            {/* SECTION 4 SYSTEM STATUS BLOCK */}
-            <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-4 sm:p-5 font-mono text-xs space-y-2.5 min-w-[320px]">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1.5 flex items-center justify-between">
-                <span>SYSTEM STATUS</span>
-                <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  ONLINE
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">MODE:</span>
-                  <span className="text-amber-400 font-bold">SIMULATION</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">ARC:</span>
-                  <span className="text-cyan-400 font-bold">CONNECTED</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">AGENTVAULT:</span>
-                  <span className="text-rose-400 font-bold">NOT DEPLOYED</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">LIVE EXECUTION:</span>
-                  <span className="text-rose-400 font-bold">DISABLED</span>
-                </div>
-                <div className="col-span-2 pt-1 border-t border-slate-900 flex justify-between items-center">
-                  <span className="text-slate-400 text-[10px]">TREASURY:</span>
-                  <span className="text-teal-400 font-bold">SIMULATED ($100.00 USDC)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-emerald-400 font-bold">ACTIVE MISSION:</span>
-              <span className="text-white font-bold">Autonomous Market Intelligence</span>
-              <span className="text-slate-500">|</span>
-              <span className="text-amber-300 font-bold">$25.00 USDC Budget</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href="/control"
-                className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors shadow-sm shadow-amber-500/20"
-              >
-                CONTROL TOWER
-              </Link>
+            <div className="flex flex-wrap lg:flex-col gap-2 font-mono text-xs">
               <Link
                 href="/missions/msn_market_intel_01/replay"
-                className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
+                className="px-3.5 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40 transition-colors text-center"
               >
                 FAILURE REPLAY &rarr;
               </Link>
               <Link
                 href="/arc"
-                className="px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition-colors border border-cyan-500/30"
+                className="px-3.5 py-2 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 font-bold border border-cyan-500/30 transition-colors text-center"
               >
-                ARC PANEL &rarr;
-              </Link>
-              <Link
-                href="/simulator"
-                className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
-              >
-                SIMULATOR &rarr;
-              </Link>
-              <Link
-                href="/marketplace"
-                className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
-              >
-                MARKETPLACE &rarr;
+                ARC STATUS &rarr;
               </Link>
             </div>
+          </div>
+        </div>
+
+        {/* 3. SECTION 5: FLAGSHIP HERO MISSION CARD */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-900/95 to-[#0b1325] border border-teal-500/40 rounded-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  RUNNING
+                </span>
+                <span className="text-xs font-mono text-slate-400">FLAGSHIP MISSION</span>
+              </div>
+              <h2 className="text-2xl font-extrabold tracking-tight font-mono text-white">
+                AUTONOMOUS MARKET INTELLIGENCE
+              </h2>
+              <p className="text-sm text-slate-300 mt-1 max-w-2xl font-sans">
+                Research the market landscape for autonomous AI infrastructure. Autonomous provider negotiation, failure fencing, and verified fallback routing.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/missions/msn_market_intel_01/replay"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono rounded-lg transition-colors shadow-lg shadow-amber-500/20"
+              >
+                REPLAY MISSION &rarr;
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-5 font-mono text-xs">
+            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase block">BUDGET</span>
+              <span className="text-base font-bold text-amber-300 mt-0.5 block">$25.00 USDC</span>
+            </div>
+            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase block">COMMITTED</span>
+              <span className="text-base font-bold text-emerald-400 mt-0.5 block">$14.00</span>
+            </div>
+            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase block">RISK</span>
+              <span className="text-base font-bold text-teal-400 mt-0.5 block">24 / 100</span>
+            </div>
+            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase block">POLICY</span>
+              <span className="text-base font-bold text-emerald-400 mt-0.5 block">ALLOW</span>
+            </div>
+            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
+              <span className="text-[10px] text-slate-400 uppercase block">PROVIDER</span>
+              <span className="text-base font-bold text-cyan-300 mt-0.5 block truncate">BudgetAI</span>
+            </div>
+            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800 sm:col-span-2 lg:col-span-1">
+              <span className="text-[10px] text-slate-400 uppercase block">STATUS</span>
+              <span className="text-[11px] font-bold text-amber-300 mt-0.5 block truncate">RECOVERED FROM FAILURE</span>
+            </div>
+            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800 sm:col-span-2 lg:col-span-1">
+              <span className="text-[10px] text-slate-400 uppercase block">NEXT</span>
+              <span className="text-[11px] font-bold text-purple-300 mt-0.5 block truncate">VALIDATE RESULT</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. SECTION 10: DETERMINISTIC DEMO KPI CARDS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 font-mono">
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Active Mission</div>
+            <div className="text-xl font-bold text-white mt-1">1</div>
+            <div className="text-[10px] text-teal-400 mt-0.5 truncate">Market Intel</div>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Running Workflow</div>
+            <div className="text-xl font-bold text-cyan-300 mt-1">1</div>
+            <div className="text-[10px] text-cyan-500/80 mt-0.5">Durable DAG ok</div>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Mission Budget</div>
+            <div className="text-xl font-bold text-amber-300 mt-1">$25.00</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">USDC Hard Cap</div>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Committed</div>
+            <div className="text-xl font-bold text-emerald-400 mt-1">$14.00</div>
+            <div className="text-[10px] text-emerald-500/80 mt-0.5">BudgetAI Quote</div>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Recovery</div>
+            <div className="text-xl font-bold text-indigo-300 mt-1">100%</div>
+            <div className="text-[10px] text-indigo-400/80 mt-0.5">1 Failure &rarr; 1 Recv</div>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Policy</div>
+            <div className="text-xl font-bold text-emerald-400 mt-1">ENFORCED</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">Deterministic 6.3µs</div>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Authority</div>
+            <div className="text-xl font-bold text-rose-400 mt-1">BOUNDED</div>
+            <div className="text-[10px] text-rose-400/80 mt-0.5">Outside Agent Reach</div>
           </div>
         </div>
 
@@ -780,7 +834,76 @@ export default function ControlTowerPage() {
           </div>
         </section>
 
-        {/* 4. SECTION 4 SYSTEM METRICS GRIDS */}
+        {/* 4. SECTION 8: DEDICATED WHY / WHY NOT DECISION CARD */}
+        <div className="bg-[#0c1427] border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+          <div className="border-b border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-teal-400">
+                AUDITABLE DECISION LOG
+              </span>
+              <h3 className="text-lg font-bold font-mono text-white mt-0.5">
+                WHY / WHY NOT DECISION SYSTEM
+              </h3>
+            </div>
+            <span className="text-xs font-mono text-slate-400">
+              Institutional explanation framework for autonomous economic choices
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 font-mono text-xs">
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
+              <div className="text-emerald-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                WHY THIS PROVIDER?
+              </div>
+              <p className="text-slate-200 font-sans text-xs leading-relaxed">
+                Lowest eligible quote within budget and policy constraints.
+              </p>
+            </div>
+
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
+              <div className="text-rose-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                WHY NOT THE $28 PROVIDER?
+              </div>
+              <p className="text-slate-200 font-sans text-xs leading-relaxed">
+                Quote exceeds the $25 mission budget.
+              </p>
+            </div>
+
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
+              <div className="text-amber-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                WHY WAS THE FAILED PAYMENT NOT RETRIED?
+              </div>
+              <p className="text-slate-200 font-sans text-xs leading-relaxed">
+                Execution was fenced. Blind retry is prohibited.
+              </p>
+            </div>
+
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
+              <div className="text-cyan-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                WHY WAS THE FALLBACK ALLOWED?
+              </div>
+              <p className="text-slate-200 font-sans text-xs leading-relaxed">
+                Capability + budget + policy + risk constraints passed.
+              </p>
+            </div>
+
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm md:col-span-2 lg:col-span-2">
+              <div className="text-purple-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                WHY NOT ARC?
+              </div>
+              <p className="text-slate-200 font-sans text-xs leading-relaxed">
+                Live execution disabled. AgentVault not deployed.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. SYSTEM METRICS GRIDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* ECONOMIC STATE */}
           <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
@@ -802,11 +925,11 @@ export default function ControlTowerPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Committed:</span>
-                <span className="text-cyan-400 font-bold">$18.50</span>
+                <span className="text-cyan-400 font-bold">$14.00</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Settled:</span>
-                <span className="text-purple-400 font-bold">$18.50</span>
+                <span className="text-purple-400 font-bold">$14.00</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Outstanding:</span>
@@ -826,12 +949,12 @@ export default function ControlTowerPage() {
             </div>
             <div className="space-y-1.5 font-mono text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-400">Active Objectives:</span>
-                <span className="text-white font-bold">1</span>
+                <span className="text-slate-400">Active Mission:</span>
+                <span className="text-white font-bold">1 (Market Intel)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Running Missions:</span>
-                <span className="text-teal-300 font-bold">1 (msn_market_intel)</span>
+                <span className="text-slate-400">Running Workflow:</span>
+                <span className="text-teal-300 font-bold">1 Active</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Active Agents:</span>
@@ -839,7 +962,7 @@ export default function ControlTowerPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Pending Approvals:</span>
-                <span className="text-emerald-400 font-bold">0 (Within SLA)</span>
+                <span className="text-emerald-400 font-bold">0 (Within Cap)</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Incidents:</span>
@@ -848,23 +971,29 @@ export default function ControlTowerPage() {
             </div>
           </section>
 
-          {/* SETTLEMENT & ARC (TRUTHFUL AUDIT) */}
-          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+          {/* SECTION 16: ARC STATUS */}
+          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3 font-mono text-xs">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                SETTLEMENT & ARC
+              <span className="font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                ARC MAINNET
               </span>
-              <span className="text-[10px] font-mono text-slate-500">CONSENSUS</span>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold">
+                CONNECTED
+              </span>
             </div>
-            <div className="space-y-1.5 font-mono text-xs">
+            <div className="space-y-1.5">
               <div className="flex justify-between">
-                <span className="text-slate-400">Network:</span>
-                <span className="text-cyan-300 font-bold">Arc Mainnet (5042)</span>
+                <span className="text-slate-400">Chain ID:</span>
+                <span className="text-cyan-300 font-bold">5042</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Native USDC:</span>
+                <span className="text-emerald-400 font-bold">VERIFIED</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">AgentVault:</span>
-                <span className="text-rose-400 font-bold">NOT DEPLOYED (0x)</span>
+                <span className="text-rose-400 font-bold">NOT DEPLOYED</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Live Execution:</span>
@@ -872,11 +1001,7 @@ export default function ControlTowerPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Real Settlements:</span>
-                <span className="text-slate-300 font-bold">0 Verified (Sim: 1)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Broadcasts:</span>
-                <span className="text-slate-300 font-bold">0</span>
+                <span className="text-slate-300 font-bold">0 VERIFIED</span>
               </div>
             </div>
           </section>
@@ -917,54 +1042,71 @@ export default function ControlTowerPage() {
 
         {/* 5. FINANCIAL AUTHORITY & SECTION 3: ONE-CLICK SECURITY ADVERSARIAL DEMO (8 ATTACKS) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* FINANCIAL AUTHORITY PANEL (5 cols) */}
-          <section className="lg:col-span-5 bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
-            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+          {/* SECTION 7: COMPACT AGENT AUTHORITY CARD (5 cols) */}
+          <section className="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-5 shadow-lg space-y-3 font-mono text-xs">
+            <div className="border-b border-slate-800 pb-2.5 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold font-mono text-white flex items-center gap-2">
+                <h3 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-teal-400" />
-                  FINANCIAL AUTHORITY PANEL
+                  AGENT AUTHORITY
                 </h3>
-                <p className="text-xs text-slate-400">Non-negotiable constitutional safety invariants</p>
+                <p className="text-[11px] text-slate-400">Deterministic boundary enforced outside model reach</p>
               </div>
-              <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/30 text-[10px] font-mono font-bold">
+              <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/30 text-[10px] font-bold">
                 ENFORCED
               </span>
             </div>
 
-            <div className="space-y-2 font-mono text-xs">
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Agent Private Keys:</span>
-                <span className="text-emerald-400 font-bold">NEVER HELD</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-3 space-y-1.5">
+                <div className="text-emerald-400 font-bold uppercase tracking-wider text-[11px] mb-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Allowed
+                </div>
+                <div className="text-slate-200 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-bold">✓</span> Discover
+                </div>
+                <div className="text-slate-200 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-bold">✓</span> Negotiate
+                </div>
+                <div className="text-slate-200 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-bold">✓</span> Plan
+                </div>
+                <div className="text-slate-200 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-bold">✓</span> Replan
+                </div>
+                <div className="text-slate-200 flex items-center gap-1.5">
+                  <span className="text-emerald-400 font-bold">✓</span> Request payment
+                </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Arbitrary Recipient:</span>
-                <span className="text-emerald-400 font-bold">BLOCKED</span>
+
+              <div className="bg-rose-950/20 border border-rose-500/30 rounded-lg p-3 space-y-1.5">
+                <div className="text-rose-400 font-bold uppercase tracking-wider text-[11px] mb-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                  Forbidden
+                </div>
+                <div className="text-slate-300 flex items-center gap-1.5">
+                  <span className="text-rose-400 font-bold">✕</span> Sign transactions
+                </div>
+                <div className="text-slate-300 flex items-center gap-1.5">
+                  <span className="text-rose-400 font-bold">✕</span> Increase budget
+                </div>
+                <div className="text-slate-300 flex items-center gap-1.5">
+                  <span className="text-rose-400 font-bold">✕</span> Change policy
+                </div>
+                <div className="text-slate-300 flex items-center gap-1.5">
+                  <span className="text-rose-400 font-bold">✕</span> Choose arbitrary recipient
+                </div>
+                <div className="text-slate-300 flex items-center gap-1.5">
+                  <span className="text-rose-400 font-bold">✕</span> Execute arbitrary calldata
+                </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Arbitrary Calldata:</span>
-                <span className="text-emerald-400 font-bold">BLOCKED</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Policy Bypass:</span>
-                <span className="text-emerald-400 font-bold">BLOCKED</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Hard DENY Override:</span>
-                <span className="text-emerald-400 font-bold">BLOCKED</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Simulation Broadcast:</span>
-                <span className="text-emerald-400 font-bold">BLOCKED</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Duplicate Settlement:</span>
-                <span className="text-emerald-400 font-bold">BLOCKED</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <span className="text-slate-300">Cross-Tenant Access:</span>
-                <span className="text-emerald-400 font-bold">BLOCKED</span>
-              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-800 text-center">
+              <span className="text-[11px] font-bold text-amber-300 tracking-wide uppercase">
+                AUTONOMY CHANGES THE PLAN. POLICY CONTROLS THE POWER.
+              </span>
             </div>
           </section>
 

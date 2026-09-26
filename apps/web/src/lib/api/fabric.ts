@@ -130,10 +130,18 @@ export interface WhyNotExplanation {
 export interface AutonomyMetrics {
   automation_rate: number;
   recovery_rate: number;
+  automation_percentage?: number;
+  recovery_percentage?: number;
   human_escalations: number;
+  human_escalation_count?: number;
   policy_blocks: number;
+  policy_block_count?: number;
   financial_actions: number;
+  financial_action_count?: number;
   simulated_actions: number;
+  simulated_action_count?: number;
+  total_objectives?: number;
+  active_objectives?: number;
 }
 
 export interface DryRunResult {
@@ -495,8 +503,32 @@ export async function fetchObjectiveState(id: string): Promise<any> {
 
 export async function fetchAutonomyMetrics(): Promise<AutonomyMetrics> {
   try {
-    const res = await apiRequest<AutonomyMetrics>('/v1/fabric/metrics');
-    return res || FALLBACK_METRICS;
+    const res = await apiRequest<any>('/v1/fabric/metrics');
+    if (!res) return FALLBACK_METRICS;
+    const autoPct =
+      typeof res.automation_percentage === 'number'
+        ? res.automation_percentage
+        : typeof res.automation_rate === 'number'
+        ? (res.automation_rate <= 1 ? res.automation_rate * 100 : res.automation_rate)
+        : FALLBACK_METRICS.automation_rate * 100;
+    const recPct =
+      typeof res.recovery_percentage === 'number'
+        ? res.recovery_percentage
+        : typeof res.recovery_rate === 'number'
+        ? (res.recovery_rate <= 1 ? res.recovery_rate * 100 : res.recovery_rate)
+        : FALLBACK_METRICS.recovery_rate * 100;
+    return {
+      automation_rate: autoPct / 100,
+      recovery_rate: recPct / 100,
+      automation_percentage: autoPct,
+      recovery_percentage: recPct,
+      human_escalations: res.human_escalation_count ?? res.human_escalations ?? FALLBACK_METRICS.human_escalations,
+      policy_blocks: res.policy_block_count ?? res.policy_blocks ?? FALLBACK_METRICS.policy_blocks,
+      financial_actions: res.financial_action_count ?? res.financial_actions ?? FALLBACK_METRICS.financial_actions,
+      simulated_actions: res.simulated_action_count ?? res.simulated_actions ?? FALLBACK_METRICS.simulated_actions,
+      total_objectives: res.total_objectives,
+      active_objectives: res.active_objectives,
+    };
   } catch {
     return FALLBACK_METRICS;
   }

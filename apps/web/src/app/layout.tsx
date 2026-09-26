@@ -35,34 +35,52 @@ export default function RootLayout({
               </Link>
 
               <nav className="hidden lg:flex items-center space-x-1 text-xs font-mono font-medium">
-                <Link
-                  href="/control/protocol"
-                  className="px-3 py-1.5 rounded-lg text-indigo-300 font-bold bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-indigo-500/10"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                  PROTOCOL
-                </Link>
-                <Link
-                  href="/control/autonomy"
-                  className="px-3 py-1.5 rounded-lg text-emerald-300 font-bold bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-500/10"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  AUTONOMY
-                </Link>
-                <Link
-                  href="/control/objectives"
-                  className="px-3 py-1.5 rounded-lg text-teal-300 font-bold bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-teal-500/10"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                  OBJECTIVES
-                </Link>
+                {/* 1. CONTROL */}
                 <Link
                   href="/control"
                   className="px-3 py-1.5 rounded-lg text-amber-300 font-bold bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-amber-500/10"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  CONTROL TOWER
+                  CONTROL
                 </Link>
+
+                {/* 2. MISSIONS */}
+                <Link
+                  href="/missions"
+                  className="px-3 py-1.5 rounded-lg text-teal-300 font-bold bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-teal-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                  MISSIONS
+                </Link>
+
+                {/* 3. MARKETPLACE */}
+                <Link
+                  href="/marketplace"
+                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-cyan-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  MARKETPLACE
+                </Link>
+
+                {/* 4. ECONOMY */}
+                <Link
+                  href="/economy"
+                  className="px-3 py-1.5 rounded-lg text-emerald-300 font-bold bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  ECONOMY
+                </Link>
+
+                {/* 5. SECURITY */}
+                <Link
+                  href="/security"
+                  className="px-3 py-1.5 rounded-lg text-rose-300 font-bold bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-rose-500/10"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                  SECURITY
+                </Link>
+
+                {/* 6. ARC */}
                 <Link
                   href="/arc"
                   className="px-3 py-1.5 rounded-lg text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-cyan-500/10"
@@ -70,125 +88,35 @@ export default function RootLayout({
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   ARC
                 </Link>
-                <Link
-                  href="/control/runtime"
-                  className="px-3 py-1.5 rounded-lg text-indigo-300 font-bold bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-indigo-500/10"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                  RUNTIME
-                </Link>
-                <Link
-                  href="/control/operations"
-                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-cyan-500/10"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  OPERATIONS
-                </Link>
-                <Link
-                  href="/overview"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  Overview
-                </Link>
-                <Link
-                  href="/missions"
-                  className="px-3 py-1.5 rounded-lg text-teal-300 font-semibold bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition-colors"
-                >
-                  Missions
-                </Link>
-                <Link
-                  href="/agents"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  Agents
-                </Link>
-                <Link
-                  href="/marketplace"
-                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5 shadow-sm shadow-cyan-500/10"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  MARKETPLACE
-                </Link>
-                <Link
-                  href="/network"
-                  className="px-3 py-1.5 rounded-lg text-emerald-300 hover:text-white hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Network
-                </Link>
-                <Link
-                  href="/economy"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  Economy
-                </Link>
-                <Link
-                  href="/economy/clearing"
-                  className="px-3 py-1.5 rounded-lg text-emerald-300 font-semibold bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Clearinghouse
-                </Link>
-                <Link
-                  href="/treasury"
-                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-semibold bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  Treasury
-                </Link>
-                <Link
-                  href="/intelligence"
-                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-semibold bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  Intelligence
-                </Link>
-                <Link
-                  href="/swarms"
-                  className="px-3 py-1.5 rounded-lg text-purple-300 font-semibold bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                  Swarms
-                </Link>
-                <Link
-                  href="/simulator"
-                  className="px-3 py-1.5 rounded-lg text-cyan-300 font-semibold bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  Simulator
-                </Link>
-                <Link
-                  href="/constitution"
-                  className="px-3 py-1.5 rounded-lg text-amber-300 font-semibold bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  Constitution
-                </Link>
-                <Link
-                  href="/approvals"
-                  className="px-3 py-1.5 rounded-lg text-amber-300 hover:text-white hover:bg-amber-500/20 transition-colors"
-                >
-                  Approvals
-                </Link>
-                <Link
-                  href="/activity"
-                  className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  Activity
-                </Link>
-                <Link
-                  href="/security"
-                  className="px-3 py-1.5 rounded-lg text-rose-300 hover:text-white hover:bg-rose-500/20 transition-colors flex items-center gap-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  Security
-                </Link>
-                <Link
-                  href="/demo"
-                  className="px-3 py-1.5 rounded-lg text-indigo-300 hover:text-white hover:bg-indigo-500/20 transition-colors"
-                >
-                  Live Demo
-                </Link>
+
+                {/* Secondary Subsystems Dropdown (No functionality lost) */}
+                <div className="relative group ml-1">
+                  <button
+                    type="button"
+                    className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1 text-[11px] font-mono border border-transparent hover:border-slate-800"
+                  >
+                    <span>MORE</span>
+                    <span className="text-[9px] text-slate-500 group-hover:text-slate-300">▼</span>
+                  </button>
+                  <div className="absolute left-0 mt-1 w-64 bg-[#0a101d] border border-slate-800 rounded-xl shadow-2xl p-2 hidden group-hover:grid grid-cols-2 gap-1 z-50 backdrop-blur-md">
+                    <Link href="/control/autonomy" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-emerald-300 hover:bg-slate-800/80 rounded transition-colors">Autonomy</Link>
+                    <Link href="/control/objectives" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-teal-300 hover:bg-slate-800/80 rounded transition-colors">Objectives</Link>
+                    <Link href="/control/protocol" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded transition-colors">Protocol</Link>
+                    <Link href="/control/runtime" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded transition-colors">Runtime</Link>
+                    <Link href="/control/operations" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 rounded transition-colors">Operations</Link>
+                    <Link href="/economy/clearing" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-emerald-300 hover:bg-slate-800/80 rounded transition-colors">Clearinghouse</Link>
+                    <Link href="/treasury" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 rounded transition-colors">Treasury</Link>
+                    <Link href="/swarms" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-purple-300 hover:bg-slate-800/80 rounded transition-colors">Swarms</Link>
+                    <Link href="/simulator" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 rounded transition-colors">Simulator</Link>
+                    <Link href="/constitution" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-amber-300 hover:bg-slate-800/80 rounded transition-colors">Constitution</Link>
+                    <Link href="/approvals" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-amber-300 hover:bg-slate-800/80 rounded transition-colors">Approvals</Link>
+                    <Link href="/activity" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 rounded transition-colors">Activity</Link>
+                    <Link href="/overview" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 rounded transition-colors">Overview</Link>
+                    <Link href="/agents" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 rounded transition-colors">Agents</Link>
+                    <Link href="/network" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-emerald-300 hover:bg-slate-800/80 rounded transition-colors">Network</Link>
+                    <Link href="/demo" className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded transition-colors">Replay Demo</Link>
+                  </div>
+                </div>
               </nav>
             </div>
 
@@ -197,46 +125,25 @@ export default function RootLayout({
             </div>
           </div>
 
-          {/* Mobile sub-nav */}
+          {/* Mobile sub-nav: Streamlined to 6 Primary Sections */}
           <div className="lg:hidden flex items-center space-x-1 px-4 py-2 border-t border-slate-800/60 overflow-x-auto text-xs font-mono">
             <Link href="/control" className="px-2.5 py-1 rounded text-amber-300 font-bold bg-amber-500/10 whitespace-nowrap">
-              Control
+              CONTROL
+            </Link>
+            <Link href="/missions" className="px-2.5 py-1 rounded text-teal-300 font-bold bg-teal-500/10 whitespace-nowrap">
+              MISSIONS
+            </Link>
+            <Link href="/marketplace" className="px-2.5 py-1 rounded text-cyan-300 font-bold bg-cyan-500/10 whitespace-nowrap">
+              MARKETPLACE
+            </Link>
+            <Link href="/economy" className="px-2.5 py-1 rounded text-emerald-300 font-bold bg-emerald-500/10 whitespace-nowrap">
+              ECONOMY
+            </Link>
+            <Link href="/security" className="px-2.5 py-1 rounded text-rose-300 font-bold bg-rose-500/10 whitespace-nowrap">
+              SECURITY
             </Link>
             <Link href="/arc" className="px-2.5 py-1 rounded text-cyan-300 font-bold bg-cyan-500/10 whitespace-nowrap">
-              Arc
-            </Link>
-            <Link href="/overview" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Overview
-            </Link>
-            <Link href="/missions" className="px-2.5 py-1 rounded text-teal-300 font-semibold bg-teal-500/10 whitespace-nowrap">
-              Missions
-            </Link>
-            <Link href="/agents" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Agents
-            </Link>
-            <Link href="/marketplace" className="px-2.5 py-1 rounded text-cyan-300 hover:text-white whitespace-nowrap">
-              Marketplace
-            </Link>
-            <Link href="/economy" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Economy
-            </Link>
-            <Link href="/economy/clearing" className="px-2.5 py-1 rounded text-emerald-300 font-semibold bg-emerald-500/10 whitespace-nowrap">
-              Clearinghouse
-            </Link>
-            <Link href="/treasury" className="px-2.5 py-1 rounded text-cyan-300 font-semibold bg-cyan-500/10 whitespace-nowrap">
-              Treasury
-            </Link>
-            <Link href="/approvals" className="px-2.5 py-1 rounded text-amber-300 hover:text-white whitespace-nowrap">
-              Approvals
-            </Link>
-            <Link href="/activity" className="px-2.5 py-1 rounded text-slate-300 hover:text-white whitespace-nowrap">
-              Activity
-            </Link>
-            <Link href="/security" className="px-2.5 py-1 rounded text-rose-300 hover:text-white whitespace-nowrap">
-              Security
-            </Link>
-            <Link href="/demo" className="px-2.5 py-1 rounded text-indigo-300 hover:text-white whitespace-nowrap">
-              Demo
+              ARC
             </Link>
           </div>
         </header>
