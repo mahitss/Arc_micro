@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import EconomicRiskHeatmap from '@/components/EconomicRiskHeatmap';
+import { SimulatorCommandRail } from '@/components/SimulatorCommandRail';
 import {
   CANONICAL_DEMO_SCENARIOS,
   SimulationScenario,
@@ -157,39 +158,41 @@ export default function SimulatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] font-sans selection:bg-[#D6A83A]/30 selection:text-[#F2F0EA]">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 border-b border-[#222222] bg-[#080808]/90 backdrop-blur-md px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="h-8 w-8 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-center font-bold text-[#F2F0EA] font-mono group-hover:border-[#D6A83A] transition-colors">
-              AP
+    <div className="flex flex-col min-[900px]:flex-row min-h-[calc(100vh-4rem)] w-full bg-[#080808] text-[#F2F0EA] font-sans selection:bg-[#D6A83A]/30 selection:text-[#F2F0EA]">
+      {/* Product Navigation Command Rail */}
+      <SimulatorCommandRail />
+
+      {/* Main Simulator Workspace */}
+      <main className="flex-1 w-full min-w-0 p-6 lg:px-8 lg:py-6 space-y-6">
+        <div className="max-w-[1600px] w-full mx-auto space-y-6">
+          {/* Simulator Workspace Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#222222]">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-mono text-[#8A8882] mb-1">
+                <span>AgentPay</span>
+                <span className="text-[#65635E]">/</span>
+                <span className="text-[#F2F0EA] font-medium">Digital Twin & Economic Simulator</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-lg md:text-xl font-bold tracking-tight text-[#F2F0EA] uppercase font-mono">
+                  DIGITAL TWIN & ECONOMIC SIMULATOR
+                </h1>
+                <span className="rounded bg-[#D6A83A]/10 border border-[#D6A83A]/30 px-2.5 py-0.5 text-[11px] font-bold text-[#D6A83A] font-mono">
+                  SIMULATION MODE — ZERO REAL TRANSACTIONS
+                </span>
+              </div>
             </div>
-            <span className="font-bold tracking-tight text-lg text-[#F2F0EA]">AgentPay</span>
-          </Link>
-          <span className="text-[#222222]">/</span>
-          <span className="text-sm font-medium text-[#B0ADA5] flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#D6A83A]" />
-            Digital Twin & Economic Simulator
-          </span>
-          <span className="rounded bg-[#D6A83A]/10 border border-[#D6A83A]/30 px-2 py-0.5 text-[11px] font-bold text-[#D6A83A] font-mono">
-            SIMULATION MODE — ZERO REAL TRANSACTIONS
-          </span>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleRunSimulation}
-            disabled={isLoading}
-            className="rounded-lg bg-[#F2F0EA] hover:bg-white px-4 py-1.5 text-xs font-semibold text-[#080808] font-mono transition-all disabled:opacity-50"
-          >
-            {isLoading ? 'Simulating...' : 'Run Simulation'}
-          </button>
-        </div>
-      </header>
-
-      {/* Main Hero Layout: LEFT (Controls) | CENTER (DAG Graph) | RIGHT (Projected Impact) */}
-      <main className="p-6 max-w-[1700px] mx-auto space-y-6">
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={handleRunSimulation}
+                disabled={isLoading}
+                className="rounded-lg bg-[#F2F0EA] hover:bg-white px-4 py-2 text-xs font-semibold text-[#080808] font-mono transition-colors duration-150 disabled:opacity-50 shadow-sm"
+              >
+                {isLoading ? 'Simulating...' : 'Run Simulation'}
+              </button>
+            </div>
+          </div>
         {/* Staleness / Outdated Alert Banner (Phase 24) */}
         {staleError && (
           <div className="rounded-xl border border-[#D85C5C]/30 bg-[#141414] p-4 shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-2">
@@ -244,10 +247,10 @@ export default function SimulatorPage() {
           </div>
         )}
 
-        {/* 3-Column Hero Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* COLUMN 1 (LEFT): Scenario Configuration (3 cols) */}
-          <div className="lg:col-span-3 rounded-xl border border-[#222222] bg-[#101010] p-5 shadow-sm space-y-4">
+        {/* 3-Column Hero Grid: 28% Scenario | 42% Execution Graph | 30% Projected Outcomes */}
+        <div className="grid grid-cols-1 xl:grid-cols-[28fr_42fr_30fr] gap-5 items-start">
+          {/* COLUMN 1 (LEFT): Scenario Configuration (28%) */}
+          <div className="rounded-xl border border-[#222222] bg-[#101010] p-5 shadow-sm space-y-4">
             <div className="border-b border-[#222222] pb-3">
               <h2 className="text-sm font-semibold text-[#F2F0EA] tracking-wide uppercase flex items-center justify-between">
                 <span>Scenario Configuration</span>
@@ -373,8 +376,8 @@ export default function SimulatorPage() {
             </div>
           </div>
 
-          {/* COLUMN 2 (CENTER): Projected Mission / Swarm Execution Graph (5 cols) */}
-          <div className="lg:col-span-5 rounded-xl border border-[#222222] bg-[#101010] p-5 shadow-sm space-y-4">
+          {/* COLUMN 2 (CENTER): Projected Mission / Swarm Execution Graph (42%) */}
+          <div className="rounded-xl border border-[#252525] bg-[#101010] p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-[#222222] pb-3">
               <div>
                 <h3 className="text-sm font-semibold text-[#F2F0EA] tracking-wide uppercase flex items-center gap-2">
@@ -406,12 +409,14 @@ export default function SimulatorPage() {
                   return (
                     <div
                       key={step.step_id || idx}
-                      className={`relative rounded-lg border p-3.5 transition-all ${
+                      className={`relative rounded-lg border p-3.5 transition-colors duration-150 bg-[#0E0E0E] ${
                         isDeny
-                          ? 'border-[#D85C5C]/50 bg-[#D85C5C]/10'
+                          ? 'border-l-2 border-l-[#D85C5C] border-t-[#222222] border-r-[#222222] border-b-[#222222]'
                           : isApproval
-                          ? 'border-[#D6A83A]/50 bg-[#D6A83A]/10'
-                          : 'border-[#222222] bg-[#0B0B0B] hover:border-[#2D2D2D]'
+                          ? 'border-l-2 border-l-[#D6A83A] border-t-[#222222] border-r-[#222222] border-b-[#222222]'
+                          : step.policy_decision === 'ALLOW'
+                          ? 'border-l-2 border-l-[#2FB36F] border-t-[#222222] border-r-[#222222] border-b-[#222222]'
+                          : 'border-[#222222] hover:border-[#2D2D2D]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -472,8 +477,8 @@ export default function SimulatorPage() {
             </div>
           </div>
 
-          {/* COLUMN 3 (RIGHT): Projected Economics & Exposure (4 cols) */}
-          <div className="lg:col-span-4 rounded-xl border border-[#222222] bg-[#101010] p-5 shadow-sm space-y-4">
+          {/* COLUMN 3 (RIGHT): Projected Economics & Exposure (30%) */}
+          <div className="rounded-xl border border-[#222222] bg-[#101010] p-5 shadow-sm space-y-4">
             <div className="border-b border-[#222222] pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-[#F2F0EA] tracking-wide uppercase">
@@ -737,7 +742,8 @@ export default function SimulatorPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
-  );
+      </div>
+    </main>
+  </div>
+);
 }

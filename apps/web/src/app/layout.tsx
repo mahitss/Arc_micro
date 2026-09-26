@@ -4,6 +4,8 @@ import './globals.css';
 import { SystemStatusBanner } from '../components/SystemStatusBanner';
 import { HeaderNav } from '../components/HeaderNav';
 
+import { MainLayoutContent } from '../components/MainLayoutContent';
+
 export const metadata: Metadata = {
   title: 'AgentPay - Autonomous Mission Control Center',
   description:
@@ -44,8 +46,8 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
+        <main className="w-full">
+          <MainLayoutContent>{children}</MainLayoutContent>
         </main>
       </body>
     </html>
