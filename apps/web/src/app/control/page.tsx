@@ -463,39 +463,39 @@ export default function ControlTowerPage() {
 
   return (
     <div className="min-h-screen bg-[#070707] text-[#f5f5f5] font-sans pb-24">
-      {/* 1. SECTION 9: PERSISTENT COMPACT STATUS STRIP */}
-      <section className="bg-[#0a0a0a] border-b border-[#202020] px-4 sm:px-6 lg:px-8 py-2.5 sticky top-16 z-30">
-        <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
-          <div className="flex items-center gap-4 flex-wrap">
+      {/* 1. PERSISTENT COMPACT SYSTEM STATUS STRIP */}
+      <section className="bg-[#0a0a0a] border-b border-[#202020] px-4 sm:px-6 lg:px-8 py-2 sticky top-16 z-30">
+        <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-4 flex-wrap text-xs text-[#a3a3a3]">
             <div className="flex items-center gap-1.5">
-              <span className="text-[#a1a1a1]">MODE:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#f5f5f5] border border-[#202020] flex items-center gap-1.5">
+              <span>MODE:</span>
+              <span className="font-semibold text-[#f5f5f5] flex items-center gap-1.5 font-mono text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
                 SIMULATION
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[#a1a1a1]">ARC:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#f5f5f5] border border-[#202020] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa]" />
-                CONNECTED
+              <span>ARC:</span>
+              <span className="font-semibold text-[#f5f5f5] flex items-center gap-1.5 font-mono text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+                CONNECTED (5042)
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[#a1a1a1]">VAULT:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#a1a1a1] border border-[#202020]">
+              <span>VAULT:</span>
+              <span className="font-semibold text-[#a3a3a3] font-mono text-[11px]">
                 NOT DEPLOYED
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[#a1a1a1]">EXECUTION:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#a1a1a1] border border-[#202020]">
+              <span>EXECUTION:</span>
+              <span className="font-semibold text-[#a3a3a3] font-mono text-[11px]">
                 DISABLED
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[#a1a1a1]">REAL SETTLEMENTS:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#a1a1a1] border border-[#202020]">
+              <span>REAL SETTLEMENTS:</span>
+              <span className="font-semibold text-[#a3a3a3] font-mono text-[11px]">
                 0 VERIFIED
               </span>
             </div>
@@ -504,34 +504,38 @@ export default function ControlTowerPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleResetDemo}
-              className="px-2.5 py-1 bg-[#101010] hover:bg-[#151515] text-[#a1a1a1] hover:text-[#f5f5f5] border border-[#202020] rounded text-[11px] font-bold font-mono transition-colors"
+              className="h-8 px-3 bg-[#141414] hover:bg-[#1a1a1a] text-[#a3a3a3] hover:text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors"
               title="Restore deterministic demo state"
             >
-              RESET DEMO
+              Reset Demo
             </button>
-            <div className="flex bg-[#101010] border border-[#202020] rounded p-0.5">
+            <div className="flex bg-[#121212] border border-[#222222] rounded-lg p-0.5">
               <button
                 onClick={() => setExecMode('SIMULATION')}
-                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-                  execMode === 'SIMULATION' ? 'bg-[#151515] text-[#f5f5f5] border border-[#2c2c2c]' : 'text-[#a1a1a1] hover:text-white'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors ${
+                  execMode === 'SIMULATION'
+                    ? 'bg-[#1a1a1a] text-[#f5f5f5] border border-[#2a2a2a]'
+                    : 'text-[#888888] hover:text-white'
                 }`}
               >
-                SIMULATION
+                Simulation
               </button>
               <button
                 onClick={() => setExecMode('REAL')}
-                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-                  execMode === 'REAL' ? 'bg-[#151515] text-[#f5f5f5] border border-[#2c2c2c]' : 'text-[#a1a1a1] hover:text-white'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors ${
+                  execMode === 'REAL'
+                    ? 'bg-[#1a1a1a] text-[#f5f5f5] border border-[#2a2a2a]'
+                    : 'text-[#888888] hover:text-white'
                 }`}
               >
-                PROJECTED
+                Projected
               </button>
             </div>
             <Link
               href="/control/autonomy"
-              className="px-3 py-1 bg-[#151515] border border-[#2c2c2c] hover:bg-[#202020] hover:border-[#3a3a3a] text-[#f5f5f5] rounded text-[11px] font-bold font-mono transition-all"
+              className="h-8 px-3.5 bg-[#f5f5f5] hover:bg-white text-[#070707] rounded-lg text-xs font-semibold flex items-center transition-colors"
             >
-              RUN SIMULATION →
+              Run Simulation →
             </Link>
           </div>
         </div>
@@ -539,193 +543,190 @@ export default function ControlTowerPage() {
 
       {resetNotice && (
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="p-3 bg-[#101010] border border-[#2c2c2c] rounded-xl text-xs font-mono text-[#f5f5f5] flex items-center justify-between">
+          <div className="p-3 bg-[#101010] border border-[#262626] rounded-xl text-xs text-[#f5f5f5] flex items-center justify-between">
             <span>✓ {resetNotice}</span>
-            <button onClick={() => setResetNotice(null)} className="text-[#a1a1a1] hover:text-white">&times;</button>
+            <button onClick={() => setResetNotice(null)} className="text-[#a3a3a3] hover:text-white text-base leading-none">&times;</button>
           </div>
         </div>
       )}
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-7">
-        {/* 2. SECTION 4: CONTROL TOWER HERO (ABOVE THE FOLD) */}
-        <div className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        {/* 2. HERO: PRODUCT IDENTITY & AUTHORITATIVE THESIS */}
+        <div className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#f5f5f5] border border-[#202020] text-xs font-mono font-bold tracking-widest uppercase flex items-center gap-1.5">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#161616] text-[#f5f5f5] border border-[#262626] text-xs font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-                  SIMULATION MODE
+                  Simulation Environment
                 </span>
-                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#a1a1a1] border border-[#202020] text-xs font-mono">
-                  ARC MAINNET · CONNECTED (5042)
+                <span className="text-xs text-[#737373]">·</span>
+                <span className="text-xs text-[#a3a3a3]">
+                  Arc Mainnet <span className="font-mono text-[#737373]">(5042)</span>
                 </span>
-                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#a1a1a1] border border-[#202020] text-xs font-mono">
-                  AGENTVAULT · NOT DEPLOYED
-                </span>
-                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#a1a1a1] border border-[#202020] text-xs font-mono">
-                  LIVE EXECUTION · DISABLED
-                </span>
+                <span className="text-xs text-[#737373]">·</span>
+                <span className="text-xs text-[#a3a3a3]">Vault Undeployed</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#f5f5f5] font-mono mt-1">
-                AGENTPAY
-              </h1>
-              <p className="text-[#a1a1a1] text-base sm:text-lg font-medium mt-1">
-                Financial Control Plane for Autonomous AI Agents
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-mono">
-                <span className="px-2.5 py-1 bg-[#121212] border border-[#202020] text-[#f5f5f5] font-bold rounded">
+
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#f5f5f5]">
+                  AGENTPAY
+                </h1>
+                <p className="text-[#a3a3a3] text-base sm:text-lg font-normal mt-1">
+                  Financial Control Plane for Autonomous AI Agents
+                </p>
+              </div>
+
+              <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs">
+                <span className="font-semibold text-[#f5f5f5] tracking-wide">
                   AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.
                 </span>
-                <span className="text-[#a1a1a1]">
-                  AUTONOMY CAN EXPAND. FINANCIAL AUTHORITY CANNOT.
+                <span className="hidden sm:inline text-[#404040]">|</span>
+                <span className="text-[#a3a3a3]">
+                  Autonomy can expand. Financial authority cannot.
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-wrap lg:flex-col gap-2 font-mono text-xs">
+            <div className="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
               <Link
                 href="/control/autonomy"
-                className="px-3.5 py-2 rounded bg-[#151515] hover:bg-[#202020] text-[#f5f5f5] font-bold border border-[#2c2c2c] transition-colors text-center"
+                className="h-9 px-4 rounded-lg bg-[#f5f5f5] hover:bg-white text-[#070707] text-xs font-semibold transition-colors flex items-center justify-center text-center"
               >
-                AUTONOMY CONTROL &rarr;
+                Autonomy Control →
               </Link>
               <Link
                 href="/arc"
-                className="px-3.5 py-2 rounded bg-[#101010] hover:bg-[#151515] text-[#a1a1a1] hover:text-[#f5f5f5] font-bold border border-[#202020] transition-colors text-center"
+                className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] text-xs font-medium border border-[#262626] transition-colors flex items-center justify-center text-center"
               >
-                ARC STATUS &rarr;
+                Arc Infrastructure →
               </Link>
             </div>
           </div>
         </div>
 
-        {/* 3. SECTION 5: FLAGSHIP HERO MISSION CARD */}
-        <div className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7 relative overflow-hidden">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#202020] pb-5">
+        {/* 3. FLAGSHIP MISSION: ONE UNIFIED OPERATIONAL SURFACE */}
+        <div className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7 space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 border-b border-[#1f1f1f] pb-5">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-[#151515] text-[#f5f5f5] border border-[#202020]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#161616] text-[#f5f5f5] border border-[#262626]">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
                   RUNNING
                 </span>
-                <span className="text-xs font-mono text-[#666666]">FLAGSHIP MISSION</span>
+                <span className="text-xs text-[#737373] uppercase tracking-wider font-medium">Flagship Mission</span>
               </div>
-              <h2 className="text-2xl font-extrabold tracking-tight font-mono text-[#f5f5f5]">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#f5f5f5]">
                 AUTONOMOUS MARKET INTELLIGENCE
               </h2>
-              <p className="text-sm text-[#a1a1a1] mt-1 max-w-2xl font-sans">
+              <p className="text-sm text-[#a3a3a3] mt-1.5 max-w-3xl leading-relaxed">
                 Research the market landscape for autonomous AI infrastructure. Autonomous provider negotiation, failure fencing, and verified fallback routing.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="shrink-0">
               <Link
                 href="/control/autonomy"
-                className="px-4 py-2 bg-[#151515] hover:bg-[#202020] border border-[#2c2c2c] text-[#f5f5f5] font-bold text-xs font-mono rounded transition-colors"
+                className="h-9 px-3.5 bg-[#141414] hover:bg-[#1a1a1a] border border-[#262626] text-[#f5f5f5] font-medium text-xs rounded-lg transition-colors flex items-center gap-1.5"
               >
-                INSPECT AUTONOMY &rarr;
+                <span>Inspect Autonomy</span>
+                <span>→</span>
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-5 font-mono text-xs">
-            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block">BUDGET</span>
-              <span className="text-base font-bold text-amber-300 mt-0.5 block">$25.00 USDC</span>
+          {/* Clean Unified Financial Row */}
+          <div>
+            <div className="text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-3">
+              Mission Economics
             </div>
-            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block">COMMITTED</span>
-              <span className="text-base font-bold text-emerald-400 mt-0.5 block">$14.00</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#0a0a0a] border border-[#1c1c1c]">
+              <div>
+                <span className="text-[11px] text-[#737373] uppercase block font-medium">Budget</span>
+                <span className="text-lg font-bold text-[#f5f5f5] mt-0.5 block">$25.00</span>
+                <span className="text-[11px] text-[#666666] block font-mono">USDC Hard Cap</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-[#737373] uppercase block font-medium">Committed</span>
+                <span className="text-lg font-bold text-[#f5f5f5] mt-0.5 block">$14.00</span>
+                <span className="text-[11px] text-[#666666] block font-mono">BudgetAI Quote</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-[#737373] uppercase block font-medium">Risk</span>
+                <span className="text-lg font-bold text-[#f5f5f5] mt-0.5 block">24 / 100</span>
+                <span className="text-[11px] text-[#666666] block">Low Exposure</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-[#737373] uppercase block font-medium">Policy</span>
+                <span className="text-lg font-bold text-[#22c55e] mt-0.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+                  ALLOW
+                </span>
+                <span className="text-[11px] text-[#666666] block font-mono">6.36µs Gate</span>
+              </div>
             </div>
-            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block">RISK</span>
-              <span className="text-base font-bold text-teal-400 mt-0.5 block">24 / 100</span>
+          </div>
+
+          {/* Operational State Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#0a0a0a] border border-[#1c1c1c] text-xs">
+            <div>
+              <span className="text-[11px] text-[#737373] uppercase block font-medium">Provider</span>
+              <span className="font-semibold text-[#f5f5f5] mt-0.5 block text-sm">BudgetAI</span>
+              <span className="text-[11px] text-[#666666] block">Failover candidate selected</span>
             </div>
-            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block">POLICY</span>
-              <span className="text-base font-bold text-emerald-400 mt-0.5 block">ALLOW</span>
+            <div>
+              <span className="text-[11px] text-[#737373] uppercase block font-medium">Status</span>
+              <span className="font-semibold text-[#f59e0b] mt-0.5 flex items-center gap-1.5 text-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
+                RECOVERED FROM FAILURE
+              </span>
+              <span className="text-[11px] text-[#666666] block">Worker isolated; budget preserved</span>
             </div>
-            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-400 uppercase block">PROVIDER</span>
-              <span className="text-base font-bold text-cyan-300 mt-0.5 block truncate">BudgetAI</span>
+            <div>
+              <span className="text-[11px] text-[#737373] uppercase block font-medium">Next Step</span>
+              <span className="font-semibold text-[#f5f5f5] mt-0.5 block text-sm">VALIDATE RESULT</span>
+              <span className="text-[11px] text-[#666666] block">Cryptographic milestone check</span>
             </div>
-            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800 sm:col-span-2 lg:col-span-1">
-              <span className="text-[10px] text-slate-400 uppercase block">STATUS</span>
-              <span className="text-[11px] font-bold text-amber-300 mt-0.5 block truncate">RECOVERED FROM FAILURE</span>
+          </div>
+
+          {/* Integrated Telemetry Summary */}
+          <div className="pt-2 border-t border-[#1a1a1a] flex flex-wrap items-center justify-between gap-3 text-xs text-[#737373]">
+            <div className="flex items-center gap-4 flex-wrap">
+              <span>Active Missions: <strong className="text-[#f5f5f5] font-medium">1</strong></span>
+              <span>•</span>
+              <span>Running Workflows: <strong className="text-[#f5f5f5] font-medium">1 (Durable DAG)</strong></span>
+              <span>•</span>
+              <span>Recovery Rate: <strong className="text-[#22c55e] font-medium">100%</strong></span>
+              <span>•</span>
+              <span>Authority Boundary: <strong className="text-[#f5f5f5] font-medium">Outside Agent Reach</strong></span>
             </div>
-            <div className="bg-slate-950/70 p-3 rounded-lg border border-slate-800 sm:col-span-2 lg:col-span-1">
-              <span className="text-[10px] text-slate-400 uppercase block">NEXT</span>
-              <span className="text-[11px] font-bold text-purple-300 mt-0.5 block truncate">VALIDATE RESULT</span>
-            </div>
+            <Link href="/missions/msn_market_intel_01/replay" className="text-xs text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors">
+              Open Replay Controller →
+            </Link>
           </div>
         </div>
 
-        {/* 4. SECTION 10: DETERMINISTIC DEMO KPI CARDS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 font-mono">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Active Mission</div>
-            <div className="text-xl font-bold text-white mt-1">1</div>
-            <div className="text-[10px] text-teal-400 mt-0.5 truncate">Market Intel</div>
-          </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Running Workflow</div>
-            <div className="text-xl font-bold text-cyan-300 mt-1">1</div>
-            <div className="text-[10px] text-cyan-500/80 mt-0.5">Durable DAG ok</div>
-          </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Mission Budget</div>
-            <div className="text-xl font-bold text-amber-300 mt-1">$25.00</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">USDC Hard Cap</div>
-          </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Committed</div>
-            <div className="text-xl font-bold text-emerald-400 mt-1">$14.00</div>
-            <div className="text-[10px] text-emerald-500/80 mt-0.5">BudgetAI Quote</div>
-          </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Recovery</div>
-            <div className="text-xl font-bold text-indigo-300 mt-1">100%</div>
-            <div className="text-[10px] text-indigo-400/80 mt-0.5">1 Failure &rarr; 1 Recv</div>
-          </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Policy</div>
-            <div className="text-xl font-bold text-emerald-400 mt-1">ENFORCED</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Deterministic 6.3µs</div>
-          </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Authority</div>
-            <div className="text-xl font-bold text-rose-400 mt-1">BOUNDED</div>
-            <div className="text-[10px] text-rose-400/80 mt-0.5">Outside Agent Reach</div>
-          </div>
-        </div>
-
-        {/* 3. HERO TRACE: ACTIVE MISSION TIMELINE WITH WHY / WHY NOT UX */}
-        <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        {/* 4. PILLAR 1: MISSION TRACE */}
+        <section className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#1f1f1f] pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-                <h2 className="text-lg font-bold font-mono text-white">
-                  HERO TRACE: DETERMINISTIC MISSION TIMELINE
+                <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+                <h2 className="text-lg font-bold text-[#f5f5f5]">
+                  MISSION TRACE
                 </h2>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Autonomous execution sequence: Objective &rarr; DAG &rarr; Discovery &rarr; Selection &rarr; Policy &rarr; Twin &rarr; Failure &rarr; Fencing &rarr; Replan &rarr; Fallback &rarr; Settle
+              <p className="text-xs text-[#a3a3a3] mt-0.5">
+                Deterministic execution sequence: Objective → Simulation → Selection → Failure → Fencing → Replan → Fallback → Settle
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <Link
                 href="/missions/msn_market_intel_01/replay"
-                className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-mono text-xs font-bold border border-amber-500/40 transition-colors"
+                className="h-8 px-3 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] text-xs font-medium border border-[#262626] transition-colors flex items-center"
               >
-                OPEN REPLAY CONTROLLER &rarr;
+                Replay Mission →
               </Link>
             </div>
           </div>
@@ -739,34 +740,37 @@ export default function ControlTowerPage() {
                   <div
                     key={evt.timestamp + evt.action}
                     onClick={() => setSelectedEventIndex(idx)}
-                    className={`p-3.5 rounded-xl border font-mono transition-all cursor-pointer ${
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-slate-900 border-amber-500/60 shadow-md shadow-amber-500/10'
-                        : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
+                        ? 'bg-[#151515] border-[#404040]'
+                        : 'bg-[#0c0c0c] border-[#1c1c1c] hover:border-[#2a2a2a]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-500 font-bold">{evt.timestamp}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-teal-300 border border-slate-700">
+                        <span className="text-[#737373] font-mono text-[11px]">{evt.timestamp}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#141414] text-[#a3a3a3] border border-[#222222] font-mono">
                           {evt.domain}
                         </span>
-                        <span className="font-bold text-white text-xs">{evt.action}</span>
+                        <span className="font-semibold text-[#f5f5f5] text-xs">{evt.action}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${
                         evt.status === 'FAILED'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                          ? 'bg-[#181111] text-[#ef4444] border border-[#ef4444]/30'
                           : evt.status === 'REPLANNING' || evt.status === 'RECOVERED'
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                          ? 'bg-[#18150f] text-[#f59e0b] border border-[#f59e0b]/30'
+                          : 'bg-[#0f1712] text-[#22c55e] border border-[#22c55e]/30'
                       }`}>
+                        <span className={`w-1 h-1 rounded-full ${
+                          evt.status === 'FAILED' ? 'bg-[#ef4444]' : evt.status === 'REPLANNING' || evt.status === 'RECOVERED' ? 'bg-[#f59e0b]' : 'bg-[#22c55e]'
+                        }`} />
                         {evt.status}
                       </span>
                     </div>
 
-                    <div className="mt-1 text-xs text-slate-300 font-sans flex items-center justify-between">
-                      <span>Actor: <strong className="text-slate-200">{evt.actor}</strong></span>
-                      <span className="text-amber-300 font-mono text-[11px]">{evt.economicImpact}</span>
+                    <div className="mt-2 text-xs text-[#a3a3a3] flex items-center justify-between pt-1 border-t border-[#141414]">
+                      <span>Actor: <strong className="text-[#f5f5f5] font-normal">{evt.actor}</strong></span>
+                      <span className="text-[#f5f5f5] text-xs">{evt.economicImpact}</span>
                     </div>
                   </div>
                 );
@@ -774,62 +778,62 @@ export default function ControlTowerPage() {
             </div>
 
             {/* Event Detail & Why / Why Not Panel (5 cols) */}
-            <div className="lg:col-span-5 bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <div className="border-b border-slate-800 pb-3">
-                <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider block">
-                  INSPECTED EVENT &bull; {activeEvent.timestamp}
+            <div className="lg:col-span-5 bg-[#0a0a0a] p-5 rounded-xl border border-[#1f1f1f] space-y-4">
+              <div className="border-b border-[#1c1c1c] pb-3">
+                <span className="text-[10px] text-[#737373] font-semibold uppercase tracking-wider block">
+                  Inspected Step · <span className="font-mono">{activeEvent.timestamp}</span>
                 </span>
-                <h3 className="text-base font-bold font-mono text-white mt-1">
+                <h3 className="text-base font-bold text-[#f5f5f5] mt-1">
                   {activeEvent.action}
                 </h3>
-                <p className="text-xs text-slate-300 mt-1 font-sans">
+                <p className="text-xs text-[#a3a3a3] mt-1.5 leading-relaxed">
                   {activeEvent.details}
                 </p>
               </div>
 
-              <div className="space-y-2 font-mono text-xs">
-                <div className="flex justify-between p-2 bg-slate-900 rounded-lg">
-                  <span className="text-slate-400">Actor:</span>
-                  <span className="text-white font-bold">{activeEvent.actor}</span>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between p-2.5 bg-[#121212] rounded-lg border border-[#1a1a1a]">
+                  <span className="text-[#737373]">Actor</span>
+                  <span className="text-[#f5f5f5] font-medium">{activeEvent.actor}</span>
                 </div>
-                <div className="flex justify-between p-2 bg-slate-900 rounded-lg">
-                  <span className="text-slate-400">Economic Impact:</span>
-                  <span className="text-amber-300 font-bold">{activeEvent.economicImpact}</span>
+                <div className="flex justify-between p-2.5 bg-[#121212] rounded-lg border border-[#1a1a1a]">
+                  <span className="text-[#737373]">Economic Impact</span>
+                  <span className="text-[#f5f5f5] font-medium">{activeEvent.economicImpact}</span>
                 </div>
-                <div className="flex justify-between p-2 bg-slate-900 rounded-lg">
-                  <span className="text-slate-400">Policy Gate:</span>
-                  <span className="text-emerald-400 font-bold">{activeEvent.policyDecision}</span>
+                <div className="flex justify-between p-2.5 bg-[#121212] rounded-lg border border-[#1a1a1a]">
+                  <span className="text-[#737373]">Policy Gate</span>
+                  <span className="text-[#22c55e] font-medium">{activeEvent.policyDecision}</span>
                 </div>
               </div>
 
-              {/* SECTION 5: "WHY?" PANEL */}
-              <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-2">
+              {/* "WHY?" PANEL */}
+              <div className="p-3.5 bg-[#0d140e] border border-[#22c55e]/20 rounded-xl space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+                  <span className="text-xs font-semibold text-[#22c55e] uppercase tracking-wider">
                     {activeEvent.whyTitle || 'WHY WAS THIS DECISION MADE?'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-200 font-sans leading-relaxed">
+                <p className="text-xs text-[#f5f5f5] leading-relaxed">
                   {activeEvent.whyExplanation || 'Deterministic policy validation within bounded constitutional envelope.'}
                 </p>
               </div>
 
-              {/* SECTION 5: "WHY NOT?" PANEL */}
-              <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+              {/* "WHY NOT?" PANEL */}
+              <div className="p-3.5 bg-[#141414] border border-[#222222] rounded-xl space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
-                  <span className="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
+                  <span className="text-xs font-semibold text-[#ef4444] uppercase tracking-wider">
                     {activeEvent.whyNotTitle || 'WHY NOT THE ALTERNATIVES?'}
                   </span>
                 </div>
-                <div className="space-y-1 font-mono text-[11px] text-slate-300">
+                <div className="space-y-1 text-xs text-[#a3a3a3]">
                   {activeEvent.whyNotExplanation && activeEvent.whyNotExplanation.length > 0 ? (
                     activeEvent.whyNotExplanation.map((reason, i) => (
-                      <div key={i}>&bull; {reason}</div>
+                      <div key={i}>• {reason}</div>
                     ))
                   ) : (
-                    <div>&bull; Standard alternatives rejected by policy constraints.</div>
+                    <div>• Standard alternatives rejected by policy constraints.</div>
                   )}
                 </div>
               </div>
@@ -837,444 +841,386 @@ export default function ControlTowerPage() {
           </div>
         </section>
 
-        {/* 4. SECTION 8: DEDICATED WHY / WHY NOT DECISION CARD */}
-        <div className="bg-[#0c1427] border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
-          <div className="border-b border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* 5. PILLAR 2: WHY THIS DECISION */}
+        <section className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7 space-y-5">
+          <div className="border-b border-[#1f1f1f] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-teal-400">
-                AUDITABLE DECISION LOG
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                Auditable Explanation Log
               </span>
-              <h3 className="text-lg font-bold font-mono text-white mt-0.5">
-                WHY / WHY NOT DECISION SYSTEM
+              <h3 className="text-lg font-bold text-[#f5f5f5] mt-0.5">
+                WHY THIS DECISION
               </h3>
             </div>
-            <span className="text-xs font-mono text-slate-400">
+            <span className="text-xs text-[#a3a3a3]">
               Institutional explanation framework for autonomous economic choices
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 font-mono text-xs">
-            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
-              <div className="text-emerald-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+            <div className="bg-[#0c0c0c] border border-[#1f1f1f] rounded-xl p-4 space-y-2">
+              <div className="text-[#f5f5f5] font-semibold text-xs flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
                 WHY THIS PROVIDER?
               </div>
-              <p className="text-slate-200 font-sans text-xs leading-relaxed">
-                Lowest eligible quote within budget and policy constraints.
+              <p className="text-[#a3a3a3] text-xs leading-relaxed">
+                Lowest eligible quote within budget and policy constraints with verified SLA.
               </p>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
-              <div className="text-rose-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+            <div className="bg-[#0c0c0c] border border-[#1f1f1f] rounded-xl p-4 space-y-2">
+              <div className="text-[#f5f5f5] font-semibold text-xs flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
                 WHY NOT THE $28 PROVIDER?
               </div>
-              <p className="text-slate-200 font-sans text-xs leading-relaxed">
-                Quote exceeds the $25 mission budget.
+              <p className="text-[#a3a3a3] text-xs leading-relaxed">
+                Quote exceeds the $25.00 USDC mission budget envelope cap.
               </p>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
-              <div className="text-amber-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <div className="bg-[#0c0c0c] border border-[#1f1f1f] rounded-xl p-4 space-y-2">
+              <div className="text-[#f5f5f5] font-semibold text-xs flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
                 WHY WAS THE FAILED PAYMENT NOT RETRIED?
               </div>
-              <p className="text-slate-200 font-sans text-xs leading-relaxed">
-                Execution was fenced. Blind retry is prohibited.
+              <p className="text-[#a3a3a3] text-xs leading-relaxed">
+                Execution was lease-fenced. Blind retries are strictly prohibited to avoid double-spend.
               </p>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm">
-              <div className="text-cyan-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+            <div className="bg-[#0c0c0c] border border-[#1f1f1f] rounded-xl p-4 space-y-2">
+              <div className="text-[#f5f5f5] font-semibold text-xs flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
                 WHY WAS THE FALLBACK ALLOWED?
               </div>
-              <p className="text-slate-200 font-sans text-xs leading-relaxed">
-                Capability + budget + policy + risk constraints passed.
+              <p className="text-[#a3a3a3] text-xs leading-relaxed">
+                Capability, budget ceiling, allowlist policy, and risk threshold checks all passed.
               </p>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-1.5 shadow-sm md:col-span-2 lg:col-span-2">
-              <div className="text-purple-400 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                WHY NOT ARC?
+            <div className="bg-[#0c0c0c] border border-[#1f1f1f] rounded-xl p-4 space-y-2 md:col-span-2 lg:col-span-2">
+              <div className="text-[#f5f5f5] font-semibold text-xs flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa]" />
+                WHY NOT ARC LIVE SETTLEMENT?
               </div>
-              <p className="text-slate-200 font-sans text-xs leading-relaxed">
-                Live execution disabled. AgentVault not deployed.
+              <p className="text-[#a3a3a3] text-xs leading-relaxed">
+                Live execution is disabled (<span className="font-mono text-[#737373]">ENABLE_LIVE_EXECUTION=false</span>) and AgentVault contract is undeployed on Arc Mainnet.
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* 5. SYSTEM METRICS GRIDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* ECONOMIC STATE */}
-          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                ECONOMIC STATE
+        {/* 6. PILLAR 3: AUTHORITY BOUNDARY & SECURITY PROVING GROUND */}
+        <section className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7 space-y-6">
+          <div className="border-b border-[#1f1f1f] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                Deterministic Enclosure
               </span>
-              <span className="text-[10px] font-mono text-slate-500">USDC</span>
+              <h3 className="text-lg font-bold text-[#f5f5f5] mt-0.5">
+                AUTHORITY BOUNDARY
+              </h3>
             </div>
-            <div className="space-y-1.5 font-mono text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Available:</span>
-                <span className="text-emerald-400 font-bold">$81.50</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Reserved:</span>
-                <span className="text-amber-400 font-bold">$18.50</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Committed:</span>
-                <span className="text-cyan-400 font-bold">$14.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Settled:</span>
-                <span className="text-purple-400 font-bold">$14.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Outstanding:</span>
-                <span className="text-slate-300 font-bold">$0.00</span>
-              </div>
-            </div>
-          </section>
+            <span className="text-xs text-[#a3a3a3]">
+              Outside agent model reach · Zero agent-held private keys
+            </span>
+          </div>
 
-          {/* OPERATIONS */}
-          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-mono font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                OPERATIONS
-              </span>
-              <span className="text-[10px] font-mono text-slate-500">RUNTIME</span>
-            </div>
-            <div className="space-y-1.5 font-mono text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Active Mission:</span>
-                <span className="text-white font-bold">1 (Market Intel)</span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Agent Authority Scope (5 cols) */}
+            <div className="lg:col-span-5 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-5 space-y-4 text-xs">
+              <div className="border-b border-[#1a1a1a] pb-2 flex items-center justify-between">
+                <span className="font-bold text-[#f5f5f5]">AI AUTONOMY PERIMETER</span>
+                <span className="text-[10px] font-medium text-[#22c55e]">ENFORCED</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Running Workflow:</span>
-                <span className="text-teal-300 font-bold">1 Active</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Active Agents:</span>
-                <span className="text-cyan-300 font-bold">4 Swarm Agents</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Pending Approvals:</span>
-                <span className="text-emerald-400 font-bold">0 (Within Cap)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Incidents:</span>
-                <span className="text-amber-400 font-bold">1 (Recovered)</span>
-              </div>
-            </div>
-          </section>
 
-          {/* SECTION 16: ARC STATUS */}
-          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3 font-mono text-xs">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                ARC MAINNET
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="bg-[#0e1410] border border-[#22c55e]/20 rounded-lg p-3 space-y-1.5">
+                  <div className="text-[#22c55e] font-semibold uppercase text-[10px] mb-1 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+                    Allowed Actions
+                  </div>
+                  <div className="text-[#f5f5f5] flex items-center gap-1.5">
+                    <span className="text-[#22c55e]">✓</span> Discover services
+                  </div>
+                  <div className="text-[#f5f5f5] flex items-center gap-1.5">
+                    <span className="text-[#22c55e]">✓</span> Negotiate quotes
+                  </div>
+                  <div className="text-[#f5f5f5] flex items-center gap-1.5">
+                    <span className="text-[#22c55e]">✓</span> Plan execution DAG
+                  </div>
+                  <div className="text-[#f5f5f5] flex items-center gap-1.5">
+                    <span className="text-[#22c55e]">✓</span> Replan on failure
+                  </div>
+                  <div className="text-[#f5f5f5] flex items-center gap-1.5">
+                    <span className="text-[#22c55e]">✓</span> Request payments
+                  </div>
+                </div>
+
+                <div className="bg-[#171010] border border-[#ef4444]/20 rounded-lg p-3 space-y-1.5">
+                  <div className="text-[#ef4444] font-semibold uppercase text-[10px] mb-1 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
+                    Forbidden Boundaries
+                  </div>
+                  <div className="text-[#a3a3a3] flex items-center gap-1.5">
+                    <span className="text-[#ef4444]">✕</span> Sign transactions
+                  </div>
+                  <div className="text-[#a3a3a3] flex items-center gap-1.5">
+                    <span className="text-[#ef4444]">✕</span> Increase budget
+                  </div>
+                  <div className="text-[#a3a3a3] flex items-center gap-1.5">
+                    <span className="text-[#ef4444]">✕</span> Change policy
+                  </div>
+                  <div className="text-[#a3a3a3] flex items-center gap-1.5">
+                    <span className="text-[#ef4444]">✕</span> Arbitrary recipient
+                  </div>
+                  <div className="text-[#a3a3a3] flex items-center gap-1.5">
+                    <span className="text-[#ef4444]">✕</span> Arbitrary calldata
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[#1a1a1a] text-center">
+                <span className="text-[11px] font-medium text-[#a3a3a3]">
+                  Autonomy changes the plan. Policy controls the financial authority.
+                </span>
+              </div>
+            </div>
+
+            {/* Security Proving Ground (7 cols, 8 ATTACKS) */}
+            <div className="lg:col-span-7 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-5 space-y-4">
+              <div className="border-b border-[#1a1a1a] pb-2 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-[#f5f5f5] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                    SECURITY PROVING GROUND
+                  </h4>
+                  <p className="text-[11px] text-[#737373]">Deterministic test vectors: Click an attack vector to verify defense gates</p>
+                </div>
+                <span className="text-[11px] font-medium text-[#22c55e]">
+                  8 / 8 DEFENDED
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  onClick={() => runSecurityAttack('RECIPIENT_SUBSTITUTION')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="1. Recipient substitution"
+                >
+                  1. Recipient Sub
+                </button>
+                <button
+                  onClick={() => runSecurityAttack('BUDGET_ESCALATION')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="2. Budget escalation"
+                >
+                  2. Budget Escalation
+                </button>
+                <button
+                  onClick={() => runSecurityAttack('POLICY_MODIFICATION')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="3. Policy modification"
+                >
+                  3. Policy Mod
+                </button>
+                <button
+                  onClick={() => runSecurityAttack('ARBITRARY_CALLDATA')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="4. Arbitrary calldata"
+                >
+                  4. Raw Calldata
+                </button>
+                <button
+                  onClick={() => runSecurityAttack('QUOTE_INVALIDATION')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="5. Quote invalidation"
+                >
+                  5. Quote Invalidate
+                </button>
+                <button
+                  onClick={() => runSecurityAttack('NONCE_REPLAY')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="6. Nonce replay"
+                >
+                  6. Nonce Replay
+                </button>
+                <button
+                  onClick={() => runSecurityAttack('DUPLICATE_SETTLEMENT')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="7. Duplicate settlement"
+                >
+                  7. Duplicate Settle
+                </button>
+                <button
+                  onClick={() => runSecurityAttack('FORGED_COMPLETION')}
+                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[#262626] rounded-lg text-xs font-medium transition-colors text-left truncate"
+                  title="8. Forged completion"
+                >
+                  8. Forged Work
+                </button>
+              </div>
+
+              {activeSecurityTest ? (
+                <div className="p-4 bg-[#0d0d0d] border border-[#262626] rounded-xl space-y-3.5 text-xs">
+                  {/* 4-Step Pipeline Flow */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div className="p-2 bg-[#171010] border border-[#ef4444]/30 rounded-lg">
+                      <span className="text-[10px] text-[#ef4444] block font-semibold">1. ATTACK</span>
+                      <span className="text-[#f5f5f5] text-xs font-medium truncate block">{activeSecurityTest.attackType}</span>
+                    </div>
+                    <div className="p-2 bg-[#18150f] border border-[#f59e0b]/30 rounded-lg">
+                      <span className="text-[10px] text-[#f59e0b] block font-semibold">2. DETECTION</span>
+                      <span className="text-[#f5f5f5] text-xs font-medium truncate block">{activeSecurityTest.ruleViolated.split(' ')[0]}</span>
+                    </div>
+                    <div className="p-2 bg-[#141414] border border-[#262626] rounded-lg">
+                      <span className="text-[10px] text-[#a3a3a3] block font-semibold">3. DECISION</span>
+                      <span className="text-[#ef4444] text-xs font-bold block">{activeSecurityTest.decision}</span>
+                    </div>
+                    <div className="p-2 bg-[#0e1410] border border-[#22c55e]/30 rounded-lg">
+                      <span className="text-[10px] text-[#22c55e] block font-semibold">4. RESULT</span>
+                      <span className="text-[#22c55e] text-xs font-bold block">{activeSecurityTest.status}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-xs text-[#a3a3a3] pt-1">
+                    <div><span className="text-[#737373]">Actor:</span> <span className="text-[#f5f5f5] font-mono text-[11px]">{activeSecurityTest.actor}</span></div>
+                    <div><span className="text-[#737373]">Attempted:</span> <span className="text-[#f5f5f5]">{activeSecurityTest.attemptedAction}</span></div>
+                    <div><span className="text-[#737373]">Detection:</span> <span className="text-[#a3a3a3]">{activeSecurityTest.detection}</span></div>
+                    <div><span className="text-[#737373]">Rule:</span> <span className="text-[#22c55e] font-mono text-[11px]">{activeSecurityTest.ruleViolated}</span></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#1a1a1a]">
+                    <div className="p-2.5 bg-[#121212] rounded-lg border border-[#1a1a1a]">
+                      <span className="text-[#737373] text-[10px] block uppercase font-medium">Prevented Outcome</span>
+                      <span className="text-[#a3a3a3] text-[11px] mt-0.5 block">{activeSecurityTest.whatWouldHaveChanged}</span>
+                    </div>
+                    <div className="p-2.5 bg-[#0e1410] border border-[#22c55e]/20 rounded-lg">
+                      <span className="text-[#22c55e] text-[10px] block uppercase font-medium">Actual State</span>
+                      <span className="text-[#f5f5f5] text-[11px] mt-0.5 block">{activeSecurityTest.whatActuallyChanged}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 bg-[#0a0a0a] border border-dashed border-[#202020] rounded-xl text-center text-[#737373] text-xs">
+                  Click any of the 8 attack vectors above to test real-time deterministic defense gates.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 7. PILLAR 4: ARC SETTLEMENT */}
+        <section className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7 space-y-5">
+          <div className="border-b border-[#1f1f1f] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                Settlement Layer
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold">
+              <h3 className="text-lg font-bold text-[#f5f5f5] mt-0.5">
+                ARC SETTLEMENT & CONSENSUS
+              </h3>
+            </div>
+            <Link href="/arc" className="text-xs text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors">
+              Full Arc Status Page →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+            <div className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl">
+              <span className="text-[10px] text-[#737373] uppercase block font-medium">Chain</span>
+              <span className="text-base font-bold text-[#f5f5f5] mt-0.5 block">5042</span>
+              <span className="text-[11px] text-[#666666] block">Arc Mainnet</span>
+            </div>
+            <div className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl">
+              <span className="text-[10px] text-[#737373] uppercase block font-medium">RPC Status</span>
+              <span className="text-base font-bold text-[#22c55e] mt-0.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
                 CONNECTED
               </span>
+              <span className="text-[11px] text-[#666666] block font-mono">Block #22,572,770</span>
             </div>
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Chain ID:</span>
-                <span className="text-cyan-300 font-bold">5042</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Native USDC:</span>
-                <span className="text-emerald-400 font-bold">VERIFIED</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">AgentVault:</span>
-                <span className="text-rose-400 font-bold">NOT DEPLOYED</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Live Execution:</span>
-                <span className="text-rose-400 font-bold">DISABLED</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Real Settlements:</span>
-                <span className="text-slate-300 font-bold">0 VERIFIED</span>
-              </div>
+            <div className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl">
+              <span className="text-[10px] text-[#737373] uppercase block font-medium">AgentVault</span>
+              <span className="text-base font-bold text-[#a3a3a3] mt-0.5 block">NOT DEPLOYED</span>
+              <span className="text-[11px] text-[#666666] block">Bytecode pending</span>
             </div>
-          </section>
-
-          {/* INTELLIGENCE */}
-          <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                INTELLIGENCE
-              </span>
-              <span className="text-[10px] font-mono text-slate-500">MEMORY</span>
+            <div className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl">
+              <span className="text-[10px] text-[#737373] uppercase block font-medium">Live Execution</span>
+              <span className="text-base font-bold text-[#a3a3a3] mt-0.5 block">DISABLED</span>
+              <span className="text-[11px] text-[#666666] block">Operator gated</span>
             </div>
-            <div className="space-y-1.5 font-mono text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Learning Signals:</span>
-                <span className="text-indigo-300 font-bold">3 Active</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">FastInfer Trust:</span>
-                <span className="text-amber-400 font-bold">82.1% (Penalized)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">BudgetAI Trust:</span>
-                <span className="text-emerald-400 font-bold">98.2% (Promoted)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Replanning Events:</span>
-                <span className="text-teal-300 font-bold">1 Auto-Failover</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Memory Graph:</span>
-                <span className="text-white font-bold">Synchronized</span>
-              </div>
+            <div className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl col-span-2 sm:col-span-1">
+              <span className="text-[10px] text-[#737373] uppercase block font-medium">Real Settlements</span>
+              <span className="text-base font-bold text-[#f5f5f5] mt-0.5 block">0 VERIFIED</span>
+              <span className="text-[11px] text-[#666666] block">Simulation consistent</span>
             </div>
-          </section>
-        </div>
+          </div>
 
-        {/* 5. FINANCIAL AUTHORITY & SECTION 3: ONE-CLICK SECURITY ADVERSARIAL DEMO (8 ATTACKS) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* SECTION 7: COMPACT AGENT AUTHORITY CARD (5 cols) */}
-          <section className="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-5 shadow-lg space-y-3 font-mono text-xs">
-            <div className="border-b border-slate-800 pb-2.5 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-teal-400" />
-                  AGENT AUTHORITY
-                </h3>
-                <p className="text-[11px] text-slate-400">Deterministic boundary enforced outside model reach</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
+            <div className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[#737373] uppercase text-[10px] font-medium">Simulation Reconciliation</span>
+                <span className="text-[#22c55e] font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+                  CONSISTENT
+                </span>
               </div>
-              <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/30 text-[10px] font-bold">
-                ENFORCED
-              </span>
+              <p className="text-[#a3a3a3] text-[11px] leading-relaxed">
+                Internal ledger, double-entry journal, and digital twin state reflect mathematical parity across all simulation scenarios.
+              </p>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-3 space-y-1.5">
-                <div className="text-emerald-400 font-bold uppercase tracking-wider text-[11px] mb-1 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Allowed
-                </div>
-                <div className="text-slate-200 flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">✓</span> Discover
-                </div>
-                <div className="text-slate-200 flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">✓</span> Negotiate
-                </div>
-                <div className="text-slate-200 flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">✓</span> Plan
-                </div>
-                <div className="text-slate-200 flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">✓</span> Replan
-                </div>
-                <div className="text-slate-200 flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">✓</span> Request payment
-                </div>
+            <div className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[#737373] uppercase text-[10px] font-medium">Real On-Chain Reconciliation</span>
+                <span className="text-[#737373] font-semibold">NOT AVAILABLE</span>
               </div>
-
-              <div className="bg-rose-950/20 border border-rose-500/30 rounded-lg p-3 space-y-1.5">
-                <div className="text-rose-400 font-bold uppercase tracking-wider text-[11px] mb-1 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                  Forbidden
-                </div>
-                <div className="text-slate-300 flex items-center gap-1.5">
-                  <span className="text-rose-400 font-bold">✕</span> Sign transactions
-                </div>
-                <div className="text-slate-300 flex items-center gap-1.5">
-                  <span className="text-rose-400 font-bold">✕</span> Increase budget
-                </div>
-                <div className="text-slate-300 flex items-center gap-1.5">
-                  <span className="text-rose-400 font-bold">✕</span> Change policy
-                </div>
-                <div className="text-slate-300 flex items-center gap-1.5">
-                  <span className="text-rose-400 font-bold">✕</span> Choose arbitrary recipient
-                </div>
-                <div className="text-slate-300 flex items-center gap-1.5">
-                  <span className="text-rose-400 font-bold">✕</span> Execute arbitrary calldata
-                </div>
-              </div>
+              <p className="text-[#a3a3a3] text-[11px] leading-relaxed">
+                Zero verified settlements: AgentVault is not deployed on Arc Mainnet and live execution remains disabled.
+              </p>
             </div>
+          </div>
+        </section>
 
-            <div className="pt-2 border-t border-slate-800 text-center">
-              <span className="text-[11px] font-bold text-amber-300 tracking-wide uppercase">
-                AUTONOMY CHANGES THE PLAN. POLICY CONTROLS THE POWER.
-              </span>
-            </div>
-          </section>
-
-          {/* SECTION 3: ONE-CLICK SECURITY ADVERSARIAL DEMO (7 cols, 8 ATTACKS) */}
-          <section className="lg:col-span-7 bg-[#0e1626] border border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
-            <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold font-mono text-white flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
-                  SECURITY PROVING GROUND (8 ATTACKS)
-                </h3>
-                <p className="text-xs text-slate-400">Deterministic verification: ATTACK &rarr; DETECTION &rarr; DECISION &rarr; BLOCKED</p>
-              </div>
-              <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[10px] font-mono font-bold">
-                8 / 8 DEFENDED
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button
-                onClick={() => runSecurityAttack('RECIPIENT_SUBSTITUTION')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="1. Recipient substitution"
-              >
-                1. Recipient Sub
-              </button>
-              <button
-                onClick={() => runSecurityAttack('BUDGET_ESCALATION')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="2. Budget escalation"
-              >
-                2. Budget Escalation
-              </button>
-              <button
-                onClick={() => runSecurityAttack('POLICY_MODIFICATION')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="3. Policy modification"
-              >
-                3. Policy Mod
-              </button>
-              <button
-                onClick={() => runSecurityAttack('ARBITRARY_CALLDATA')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="4. Arbitrary calldata"
-              >
-                4. Raw Calldata
-              </button>
-              <button
-                onClick={() => runSecurityAttack('QUOTE_INVALIDATION')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="5. Quote invalidation"
-              >
-                5. Quote Invalidation
-              </button>
-              <button
-                onClick={() => runSecurityAttack('NONCE_REPLAY')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="6. Nonce replay"
-              >
-                6. Nonce Replay
-              </button>
-              <button
-                onClick={() => runSecurityAttack('DUPLICATE_SETTLEMENT')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="7. Duplicate settlement"
-              >
-                7. Duplicate Settle
-              </button>
-              <button
-                onClick={() => runSecurityAttack('FORGED_COMPLETION')}
-                className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors text-left truncate"
-                title="8. Forged completion"
-              >
-                8. Forged Work
-              </button>
-            </div>
-
-            {activeSecurityTest ? (
-              <div className="p-4 bg-slate-950 border border-rose-500/40 rounded-xl space-y-4 font-mono text-xs">
-                {/* 4-Step Pipeline Flow */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                  <div className="p-2.5 bg-rose-950/40 border border-rose-500/40 rounded-lg">
-                    <span className="text-[10px] text-rose-400 block font-bold">1. ATTACK</span>
-                    <span className="text-white text-xs font-bold truncate block">{activeSecurityTest.attackType}</span>
-                  </div>
-                  <div className="p-2.5 bg-amber-950/40 border border-amber-500/40 rounded-lg">
-                    <span className="text-[10px] text-amber-400 block font-bold">2. DETECTION</span>
-                    <span className="text-amber-200 text-xs font-bold truncate block">{activeSecurityTest.ruleViolated.split(' ')[0]}</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-900 border border-slate-700 rounded-lg">
-                    <span className="text-[10px] text-slate-400 block font-bold">3. DECISION</span>
-                    <span className="text-rose-400 text-xs font-bold block">{activeSecurityTest.decision}</span>
-                  </div>
-                  <div className="p-2.5 bg-emerald-950/40 border border-emerald-500/40 rounded-lg">
-                    <span className="text-[10px] text-emerald-400 block font-bold">4. RESULT</span>
-                    <span className="text-emerald-400 text-xs font-bold block">{activeSecurityTest.status}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-slate-300 pt-1">
-                  <div><strong>Actor:</strong> <span className="text-slate-400">{activeSecurityTest.actor}</span></div>
-                  <div><strong>Attempted Action:</strong> <span className="text-rose-300">{activeSecurityTest.attemptedAction}</span></div>
-                  <div><strong>Detection Mechanism:</strong> <span className="text-amber-300">{activeSecurityTest.detection}</span></div>
-                  <div><strong>Rule Enforced:</strong> <span className="text-emerald-400">{activeSecurityTest.ruleViolated}</span></div>
-                  <div><strong>Constitutional Invariant:</strong> <span className="text-teal-300">{activeSecurityTest.invariant}</span></div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-                  <div className="p-2.5 bg-slate-900 rounded-lg">
-                    <span className="text-slate-500 text-[10px] block uppercase">What Would Have Happened</span>
-                    <span className="text-rose-300 text-[11px] mt-0.5 block">{activeSecurityTest.whatWouldHaveChanged}</span>
-                  </div>
-                  <div className="p-2.5 bg-emerald-950/20 border border-emerald-500/20 rounded-lg">
-                    <span className="text-emerald-400 text-[10px] block uppercase">What Actually Happened</span>
-                    <span className="text-emerald-200 text-[11px] mt-0.5 block">{activeSecurityTest.whatActuallyChanged}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 bg-slate-950 border border-dashed border-slate-800 rounded-xl text-center text-slate-500 font-mono text-xs">
-                Click any of the 8 attack buttons above to verify real-time deterministic defense gates.
-              </div>
-            )}
-          </section>
-        </div>
-
-        {/* 6. GLOBAL SEARCH */}
-        <section className="bg-[#0e1626] border border-slate-800 rounded-xl p-4 shadow-sm">
-          <form onSubmit={handleSearch} className="flex gap-2">
+        {/* 8. GLOBAL TECHNICAL SEARCH */}
+        <section className="bg-[#101010] border border-[#202020] rounded-xl p-4 sm:p-5 shadow-sm">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search across Mission ID, Agent ID, Contract ID, Payment ID, Tx Hash..."
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 font-mono focus:outline-none focus:border-amber-400"
+              className="flex-1 bg-[#0a0a0a] border border-[#222222] rounded-lg px-4 h-10 text-xs text-[#f5f5f5] placeholder-[#666666] font-sans focus:outline-none focus:border-[#444444]"
             />
             <button
               type="submit"
               disabled={searching}
-              className="px-5 py-2.5 rounded-lg bg-amber-500 text-slate-950 font-bold font-mono text-xs hover:bg-amber-400 transition-colors disabled:opacity-50"
+              className="h-10 px-5 rounded-lg bg-[#f5f5f5] hover:bg-white text-[#070707] font-semibold text-xs transition-colors disabled:opacity-50 shrink-0"
             >
-              {searching ? 'SEARCHING...' : 'GLOBAL SEARCH'}
+              {searching ? 'Searching...' : 'Search'}
             </button>
           </form>
 
           {searchResults.length > 0 && (
-            <div className="mt-3 border-t border-slate-800 pt-3 space-y-2">
-              <span className="text-[11px] font-mono text-slate-400">SEARCH RESULTS ({searchResults.length}):</span>
+            <div className="mt-3 border-t border-[#1f1f1f] pt-3 space-y-2">
+              <span className="text-[11px] text-[#737373]">SEARCH RESULTS ({searchResults.length}):</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {searchResults.map((r) => (
                   <Link
                     key={r.id}
                     href={r.deep_link_url}
-                    className="p-3 bg-slate-900/80 border border-slate-700/60 rounded-lg hover:border-amber-400/50 transition-colors flex items-center justify-between"
+                    className="p-3 bg-[#0a0a0a] border border-[#1c1c1c] rounded-lg hover:border-[#333333] transition-colors flex items-center justify-between"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono text-[10px] border border-amber-500/20">
+                        <span className="px-1.5 py-0.5 rounded bg-[#141414] text-[#a3a3a3] font-mono text-[10px] border border-[#222222]">
                           {r.type}
                         </span>
-                        <span className="font-semibold text-xs text-white">{r.title}</span>
+                        <span className="font-semibold text-xs text-[#f5f5f5]">{r.title}</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">{r.subtitle}</p>
+                      <p className="text-[11px] text-[#737373] mt-1">{r.subtitle}</p>
                     </div>
-                    <span className="text-amber-400 text-xs font-mono font-bold">OPEN &rarr;</span>
+                    <span className="text-[#a3a3a3] text-xs font-semibold">Open →</span>
                   </Link>
                 ))}
               </div>

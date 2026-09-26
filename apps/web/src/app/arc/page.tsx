@@ -32,7 +32,7 @@ export default function ArcPanelPage() {
       description: 'HTTP JSON-RPC 2.0 (Block #22,572,770 confirmed)',
     },
     {
-      label: 'Native USDC Contract',
+      label: 'NATIVE USDC Contract',
       value: '0x3600000000000000000000000000000000000000',
       status: 'VERIFIED' as const,
       description: 'Native Arc micro-payment token (6 decimals)',
@@ -66,24 +66,24 @@ export default function ArcPanelPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 text-[#f5f5f5]">
       {/* Top Banner Status Bar */}
-      <div className="border border-[#222222] bg-[#101010] rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+      <div className="border border-[#222222] bg-[#101010] rounded-xl p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs">
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-center gap-2">
-            <span className="text-[#666666] uppercase text-[11px]">SETTLEMENT PLANE:</span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#141414] text-[#f5f5f5] border border-[#222222]">
-              ARC CONSENSUS
+            <span className="text-[#666666] uppercase text-[11px] font-medium">Settlement Plane:</span>
+            <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+              Arc Consensus
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[#666666] uppercase text-[11px]">NETWORK STATUS:</span>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+            <span className="text-[#666666] uppercase text-[11px] font-medium">Network Status:</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#141414] text-[#f5f5f5] border border-[#222222]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-              RPC ACTIVE (BLOCK #22,572,770)
+              RPC Active (Block #22,572,770)
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[#666666] uppercase text-[11px]">RECONCILIATION:</span>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#141414] text-[#f59e0b] border border-[#222222]">
+            <span className="text-[#666666] uppercase text-[11px] font-medium">Reconciliation:</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#141414] text-[#f59e0b] border border-[#222222]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
               SIMULATION CONSISTENT
             </span>
@@ -92,22 +92,22 @@ export default function ArcPanelPage() {
 
         {/* Execution Mode Controls */}
         <div className="flex items-center gap-2">
-          <span className="text-[#666666] text-[11px]">EXECUTION MODE:</span>
-          <div className="flex bg-[#0d0d0d] border border-[#222222] rounded p-0.5">
+          <span className="text-[#666666] text-xs font-medium">Execution:</span>
+          <div className="flex bg-[#0d0d0d] border border-[#222222] rounded-lg p-0.5">
             <button
               type="button"
-              className="px-2.5 py-1 rounded text-[11px] font-bold bg-[#1a1a1a] text-[#f5f5f5] border border-[#2a2a2a] cursor-default"
+              className="h-7 px-2.5 rounded-md text-xs font-bold bg-[#1a1a1a] text-[#f5f5f5] border border-[#2a2a2a] cursor-default"
             >
-              SIMULATION
+              Simulation
             </button>
             <button
               type="button"
               disabled
               title="Disabled: AgentVault is not deployed on Arc Mainnet"
-              className="px-2.5 py-1 rounded text-[11px] font-medium text-[#666666] cursor-not-allowed opacity-60 flex items-center gap-1"
+              className="h-7 px-2.5 rounded-md text-xs font-medium text-[#666666] cursor-not-allowed opacity-60 flex items-center gap-1"
             >
-              <span>LIVE</span>
-              <span className="text-[9px] text-[#ef4444] border border-[#ef4444]/30 px-1 rounded">OPERATOR ONLY</span>
+              <span>Live</span>
+              <span className="text-[9px] text-[#ef4444] border border-[#ef4444]/30 px-1 rounded font-mono">OPERATOR ONLY</span>
             </button>
           </div>
         </div>
@@ -117,86 +117,79 @@ export default function ArcPanelPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#222222] pb-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-[#f5f5f5] font-mono">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#f5f5f5]">
               ARC SETTLEMENT & CONSENSUS
             </h1>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
+            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
               INSTITUTIONAL LAYER-1
             </span>
           </div>
-          <p className="mt-1 text-xs text-[#a3a3a3] max-w-2xl leading-relaxed">
-            Authoritative on-chain settlement, contract registry verification, and cryptographic settlement status for AgentPay micro-transactions.
+          <p className="mt-1.5 text-xs sm:text-sm text-[#a3a3a3] max-w-2xl leading-relaxed">
+            Authoritative settlement infrastructure for AgentPay. Cryptographic parameter verification and dual-mode reconciliation telemetry.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 font-mono text-xs">
+        <div className="flex items-center gap-2 text-xs">
           <Link
             href="/control"
-            className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#a3a3a3] hover:text-[#f5f5f5] hover:bg-[#1a1a1a] transition-colors border border-[#262626]"
+            className="h-9 px-3.5 rounded-lg bg-[#141414] text-[#a3a3a3] hover:text-[#f5f5f5] hover:bg-[#1a1a1a] transition-colors border border-[#262626] flex items-center"
           >
-            ← CONTROL TOWER
+            ← Control Tower
           </Link>
           <Link
             href="/treasury"
-            className="px-3 py-1.5 rounded-lg bg-[#151515] text-[#f5f5f5] hover:bg-[#1a1a1a] transition-colors border border-[#262626]"
+            className="h-9 px-3.5 rounded-lg bg-[#f5f5f5] hover:bg-white text-[#070707] font-semibold transition-colors flex items-center"
           >
-            TREASURY VIEW →
+            Treasury View →
           </Link>
         </div>
       </div>
 
-      {/* System Cards (Exact 7 Cards) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs font-mono">
-        <div className="p-3.5 bg-[#101010] rounded-xl border border-[#222222]">
-          <span className="text-[#666666] text-[10px] block">CHAIN</span>
-          <span className="text-[#f5f5f5] font-bold text-sm mt-0.5 block">5042</span>
+      {/* Prioritized 5-Column Financial Status Strip */}
+      <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 sm:p-6 space-y-3">
+        <div className="text-[11px] font-semibold text-[#737373] uppercase tracking-wider">
+          Settlement Infrastructure Status
         </div>
-        <div className="p-3.5 bg-[#101010] rounded-xl border border-[#222222]">
-          <span className="text-[#666666] text-[10px] block">RPC</span>
-          <span className="text-[#22c55e] font-bold text-sm mt-0.5 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-            CONNECTED
-          </span>
-        </div>
-        <div className="p-3.5 bg-[#101010] rounded-xl border border-[#222222]">
-          <span className="text-[#666666] text-[10px] block">NATIVE USDC</span>
-          <span className="text-[#22c55e] font-bold text-sm mt-0.5 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-            VERIFIED
-          </span>
-        </div>
-        <div className="p-3.5 bg-[#101010] rounded-xl border border-[#222222]">
-          <span className="text-[#666666] text-[10px] block">AGENTVAULT</span>
-          <span className="text-[#ef4444] font-bold text-sm mt-0.5 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
-            NOT DEPLOYED
-          </span>
-        </div>
-        <div className="p-3.5 bg-[#101010] rounded-xl border border-[#222222]">
-          <span className="text-[#666666] text-[10px] block">LIVE EXECUTION</span>
-          <span className="text-[#ef4444] font-bold text-sm mt-0.5 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
-            DISABLED
-          </span>
-        </div>
-        <div className="p-3.5 bg-[#101010] rounded-xl border border-[#222222]">
-          <span className="text-[#666666] text-[10px] block">REAL SETTLEMENTS</span>
-          <span className="text-[#f5f5f5] font-bold text-sm mt-0.5 block">0 VERIFIED</span>
-        </div>
-        <div className="p-3.5 bg-[#101010] rounded-xl border border-[#222222]">
-          <span className="text-[#666666] text-[10px] block">BROADCASTS</span>
-          <span className="text-[#f5f5f5] font-bold text-sm mt-0.5 block">0</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+            <span className="text-[#737373] text-[10px] uppercase block font-medium">Chain</span>
+            <span className="text-[#f5f5f5] font-bold text-base mt-1 block">5042</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5">Arc Mainnet</span>
+          </div>
+          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+            <span className="text-[#737373] text-[10px] uppercase block font-medium">RPC</span>
+            <span className="text-[#22c55e] font-bold text-base mt-1 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+              CONNECTED
+            </span>
+            <span className="text-[#666666] text-[11px] block mt-0.5 font-mono">Block #22,572,770</span>
+          </div>
+          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+            <span className="text-[#737373] text-[10px] uppercase block font-medium">AGENTVAULT</span>
+            <span className="text-[#a3a3a3] font-bold text-base mt-1 block">NOT DEPLOYED</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5">0x bytecode pending</span>
+          </div>
+          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c]">
+            <span className="text-[#737373] text-[10px] uppercase block font-medium">LIVE EXECUTION</span>
+            <span className="text-[#a3a3a3] font-bold text-base mt-1 block">DISABLED</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5">Operator gated</span>
+          </div>
+          <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#1c1c1c] col-span-2 sm:col-span-1">
+            <span className="text-[#737373] text-[10px] uppercase block font-medium">REAL SETTLEMENTS</span>
+            <span className="text-[#f5f5f5] font-bold text-base mt-1 block">0 VERIFIED</span>
+            <span className="text-[#666666] text-[11px] block mt-0.5 font-mono">0 BROADCASTS</span>
+          </div>
         </div>
       </div>
 
       {/* Truthfulness Notice */}
-      <div className="bg-[#101010] border border-[#222222] rounded-xl p-4">
+      <div className="bg-[#101010] border border-[#222222] rounded-xl p-5">
         <div className="flex items-start gap-3">
-          <div className="p-1.5 rounded bg-[#171717] text-[#a3a3a3] border border-[#262626] text-xs font-mono font-bold">
+          <div className="p-1.5 rounded-md bg-[#161616] text-[#a3a3a3] border border-[#262626] text-xs font-semibold">
             INFO
           </div>
           <div className="space-y-1">
-            <h3 className="text-xs font-bold text-[#f5f5f5] font-mono uppercase tracking-wide">
+            <h3 className="text-xs font-bold text-[#f5f5f5] uppercase tracking-wide">
               TRUTHFUL VERIFICATION STANDARD · NO FABRICATION OF PRODUCTION REALITY
             </h3>
             <p className="text-xs text-[#a3a3a3] leading-relaxed">
@@ -209,10 +202,10 @@ export default function ArcPanelPage() {
       </div>
 
       {/* Critical Truthfulness Audit: Simulation vs Live Reconciliation */}
-      <section className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
+      <section className="bg-[#101010] border border-[#222222] rounded-xl p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-[#222222] pb-3">
           <div>
-            <h2 className="text-sm font-bold font-mono text-[#f5f5f5] flex items-center gap-2">
+            <h2 className="text-sm font-bold text-[#f5f5f5] flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
               RECONCILIATION AUDIT MATRIX
             </h2>
@@ -220,63 +213,62 @@ export default function ArcPanelPage() {
               Truthful separation: Simulation reconciliation vs. Live on-chain status
             </p>
           </div>
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#a3a3a3] border border-[#222222]">
+          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
             SIMULATION ONLY
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
-          <div className="p-3.5 bg-[#0d0d0d] border border-[#222222] rounded-lg space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div className="p-4 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[#666666] text-[10px] uppercase">Simulation Reconciliation</span>
-              <span className="inline-flex items-center gap-1 text-[11px] text-[#22c55e] font-bold">
+              <span className="text-[#737373] text-[10px] uppercase font-medium">Simulation Reconciliation</span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#22c55e] font-bold">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
                 CONSISTENT
               </span>
             </div>
-            <p className="text-[11px] text-[#a3a3a3] font-sans">
+            <p className="text-xs text-[#a3a3a3] leading-relaxed">
               Internal ledger, double-entry journal, and digital twin state reflect mathematical parity across all simulation scenarios.
             </p>
           </div>
 
-          <div className="p-3.5 bg-[#0d0d0d] border border-[#222222] rounded-lg space-y-1.5">
+          <div className="p-4 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[#666666] text-[10px] uppercase">Real On-Chain Reconciliation</span>
-              <span className="inline-flex items-center gap-1 text-[11px] text-[#ef4444] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
+              <span className="text-[#737373] text-[10px] uppercase font-medium">Real On-Chain Reconciliation</span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#737373] font-bold">
                 NOT AVAILABLE
               </span>
             </div>
-            <p className="text-[11px] text-[#a3a3a3] font-sans">
+            <p className="text-xs text-[#a3a3a3] leading-relaxed">
               No verified settlements: AgentVault contract is undeployed on Arc Mainnet and live execution remains disabled.
             </p>
           </div>
         </div>
 
         {/* 4-Way Reconciliation Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono pt-1">
-          <div className="p-3.5 bg-[#0d0d0d] border border-[#222222] rounded-lg space-y-1">
-            <span className="text-[#666666] text-[10px] block">1. INTERNAL LEDGER (SIM)</span>
-            <div className="text-[#f5f5f5] font-bold text-sm">$100.00 USDC</div>
-            <span className="text-[10px] text-[#666666] block">Double-entry balanced</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-1">
+          <div className="p-4 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1">
+            <span className="text-[#737373] text-[10px] block uppercase font-medium">1. Internal Ledger (Sim)</span>
+            <div className="text-[#f5f5f5] font-bold text-base">$100.00 USDC</div>
+            <span className="text-[11px] text-[#666666] block">Double-entry balanced</span>
           </div>
 
-          <div className="p-3.5 bg-[#0d0d0d] border border-[#222222] rounded-lg space-y-1">
-            <span className="text-[#666666] text-[10px] block">2. REPOSITORY STATE (SIM)</span>
-            <div className="text-[#f5f5f5] font-bold text-sm">$100.00 USDC</div>
-            <span className="text-[10px] text-[#666666] block">Encumbrance tracking</span>
+          <div className="p-4 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1">
+            <span className="text-[#737373] text-[10px] block uppercase font-medium">2. Repository State (Sim)</span>
+            <div className="text-[#f5f5f5] font-bold text-base">$100.00 USDC</div>
+            <span className="text-[11px] text-[#666666] block">Encumbrance tracking</span>
           </div>
 
-          <div className="p-3.5 bg-[#0d0d0d] border border-[#222222] rounded-lg space-y-1">
-            <span className="text-[#666666] text-[10px] block">3. AGENTVAULT (SIMULATED)</span>
-            <div className="text-[#f5f5f5] font-bold text-sm">$100.00 USDC</div>
-            <span className="text-[10px] text-[#666666] block">Contract pool (Sim)</span>
+          <div className="p-4 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1">
+            <span className="text-[#737373] text-[10px] block uppercase font-medium">3. AgentVault (Simulated)</span>
+            <div className="text-[#f5f5f5] font-bold text-base">$100.00 USDC</div>
+            <span className="text-[11px] text-[#666666] block">Contract pool (Sim)</span>
           </div>
 
-          <div className="p-3.5 bg-[#0d0d0d] border border-[#222222] rounded-lg space-y-1">
-            <span className="text-[#666666] text-[10px] block">4. REAL ARC SETTLEMENT</span>
-            <div className="text-[#ef4444] font-bold text-sm">0 Verified</div>
-            <span className="text-[10px] text-[#666666] block">AgentVault Undeployed</span>
+          <div className="p-4 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-1">
+            <span className="text-[#737373] text-[10px] block uppercase font-medium">4. Real Arc Settlement</span>
+            <div className="text-[#a3a3a3] font-bold text-base">0 Verified</div>
+            <span className="text-[11px] text-[#666666] block">AgentVault Undeployed</span>
           </div>
         </div>
       </section>
@@ -285,7 +277,7 @@ export default function ArcPanelPage() {
       <section className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-[#222222] pb-3">
           <div>
-            <h2 className="text-sm font-bold font-mono text-[#f5f5f5] flex items-center gap-2">
+            <h2 className="text-sm font-bold text-[#f5f5f5] flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
               VERIFIED ARC SYSTEM PARAMETERS
             </h2>
@@ -300,13 +292,13 @@ export default function ArcPanelPage() {
           {arcParameters.map((param) => (
             <div
               key={param.label}
-              className="p-3.5 bg-[#0d0d0d] border border-[#222222] rounded-lg space-y-2 hover:border-[#2a2a2a] transition-colors"
+              className="p-3.5 bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl space-y-2 hover:border-[#2a2a2a] transition-colors"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-mono text-[#a3a3a3] font-medium tracking-wide">
+                <span className="text-xs text-[#a3a3a3] font-medium">
                   {param.label}
                 </span>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#141414] text-[#f5f5f5] border border-[#222222]">
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
                       param.status === 'VERIFIED'
@@ -320,20 +312,20 @@ export default function ArcPanelPage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-2 bg-[#141414] px-2.5 py-1.5 rounded border border-[#222222]">
-                <span className="font-mono text-xs text-[#f5f5f5] truncate font-bold">
+              <div className="flex items-center justify-between gap-2 bg-[#121212] px-2.5 py-1.5 rounded-lg border border-[#1f1f1f]">
+                <span className="font-mono text-xs text-[#f5f5f5] truncate font-medium">
                   {param.value}
                 </span>
                 <button
                   onClick={() => copyToClipboard(param.value, param.label)}
-                  className="text-[#666666] hover:text-[#f5f5f5] text-[10px] font-mono transition-colors shrink-0"
+                  className="text-[#666666] hover:text-[#f5f5f5] text-[10px] transition-colors shrink-0 font-medium"
                   title="Copy to clipboard"
                 >
-                  {copiedKey === param.label ? '✓ COPIED' : 'COPY'}
+                  {copiedKey === param.label ? '✓ Copied' : 'Copy'}
                 </button>
               </div>
 
-              <p className="text-[11px] text-[#666666] font-sans">
+              <p className="text-[11px] text-[#737373]">
                 {param.description}
               </p>
             </div>
@@ -342,32 +334,32 @@ export default function ArcPanelPage() {
       </section>
 
       {/* Live Settlement Audit Status */}
-      <section className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-3">
+      <section className="bg-[#101010] border border-[#222222] rounded-xl p-5 sm:p-6 space-y-3">
         <div className="flex items-center justify-between border-b border-[#222222] pb-3">
-          <h2 className="text-sm font-bold font-mono text-[#f5f5f5] flex items-center gap-2">
+          <h2 className="text-sm font-bold text-[#f5f5f5] flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
             LIVE SETTLEMENT AUDIT STATUS
           </h2>
-          <span className="px-2 py-0.5 rounded bg-[#141414] text-[#666666] font-mono text-[10px] border border-[#222222]">
-            AUDIT TRAIL
+          <span className="px-2 py-0.5 rounded-md bg-[#141414] text-[#737373] text-[10px] border border-[#222222] font-medium">
+            Audit Trail
           </span>
         </div>
 
-        <div className="p-4 bg-[#0d0d0d] border border-dashed border-[#262626] rounded-lg text-center space-y-2">
-          <div className="w-8 h-8 rounded-full bg-[#171717] text-[#a3a3a3] border border-[#262626] flex items-center justify-center mx-auto text-sm font-bold font-mono">
+        <div className="p-5 bg-[#0a0a0a] border border-dashed border-[#222222] rounded-xl text-center space-y-2">
+          <div className="w-7 h-7 rounded-full bg-[#141414] text-[#a3a3a3] border border-[#262626] flex items-center justify-center mx-auto text-xs font-bold">
             !
           </div>
           <div className="space-y-1">
-            <h3 className="text-xs font-bold text-[#f5f5f5] font-mono uppercase tracking-wide">
-              No live settlement verified.
+            <h3 className="text-xs font-bold text-[#f5f5f5] uppercase tracking-wide">
+              No live settlement verified
             </h3>
             <p className="text-xs text-[#a3a3a3] max-w-lg mx-auto leading-relaxed">
               Production broadcast remains operator-gated. All demonstration workflows execute within deterministic simulation or air-gapped canary verification modes.
             </p>
           </div>
           <div className="pt-1">
-            <span className="inline-block px-2.5 py-0.5 bg-[#141414] rounded text-[10px] font-mono text-[#a3a3a3] border border-[#222222]">
-              GATE INVARIANT: Production Broadcast requires Operator Multi-Sig
+            <span className="inline-block px-2.5 py-0.5 bg-[#141414] rounded-md text-[10px] text-[#737373] border border-[#222222]">
+              Gate Boundary: Production broadcast requires operator multi-sig verification
             </span>
           </div>
         </div>

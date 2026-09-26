@@ -179,56 +179,61 @@ export default function MissionsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#222222]">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-[#f5f5f5]">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#f5f5f5]">
               Autonomous Missions
             </h1>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
+            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#141414] text-[#a3a3a3] border border-[#222222]">
               DETERMINISTIC SPEND ENGINE
             </span>
           </div>
-          <p className="text-xs text-[#a3a3a3] mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#a3a3a3] mt-1.5 max-w-2xl leading-relaxed">
             Autonomous economic objectives executed under deterministic AgentPay financial controls.
             AI agents discover services, evaluate quotes, and coordinate spend without holding private keys.
           </p>
         </div>
-        <div className="flex items-center gap-2 font-mono text-[11px] text-[#a3a3a3] bg-[#101010] px-3 py-1.5 rounded-lg border border-[#222222]">
+        <div className="flex items-center gap-2 text-xs text-[#a3a3a3] bg-[#101010] px-3.5 py-2 rounded-lg border border-[#222222] shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-          <span>INV-E1: Spend ≤ Budget Enforced</span>
+          <span>Budget Ceiling Strictly Enforced</span>
         </div>
       </div>
 
-      {/* Metrics Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
-          <div className="text-[11px] font-mono text-[#a3a3a3]">TOTAL MISSIONS</div>
-          <div className="text-2xl font-bold text-[#f5f5f5] mt-1">{missions.length}</div>
-          <div className="text-[11px] text-[#666666] mt-0.5">Autonomous operations</div>
+      {/* Metrics Ribbon (Unified Surface) */}
+      <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 sm:p-6 space-y-3">
+        <div className="text-[11px] font-semibold text-[#737373] uppercase tracking-wider">
+          Mission Program Telemetry
         </div>
-        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
-          <div className="text-[11px] font-mono text-[#a3a3a3]">ACTIVE MISSIONS</div>
-          <div className="text-2xl font-bold text-[#f5f5f5] mt-1">
-            {missions.filter((m) => ['PLANNING', 'DISCOVERING', 'EXECUTING'].includes(m.status)).length}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#0a0a0a] border border-[#1c1c1c]">
+          <div>
+            <span className="text-[11px] text-[#737373] uppercase block font-medium">TOTAL MISSIONS</span>
+            <span className="text-2xl font-bold text-[#f5f5f5] mt-0.5 block">{missions.length}</span>
+            <span className="text-[11px] text-[#666666] block">Autonomous operations</span>
           </div>
-          <div className="text-[11px] text-[#666666] mt-0.5">In flight</div>
-        </div>
-        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
-          <div className="text-[11px] font-mono text-[#a3a3a3]">TOTAL SPENT</div>
-          <div className="text-2xl font-bold text-[#f5f5f5] mt-1">
-            {formatUsdc(
-              missions
-                .reduce((acc, m) => acc + parseInt(m.spent || '0', 10), 0)
-                .toString()
-            )}
+          <div>
+            <span className="text-[11px] text-[#737373] uppercase block font-medium">ACTIVE MISSIONS</span>
+            <span className="text-2xl font-bold text-[#f5f5f5] mt-0.5 block">
+              {missions.filter((m) => ['PLANNING', 'DISCOVERING', 'EXECUTING'].includes(m.status)).length}
+            </span>
+            <span className="text-[11px] text-[#666666] block">In flight workflows</span>
           </div>
-          <div className="text-[11px] text-[#666666] mt-0.5">Arc USDC Base Units</div>
-        </div>
-        <div className="p-4 rounded-xl bg-[#101010] border border-[#222222]">
-          <div className="text-[11px] font-mono text-[#a3a3a3]">SAFETY SHIELD</div>
-          <div className="text-2xl font-bold text-[#f5f5f5] mt-1 flex items-center gap-1.5">
-            <span>100%</span>
-            <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
+          <div>
+            <span className="text-[11px] text-[#737373] uppercase block font-medium">TOTAL SPENT</span>
+            <span className="text-2xl font-bold text-[#f5f5f5] mt-0.5 block">
+              {formatUsdc(
+                missions
+                  .reduce((acc, m) => acc + parseInt(m.spent || '0', 10), 0)
+                  .toString()
+              )}
+            </span>
+            <span className="text-[11px] text-[#666666] block font-mono">Arc USDC Base Units</span>
           </div>
-          <div className="text-[11px] text-[#666666] mt-0.5">Deterministic Rust Policy</div>
+          <div>
+            <span className="text-[11px] text-[#737373] uppercase block font-medium">SAFETY SHIELD</span>
+            <span className="text-2xl font-bold text-[#22c55e] mt-0.5 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
+              100%
+            </span>
+            <span className="text-[11px] text-[#666666] block">Deterministic Rust Policy</span>
+          </div>
         </div>
       </div>
 
@@ -357,7 +362,7 @@ export default function MissionsPage() {
               type="button"
               disabled={isSubmitting || !objective.trim()}
               onClick={handleCreate}
-              className="px-4 py-2 rounded-lg bg-[#f5f5f5] hover:bg-[#e5e5e5] text-[#080808] font-bold text-xs font-mono transition-colors disabled:opacity-40"
+              className="h-9 px-4 rounded-lg bg-[#f5f5f5] hover:bg-white text-[#070707] font-semibold text-xs tracking-wide transition-colors disabled:opacity-40"
             >
               {isSubmitting ? 'CREATING...' : 'CREATE MISSION'}
             </button>
@@ -365,7 +370,7 @@ export default function MissionsPage() {
               type="button"
               disabled={isSubmitting || !objective.trim()}
               onClick={handleSimulate}
-              className="px-4 py-2 rounded-lg bg-[#151515] hover:bg-[#1a1a1a] text-[#f5f5f5] text-xs font-semibold font-mono border border-[#2a2a2a] transition-colors disabled:opacity-40"
+              className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#f5f5f5] text-xs font-medium border border-[#262626] tracking-wide transition-colors disabled:opacity-40"
             >
               SIMULATE DRY-RUN
             </button>
@@ -375,13 +380,13 @@ export default function MissionsPage() {
 
       {/* Missions List */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#f5f5f5]">
+        <div className="flex items-center justify-between pb-1 border-b border-[#222222]">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[#f5f5f5]">
             Mission Roster
           </h2>
           <button
             onClick={loadMissions}
-            className="text-xs font-mono text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors"
+            className="text-xs text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors"
           >
             Refresh Roster
           </button>
