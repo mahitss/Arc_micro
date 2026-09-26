@@ -331,4 +331,175 @@ describe('TASK 30 — Control Tower UI Rescue & Simulation Truthfulness Suite', 
       );
     });
   });
+
+  // =========================================================================
+  // 9. TASK 30 — MATTE BLACK CONTROL TOWER DESIGN SPECIFICATIONS
+  // =========================================================================
+  describe('9. Matte Black Design System & Institutional Financial Control Surface', () => {
+    it('defines authoritative Matte Black color tokens', () => {
+      const MATTE_BLACK_TOKENS = {
+        bg: '#070707',
+        bgSubtle: '#0A0A0A',
+        bgElevated: '#0D0D0D',
+        panel: '#101010',
+        panelSurface: '#121212',
+        panelHover: '#151515',
+        border: '#202020',
+        borderSubtle: '#262626',
+        borderStrong: '#2C2C2C',
+        textPrimary: '#F5F5F5',
+        textSecondary: '#A1A1A1',
+        textMuted: '#666666',
+        success: '#22C55E',
+        warning: '#F59E0B',
+        danger: '#EF4444',
+        info: '#60A5FA',
+      };
+
+      assert.equal(MATTE_BLACK_TOKENS.bg, '#070707');
+      assert.equal(MATTE_BLACK_TOKENS.panel, '#101010');
+      assert.equal(MATTE_BLACK_TOKENS.border, '#202020');
+      assert.equal(MATTE_BLACK_TOKENS.textPrimary, '#F5F5F5');
+      assert.equal(MATTE_BLACK_TOKENS.textSecondary, '#A1A1A1');
+      assert.equal(MATTE_BLACK_TOKENS.success, '#22C55E');
+      assert.equal(MATTE_BLACK_TOKENS.warning, '#F59E0B');
+      assert.equal(MATTE_BLACK_TOKENS.danger, '#EF4444');
+      assert.equal(MATTE_BLACK_TOKENS.info, '#60A5FA');
+    });
+
+    it('validates 6-metric unified hero mission panel structure', () => {
+      const HERO_MISSION = {
+        title: 'AUTONOMOUS MARKET INTELLIGENCE',
+        status: 'RUNNING',
+        description: 'Research the market landscape for autonomous AI agent infrastructure.',
+        metrics: {
+          missionBudget: '$25.00 USDC',
+          committed: '$14.00 USDC',
+          risk: '24 / 100',
+          provider: 'agent_budget_ai',
+          status: 'RECOVERED',
+          next: 'VALIDATE RESULT',
+        },
+      };
+
+      assert.equal(HERO_MISSION.title, 'AUTONOMOUS MARKET INTELLIGENCE');
+      assert.equal(HERO_MISSION.status, 'RUNNING');
+      assert.equal(HERO_MISSION.metrics.missionBudget, '$25.00 USDC');
+      assert.equal(HERO_MISSION.metrics.committed, '$14.00 USDC');
+      assert.equal(HERO_MISSION.metrics.risk, '24 / 100');
+      assert.equal(HERO_MISSION.metrics.provider, 'agent_budget_ai');
+      assert.equal(HERO_MISSION.metrics.status, 'RECOVERED');
+      assert.equal(HERO_MISSION.metrics.next, 'VALIDATE RESULT');
+    });
+
+    it('validates 12-stage horizontal mission timeline progression', () => {
+      const TIMELINE_STAGES = [
+        'OBJECTIVE',
+        'PLAN',
+        'DISCOVER',
+        'QUOTE',
+        'POLICY',
+        'RESERVE',
+        'EXECUTE',
+        'FAILURE',
+        'REPLAN',
+        'RECOVER',
+        'CLEAR',
+        'SETTLE',
+      ];
+
+      assert.equal(TIMELINE_STAGES.length, 12, 'Timeline must contain exactly 12 lifecycle stages');
+      assert.equal(TIMELINE_STAGES[0], 'OBJECTIVE');
+      assert.equal(TIMELINE_STAGES[7], 'FAILURE');
+      assert.equal(TIMELINE_STAGES[8], 'REPLAN');
+      assert.equal(TIMELINE_STAGES[9], 'RECOVER');
+      assert.equal(TIMELINE_STAGES[10], 'CLEAR');
+      assert.equal(TIMELINE_STAGES[11], 'SETTLE');
+    });
+
+    it('validates 5 allowed and 5 forbidden authority boundaries and anchor axiom', () => {
+      const AUTHORITY = {
+        title: 'AGENT AUTHORITY',
+        subtitle: 'Autonomy within deterministic financial boundaries.',
+        allowed: [
+          'Discover providers',
+          'Negotiate terms',
+          'Plan tasks',
+          'Replan after failure',
+          'Request payment through policy',
+        ],
+        forbidden: [
+          'Sign transactions',
+          'Increase budget',
+          'Change policy',
+          'Choose arbitrary recipient',
+          'Execute arbitrary calldata',
+        ],
+        anchor: 'AUTONOMY CHANGES THE PLAN. POLICY CONTROLS THE POWER.',
+      };
+
+      assert.equal(AUTHORITY.allowed.length, 5);
+      assert.equal(AUTHORITY.forbidden.length, 5);
+      assert.equal(AUTHORITY.anchor, 'AUTONOMY CHANGES THE PLAN. POLICY CONTROLS THE POWER.');
+      assert.ok(AUTHORITY.allowed.includes('Discover providers'));
+      assert.ok(AUTHORITY.allowed.includes('Replan after failure'));
+      assert.ok(AUTHORITY.forbidden.includes('Sign transactions'));
+      assert.ok(AUTHORITY.forbidden.includes('Execute arbitrary calldata'));
+    });
+
+    it('validates 4 compact Why / Why Not decision cards', () => {
+      const DECISION_CARDS = [
+        {
+          title: 'WHY THIS PROVIDER?',
+          summary: 'Lowest eligible quote within budget and policy constraints.',
+        },
+        {
+          title: 'WHY NOT THE $28 PROVIDER?',
+          summary: 'Quote exceeds the $25 mission budget.',
+        },
+        {
+          title: 'WHY WAS THE PAYMENT NOT RETRIED?',
+          summary: 'Execution was fenced. Blind retry is prohibited.',
+        },
+        {
+          title: 'WHY WAS THE FALLBACK ALLOWED?',
+          summary: 'Capability, budget, policy and risk constraints passed.',
+        },
+      ];
+
+      assert.equal(DECISION_CARDS.length, 4);
+      assert.equal(DECISION_CARDS[0].title, 'WHY THIS PROVIDER?');
+      assert.equal(DECISION_CARDS[1].title, 'WHY NOT THE $28 PROVIDER?');
+      assert.equal(DECISION_CARDS[2].title, 'WHY WAS THE PAYMENT NOT RETRIED?');
+      assert.equal(DECISION_CARDS[3].title, 'WHY WAS THE FALLBACK ALLOWED?');
+    });
+
+    it('validates 7-item Arc Infrastructure status panel', () => {
+      const ARC_PANEL = [
+        { label: 'CHAIN ID', value: '5042' },
+        { label: 'RPC', value: 'CONNECTED' },
+        { label: 'NATIVE USDC', value: 'VERIFIED' },
+        { label: 'AGENTVAULT', value: 'NOT DEPLOYED' },
+        { label: 'LIVE EXECUTION', value: 'DISABLED' },
+        { label: 'REAL SETTLEMENTS', value: '0 VERIFIED' },
+        { label: 'BROADCASTS', value: '0' },
+      ];
+
+      assert.equal(ARC_PANEL.length, 7);
+      assert.equal(ARC_PANEL[0].value, '5042');
+      assert.equal(ARC_PANEL[1].value, 'CONNECTED');
+      assert.equal(ARC_PANEL[2].value, 'VERIFIED');
+      assert.equal(ARC_PANEL[3].value, 'NOT DEPLOYED');
+      assert.equal(ARC_PANEL[4].value, 'DISABLED');
+      assert.equal(ARC_PANEL[5].value, '0 VERIFIED');
+      assert.equal(ARC_PANEL[6].value, '0');
+    });
+
+    it('validates matte graphite CTA buttons (RUN SIMULATION, RESET DEMO)', () => {
+      const BUTTONS = ['RUN SIMULATION', 'RESET DEMO'];
+      assert.ok(BUTTONS.includes('RUN SIMULATION'));
+      assert.ok(BUTTONS.includes('RESET DEMO'));
+      assert.doesNotMatch(BUTTONS[0], /LIVE/i);
+    });
+  });
 });

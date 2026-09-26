@@ -462,38 +462,40 @@ export default function ControlTowerPage() {
   const activeEvent = DETERMINISTIC_ECONOMIC_TRACE[selectedEventIndex];
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans pb-24">
+    <div className="min-h-screen bg-[#070707] text-[#f5f5f5] font-sans pb-24">
       {/* 1. SECTION 9: PERSISTENT COMPACT STATUS STRIP */}
-      <section className="bg-[#0a0f1d] border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-2.5 sticky top-16 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+      <section className="bg-[#0a0a0a] border-b border-[#202020] px-4 sm:px-6 lg:px-8 py-2.5 sticky top-16 z-30">
+        <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-semibold">MODE:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+              <span className="text-[#a1a1a1]">MODE:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#f5f5f5] border border-[#202020] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
                 SIMULATION
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-semibold">ARC:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              <span className="text-[#a1a1a1]">ARC:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#f5f5f5] border border-[#202020] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#60a5fa]" />
                 CONNECTED
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-semibold">VAULT:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">
+              <span className="text-[#a1a1a1]">VAULT:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#a1a1a1] border border-[#202020]">
                 NOT DEPLOYED
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-semibold">EXECUTION:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300 border border-slate-700">
+              <span className="text-[#a1a1a1]">EXECUTION:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#a1a1a1] border border-[#202020]">
                 DISABLED
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-semibold">REAL SETTLEMENTS:</span>
-              <span className="px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-300 border border-slate-700">
+              <span className="text-[#a1a1a1]">REAL SETTLEMENTS:</span>
+              <span className="px-2 py-0.5 rounded font-bold bg-[#151515] text-[#a1a1a1] border border-[#202020]">
                 0 VERIFIED
               </span>
             </div>
@@ -502,16 +504,16 @@ export default function ControlTowerPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleResetDemo}
-              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded text-[11px] font-bold font-mono transition-colors"
+              className="px-2.5 py-1 bg-[#101010] hover:bg-[#151515] text-[#a1a1a1] hover:text-[#f5f5f5] border border-[#202020] rounded text-[11px] font-bold font-mono transition-colors"
               title="Restore deterministic demo state"
             >
               RESET DEMO
             </button>
-            <div className="flex bg-slate-900 border border-slate-700 rounded p-0.5">
+            <div className="flex bg-[#101010] border border-[#202020] rounded p-0.5">
               <button
                 onClick={() => setExecMode('SIMULATION')}
                 className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-                  execMode === 'SIMULATION' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                  execMode === 'SIMULATION' ? 'bg-[#151515] text-[#f5f5f5] border border-[#2c2c2c]' : 'text-[#a1a1a1] hover:text-white'
                 }`}
               >
                 SIMULATION
@@ -519,15 +521,15 @@ export default function ControlTowerPage() {
               <button
                 onClick={() => setExecMode('REAL')}
                 className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
-                  execMode === 'REAL' ? 'bg-teal-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                  execMode === 'REAL' ? 'bg-[#151515] text-[#f5f5f5] border border-[#2c2c2c]' : 'text-[#a1a1a1] hover:text-white'
                 }`}
               >
                 PROJECTED
               </button>
             </div>
             <Link
-              href="/demo"
-              className="px-3 py-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 rounded text-[11px] font-bold font-mono transition-all shadow-sm shadow-teal-500/20"
+              href="/control/autonomy"
+              className="px-3 py-1 bg-[#151515] border border-[#2c2c2c] hover:bg-[#202020] hover:border-[#3a3a3a] text-[#f5f5f5] rounded text-[11px] font-bold font-mono transition-all"
             >
               RUN SIMULATION →
             </Link>
@@ -536,44 +538,45 @@ export default function ControlTowerPage() {
       </section>
 
       {resetNotice && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs font-mono text-emerald-300 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="p-3 bg-[#101010] border border-[#2c2c2c] rounded-xl text-xs font-mono text-[#f5f5f5] flex items-center justify-between">
             <span>✓ {resetNotice}</span>
-            <button onClick={() => setResetNotice(null)} className="text-emerald-400 hover:text-white">&times;</button>
+            <button onClick={() => setResetNotice(null)} className="text-[#a1a1a1] hover:text-white">&times;</button>
           </div>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-7">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-7">
         {/* 2. SECTION 4: CONTROL TOWER HERO (ABOVE THE FOLD) */}
-        <div className="bg-gradient-to-r from-[#0c1427] via-[#0f1d38] to-[#0c1427] border border-slate-800 rounded-2xl p-6 sm:p-7 shadow-xl">
+        <div className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-mono font-bold tracking-widest uppercase">
+                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#f5f5f5] border border-[#202020] text-xs font-mono font-bold tracking-widest uppercase flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
                   SIMULATION MODE
                 </span>
-                <span className="px-2.5 py-1 rounded bg-cyan-950/60 text-cyan-400 border border-cyan-800/40 text-xs font-mono">
+                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#a1a1a1] border border-[#202020] text-xs font-mono">
                   ARC MAINNET · CONNECTED (5042)
                 </span>
-                <span className="px-2.5 py-1 rounded bg-slate-900 text-rose-400 border border-slate-800 text-xs font-mono">
+                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#a1a1a1] border border-[#202020] text-xs font-mono">
                   AGENTVAULT · NOT DEPLOYED
                 </span>
-                <span className="px-2.5 py-1 rounded bg-slate-900 text-slate-400 border border-slate-800 text-xs font-mono">
+                <span className="px-2.5 py-1 rounded bg-[#151515] text-[#a1a1a1] border border-[#202020] text-xs font-mono">
                   LIVE EXECUTION · DISABLED
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-mono mt-1">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#f5f5f5] font-mono mt-1">
                 AGENTPAY
               </h1>
-              <p className="text-slate-300 text-base sm:text-lg font-medium mt-1">
+              <p className="text-[#a1a1a1] text-base sm:text-lg font-medium mt-1">
                 Financial Control Plane for Autonomous AI Agents
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-mono">
-                <span className="px-2.5 py-1 bg-slate-900 border border-slate-700 text-amber-300 font-bold rounded">
+                <span className="px-2.5 py-1 bg-[#121212] border border-[#202020] text-[#f5f5f5] font-bold rounded">
                   AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.
                 </span>
-                <span className="text-slate-400">
+                <span className="text-[#a1a1a1]">
                   AUTONOMY CAN EXPAND. FINANCIAL AUTHORITY CANNOT.
                 </span>
               </div>
@@ -581,14 +584,14 @@ export default function ControlTowerPage() {
 
             <div className="flex flex-wrap lg:flex-col gap-2 font-mono text-xs">
               <Link
-                href="/missions/msn_market_intel_01/replay"
-                className="px-3.5 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40 transition-colors text-center"
+                href="/control/autonomy"
+                className="px-3.5 py-2 rounded bg-[#151515] hover:bg-[#202020] text-[#f5f5f5] font-bold border border-[#2c2c2c] transition-colors text-center"
               >
-                FAILURE REPLAY &rarr;
+                AUTONOMY CONTROL &rarr;
               </Link>
               <Link
                 href="/arc"
-                className="px-3.5 py-2 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 font-bold border border-cyan-500/30 transition-colors text-center"
+                className="px-3.5 py-2 rounded bg-[#101010] hover:bg-[#151515] text-[#a1a1a1] hover:text-[#f5f5f5] font-bold border border-[#202020] transition-colors text-center"
               >
                 ARC STATUS &rarr;
               </Link>
@@ -597,30 +600,30 @@ export default function ControlTowerPage() {
         </div>
 
         {/* 3. SECTION 5: FLAGSHIP HERO MISSION CARD */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-900/95 to-[#0b1325] border border-teal-500/40 rounded-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+        <div className="bg-[#101010] border border-[#202020] rounded-xl p-6 sm:p-7 relative overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#202020] pb-5">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-[#151515] text-[#f5f5f5] border border-[#202020]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
                   RUNNING
                 </span>
-                <span className="text-xs font-mono text-slate-400">FLAGSHIP MISSION</span>
+                <span className="text-xs font-mono text-[#666666]">FLAGSHIP MISSION</span>
               </div>
-              <h2 className="text-2xl font-extrabold tracking-tight font-mono text-white">
+              <h2 className="text-2xl font-extrabold tracking-tight font-mono text-[#f5f5f5]">
                 AUTONOMOUS MARKET INTELLIGENCE
               </h2>
-              <p className="text-sm text-slate-300 mt-1 max-w-2xl font-sans">
+              <p className="text-sm text-[#a1a1a1] mt-1 max-w-2xl font-sans">
                 Research the market landscape for autonomous AI infrastructure. Autonomous provider negotiation, failure fencing, and verified fallback routing.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Link
-                href="/missions/msn_market_intel_01/replay"
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono rounded-lg transition-colors shadow-lg shadow-amber-500/20"
+                href="/control/autonomy"
+                className="px-4 py-2 bg-[#151515] hover:bg-[#202020] border border-[#2c2c2c] text-[#f5f5f5] font-bold text-xs font-mono rounded transition-colors"
               >
-                REPLAY MISSION &rarr;
+                INSPECT AUTONOMY &rarr;
               </Link>
             </div>
           </div>
