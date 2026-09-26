@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import EconomicRiskHeatmap from '@/components/EconomicRiskHeatmap';
-import { SimulatorCommandRail } from '@/components/SimulatorCommandRail';
 import {
   CANONICAL_DEMO_SCENARIOS,
   SimulationScenario,
@@ -158,13 +157,8 @@ export default function SimulatorPage() {
   };
 
   return (
-    <div className="flex flex-col min-[900px]:flex-row min-h-[calc(100vh-4rem)] w-full bg-[#080808] text-[#F2F0EA] font-sans selection:bg-[#D6A83A]/30 selection:text-[#F2F0EA]">
-      {/* Product Navigation Command Rail */}
-      <SimulatorCommandRail />
-
-      {/* Main Simulator Workspace */}
-      <main className="flex-1 w-full min-w-0 p-6 lg:px-8 lg:py-6 space-y-6">
-        <div className="max-w-[1600px] w-full mx-auto space-y-6">
+    <div className="w-full space-y-6">
+      <div className="max-w-[1600px] w-full mx-auto space-y-6">
           {/* Simulator Workspace Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#222222]">
             <div>
@@ -743,7 +737,6 @@ export default function SimulatorPage() {
           )}
         </div>
       </div>
-    </main>
-  </div>
-);
+    </div>
+  );
 }

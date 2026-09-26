@@ -69,9 +69,9 @@ describe('TASK 35 — AgentPay Simulator Command Rail & Workspace Suite', () => 
 
   // 2. Main Workspace Layout & 3-Column Proportions
   describe('2. Main Workspace Composition & 3-Column Grid', () => {
-    it('verifies simulator page embeds SimulatorCommandRail and removes duplicate header', () => {
+    it('verifies simulator workspace renders in shell and removes duplicate header', () => {
       const pageContent = fs.readFileSync(path.join(webSrcDir, 'app', 'simulator', 'page.tsx'), 'utf-8');
-      assert.ok(pageContent.includes('<SimulatorCommandRail'), 'Simulator page must render SimulatorCommandRail');
+      assert.ok(!pageContent.includes('<SimulatorCommandRail'), 'Simulator page must not render duplicate page-specific sidebar');
       assert.ok(pageContent.includes('DIGITAL TWIN & ECONOMIC SIMULATOR'), 'Must render DIGITAL TWIN title in workspace');
       assert.ok(pageContent.includes('SIMULATION MODE — ZERO REAL TRANSACTIONS'), 'Must render amber simulation mode badge');
       assert.ok(pageContent.includes('Run Simulation'), 'Must render Run Simulation button');

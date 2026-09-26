@@ -398,4 +398,5 @@ export function AgentPaySidebar() {
   );
 }
 
+// Alias for backwards compatibility
 export { AgentPaySidebar as SimulatorCommandRail };

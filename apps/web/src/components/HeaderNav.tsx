@@ -17,7 +17,8 @@ export function HeaderNav() {
 
   return (
     <>
-      <nav className="hidden lg:flex items-center space-x-1 text-xs font-sans font-medium">
+      {/* Task 36: Top navigation links hidden in favor of persistent global sidebar command rail */}
+      <nav aria-label="Global Navigation" className="hidden items-center space-x-1 text-xs font-sans font-medium">
         {/* 1. CONTROL */}
         <Link
           href="/control"

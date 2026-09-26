@@ -3,8 +3,7 @@ import Link from 'next/link';
 import './globals.css';
 import { SystemStatusBanner } from '../components/SystemStatusBanner';
 import { HeaderNav } from '../components/HeaderNav';
-
-import { MainLayoutContent } from '../components/MainLayoutContent';
+import { AgentPayShell } from '../components/AgentPayShell';
 
 export const metadata: Metadata = {
   title: 'AgentPay - Autonomous Mission Control Center',
@@ -21,7 +20,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="min-h-screen bg-[#080808] text-[#F2F0EA] antialiased selection:bg-[#1A1A1A] selection:text-white">
         <header className="border-b border-[#222222] bg-[#080808] sticky top-0 z-40">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center space-x-6">
               <Link href="/control" className="flex items-center space-x-3 group">
                 <div className="w-8 h-8 rounded bg-[#101010] border border-[#222222] flex items-center justify-center font-bold text-[#F2F0EA] text-xs tracking-wider">
@@ -46,9 +45,7 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="w-full">
-          <MainLayoutContent>{children}</MainLayoutContent>
-        </main>
+        <AgentPayShell>{children}</AgentPayShell>
       </body>
     </html>
   );
