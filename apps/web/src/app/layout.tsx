@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
-import { SystemStatusBanner } from '../components/SystemStatusBanner';
 import { HeaderNav } from '../components/HeaderNav';
+import { SystemStatusBanner } from '../components/SystemStatusBanner';
+import { GlobalTopBar } from '../components/GlobalTopBar';
 import { AgentPayShell } from '../components/AgentPayShell';
 
 export const metadata: Metadata = {
-  title: 'AgentPay - Autonomous Mission Control Center',
+  title: 'AgentPay — Autonomous Economic Operating System',
   description:
     'The control center for an autonomous AI economy. Deterministic spending policies, keyless agents, and on-chain Arc USDC settlement.',
 };
@@ -19,32 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-[#080808] text-[#F2F0EA] antialiased selection:bg-[#1A1A1A] selection:text-white">
-        <header className="border-b border-[#222222] bg-[#080808] sticky top-0 z-40">
-          <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-            <div className="flex items-center space-x-6">
-              <Link href="/control" className="flex items-center space-x-3 group">
-                <div className="w-8 h-8 rounded bg-[#101010] border border-[#222222] flex items-center justify-center font-bold text-[#F2F0EA] text-xs tracking-wider">
-                  AP
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-sm tracking-tight text-[#F2F0EA]">
-                    AgentPay
-                  </span>
-                  <span className="text-[10px] text-[#B0ADA5] leading-none">
-                    Financial Control Plane
-                  </span>
-                </div>
-              </Link>
-
-              <HeaderNav />
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <SystemStatusBanner />
-            </div>
-          </div>
-        </header>
-
+        <GlobalTopBar />
+        <div className="hidden w-full" aria-hidden="true">
+          <HeaderNav />
+          <SystemStatusBanner />
+        </div>
         <AgentPayShell>{children}</AgentPayShell>
       </body>
     </html>

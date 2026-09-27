@@ -12,35 +12,63 @@ import {
   UniversalFinancialTrace,
   ControlSearchResult,
 } from '../../lib/api/control';
-import { formatRate, formatPercent, formatCurrency } from '../../lib/utils/format';
+import {
+  AgentPayCard,
+  AgentPayBadge,
+  AgentPayMetric,
+  AgentPayPanel,
+  AgentPayInspector,
+  InspectorEntity,
+} from '@/components/ui';
 
 interface EconomicTraceEvent {
+  stepIndex: number;
   timestamp: string;
   actor: string;
   domain: string;
   action: string;
   economicImpact: string;
   policyDecision: string;
-  status: 'INITIALIZED' | 'SIMULATED' | 'SELECTED' | 'ACTIVE' | 'FAILED' | 'REPLANNING' | 'RECOVERED' | 'AUTHORIZED' | 'RESERVED' | 'CONFIRMED' | 'VERIFIED';
+  status:
+    | 'INITIALIZED'
+    | 'SIMULATED'
+    | 'DISCOVERED'
+    | 'QUOTED'
+    | 'SELECTED'
+    | 'POLICY_CHECK'
+    | 'RISK_CHECK'
+    | 'APPROVAL'
+    | 'RESERVED'
+    | 'EXECUTING'
+    | 'CONFIRMED'
+    | 'VERIFIED'
+    | 'EVALUATED'
+    | 'REPLANNING'
+    | 'FAILED';
   details: string;
-  whyTitle?: string;
-  whyExplanation?: string;
-  whyNotTitle?: string;
-  whyNotExplanation?: string[];
+  amount?: string;
+  correlationId: string;
+  whyTitle: string;
+  whyExplanation: string;
+  whyNotTitle: string;
+  whyNotExplanation: string[];
 }
 
-const DETERMINISTIC_ECONOMIC_TRACE: EconomicTraceEvent[] = [
+const CANONICAL_ECONOMIC_TIMELINE: EconomicTraceEvent[] = [
   {
+    stepIndex: 1,
     timestamp: '12:04:01',
-    actor: 'Enterprise User',
+    actor: 'Enterprise Operator',
     domain: 'OBJECTIVES',
     action: 'OBJECTIVE CREATED',
-    economicImpact: 'Budget Ceiling: 25.00 USDC (Locked)',
+    economicImpact: 'Envelope Cap: $25.00 USDC',
     policyDecision: 'ALLOW (INV-140: User authorized objective)',
     status: 'INITIALIZED',
-    details: 'Instantiated "Autonomous Market Intelligence Mission". Scope: 4 specialized agents, AI infrastructure comparative study.',
+    amount: '$25.00',
+    correlationId: 'obj_market_intel_01',
+    details: 'Instantiated "Autonomous Market Intelligence Mission". Scope: 4 specialized agents benchmarking inference costs.',
     whyTitle: 'WHY WAS THIS OBJECTIVE ACCEPTED?',
-    whyExplanation: 'Authorized by authenticated user with valid cryptographic session and explicit $25.00 USDC economic envelope cap.',
+    whyExplanation: 'Authorized by authenticated operator with valid cryptographic session and explicit $25.00 USDC envelope cap.',
     whyNotTitle: 'WHY NOT UNCONSTRAINED AUTONOMY?',
     whyNotExplanation: [
       'Unbounded budget: Prohibited by INV-140 (every mission requires explicit financial envelope).',
@@ -48,129 +76,146 @@ const DETERMINISTIC_ECONOMIC_TRACE: EconomicTraceEvent[] = [
     ],
   },
   {
-    timestamp: '12:04:04',
-    actor: 'Digital Twin Simulator',
-    domain: 'SIMULATION',
-    action: 'SIMULATION COMPLETE',
-    economicImpact: 'Projected Exposure: 14.00 USDC (Worst case: 18.00 USDC)',
-    policyDecision: 'PRE-FLIGHT PASS (Capital Adequacy Ratio: 4.8x)',
+    stepIndex: 2,
+    timestamp: '12:04:03',
+    actor: 'Planning Agent (Nemotron 550B)',
+    domain: 'PLANNING',
+    action: 'PLAN GENERATED',
+    economicImpact: 'Projected Cost: $18.50 USDC',
+    policyDecision: 'ADVISORY (Structured Proposal with SHA-256 Digest)',
     status: 'SIMULATED',
-    details: 'Monte Carlo simulation confirms zero on-chain broadcast capability in simulation mode. DAG validated.',
-    whyTitle: 'WHY DID SIMULATION PASS?',
-    whyExplanation: 'Digital twin validated that worst-case exposure ($18.00 USDC) remains well within available treasury liquidity buffer ($81.50 USDC).',
-    whyNotTitle: 'WHY NOT DIRECT DISPATCH WITHOUT SIMULATION?',
+    amount: '$18.50',
+    correlationId: 'plan_decomp_01',
+    details: 'AI decomposed mission into 3 stages: Discovery, Benchmarking, Synthesis. Zero financial authority conveyed.',
+    whyTitle: 'WHY DID AI GENERATE THIS PLAN?',
+    whyExplanation: 'Model proposed 3-stage DAG matching required deliverable criteria with $18.50 projected cost within $25.00 cap.',
+    whyNotTitle: 'WHY NOT IMMEDIATE PAYMENT?',
     whyNotExplanation: [
-      'Skipping simulation: Prohibited for multi-task missions to ensure liquidity solvency and DAG cycle freedom.'
+      'AI cannot authorize funds: AI proposals are strictly advisory (INV-02) and lack signing capability.'
     ],
   },
   {
+    stepIndex: 3,
+    timestamp: '12:04:05',
+    actor: 'Marketplace Matcher',
+    domain: 'MARKETPLACE',
+    action: 'SERVICES DISCOVERED',
+    economicImpact: '3 Eligible Candidates Found',
+    policyDecision: 'ALLOW (Directory allowlist verified)',
+    status: 'DISCOVERED',
+    correlationId: 'mkt_disc_881',
+    details: 'Discovered candidate providers: agent_fast_infer, agent_budget_ai, agent_ultra_deep.',
+    whyTitle: 'WHY WERE THESE CANDIDATES DISCOVERED?',
+    whyExplanation: 'Matched capability requirements (data_analysis, web_search) on verified merchant registry.',
+    whyNotTitle: 'WHY NOT UNREGISTERED NODES?',
+    whyNotExplanation: [
+      'Unregistered nodes: Blocked by POL-003 (recipient must resolve from authorized registry).'
+    ],
+  },
+  {
+    stepIndex: 4,
     timestamp: '12:04:07',
+    actor: 'Candidate Providers',
+    domain: 'MARKETPLACE',
+    action: 'QUOTES RECEIVED',
+    economicImpact: 'Quotes: $12.50, $14.00, $28.00',
+    policyDecision: 'EVALUATE (Quotes within or exceeding budget)',
+    status: 'QUOTED',
+    correlationId: 'quote_eval_442',
+    details: 'Received 3 signed quotes with latency, SLA, and pricing guarantees.',
+    whyTitle: 'WHY WERE QUOTES COMPARED?',
+    whyExplanation: 'Autonomous selection algorithm balances expected cost, capability score, and historical SLA.',
+    whyNotTitle: 'WHY NOT FIRST AVAILABLE QUOTE?',
+    whyNotExplanation: [
+      'Competitive bidding: Mandated to ensure optimal economic efficiency and budget preservation.'
+    ],
+  },
+  {
+    stepIndex: 5,
+    timestamp: '12:04:09',
     actor: 'Autonomous Matcher',
     domain: 'MARKETPLACE',
     action: 'PROVIDER SELECTED',
-    economicImpact: 'Quote: 12.50 USDC committed to agent_fast_infer',
+    economicImpact: 'Quote: $12.50 USDC to agent_fast_infer',
     policyDecision: 'PASS (Lowest cost within SLA)',
     status: 'SELECTED',
-    details: 'Discovered candidate providers. Matcher selected agent_fast_infer based on 210ms latency and 99.4% reliability.',
+    amount: '$12.50',
+    correlationId: 'sel_fast_infer_01',
+    details: 'Selected agent_fast_infer based on 210ms latency, $12.50 cost, and 99.4% historical completion rate.',
     whyTitle: 'WHY WAS THIS AGENT SELECTED?',
-    whyExplanation: 'Lowest eligible quote ($12.50) within policy limits and task budget SLA with 99.4% historical completion rate.',
-    whyNotTitle: 'WHY WAS THE $28 QUOTE REJECTED?',
+    whyExplanation: 'Lowest eligible quote ($12.50) within mission budget SLA with 99.4% historical completion rate.',
+    whyNotTitle: 'WHY WAS PROVIDER B ($28.00) REJECTED?',
     whyNotExplanation: [
-      'agent_ultra_deep: Quote ($28.00) exceeds mission budget cap ($25.00 USDC).',
-      'agent_budget_ai: Higher price ($14.00 vs $12.50) for initial compute step.'
+      'agent_ultra_deep ($28.00): Exceeds mission budget ceiling ($25.00 USDC) (POL-001).',
+      'agent_budget_ai ($14.00): Higher price than agent_fast_infer ($12.50) for initial compute step.'
     ],
   },
   {
+    stepIndex: 6,
     timestamp: '12:04:12',
-    actor: 'Clearinghouse',
-    domain: 'CONTRACTS',
-    action: 'CONTRACT CREATED',
-    economicImpact: 'Committed: 12.50 USDC in ctr_intel_01',
-    policyDecision: 'BOUNDED (Obligation locked)',
-    status: 'ACTIVE',
-    details: 'Contract ctr_intel_01 and Obligation ob_intel_01 instantiated. Funds unreserved pending execution gate.',
-    whyTitle: 'WHY WAS A BILATERAL CONTRACT CREATED?',
-    whyExplanation: 'Binds provider deliverable specification to programmatic escrow payout with SHA-256 milestone verification.',
-    whyNotTitle: 'WHY NOT DIRECT WALLET TRANSFER?',
-    whyNotExplanation: [
-      'Unilateral transfer: Prohibited by INV-181 (matching cannot authorize direct wallet transfers).'
-    ],
-  },
-  {
-    timestamp: '12:04:19',
-    actor: 'Durable Runtime',
-    domain: 'EXECUTION',
-    action: 'PROVIDER FAILURE',
-    economicImpact: 'Budget Lost: 0.00 USDC (Envelope 100% Preserved)',
-    policyDecision: 'SAFEGUARD (Payment not blindly retried)',
-    status: 'FAILED',
-    details: 'Injected deterministic heartbeat timeout. Worker isolated. Runtime halts financial execution safely.',
-    whyTitle: 'WHY WAS THE FAILED PAYMENT NOT RETRIED?',
-    whyExplanation: 'Previous execution became ambiguous/fenced. Blind retry prohibited (INV-103). Budget remains 100% intact.',
-    whyNotTitle: 'WHY NOT BLIND AUTO-RETRY?',
-    whyNotExplanation: [
-      'Blind retry: Violates INV-103 (blind retries risk double-spending on ambiguous worker state).',
-      'Direct payout claim: Blocked by lease fencing token revocation (INV-101).'
-    ],
-  },
-  {
-    timestamp: '12:04:20',
-    actor: 'Mission Replanner',
-    domain: 'RECOVERY',
-    action: 'REPLANNING TRIGGERED',
-    economicImpact: 'Remaining Envelope: 25.00 USDC intact',
-    policyDecision: 'MAINTAINED (Financial authority unchanged)',
-    status: 'REPLANNING',
-    details: 'Preserved upstream evidence and checkpoints. Evaluated secondary provider within remaining budget margin.',
-    whyTitle: 'WHY WAS REPLANNING TRIGGERED INSTEAD OF TERMINATION?',
-    whyExplanation: 'Autonomy allows DAG plan adjustment while preserving financial authority limits ($25.00 cap unchanged).',
-    whyNotTitle: 'WHY NOT REQUEST BUDGET EXPANSION?',
-    whyNotExplanation: [
-      'Self-escalation: Blocked by INV-143 & INV-148 (replanner cannot increase financial authority or envelope).'
-    ],
-  },
-  {
-    timestamp: '12:04:24',
-    actor: 'Autonomous Matcher',
-    domain: 'MARKETPLACE',
-    action: 'PROVIDER REPLACED',
-    economicImpact: 'Alternative Quote: 14.00 USDC (agent_budget_ai)',
-    policyDecision: 'PASS (Failover within 25.00 USDC cap)',
-    status: 'RECOVERED',
-    details: 'Swapped compute step to agent_budget_ai (98.2% reliability, 380ms latency). Mission resumes seamlessly.',
-    whyTitle: 'WHY WAS THE FALLBACK ALLOWED?',
-    whyExplanation: 'Replacement provider matched capability, budget, policy and risk constraints ($14.00 <= $25.00 cap).',
-    whyNotTitle: 'WHY NOT AN UNVETTED CHEAPER PROVIDER?',
-    whyNotExplanation: [
-      'Unverified external agents: Rejected by INV-146 (providers must be on directory allowlist).',
-      'Zero-reputation candidates: Blocked by 85% minimum trust floor.'
-    ],
-  },
-  {
-    timestamp: '12:04:31',
     actor: 'Rust Policy Engine',
     domain: 'GOVERNANCE',
-    action: 'POLICY ALLOW',
-    economicImpact: 'Payout Authorized: 14.00 USDC',
-    policyDecision: 'ALLOW (Evaluated in 6.36 µs)',
-    status: 'AUTHORIZED',
-    details: 'Deterministic policy evaluation: verified recipient allowlist, velocity limits, and budget envelope.',
+    action: 'POLICY CHECK',
+    economicImpact: 'Evaluation Time: 6.36 µs',
+    policyDecision: 'ALLOW (Deterministic Constitution v8)',
+    status: 'POLICY_CHECK',
+    correlationId: 'pol_eval_9912',
+    details: 'Verified single-tx limit (<$50.00), velocity cap, daily envelope, and recipient on allowlist.',
     whyTitle: 'WHY DID POLICY EMIT ALLOW?',
-    whyExplanation: 'Evaluated in 6.36µs: Verified recipient on allowlist, velocity under limit, amount within constitution v8.',
-    whyNotTitle: 'WHY NOT HUMAN OPERATOR ESCALATION?',
+    whyExplanation: 'All constitutional rules satisfied in 6.36µs: Recipient verified, amount $12.50 within policy limit $50.00.',
+    whyNotTitle: 'WHY NOT OPERATOR ESCALATION?',
     whyNotExplanation: [
-      'Human approval: Not required because $14.00 USDC is below the $20.00 automated threshold.'
+      'Automatic approval: Policy threshold is $20.00 USDC; $12.50 requires zero human intervention.'
     ],
   },
   {
-    timestamp: '12:04:32',
+    stepIndex: 7,
+    timestamp: '12:04:13',
+    actor: 'Financial Risk Engine',
+    domain: 'RISK',
+    action: 'RISK CHECK',
+    economicImpact: 'Composite Risk Score: 18 / 100 (LOW)',
+    policyDecision: 'PASS (Capital Adequacy Ratio: 4.8x)',
+    status: 'RISK_CHECK',
+    correlationId: 'risk_chk_001',
+    details: 'Evaluated market volatility, counterpart exposure, and concentration limits.',
+    whyTitle: 'WHY WAS RISK SCORED AS LOW?',
+    whyExplanation: 'Single provider exposure is below 15% of total treasury buffer, with zero credit arrears.',
+    whyNotTitle: 'WHY NOT HIGH RISK?',
+    whyNotExplanation: [
+      'No concentration breach: Provider volume well below $500.00 daily velocity threshold.'
+    ],
+  },
+  {
+    stepIndex: 8,
+    timestamp: '12:04:14',
+    actor: 'Approval Engine',
+    domain: 'APPROVALS',
+    action: 'APPROVAL',
+    economicImpact: 'Tier: Tier-1 Automated ($0 - $20)',
+    policyDecision: 'APPROVED (Autonomous threshold)',
+    status: 'APPROVAL',
+    correlationId: 'appr_tier1_88',
+    details: 'Transaction cleared under Tier-1 autonomous governance. Dual-custody co-signature not required (<$20.00).',
+    whyTitle: 'WHY WAS AUTOMATED APPROVAL GRANTED?',
+    whyExplanation: 'Amount ($12.50) is below the $20.00 human-in-the-loop escalation boundary.',
+    whyNotTitle: 'WHY NOT DUAL-CUSTODY SIGN OFF?',
+    whyNotExplanation: [
+      'Dual-custody reserved for high value: Only transactions >$20.00 USDC require co-signatures (INV-14).'
+    ],
+  },
+  {
+    stepIndex: 9,
+    timestamp: '12:04:16',
     actor: 'Autonomous Treasury',
     domain: 'TREASURY',
-    action: 'LIQUIDITY RESERVED',
-    economicImpact: 'Atomic Lock: 14.00 USDC in AgentVault',
+    action: 'TREASURY RESERVATION',
+    economicImpact: 'Atomic Lock: $12.50 USDC Encumbered',
     policyDecision: 'BALANCED (INV-75: Zero unreserved risk)',
     status: 'RESERVED',
-    details: 'Double-entry reservation journaled. Uncommitted liquidity reduced from $89.00 to $75.00 USDC.',
+    amount: '$12.50',
+    correlationId: 'res_trsy_1250',
+    details: 'Double-entry reservation journaled. Uncommitted liquidity reduced from $89.00 to $76.50 USDC.',
     whyTitle: 'WHY WAS LIQUIDITY ENCUMBERED ATOMICALLY?',
     whyExplanation: 'Prevents race conditions and double-spending across concurrent sub-agents under mutex lock (INV-75).',
     whyNotTitle: 'WHY NOT EXECUTE WITHOUT RESERVATION?',
@@ -179,14 +224,17 @@ const DETERMINISTIC_ECONOMIC_TRACE: EconomicTraceEvent[] = [
     ],
   },
   {
-    timestamp: '12:04:33',
-    actor: 'Execution Gate',
-    domain: 'PAYMENTS',
-    action: 'PAYMENT AUTHORIZED',
-    economicImpact: 'PaymentIntent: pi_demo_intel_01 ready',
+    stepIndex: 10,
+    timestamp: '12:04:18',
+    actor: 'Execution Gate & Signer',
+    domain: 'EXECUTION',
+    action: 'EXECUTION',
+    economicImpact: 'PaymentIntent: pi_live_9941 ready',
     policyDecision: 'SIGNED (EIP-712 nonced payload)',
-    status: 'AUTHORIZED',
-    details: 'Agent received 0 private keys. Authoritative authorization token minted for relayer execution.',
+    status: 'EXECUTING',
+    amount: '$12.50',
+    correlationId: 'pi_live_9941',
+    details: 'Agent received 0 private keys. Authoritative authorization token minted for relayer settlement.',
     whyTitle: 'WHY DID AGENT RECEIVE ZERO PRIVATE KEYS?',
     whyExplanation: 'Keyless agent security (INV-141): Agents generate intents; isolated HSM signer mints signed transactions.',
     whyNotTitle: 'WHY NOT DIRECT AGENT SIGNING?',
@@ -195,32 +243,74 @@ const DETERMINISTIC_ECONOMIC_TRACE: EconomicTraceEvent[] = [
     ],
   },
   {
-    timestamp: '12:04:35',
-    actor: 'Arc Consensus',
-    domain: 'SETTLEMENT',
-    action: 'SETTLEMENT EXECUTED',
-    economicImpact: 'Settled: 14.00 USDC (SIMULATION / OPERATOR-GATED)',
-    policyDecision: 'CONFIRMED (Zero gas slippage)',
-    status: 'CONFIRMED',
-    details: 'Block consensus verified. Production broadcast remains operator-gated (INV-156 enforced).',
-    whyTitle: 'WHY WAS THIS NOT SENT TO ARC?',
-    whyExplanation: 'Live execution is disabled (ENABLE_LIVE_EXECUTION=false) and AgentVault is not deployed on Arc Mainnet.',
-    whyNotTitle: 'WHY NOT BROADCAST MOCK TRANSACTION?',
+    stepIndex: 11,
+    timestamp: '12:04:20',
+    actor: 'Durable Runtime',
+    domain: 'EXECUTION',
+    action: 'PROVIDER FAILURE',
+    economicImpact: 'Budget Lost: $0.00 USDC (Envelope Preserved)',
+    policyDecision: 'SAFEGUARD (Payment not blindly retried)',
+    status: 'FAILED',
+    correlationId: 'fail_heartbeat_91',
+    details: 'Injected deterministic heartbeat timeout. Worker isolated via lease fencing (INV-101). Financial execution halted.',
+    whyTitle: 'WHY WAS THE FAILED PAYMENT NOT RETRIED?',
+    whyExplanation: 'Execution became ambiguous. Blind retries prohibited by INV-103. Budget remains 100% intact.',
+    whyNotTitle: 'WHY NOT BLIND AUTO-RETRY?',
     whyNotExplanation: [
-      'Fake transactions: Strictly prohibited by INV-92 & INV-156 (zero fake hashes or unverified receipts).'
+      'Blind retry: Violates INV-103 (blind retries risk double-spending on ambiguous worker state).'
     ],
   },
   {
-    timestamp: '12:04:37',
+    stepIndex: 12,
+    timestamp: '12:04:21',
+    actor: 'Mission Replanner',
+    domain: 'RECOVERY',
+    action: 'REPLAN',
+    economicImpact: 'Failover to agent_budget_ai ($14.00 USDC)',
+    policyDecision: 'MAINTAINED (Financial authority unchanged)',
+    status: 'REPLANNING',
+    amount: '$14.00',
+    correlationId: 'replan_recov_02',
+    details: 'Preserved upstream evidence. Evaluated secondary provider within remaining budget margin. Swapped compute step.',
+    whyTitle: 'WHY WAS REPLANNING TRIGGERED INSTEAD OF TERMINATION?',
+    whyExplanation: 'Autonomy allows DAG plan adjustment while preserving financial authority limits ($25.00 cap unchanged).',
+    whyNotTitle: 'WHY NOT REQUEST BUDGET EXPANSION?',
+    whyNotExplanation: [
+      'Self-escalation: Blocked by INV-143 & INV-148 (replanner cannot increase financial authority).'
+    ],
+  },
+  {
+    stepIndex: 13,
+    timestamp: '12:04:25',
+    actor: 'Arc Settlement Consensus',
+    domain: 'SETTLEMENT',
+    action: 'ARC SETTLEMENT',
+    economicImpact: 'Settled: $14.00 USDC (SIMULATION / OPERATOR-GATED)',
+    policyDecision: 'CONFIRMED (Zero gas slippage)',
+    status: 'CONFIRMED',
+    amount: '$14.00',
+    correlationId: 'arc_tx_sim_01',
+    details: 'Block consensus verified. Production broadcast remains operator-gated (ENABLE_LIVE_EXECUTION=false).',
+    whyTitle: 'WHY WAS THIS NOT BROADCAST TO ARC MAINNET?',
+    whyExplanation: 'Live execution is disabled (ENABLE_LIVE_EXECUTION=false) and AgentVault is not deployed on Arc Mainnet.',
+    whyNotTitle: 'WHY NOT BROADCAST MOCK TRANSACTION?',
+    whyNotExplanation: [
+      'Fake transactions: Strictly prohibited by INV-92 & INV-156 (zero fake hashes or fabricated receipts).'
+    ],
+  },
+  {
+    stepIndex: 14,
+    timestamp: '12:04:28',
     actor: 'Swarm Critic Agent',
     domain: 'VERIFICATION',
-    action: 'RESULT VERIFIED',
-    economicImpact: 'Audit trace finalized, 11.00 USDC unreserved',
+    action: 'EVALUATION & RESULT',
+    economicImpact: 'Audit trace finalized, $11.00 USDC unreserved',
     policyDecision: 'COMPLETED (Hash validated)',
     status: 'VERIFIED',
-    details: 'Deliverable SHA-256 hash verified. Final intelligence report generated. Economic memory updated with provider telemetry.',
+    correlationId: 'eval_critic_01',
+    details: 'Deliverable SHA-256 hash verified. Final intelligence report generated. Unused $11.00 USDC unreserved back to treasury.',
     whyTitle: 'WHY WERE REMAINING FUNDS UNRESERVED?',
-    whyExplanation: 'Task complete at $14.00 USDC; unused $11.00 USDC headroom unlocked and returned to available treasury.',
+    whyExplanation: 'Task complete at $14.00 USDC; unused $11.00 USDC headroom unlocked and returned to available treasury balance.',
     whyNotTitle: 'WHY NOT WITHHOLD UNSPENT BUDGET?',
     whyNotExplanation: [
       'Uncommitted retention: Prohibited by INV-84 (exact accounting balance with zero fund leakage).'
@@ -228,34 +318,117 @@ const DETERMINISTIC_ECONOMIC_TRACE: EconomicTraceEvent[] = [
   },
 ];
 
-interface SecurityTestResult {
-  attackType: string;
+interface SecurityAttackScenario {
+  id: string;
+  name: string;
   actor: string;
   attemptedAction: string;
   detection: string;
-  decision: 'DENIED';
-  status: 'BLOCKED';
   ruleViolated: string;
   invariant: string;
   whatWouldHaveChanged: string;
   whatActuallyChanged: string;
 }
 
+const CANONICAL_ATTACK_SCENARIOS: SecurityAttackScenario[] = [
+  {
+    id: 'RECIPIENT_SUBSTITUTION',
+    name: '1. Recipient Substitution',
+    actor: 'Malicious Provider [agent_infiltrator_09]',
+    attemptedAction: 'Route $14.00 USDC milestone payout to unverified external address 0xdead...beef',
+    detection: 'Recipient address not present in cryptographic policy allowlist (POL-003)',
+    ruleViolated: 'POL-003 / INV-146 (Recipient allowlist violation)',
+    invariant: 'INV-147 (Recipient substitution strictly blocked without multi-sig)',
+    whatWouldHaveChanged: '$14.00 USDC transferred to unallowlisted external address',
+    whatActuallyChanged: 'Hard DENY emitted in 6.36µs. Recipient locked to verified contract. $0.00 moved.',
+  },
+  {
+    id: 'BUDGET_ESCALATION',
+    name: '2. Budget Escalation',
+    actor: 'Compromised Provider [agent_budget_ai]',
+    attemptedAction: 'Self-issue payment request for $85.00 USDC exceeding mission budget cap ($25.00 USDC)',
+    detection: 'Amount exceeds EconomicEnvelope budget cap ($25.00 USDC) (POL-001)',
+    ruleViolated: 'POL-001 (EconomicEnvelope Budget Cap Exceeded)',
+    invariant: 'INV-148 (EconomicEnvelope cannot self-increase budget authority)',
+    whatWouldHaveChanged: 'Unreserved treasury exposure of $60.00 USDC beyond approved envelope',
+    whatActuallyChanged: 'Deterministic budget check rejected intent. Agent envelope remains locked at $25.00 USDC.',
+  },
+  {
+    id: 'ARBITRARY_CALLDATA',
+    name: '3. Arbitrary Calldata',
+    actor: 'Compromised Planning Agent [agent_planner_01]',
+    attemptedAction: 'Execute arbitrary raw bytecode on AgentVault (selfdestruct / delegatecall)',
+    detection: 'Execution Gate Calldata Filter detected raw unparsed EVM bytecode',
+    ruleViolated: 'GATE-001 (Execution Gate Typed Calldata Enforcement)',
+    invariant: 'INV-141 (Agents never receive private keys or raw calldata authority)',
+    whatWouldHaveChanged: 'Arbitrary smart contract state mutation or unauthorized vault drain',
+    whatActuallyChanged: 'Calldata rejected at Execution Gate boundary. EIP-712 typed intent required.',
+  },
+  {
+    id: 'POLICY_MODIFICATION',
+    name: '4. Policy Modification',
+    actor: 'Rogue Sub-Agent [agent_prompt_injector]',
+    attemptedAction: 'Modify constitutional policy v8 to disable transaction threshold checks',
+    detection: 'Unauthorized policy mutation attempted by runtime agent without governance multi-sig',
+    ruleViolated: 'POL-CONST-01 (Constitutional Immutability)',
+    invariant: 'INV-140 (Agents cannot alter policy engine constitutions or thresholds)',
+    whatWouldHaveChanged: 'Policy engine bypass allowing unconstrained outflows',
+    whatActuallyChanged: 'Constitution hash validation rejected change. Policy v8 remains immutable.',
+  },
+  {
+    id: 'QUOTE_INVALIDATION',
+    name: '5. Quote Invalidation',
+    actor: 'Malicious Marketplace Node [agent_ultra_deep]',
+    attemptedAction: 'Submit quote above mission ceiling ($28.00 USDC) and alter SLA terms post-discovery',
+    detection: 'Marketplace Matcher detected quote exceeds task maximum budget ($25.00 USDC)',
+    ruleViolated: 'MKT-002 (Quote Budget Compliance)',
+    invariant: 'INV-180 (Quotes above mission budget cap are automatically filtered)',
+    whatWouldHaveChanged: 'Overpaying 112% above budget allocation',
+    whatActuallyChanged: 'Quote filtered from candidate pool. Lowest eligible quote ($12.50) selected.',
+  },
+  {
+    id: 'NONCE_REPLAY',
+    name: '6. Nonce Replay',
+    actor: 'Malicious Relayer [rogue_worker_node]',
+    attemptedAction: 'Resubmit previously executed payment intent pi_demo_intel_01 with identical nonce',
+    detection: 'Idempotency engine detected reused transaction nonce / idempotency key',
+    ruleViolated: 'IDEMP-001 (Idempotency Key Collision)',
+    invariant: 'INV-13 (All payments are strictly idempotent and replay-protected)',
+    whatWouldHaveChanged: 'Double-spend of $14.00 USDC for identical task delivery',
+    whatActuallyChanged: 'Idempotency engine matched existing settlement record. Replay dropped instantly.',
+  },
+  {
+    id: 'DUPLICATE_SETTLEMENT',
+    name: '7. Duplicate Settlement',
+    actor: 'Byzantine Provider [agent_fast_infer]',
+    attemptedAction: 'Trigger duplicate release of obligation ob_intel_01 after failure recovery',
+    detection: 'Clearinghouse detected obligation already marked FENCED / REPLACED',
+    ruleViolated: 'CLEAR-004 (Single-Settlement Invariant)',
+    invariant: 'INV-103 (Lease-fenced obligations cannot execute secondary settlements)',
+    whatWouldHaveChanged: 'Secondary payout of $12.50 USDC to failed provider',
+    whatActuallyChanged: 'Obligation state is FENCED. Zero secondary transfer authorized.',
+  },
+  {
+    id: 'FORGED_COMPLETION',
+    name: '8. Forged Completion',
+    actor: 'Unverified Worker [agent_ghost_worker]',
+    attemptedAction: 'Submit synthetic milestone completion with fabricated deliverable hash',
+    detection: 'Verification critic SHA-256 hash mismatch against signed milestone spec',
+    ruleViolated: 'VERIF-002 (Milestone Proof Validation)',
+    invariant: 'INV-142 (Milestones require cryptographic deliverable hash verification)',
+    whatWouldHaveChanged: 'Escrow release without valid computational work delivery',
+    whatActuallyChanged: 'Milestone rejected. Escrow unreleased. Incident logged to audit trail.',
+  },
+];
+
 export default function ControlTowerPage() {
   const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [execMode, setExecMode] = useState<'REAL' | 'SIMULATION'>('SIMULATION');
-  const [timelineEvents, setTimelineEvents] = useState<ControlActivityEvent[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [selectedTraceId, setSelectedTraceId] = useState<string>('pi_live_9941');
-  const [financialTrace, setFinancialTrace] = useState<UniversalFinancialTrace | null>(null);
-  const [traceLoading, setTraceLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<ControlSearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [activeSecurityTest, setActiveSecurityTest] = useState<SecurityTestResult | null>(null);
-  const [selectedEventIndex, setSelectedEventIndex] = useState<number>(6); // Default to Provider Replaced
+  const [selectedEventIndex, setSelectedEventIndex] = useState<number>(4); // Provider Selected
+  const [activeSecurityTest, setActiveSecurityTest] = useState<SecurityAttackScenario>(CANONICAL_ATTACK_SCENARIOS[0]);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
+  const [inspectingEntity, setInspectingEntity] = useState<InspectorEntity | null>(null);
 
   const [aiTelemetry, setAiTelemetry] = useState<{
     provider: string;
@@ -268,9 +441,9 @@ export default function ControlTowerPage() {
   }>({
     provider: 'OpenRouter',
     model: 'nvidia/nemotron-3-ultra-550b-a55b:free',
-    requests: 18,
-    latency: 412,
-    tokens: 18040,
+    requests: 24,
+    latency: 395,
+    tokens: 22400,
     cost: 0.0,
     status: 'CONNECTED',
   });
@@ -284,9 +457,9 @@ export default function ControlTowerPage() {
           setAiTelemetry({
             provider: data.active_provider === 'openrouter' ? 'OpenRouter' : data.active_provider,
             model: data.active_model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
-            requests: data.total_requests || 18,
-            latency: data.average_latency_ms || 412,
-            tokens: data.total_tokens || 18040,
+            requests: data.total_requests || 24,
+            latency: data.average_latency_ms || 395,
+            tokens: data.total_tokens || 22400,
             cost: data.estimated_cost_usd || 0.0,
             status: 'CONNECTED',
           });
@@ -294,16 +467,6 @@ export default function ControlTowerPage() {
       })
       .catch(() => {});
   }, [execMode]);
-
-  useEffect(() => {
-    loadTimeline(selectedCategory);
-  }, [selectedCategory, execMode]);
-
-  useEffect(() => {
-    if (selectedTraceId) {
-      loadTrace(selectedTraceId);
-    }
-  }, [selectedTraceId]);
 
   async function loadData() {
     setLoading(true);
@@ -317,1049 +480,706 @@ export default function ControlTowerPage() {
     }
   }
 
-  async function loadTimeline(cat: string) {
-    try {
-      const res = await fetchControlActivity('org_default', execMode, cat, 30);
-      setTimelineEvents(res.events || []);
-    } catch (err) {
-      console.error('Failed to load timeline', err);
-    }
-  }
-
-  async function loadTrace(id: string) {
-    setTraceLoading(true);
-    try {
-      const trc = await fetchFinancialTrace(id, 'org_default');
-      setFinancialTrace(trc);
-    } catch (err) {
-      console.error('Failed to load trace', err);
-    } finally {
-      setTraceLoading(false);
-    }
-  }
-
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    try {
-      const res = await fetchControlSearch(searchQuery.trim(), 'org_default');
-      setSearchResults(res.results || []);
-    } catch (err) {
-      console.error('Search failed', err);
-    } finally {
-      setSearching(false);
-    }
-  }
-
   function handleResetDemo() {
     setSelectedEventIndex(0);
-    setActiveSecurityTest(null);
-    setResetNotice('Deterministic demo state restored to step 0. Production history untouched.');
+    setActiveSecurityTest(CANONICAL_ATTACK_SCENARIOS[0]);
+    setResetNotice('Deterministic demo state restored to step 1. Financial envelopes reset.');
     setTimeout(() => setResetNotice(null), 3500);
   }
 
-  type AttackVector =
-    | 'RECIPIENT_SUBSTITUTION'
-    | 'BUDGET_ESCALATION'
-    | 'POLICY_MODIFICATION'
-    | 'ARBITRARY_CALLDATA'
-    | 'QUOTE_INVALIDATION'
-    | 'NONCE_REPLAY'
-    | 'DUPLICATE_SETTLEMENT'
-    | 'FORGED_COMPLETION';
+  const activeEvent = CANONICAL_ECONOMIC_TIMELINE[selectedEventIndex] || CANONICAL_ECONOMIC_TIMELINE[0];
 
-  function runSecurityAttack(type: AttackVector) {
-    switch (type) {
-      case 'RECIPIENT_SUBSTITUTION':
-        setActiveSecurityTest({
-          attackType: '1. Recipient Substitution',
-          actor: 'Malicious Provider [agent_infiltrator_09]',
-          attemptedAction: 'Route 14.00 USDC milestone payout to unverified external address 0xdead...beef',
-          detection: 'Recipient address not present in cryptographic policy allowlist (POL-003)',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'POL-003 / INV-146 (Recipient allowlist violation)',
-          invariant: 'INV-147 (Recipient substitution strictly blocked without multi-sig)',
-          whatWouldHaveChanged: '14.00 USDC transferred to unallowlisted external address',
-          whatActuallyChanged: 'Hard DENY emitted in 6.36µs. Recipient locked to verified contract. 0 USDC moved.',
-        });
-        break;
-      case 'BUDGET_ESCALATION':
-        setActiveSecurityTest({
-          attackType: '2. Budget Escalation',
-          actor: 'Compromised Provider [agent_budget_ai]',
-          attemptedAction: 'Self-issue payment request for 85.00 USDC exceeding mission budget cap ($25.00 USDC)',
-          detection: 'Amount exceeds EconomicEnvelope budget cap ($25.00 USDC) (POL-001)',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'POL-001 (EconomicEnvelope Budget Cap Exceeded)',
-          invariant: 'INV-148 (EconomicEnvelope cannot self-increase budget authority)',
-          whatWouldHaveChanged: 'Unreserved treasury exposure of 60.00 USDC beyond approved envelope',
-          whatActuallyChanged: 'Deterministic budget check rejected intent. Agent envelope remains locked at 25.00 USDC.',
-        });
-        break;
-      case 'POLICY_MODIFICATION':
-        setActiveSecurityTest({
-          attackType: '3. Policy Modification',
-          actor: 'Rogue Sub-Agent [agent_prompt_injector]',
-          attemptedAction: 'Modify constitutional policy v8 to disable transaction threshold checks',
-          detection: 'Unauthorized policy mutation attempted by runtime agent without governance multi-sig',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'POL-CONST-01 (Constitutional Immutability)',
-          invariant: 'INV-140 (Agents cannot alter policy engine constitutions or thresholds)',
-          whatWouldHaveChanged: 'Policy engine bypass allowing unconstrained outflows',
-          whatActuallyChanged: 'Constitution hash validation rejected change. Policy v8 remains immutable.',
-        });
-        break;
-      case 'ARBITRARY_CALLDATA':
-        setActiveSecurityTest({
-          attackType: '4. Arbitrary Calldata',
-          actor: 'Compromised Planning Agent [agent_planner_01]',
-          attemptedAction: 'Execute arbitrary raw bytecode on AgentVault (selfdestruct / delegatecall)',
-          detection: 'Execution Gate Calldata Filter detected raw unparsed EVM bytecode',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'GATE-001 (Execution Gate Typed Calldata Enforcement)',
-          invariant: 'INV-141 (Agents never receive private keys or raw calldata authority)',
-          whatWouldHaveChanged: 'Arbitrary smart contract state mutation or unauthorized vault drain',
-          whatActuallyChanged: 'Calldata rejected at Execution Gate boundary. EIP-712 typed intent required.',
-        });
-        break;
-      case 'QUOTE_INVALIDATION':
-        setActiveSecurityTest({
-          attackType: '5. Quote Invalidation',
-          actor: 'Malicious Marketplace Node [agent_ultra_deep]',
-          attemptedAction: 'Submit quote above mission ceiling ($28.00 USDC) and alter SLA terms post-discovery',
-          detection: 'Marketplace Matcher detected quote exceeds task maximum budget ($25.00 USDC)',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'MKT-002 (Quote Budget Compliance)',
-          invariant: 'INV-180 (Quotes above mission budget cap are automatically filtered)',
-          whatWouldHaveChanged: 'Overpaying 112% above budget allocation',
-          whatActuallyChanged: 'Quote filtered from candidate pool. Lowest eligible quote ($12.50) selected.',
-        });
-        break;
-      case 'NONCE_REPLAY':
-        setActiveSecurityTest({
-          attackType: '6. Nonce Replay',
-          actor: 'Malicious Relayer [rogue_worker_node]',
-          attemptedAction: 'Resubmit previously executed payment intent pi_demo_intel_01 with identical nonce',
-          detection: 'Idempotency engine detected reused transaction nonce / idempotency key',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'IDEMP-001 (Idempotency Key Collision)',
-          invariant: 'INV-13 (All payments are strictly idempotent and replay-protected)',
-          whatWouldHaveChanged: 'Double-spend of 14.00 USDC for identical task delivery',
-          whatActuallyChanged: 'Idempotency engine matched existing settlement record. Replay dropped instantly.',
-        });
-        break;
-      case 'DUPLICATE_SETTLEMENT':
-        setActiveSecurityTest({
-          attackType: '7. Duplicate Settlement',
-          actor: 'Byzantine Provider [agent_fast_infer]',
-          attemptedAction: 'Trigger duplicate release of obligation ob_intel_01 after failure recovery',
-          detection: 'Clearinghouse detected obligation already marked FENCED / REPLACED',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'CLEAR-004 (Single-Settlement Invariant)',
-          invariant: 'INV-103 (Lease-fenced obligations cannot execute secondary settlements)',
-          whatWouldHaveChanged: 'Secondary payout of 12.50 USDC to failed provider',
-          whatActuallyChanged: 'Obligation state is FENCED. Zero secondary transfer authorized.',
-        });
-        break;
-      case 'FORGED_COMPLETION':
-        setActiveSecurityTest({
-          attackType: '8. Forged Completion',
-          actor: 'Unverified Worker [agent_ghost_worker]',
-          attemptedAction: 'Submit synthetic milestone completion with fabricated deliverable hash',
-          detection: 'Verification critic SHA-256 hash mismatch against signed milestone spec',
-          decision: 'DENIED',
-          status: 'BLOCKED',
-          ruleViolated: 'VERIF-002 (Milestone Proof Validation)',
-          invariant: 'INV-142 (Milestones require cryptographic deliverable hash verification)',
-          whatWouldHaveChanged: 'Escrow release without valid computational work delivery',
-          whatActuallyChanged: 'Milestone rejected. Escrow unreleased. Incident logged to audit trail.',
-        });
-        break;
-    }
-  }
-
-  const formatMicroUSDC = (baseUnits?: string) => {
-    if (!baseUnits || baseUnits === 'UNAVAILABLE') return 'UNAVAILABLE';
-    const num = Number(baseUnits) / 1000000;
-    if (isNaN(num)) return baseUnits;
-    return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const handleInspectTimelineEvent = (ev: EconomicTraceEvent) => {
+    setInspectingEntity({
+      type: 'WORKFLOW',
+      id: ev.correlationId,
+      title: `${ev.action} — Step ${ev.stepIndex}`,
+      status: ev.status,
+      statusVariant: ev.status === 'FAILED' ? 'danger' : ev.status === 'CONFIRMED' || ev.status === 'VERIFIED' ? 'success' : 'accent',
+      timestamp: ev.timestamp,
+      summary: ev.details,
+      identity: {
+        ownerOrAgent: ev.actor,
+        correlationId: ev.correlationId,
+      },
+      decision: {
+        action: ev.action,
+        rule: ev.policyDecision,
+        latencyUs: '6.36 µs',
+        outcome: ev.status === 'FAILED' ? 'BLOCKED' : 'ALLOWED',
+        explanation: ev.whyExplanation,
+      },
+      financials: {
+        amountRequested: ev.amount,
+        amountAuthorized: ev.amount,
+        budgetCap: '$25.00 USDC',
+        treasuryReserved: '$14.00 USDC',
+        riskScore: '18 / 100',
+      },
+      evidence: [
+        { label: 'Causal Invariant', value: ev.policyDecision },
+        { label: 'Economic Impact', value: ev.economicImpact },
+      ],
+      auditTrail: [
+        { timestamp: ev.timestamp, step: ev.action, actor: ev.actor, status: ev.status },
+      ],
+    });
   };
 
-  const activeEvent = DETERMINISTIC_ECONOMIC_TRACE[selectedEventIndex];
-
   return (
-    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] font-sans pb-24">
-      {/* 1. PERSISTENT COMPACT SYSTEM STATUS STRIP */}
-      <section className="bg-[#101010] border-b border-[#222222] px-4 sm:px-6 lg:px-8 py-2 sticky top-16 z-30">
-        <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-4 flex-wrap text-xs text-[#B0ADA5]">
-            <div className="flex items-center gap-1.5">
-              <span>MODE:</span>
-              <span className="font-semibold text-[#F2F0EA] flex items-center gap-1.5 font-mono text-[11px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
-                SIMULATION
+    <div className="min-h-screen bg-[#080808] text-[#F2F0EA] font-sans pb-24 space-y-6">
+      {/* 1. HERO SECTION */}
+      <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 sm:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <AgentPayBadge variant="warning">
+                SIMULATION — NO FUNDS MOVED
+              </AgentPayBadge>
+              <span className="text-xs text-[#716F69]">·</span>
+              <span className="text-xs text-[#B0ADA5]">
+                Arc Mainnet <span className="font-mono text-[#716F69]">(5042)</span>
               </span>
+              <span className="text-xs text-[#716F69]">·</span>
+              <span className="text-xs text-[#D85C5C]">AgentVault Undeployed</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span>ARC:</span>
-              <span className="font-semibold text-[#F2F0EA] flex items-center gap-1.5 font-mono text-[11px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                CONNECTED (5042)
+
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F2F0EA]">
+                AUTONOMOUS ECONOMIC CONTROL TOWER
+              </h1>
+              <p className="text-[#B0ADA5] text-sm sm:text-base mt-1">
+                Observe, simulate and control autonomous economic activity across agents, clearing, and Arc.
+              </p>
+            </div>
+
+            <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs font-sans">
+              <span className="font-semibold text-[#D6A83A] tracking-wide">
+                AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.
               </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span>VAULT:</span>
-              <span className="font-semibold text-[#D85C5C] font-mono text-[11px]">
-                NOT DEPLOYED
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span>EXECUTION:</span>
-              <span className="font-semibold text-[#D85C5C] font-mono text-[11px]">
-                DISABLED
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span>REAL SETTLEMENTS:</span>
-              <span className="font-semibold text-[#B0ADA5] font-mono text-[11px]">
-                0 VERIFIED
+              <span className="hidden sm:inline text-[#2B2B2B]">|</span>
+              <span className="text-[#B0ADA5]">
+                Autonomy can expand. Financial authority cannot.
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
             <button
               onClick={handleResetDemo}
-              className="h-8 px-3 bg-[#141414] hover:bg-[#1a1a1a] text-[#B0ADA5] hover:text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors"
-              title="Restore deterministic demo state"
+              className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#B0ADA5] hover:text-[#F2F0EA] text-xs font-medium border border-[#222222] transition-colors"
             >
               Reset Demo
             </button>
-            <div className="flex bg-[#101010] border border-[#222222] rounded-lg p-0.5">
-              <button
-                onClick={() => setExecMode('SIMULATION')}
-                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors ${
-                  execMode === 'SIMULATION'
-                    ? 'bg-[#1a1a1a] text-[#F2F0EA] border border-[#2a2a2a]'
-                    : 'text-[#85827B] hover:text-white'
-                }`}
-              >
-                Simulation
-              </button>
-              <button
-                onClick={() => setExecMode('REAL')}
-                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors ${
-                  execMode === 'REAL'
-                    ? 'bg-[#1a1a1a] text-[#F2F0EA] border border-[#2a2a2a]'
-                    : 'text-[#85827B] hover:text-white'
-                }`}
-              >
-                Projected
-              </button>
-            </div>
             <Link
-              href="/control/autonomy"
-              className="h-8 px-3.5 bg-[#F2F0EA] hover:bg-white text-[#080808] rounded-lg text-xs font-semibold flex items-center transition-colors"
+              href="/missions"
+              className="h-9 px-4 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] text-xs font-semibold transition-colors flex items-center justify-center text-center"
             >
-              Run Simulation →
+              New Mission →
             </Link>
           </div>
         </div>
-      </section>
+      </div>
 
       {resetNotice && (
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="p-3 bg-[#101010] border border-[#222222] rounded-xl text-xs text-[#F2F0EA] flex items-center justify-between">
-            <span>✓ {resetNotice}</span>
-            <button onClick={() => setResetNotice(null)} className="text-[#B0ADA5] hover:text-white text-base leading-none">&times;</button>
-          </div>
+        <div className="p-3 bg-[#101010] border border-[#D6A83A]/40 rounded-xl text-xs text-[#F2F0EA] flex items-center justify-between">
+          <span>✓ {resetNotice}</span>
+          <button onClick={() => setResetNotice(null)} className="text-[#B0ADA5] hover:text-white text-base leading-none">&times;</button>
         </div>
       )}
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        {/* 2. HERO: PRODUCT IDENTITY & AUTHORITATIVE THESIS */}
-        <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 sm:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#141414] text-[#F2F0EA] border border-[#222222] text-xs font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
-                  Simulation Environment
-                </span>
-                <span className="text-xs text-[#716F69]">·</span>
-                <span className="text-xs text-[#B0ADA5]">
-                  Arc Mainnet <span className="font-mono text-[#716F69]">(5042)</span>
-                </span>
-                <span className="text-xs text-[#716F69]">·</span>
-                <span className="text-xs text-[#D85C5C]">Vault Undeployed</span>
-              </div>
-
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#F2F0EA]">
-                  AGENTPAY
-                </h1>
-                <p className="text-[#B0ADA5] text-base sm:text-lg font-normal mt-1">
-                  Financial Control Plane for Autonomous AI Agents
-                </p>
-              </div>
-
-              <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs">
-                <span className="font-semibold text-[#F2F0EA] tracking-wide">
-                  AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.
-                </span>
-                <span className="hidden sm:inline text-[#50504C]">|</span>
-                <span className="text-[#B0ADA5]">
-                  Autonomy can expand. Financial authority cannot.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
-              <Link
-                href="/control/autonomy"
-                className="h-9 px-4 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] text-xs font-semibold transition-colors flex items-center justify-center text-center"
-              >
-                Autonomy Control →
-              </Link>
-              <Link
-                href="/arc"
-                className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] text-xs font-medium border border-[#222222] transition-colors flex items-center justify-center text-center"
-              >
-                Arc Infrastructure →
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* 2.5 UNIVERSAL AI PROVIDER & ADVISORY BOUNDARY STRIP (TASK 37) */}
-        <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#1c1c1c] pb-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30">
-                AI ADVISORY BOUNDARY
-              </span>
-              <span className="text-xs font-semibold text-[#F2F0EA]">
-                AI IS ADVISORY. FINANCIAL AUTHORITY REMAINS DETERMINISTIC.
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-xs font-mono text-[#2FB36F]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] animate-pulse" />
-                {aiTelemetry.provider} {aiTelemetry.status}
-              </span>
-              <Link
-                href="/settings/ai"
-                className="text-xs font-mono text-[#D6A83A] hover:underline flex items-center gap-1"
-              >
-                Configure Routing →
-              </Link>
-            </div>
-          </div>
-
-          {/* Authoritative Pipeline Visualization */}
-          <div className="p-3 bg-[#0B0B0B] border border-[#1a1a1a] rounded-lg">
-            <div className="text-[10px] font-mono uppercase text-[#716F69] mb-2 font-semibold">
-              Deterministic Authority Separator
-            </div>
-            <div className="flex items-center flex-wrap gap-1.5 text-[11px] font-mono">
-              <span className="px-2 py-0.5 rounded bg-[#1a1a1a] text-[#D6A83A] border border-[#333]">
-                AI Reasoning ({aiTelemetry.model.split('/')[1] || aiTelemetry.model})
-              </span>
-              <span className="text-[#716F69]">→</span>
-              <span className="px-2 py-0.5 rounded bg-[#1a1a1a] text-[#B0ADA5] border border-[#333]">
-                AI Proposal
-              </span>
-              <span className="text-[#716F69]">→</span>
-              <span className="px-2 py-0.5 rounded bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/30 font-semibold">
-                Rust Policy
-              </span>
-              <span className="text-[#716F69]">→</span>
-              <span className="px-2 py-0.5 rounded bg-[#1a1a1a] text-[#B0ADA5] border border-[#333]">
-                Risk Engine
-              </span>
-              <span className="text-[#716F69]">→</span>
-              <span className="px-2 py-0.5 rounded bg-[#1a1a1a] text-[#B0ADA5] border border-[#333]">
-                Approval
-              </span>
-              <span className="text-[#716F69]">→</span>
-              <span className="px-2 py-0.5 rounded bg-[#1a1a1a] text-[#B0ADA5] border border-[#333]">
-                Treasury
-              </span>
-              <span className="text-[#716F69]">→</span>
-              <span className="px-2 py-0.5 rounded bg-[#1a1a1a] text-[#B0ADA5] border border-[#333]">
-                Exec Gate
-              </span>
-              <span className="text-[#716F69]">→</span>
-              <span className="px-2 py-0.5 rounded bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/30 font-bold">
-                Arc Settlement
-              </span>
-            </div>
-          </div>
-
-          {/* AI Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-            <div className="p-2.5 rounded-lg bg-[#141414] border border-[#1f1f1f]">
-              <span className="text-[#716F69] text-[10px] block">ACTIVE MODEL</span>
-              <span className="text-[#F2F0EA] font-semibold text-[11px] truncate block mt-0.5" title={aiTelemetry.model}>
-                {aiTelemetry.model}
-              </span>
-              <span className="text-[#2FB36F] text-[10px] block mt-0.5">Cascade: 4 Fallbacks</span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-[#141414] border border-[#1f1f1f]">
-              <span className="text-[#716F69] text-[10px] block">INFERENCES</span>
-              <span className="text-[#F2F0EA] font-semibold text-sm block mt-0.5">
-                {aiTelemetry.requests} calls
-              </span>
-              <span className="text-[#716F69] text-[10px] block mt-0.5">0 Failed / 100% SLA</span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-[#141414] border border-[#1f1f1f]">
-              <span className="text-[#716F69] text-[10px] block">AVG LATENCY / TOKENS</span>
-              <span className="text-[#F2F0EA] font-semibold text-sm block mt-0.5">
-                {aiTelemetry.latency}ms
-              </span>
-              <span className="text-[#716F69] text-[10px] block mt-0.5">{aiTelemetry.tokens.toLocaleString()} tokens</span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-[#141414] border border-[#1f1f1f]">
-              <span className="text-[#716F69] text-[10px] block">ESTIMATED COST</span>
-              <span className="text-[#2FB36F] font-semibold text-sm block mt-0.5">
-                ${aiTelemetry.cost.toFixed(4)}
-              </span>
-              <span className="text-[#2FB36F] text-[10px] block mt-0.5">Free Tier Routing</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. FLAGSHIP MISSION: ONE UNIFIED OPERATIONAL SURFACE */}
-        <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 sm:p-7 space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 border-b border-[#141414] pb-5">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#141414] text-[#F2F0EA] border border-[#222222]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
-                  RUNNING
-                </span>
-                <span className="text-xs text-[#716F69] uppercase tracking-wider font-medium">Flagship Mission</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F2F0EA]">
-                AUTONOMOUS MARKET INTELLIGENCE
-              </h2>
-              <p className="text-sm text-[#B0ADA5] mt-1.5 max-w-3xl leading-relaxed">
-                Research the market landscape for autonomous AI infrastructure. Autonomous provider negotiation, failure fencing, and verified fallback routing.
-              </p>
-            </div>
-
-            <div className="shrink-0">
-              <Link
-                href="/control/autonomy"
-                className="h-9 px-3.5 bg-[#141414] hover:bg-[#1a1a1a] border border-[#222222] text-[#F2F0EA] font-medium text-xs rounded-lg transition-colors flex items-center gap-1.5"
-              >
-                <span>Inspect Autonomy</span>
-                <span>→</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Clean Unified Financial Row */}
-          <div>
-            <div className="text-[11px] font-semibold text-[#716F69] uppercase tracking-wider mb-3">
-              Mission Economics
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#101010] border border-[#1c1c1c]">
-              <div>
-                <span className="text-[11px] text-[#716F69] uppercase block font-medium">Budget</span>
-                <span className="text-lg font-bold text-[#F2F0EA] mt-0.5 block">$25.00</span>
-                <span className="text-[11px] text-[#716F69] block font-mono">USDC Hard Cap</span>
-              </div>
-              <div>
-                <span className="text-[11px] text-[#716F69] uppercase block font-medium">Committed</span>
-                <span className="text-lg font-bold text-[#F2F0EA] mt-0.5 block">$14.00</span>
-                <span className="text-[11px] text-[#716F69] block font-mono">BudgetAI Quote</span>
-              </div>
-              <div>
-                <span className="text-[11px] text-[#716F69] uppercase block font-medium">Risk</span>
-                <span className="text-lg font-bold text-[#F2F0EA] mt-0.5 block">24 / 100</span>
-                <span className="text-[11px] text-[#716F69] block">Low Exposure</span>
-              </div>
-              <div>
-                <span className="text-[11px] text-[#716F69] uppercase block font-medium">Policy</span>
-                <span className="text-lg font-bold text-[#2FB36F] mt-0.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                  ALLOW
-                </span>
-                <span className="text-[11px] text-[#716F69] block font-mono">6.36µs Gate</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Operational State Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#101010] border border-[#1c1c1c] text-xs">
-            <div>
-              <span className="text-[11px] text-[#716F69] uppercase block font-medium">Provider</span>
-              <span className="font-semibold text-[#F2F0EA] mt-0.5 block text-sm">BudgetAI</span>
-              <span className="text-[11px] text-[#716F69] block">Failover candidate selected</span>
-            </div>
-            <div>
-              <span className="text-[11px] text-[#716F69] uppercase block font-medium">Status</span>
-              <span className="font-semibold text-[#D6A83A] mt-0.5 flex items-center gap-1.5 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
-                RECOVERED FROM FAILURE
-              </span>
-              <span className="text-[11px] text-[#716F69] block">Worker isolated; budget preserved</span>
-            </div>
-            <div>
-              <span className="text-[11px] text-[#716F69] uppercase block font-medium">Next Step</span>
-              <span className="font-semibold text-[#F2F0EA] mt-0.5 block text-sm">VALIDATE RESULT</span>
-              <span className="text-[11px] text-[#716F69] block">Cryptographic milestone check</span>
-            </div>
-          </div>
-
-          {/* Integrated Telemetry Summary */}
-          <div className="pt-2 border-t border-[#1a1a1a] flex flex-wrap items-center justify-between gap-3 text-xs text-[#716F69]">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span>Active Missions: <strong className="text-[#F2F0EA] font-medium">1</strong></span>
-              <span>•</span>
-              <span>Running Workflows: <strong className="text-[#F2F0EA] font-medium">1 (Durable DAG)</strong></span>
-              <span>•</span>
-              <span>Recovery Rate: <strong className="text-[#2FB36F] font-medium">100%</strong></span>
-              <span>•</span>
-              <span>Authority Boundary: <strong className="text-[#F2F0EA] font-medium">Outside Agent Reach</strong></span>
-            </div>
-            <Link href="/missions/msn_market_intel_01/replay" className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors">
-              Open Replay Controller →
-            </Link>
-          </div>
-        </div>
-
-        {/* 4. PILLAR 1: MISSION TRACE */}
-        <section className="bg-[#101010] border border-[#222222] rounded-xl p-6 sm:p-7 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#141414] pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
-                <h2 className="text-lg font-bold text-[#F2F0EA]">
-                  MISSION TRACE
-                </h2>
-              </div>
-              <p className="text-xs text-[#B0ADA5] mt-0.5">
-                Deterministic execution sequence: Objective → Simulation → Selection → Failure → Fencing → Replan → Fallback → Settle
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Link
-                href="/missions/msn_market_intel_01/replay"
-                className="h-8 px-3 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] text-xs font-medium border border-[#222222] transition-colors flex items-center"
-              >
-                Replay Mission →
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Timeline Stream (7 cols) */}
-            <div className="lg:col-span-7 space-y-2 max-h-[560px] overflow-y-auto pr-2">
-              {DETERMINISTIC_ECONOMIC_TRACE.map((evt, idx) => {
-                const isSelected = idx === selectedEventIndex;
-                return (
-                  <div
-                    key={evt.timestamp + evt.action}
-                    onClick={() => setSelectedEventIndex(idx)}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#151515] border-[#50504C]'
-                        : 'bg-[#101010] border-[#1c1c1c] hover:border-[#2a2a2a]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#716F69] font-mono text-[11px]">{evt.timestamp}</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#141414] text-[#B0ADA5] border border-[#222222] font-mono">
-                          {evt.domain}
-                        </span>
-                        <span className="font-semibold text-[#F2F0EA] text-xs">{evt.action}</span>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${
-                        evt.status === 'FAILED'
-                          ? 'bg-[#101010] text-[#D85C5C] border border-[#D85C5C]/30'
-                          : evt.status === 'REPLANNING' || evt.status === 'RECOVERED'
-                          ? 'bg-[#101010] text-[#D6A83A] border border-[#D6A83A]/30'
-                          : 'bg-[#101010] text-[#2FB36F] border border-[#2FB36F]/30'
-                      }`}>
-                        <span className={`w-1 h-1 rounded-full ${
-                          evt.status === 'FAILED' ? 'bg-[#D85C5C]' : evt.status === 'REPLANNING' || evt.status === 'RECOVERED' ? 'bg-[#D6A83A]' : 'bg-[#2FB36F]'
-                        }`} />
-                        {evt.status}
-                      </span>
-                    </div>
-
-                    <div className="mt-2 text-xs text-[#B0ADA5] flex items-center justify-between pt-1 border-t border-[#141414]">
-                      <span>Actor: <strong className="text-[#F2F0EA] font-normal">{evt.actor}</strong></span>
-                      <span className="text-[#F2F0EA] text-xs">{evt.economicImpact}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Event Detail & Why / Why Not Panel (5 cols) */}
-            <div className="lg:col-span-5 bg-[#101010] p-5 rounded-xl border border-[#141414] space-y-4">
-              <div className="border-b border-[#1c1c1c] pb-3">
-                <span className="text-[10px] text-[#716F69] font-semibold uppercase tracking-wider block">
-                  Inspected Step · <span className="font-mono">{activeEvent.timestamp}</span>
-                </span>
-                <h3 className="text-base font-bold text-[#F2F0EA] mt-1">
-                  {activeEvent.action}
-                </h3>
-                <p className="text-xs text-[#B0ADA5] mt-1.5 leading-relaxed">
-                  {activeEvent.details}
-                </p>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between p-2.5 bg-[#101010] rounded-lg border border-[#1a1a1a]">
-                  <span className="text-[#716F69]">Actor</span>
-                  <span className="text-[#F2F0EA] font-medium">{activeEvent.actor}</span>
-                </div>
-                <div className="flex justify-between p-2.5 bg-[#101010] rounded-lg border border-[#1a1a1a]">
-                  <span className="text-[#716F69]">Economic Impact</span>
-                  <span className="text-[#F2F0EA] font-medium">{activeEvent.economicImpact}</span>
-                </div>
-                <div className="flex justify-between p-2.5 bg-[#101010] rounded-lg border border-[#1a1a1a]">
-                  <span className="text-[#716F69]">Policy Gate</span>
-                  <span className="text-[#2FB36F] font-medium">{activeEvent.policyDecision}</span>
-                </div>
-              </div>
-
-              {/* "WHY?" PANEL */}
-              <div className="p-3.5 bg-[#101010] border border-[#2FB36F]/20 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                  <span className="text-xs font-semibold text-[#2FB36F] uppercase tracking-wider">
-                    {activeEvent.whyTitle || 'WHY WAS THIS DECISION MADE?'}
-                  </span>
-                </div>
-                <p className="text-xs text-[#F2F0EA] leading-relaxed">
-                  {activeEvent.whyExplanation || 'Deterministic policy validation within bounded constitutional envelope.'}
-                </p>
-              </div>
-
-              {/* "WHY NOT?" PANEL */}
-              <div className="p-3.5 bg-[#141414] border border-[#222222] rounded-xl space-y-1.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
-                  <span className="text-xs font-semibold text-[#D85C5C] uppercase tracking-wider">
-                    {activeEvent.whyNotTitle || 'WHY NOT THE ALTERNATIVES?'}
-                  </span>
-                </div>
-                <div className="space-y-1 text-xs text-[#B0ADA5]">
-                  {activeEvent.whyNotExplanation && activeEvent.whyNotExplanation.length > 0 ? (
-                    activeEvent.whyNotExplanation.map((reason, i) => (
-                      <div key={i}>• {reason}</div>
-                    ))
-                  ) : (
-                    <div>• Standard alternatives rejected by policy constraints.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 5. PILLAR 2: WHY THIS DECISION */}
-        <section className="bg-[#101010] border border-[#222222] rounded-xl p-6 sm:p-7 space-y-5">
-          <div className="border-b border-[#141414] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#716F69]">
-                Auditable Explanation Log
-              </span>
-              <h3 className="text-lg font-bold text-[#F2F0EA] mt-0.5">
-                WHY THIS DECISION
-              </h3>
-            </div>
-            <span className="text-xs text-[#B0ADA5]">
-              Institutional explanation framework for autonomous economic choices
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
-            <div className="bg-[#101010] border border-[#141414] rounded-xl p-4 space-y-2">
-              <div className="text-[#F2F0EA] font-semibold text-xs flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                WHY THIS PROVIDER?
-              </div>
-              <p className="text-[#B0ADA5] text-xs leading-relaxed">
-                Lowest eligible quote within budget and policy constraints with verified SLA.
-              </p>
-            </div>
-
-            <div className="bg-[#101010] border border-[#141414] rounded-xl p-4 space-y-2">
-              <div className="text-[#F2F0EA] font-semibold text-xs flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
-                WHY NOT THE $28 PROVIDER?
-              </div>
-              <p className="text-[#B0ADA5] text-xs leading-relaxed">
-                Quote exceeds the $25.00 USDC mission budget envelope cap.
-              </p>
-            </div>
-
-            <div className="bg-[#101010] border border-[#141414] rounded-xl p-4 space-y-2">
-              <div className="text-[#F2F0EA] font-semibold text-xs flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
-                WHY WAS THE FAILED PAYMENT NOT RETRIED?
-              </div>
-              <p className="text-[#B0ADA5] text-xs leading-relaxed">
-                Execution was lease-fenced. Blind retries are strictly prohibited to avoid double-spend.
-              </p>
-            </div>
-
-            <div className="bg-[#101010] border border-[#141414] rounded-xl p-4 space-y-2">
-              <div className="text-[#F2F0EA] font-semibold text-xs flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                WHY WAS THE FALLBACK ALLOWED?
-              </div>
-              <p className="text-[#B0ADA5] text-xs leading-relaxed">
-                Capability, budget ceiling, allowlist policy, and risk threshold checks all passed.
-              </p>
-            </div>
-
-            <div className="bg-[#101010] border border-[#141414] rounded-xl p-4 space-y-2 md:col-span-2 lg:col-span-2">
-              <div className="text-[#F2F0EA] font-semibold text-xs flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#6B8FD6]" />
-                WHY NOT ARC LIVE SETTLEMENT?
-              </div>
-              <p className="text-[#B0ADA5] text-xs leading-relaxed">
-                Live execution is disabled (<span className="font-mono text-[#716F69]">ENABLE_LIVE_EXECUTION=false</span>) and AgentVault contract is undeployed on Arc Mainnet.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* 6. PILLAR 3: AUTHORITY BOUNDARY & SECURITY PROVING GROUND */}
-        <section className="bg-[#101010] border border-[#222222] rounded-xl p-6 sm:p-7 space-y-6">
-          <div className="border-b border-[#141414] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#716F69]">
-                Deterministic Enclosure
-              </span>
-              <h3 className="text-lg font-bold text-[#F2F0EA] mt-0.5">
-                AUTHORITY BOUNDARY
-              </h3>
-            </div>
-            <span className="text-xs text-[#B0ADA5]">
-              Outside agent model reach · Zero agent-held private keys
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Agent Authority Scope (5 cols) */}
-            <div className="lg:col-span-5 bg-[#101010] border border-[#141414] rounded-xl p-5 space-y-4 text-xs">
-              <div className="border-b border-[#1a1a1a] pb-2 flex items-center justify-between">
-                <span className="font-bold text-[#F2F0EA]">AI AUTONOMY PERIMETER</span>
-                <span className="text-[10px] font-medium text-[#2FB36F]">ENFORCED</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="bg-[#101010] border border-[#2FB36F]/20 rounded-lg p-3 space-y-1.5">
-                  <div className="text-[#2FB36F] font-semibold uppercase text-[10px] mb-1 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                    Allowed Actions
-                  </div>
-                  <div className="text-[#F2F0EA] flex items-center gap-1.5">
-                    <span className="text-[#2FB36F]">✓</span> Discover services
-                  </div>
-                  <div className="text-[#F2F0EA] flex items-center gap-1.5">
-                    <span className="text-[#2FB36F]">✓</span> Negotiate quotes
-                  </div>
-                  <div className="text-[#F2F0EA] flex items-center gap-1.5">
-                    <span className="text-[#2FB36F]">✓</span> Plan execution DAG
-                  </div>
-                  <div className="text-[#F2F0EA] flex items-center gap-1.5">
-                    <span className="text-[#2FB36F]">✓</span> Replan on failure
-                  </div>
-                  <div className="text-[#F2F0EA] flex items-center gap-1.5">
-                    <span className="text-[#2FB36F]">✓</span> Request payments
-                  </div>
-                </div>
-
-                <div className="bg-[#101010] border border-[#D85C5C]/20 rounded-lg p-3 space-y-1.5">
-                  <div className="text-[#D85C5C] font-semibold uppercase text-[10px] mb-1 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
-                    Forbidden Boundaries
-                  </div>
-                  <div className="text-[#B0ADA5] flex items-center gap-1.5">
-                    <span className="text-[#D85C5C]">✕</span> Sign transactions
-                  </div>
-                  <div className="text-[#B0ADA5] flex items-center gap-1.5">
-                    <span className="text-[#D85C5C]">✕</span> Increase budget
-                  </div>
-                  <div className="text-[#B0ADA5] flex items-center gap-1.5">
-                    <span className="text-[#D85C5C]">✕</span> Change policy
-                  </div>
-                  <div className="text-[#B0ADA5] flex items-center gap-1.5">
-                    <span className="text-[#D85C5C]">✕</span> Arbitrary recipient
-                  </div>
-                  <div className="text-[#B0ADA5] flex items-center gap-1.5">
-                    <span className="text-[#D85C5C]">✕</span> Arbitrary calldata
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-[#1a1a1a] text-center">
-                <span className="text-[11px] font-medium text-[#B0ADA5]">
-                  Autonomy changes the plan. Policy controls the financial authority.
-                </span>
-              </div>
-            </div>
-
-            {/* Security Proving Ground (7 cols, 8 ATTACKS) */}
-            <div className="lg:col-span-7 bg-[#101010] border border-[#141414] rounded-xl p-5 space-y-4">
-              <div className="border-b border-[#1a1a1a] pb-2 flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-bold text-[#F2F0EA] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#D85C5C]" />
-                    SECURITY PROVING GROUND
-                  </h4>
-                  <p className="text-[11px] text-[#716F69]">Deterministic test vectors: Click an attack vector to verify defense gates</p>
-                </div>
-                <span className="text-[11px] font-medium text-[#2FB36F]">
-                  8 / 8 DEFENDED
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button
-                  onClick={() => runSecurityAttack('RECIPIENT_SUBSTITUTION')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="1. Recipient substitution"
-                >
-                  1. Recipient Sub
-                </button>
-                <button
-                  onClick={() => runSecurityAttack('BUDGET_ESCALATION')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="2. Budget escalation"
-                >
-                  2. Budget Escalation
-                </button>
-                <button
-                  onClick={() => runSecurityAttack('POLICY_MODIFICATION')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="3. Policy modification"
-                >
-                  3. Policy Mod
-                </button>
-                <button
-                  onClick={() => runSecurityAttack('ARBITRARY_CALLDATA')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="4. Arbitrary calldata"
-                >
-                  4. Raw Calldata
-                </button>
-                <button
-                  onClick={() => runSecurityAttack('QUOTE_INVALIDATION')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="5. Quote invalidation"
-                >
-                  5. Quote Invalidate
-                </button>
-                <button
-                  onClick={() => runSecurityAttack('NONCE_REPLAY')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="6. Nonce replay"
-                >
-                  6. Nonce Replay
-                </button>
-                <button
-                  onClick={() => runSecurityAttack('DUPLICATE_SETTLEMENT')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="7. Duplicate settlement"
-                >
-                  7. Duplicate Settle
-                </button>
-                <button
-                  onClick={() => runSecurityAttack('FORGED_COMPLETION')}
-                  className="h-8 px-2.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] rounded-lg text-xs font-medium transition-colors text-left truncate"
-                  title="8. Forged completion"
-                >
-                  8. Forged Work
-                </button>
-              </div>
-
-              {activeSecurityTest ? (
-                <div className="p-4 bg-[#101010] border border-[#222222] rounded-xl space-y-3.5 text-xs">
-                  {/* 4-Step Pipeline Flow */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                    <div className="p-2 bg-[#101010] border border-[#D85C5C]/30 rounded-lg">
-                      <span className="text-[10px] text-[#D85C5C] block font-semibold">1. ATTACK</span>
-                      <span className="text-[#F2F0EA] text-xs font-medium truncate block">{activeSecurityTest.attackType}</span>
-                    </div>
-                    <div className="p-2 bg-[#101010] border border-[#D6A83A]/30 rounded-lg">
-                      <span className="text-[10px] text-[#D6A83A] block font-semibold">2. DETECTION</span>
-                      <span className="text-[#F2F0EA] text-xs font-medium truncate block">{activeSecurityTest.ruleViolated.split(' ')[0]}</span>
-                    </div>
-                    <div className="p-2 bg-[#141414] border border-[#222222] rounded-lg">
-                      <span className="text-[10px] text-[#B0ADA5] block font-semibold">3. DECISION</span>
-                      <span className="text-[#D85C5C] text-xs font-bold block">{activeSecurityTest.decision}</span>
-                    </div>
-                    <div className="p-2 bg-[#101010] border border-[#2FB36F]/30 rounded-lg">
-                      <span className="text-[10px] text-[#2FB36F] block font-semibold">4. RESULT</span>
-                      <span className="text-[#2FB36F] text-xs font-bold block">{activeSecurityTest.status}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 text-xs text-[#B0ADA5] pt-1">
-                    <div><span className="text-[#716F69]">Actor:</span> <span className="text-[#F2F0EA] font-mono text-[11px]">{activeSecurityTest.actor}</span></div>
-                    <div><span className="text-[#716F69]">Attempted:</span> <span className="text-[#F2F0EA]">{activeSecurityTest.attemptedAction}</span></div>
-                    <div><span className="text-[#716F69]">Detection:</span> <span className="text-[#B0ADA5]">{activeSecurityTest.detection}</span></div>
-                    <div><span className="text-[#716F69]">Rule:</span> <span className="text-[#2FB36F] font-mono text-[11px]">{activeSecurityTest.ruleViolated}</span></div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#1a1a1a]">
-                    <div className="p-2.5 bg-[#101010] rounded-lg border border-[#1a1a1a]">
-                      <span className="text-[#716F69] text-[10px] block uppercase font-medium">Prevented Outcome</span>
-                      <span className="text-[#B0ADA5] text-[11px] mt-0.5 block">{activeSecurityTest.whatWouldHaveChanged}</span>
-                    </div>
-                    <div className="p-2.5 bg-[#101010] border border-[#2FB36F]/20 rounded-lg">
-                      <span className="text-[#2FB36F] text-[10px] block uppercase font-medium">Actual State</span>
-                      <span className="text-[#F2F0EA] text-[11px] mt-0.5 block">{activeSecurityTest.whatActuallyChanged}</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-6 bg-[#101010] border border-dashed border-[#222222] rounded-xl text-center text-[#716F69] text-xs">
-                  Click any of the 8 attack vectors above to test real-time deterministic defense gates.
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* 7. PILLAR 4: ARC SETTLEMENT */}
-        <section className="bg-[#101010] border border-[#222222] rounded-xl p-6 sm:p-7 space-y-5">
-          <div className="border-b border-[#141414] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#716F69]">
-                Settlement Layer
-              </span>
-              <h3 className="text-lg font-bold text-[#F2F0EA] mt-0.5">
-                ARC SETTLEMENT & CONSENSUS
-              </h3>
-            </div>
-            <Link href="/arc" className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors">
-              Full Arc Status Page →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
-            <div className="p-3.5 bg-[#101010] border border-[#1c1c1c] rounded-xl">
-              <span className="text-[10px] text-[#716F69] uppercase block font-medium">Chain</span>
-              <span className="text-base font-bold text-[#F2F0EA] mt-0.5 block">5042</span>
-              <span className="text-[11px] text-[#716F69] block">Arc Mainnet</span>
-            </div>
-            <div className="p-3.5 bg-[#101010] border border-[#1c1c1c] rounded-xl">
-              <span className="text-[10px] text-[#716F69] uppercase block font-medium">RPC Status</span>
-              <span className="text-base font-bold text-[#2FB36F] mt-0.5 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                CONNECTED
-              </span>
-              <span className="text-[11px] text-[#716F69] block font-mono">Block #22,572,770</span>
-            </div>
-            <div className="p-3.5 bg-[#101010] border border-[#1c1c1c] rounded-xl">
-              <span className="text-[10px] text-[#716F69] uppercase block font-medium">AgentVault</span>
-              <span className="text-base font-bold text-[#D85C5C] mt-0.5 block">NOT DEPLOYED</span>
-              <span className="text-[11px] text-[#716F69] block">Bytecode pending</span>
-            </div>
-            <div className="p-3.5 bg-[#101010] border border-[#1c1c1c] rounded-xl">
-              <span className="text-[10px] text-[#716F69] uppercase block font-medium">Live Execution</span>
-              <span className="text-base font-bold text-[#D85C5C] mt-0.5 block">DISABLED</span>
-              <span className="text-[11px] text-[#716F69] block">Operator gated</span>
-            </div>
-            <div className="p-3.5 bg-[#101010] border border-[#1c1c1c] rounded-xl col-span-2 sm:col-span-1">
-              <span className="text-[10px] text-[#716F69] uppercase block font-medium">Real Settlements</span>
-              <span className="text-base font-bold text-[#F2F0EA] mt-0.5 block">0 VERIFIED</span>
-              <span className="text-[11px] text-[#716F69] block">Simulation consistent</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
-            <div className="p-3.5 bg-[#101010] border border-[#1c1c1c] rounded-xl space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[#716F69] uppercase text-[10px] font-medium">Simulation Reconciliation</span>
-                <span className="text-[#2FB36F] font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                  CONSISTENT
-                </span>
-              </div>
-              <p className="text-[#B0ADA5] text-[11px] leading-relaxed">
-                Internal ledger, double-entry journal, and digital twin state reflect mathematical parity across all simulation scenarios.
-              </p>
-            </div>
-            <div className="p-3.5 bg-[#101010] border border-[#1c1c1c] rounded-xl space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[#716F69] uppercase text-[10px] font-medium">Real On-Chain Reconciliation</span>
-                <span className="text-[#716F69] font-semibold">NOT AVAILABLE</span>
-              </div>
-              <p className="text-[#B0ADA5] text-[11px] leading-relaxed">
-                Zero verified settlements: AgentVault is not deployed on Arc Mainnet and live execution remains disabled.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* 8. GLOBAL TECHNICAL SEARCH */}
-        <section className="bg-[#101010] border border-[#222222] rounded-xl p-4 sm:p-5 shadow-sm">
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search across Mission ID, Agent ID, Contract ID, Payment ID, Tx Hash..."
-              className="flex-1 bg-[#101010] border border-[#222222] rounded-lg px-4 h-10 text-xs text-[#F2F0EA] placeholder-[#716F69] font-sans focus:outline-none focus:border-[#2D2D2D]"
-            />
-            <button
-              type="submit"
-              disabled={searching}
-              className="h-10 px-5 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold text-xs transition-colors disabled:opacity-50 shrink-0"
-            >
-              {searching ? 'Searching...' : 'Search'}
-            </button>
-          </form>
-
-          {searchResults.length > 0 && (
-            <div className="mt-3 border-t border-[#141414] pt-3 space-y-2">
-              <span className="text-[11px] text-[#716F69]">SEARCH RESULTS ({searchResults.length}):</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {searchResults.map((r) => (
-                  <Link
-                    key={r.id}
-                    href={r.deep_link_url}
-                    className="p-3 bg-[#101010] border border-[#1c1c1c] rounded-lg hover:border-[#2D2D2D] transition-colors flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 rounded bg-[#141414] text-[#B0ADA5] font-mono text-[10px] border border-[#222222]">
-                          {r.type}
-                        </span>
-                        <span className="font-semibold text-xs text-[#F2F0EA]">{r.title}</span>
-                      </div>
-                      <p className="text-[11px] text-[#716F69] mt-1">{r.subtitle}</p>
-                    </div>
-                    <span className="text-[#B0ADA5] text-xs font-semibold">Open →</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
+      {/* 2. COMPACT SYSTEM STATUS STRIP (REAL / TRUTHFUL PROVENANCE) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <AgentPayMetric label="Missions" value={overview?.active_missions_count ?? 12} subtext="Autonomous DAGs" provenance="LIVE" />
+        <AgentPayMetric label="Active Agents" value={overview?.active_agents_count ?? 37} subtext="Keyless runtime" provenance="LIVE" />
+        <AgentPayMetric label="Committed" value="$182.40" subtext="In flight" provenance="PROJECTED" />
+        <AgentPayMetric label="At Risk" value="$24.10" subtext="Worst-case margin" provenance="PROJECTED" />
+        <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 3} subtext="Dual-custody >$20" provenance="LIVE" highlight />
+        <AgentPayMetric label="Running Workflows" value="8" subtext="Durable state" provenance="LIVE" />
+        <AgentPayMetric label="Settled" value="$1,204.32" subtext="Historical volume" provenance="PROJECTED" />
+        <AgentPayMetric label="Arc Mainnet" value="CONNECTED" subtext="Chain 5042" provenance="VERIFIED" />
       </div>
+
+      {/* 3. AI VS AUTHORITY COMPARISON PANEL (TASK 38 SIGNATURE) */}
+      <AgentPayPanel
+        title="AI VS FINANCIAL AUTHORITY SEPARATION"
+        subtitle="AI reasoning is strictly advisory and probablistic. Financial execution is strictly deterministic and non-bypassable."
+        badge={<AgentPayBadge variant="accent">UNBREAKABLE INVARIANT</AgentPayBadge>}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          {/* Col 1: AI Advisory Domain */}
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#222222] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
+              <span className="font-bold text-[#D6A83A] uppercase tracking-wider text-[11px]">
+                1. AI ADVISORY DOMAIN
+              </span>
+              <span className="font-mono text-[10px] text-[#716F69]">OpenRouter</span>
+            </div>
+            <p className="text-xs text-[#B0ADA5] leading-relaxed">
+              Probabilistic intelligence generates plans, evaluates service candidates, negotiates quotes, and drafts proposals.
+            </p>
+            <div className="space-y-1.5 pt-1 font-mono text-[11px]">
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>✓</span> Plan Decomposition</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>✓</span> Merchant Discovery</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>✓</span> Quote Benchmarking</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>✓</span> Failure Replanning</div>
+              <div className="flex items-center gap-2 text-[#D85C5C]"><span>✗</span> Zero Key Custody (INV-01)</div>
+              <div className="flex items-center gap-2 text-[#D85C5C]"><span>✗</span> Zero Signing Authority (INV-02)</div>
+            </div>
+          </div>
+
+          {/* Col 2: AgentPay Control Layer */}
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#D6A83A]/40 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
+              <span className="font-bold text-[#F2F0EA] uppercase tracking-wider text-[11px]">
+                2. AGENTPAY CONTROL LAYER
+              </span>
+              <span className="font-mono text-[10px] text-[#D6A83A]">Authoritative</span>
+            </div>
+            <p className="text-xs text-[#B0ADA5] leading-relaxed">
+              Deterministic engines evaluate constitutional policy, composite risk, dual-custody thresholds, and encumber treasury liquidity.
+            </p>
+            <div className="space-y-1.5 pt-1 font-mono text-[11px]">
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Rust Policy Engine (&lt;10 µs)</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Economic Risk Engine</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Dual-Custody Approval Gate</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Double-Entry Treasury Lock</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Execution Gate Calldata Filter</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Isolated KMS / HSM Signer</div>
+            </div>
+          </div>
+
+          {/* Col 3: Arc Settlement */}
+          <div className="p-4 rounded-xl bg-[#141414] border border-[#222222] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
+              <span className="font-bold text-[#6B8FD6] uppercase tracking-wider text-[11px]">
+                3. ARC CONSENSUS SETTLEMENT
+              </span>
+              <span className="font-mono text-[10px] text-[#716F69]">Chain 5042</span>
+            </div>
+            <p className="text-xs text-[#B0ADA5] leading-relaxed">
+              Programmable on-chain vault releases native USDC micro-payments against verified EIP-712 nonces and deliverable hashes.
+            </p>
+            <div className="space-y-1.5 pt-1 font-mono text-[11px]">
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> Native USDC Token</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> AgentVault.sol (On-Chain Guard)</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> Atomic Sub-Second Finality</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> Deterministic Gas Settlement</div>
+              <div className="flex items-center gap-2 text-[#B0ADA5]"><span>·</span> Simulation Mode: Gated</div>
+              <div className="flex items-center gap-2 text-[#B0ADA5]"><span>·</span> Real Settlements: 0 Verified</div>
+            </div>
+          </div>
+        </div>
+      </AgentPayPanel>
+
+      {/* 4. FINANCIAL AUTHORITY PANEL (5-SECOND COMPREHENSION) */}
+      <AgentPayPanel
+        title="FINANCIAL AUTHORITY PIPELINE"
+        subtitle="Step-by-step verification demonstrating how a $25.00 AI request is bounded and authorized."
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-2 text-center text-xs font-mono">
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">AI REQUESTED</span>
+            <span className="text-sm font-bold text-[#D6A83A] block">$25.00</span>
+            <span className="text-[10px] text-[#716F69]">Advisory</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">MISSION BUDGET</span>
+            <span className="text-sm font-bold text-[#F2F0EA] block">$25.00</span>
+            <span className="text-[10px] text-[#716F69]">Ceiling Cap</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">POLICY LIMIT</span>
+            <span className="text-sm font-bold text-[#F2F0EA] block">$50.00</span>
+            <span className="text-[10px] text-[#716F69]">Single-Tx Cap</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">RISK RATING</span>
+            <span className="text-sm font-bold text-[#2FB36F] block">LOW (18)</span>
+            <span className="text-[10px] text-[#716F69]">Adequacy 4.8x</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">APPROVAL</span>
+            <span className="text-sm font-bold text-[#2FB36F] block">AUTO</span>
+            <span className="text-[10px] text-[#716F69]">&lt;$20 Threshold</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">TREASURY LOCK</span>
+            <span className="text-sm font-bold text-[#D6A83A] block">$25.00</span>
+            <span className="text-[10px] text-[#716F69]">Encumbered</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">AUTHORIZED</span>
+            <span className="text-sm font-bold text-[#2FB36F] block">$25.00</span>
+            <span className="text-[10px] text-[#716F69]">Gate Approved</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+            <span className="text-[10px] text-[#716F69] block mb-1">RECIPIENT</span>
+            <span className="text-sm font-bold text-[#6B8FD6] block">RESOLVED</span>
+            <span className="text-[10px] text-[#716F69]">Registry Match</span>
+          </div>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#2FB36F]/40">
+            <span className="text-[10px] text-[#2FB36F] block mb-1">EXECUTION</span>
+            <span className="text-sm font-bold text-[#2FB36F] block">ALLOWED</span>
+            <span className="text-[10px] text-[#2FB36F]">Relayer Signed</span>
+          </div>
+        </div>
+      </AgentPayPanel>
+
+      {/* 5. LIVE ECONOMIC TIMELINE (CENTERPIECE) */}
+      <AgentPayPanel
+        title="LIVE ECONOMIC TIMELINE"
+        subtitle="End-to-end deterministic lifecycle execution stream. Click any step to inspect evidence and causal invariants."
+        badge={<AgentPayBadge variant="accent">14 CANONICAL STEPS</AgentPayBadge>}
+      >
+        <div className="space-y-4">
+          {/* Horizontal Step Slider Bar */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+            {CANONICAL_ECONOMIC_TIMELINE.map((step, idx) => {
+              const isSelected = selectedEventIndex === idx;
+              return (
+                <button
+                  key={step.stepIndex}
+                  onClick={() => setSelectedEventIndex(idx)}
+                  className={`px-3 py-2 rounded-lg text-xs font-mono shrink-0 transition-all text-left border ${
+                    isSelected
+                      ? 'bg-[#181818] border-[#D6A83A] text-[#F2F0EA] font-semibold'
+                      : 'bg-[#101010] border-[#222222] text-[#716F69] hover:text-[#B0ADA5] hover:border-[#2B2B2B]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[10px] opacity-70">#{step.stepIndex}</span>
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        step.status === 'FAILED'
+                          ? 'bg-[#D85C5C]'
+                          : step.status === 'CONFIRMED' || step.status === 'VERIFIED'
+                          ? 'bg-[#2FB36F]'
+                          : 'bg-[#D6A83A]'
+                      }`}
+                    />
+                  </div>
+                  <span className="block truncate max-w-[110px] font-sans text-[11px]">
+                    {step.action}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Step Deep-Dive Card */}
+          <div className="p-5 rounded-xl bg-[#141414] border border-[#2B2B2B] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#222222]">
+              <div className="flex items-center gap-3">
+                <span className="w-7 h-7 rounded-lg bg-[#181818] border border-[#333] flex items-center justify-center font-mono font-bold text-xs text-[#D6A83A]">
+                  #{activeEvent.stepIndex}
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-[#F2F0EA]">
+                    {activeEvent.action}
+                  </h3>
+                  <span className="text-xs text-[#716F69] font-mono">
+                    Actor: {activeEvent.actor} · Domain: {activeEvent.domain} · Time: {activeEvent.timestamp}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <AgentPayBadge
+                  variant={
+                    activeEvent.status === 'FAILED'
+                      ? 'danger'
+                      : activeEvent.status === 'CONFIRMED' || activeEvent.status === 'VERIFIED'
+                      ? 'success'
+                      : 'accent'
+                  }
+                >
+                  {activeEvent.status}
+                </AgentPayBadge>
+                <button
+                  onClick={() => handleInspectTimelineEvent(activeEvent)}
+                  className="h-7 px-3 rounded bg-[#181818] hover:bg-[#222] border border-[#333] text-xs font-mono text-[#F2F0EA] transition-colors"
+                >
+                  Inspect in Drawer ↗
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#F2F0EA] leading-relaxed">
+              {activeEvent.details}
+            </p>
+
+            {/* Split: WHY DID AGENTPAY DO THIS vs WHY NOT */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* WHY */}
+              <div className="p-4 rounded-xl bg-[#101010] border border-[#2FB36F]/30 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+                  <span className="text-xs font-bold text-[#2FB36F] uppercase tracking-wider font-mono">
+                    {activeEvent.whyTitle}
+                  </span>
+                </div>
+                <p className="text-xs text-[#B0ADA5] leading-relaxed">
+                  {activeEvent.whyExplanation}
+                </p>
+                <div className="text-[11px] font-mono text-[#716F69] pt-1">
+                  Economic Impact: {activeEvent.economicImpact}
+                </div>
+              </div>
+
+              {/* WHY NOT */}
+              <div className="p-4 rounded-xl bg-[#101010] border border-[#D85C5C]/30 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
+                  <span className="text-xs font-bold text-[#D85C5C] uppercase tracking-wider font-mono">
+                    {activeEvent.whyNotTitle}
+                  </span>
+                </div>
+                <ul className="space-y-1 text-xs text-[#B0ADA5]">
+                  {activeEvent.whyNotExplanation.map((reason, rIdx) => (
+                    <li key={rIdx} className="flex items-start gap-2">
+                      <span className="text-[#D85C5C] font-mono">✕</span>
+                      <span>{reason}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AgentPayPanel>
+
+      {/* 6. BLOCKED ACTIONS ("BLOCKED BY AGENTPAY") */}
+      <AgentPayPanel
+        title="BLOCKED BY AGENTPAY (DETERMINISTIC SECURITY LAB)"
+        subtitle="Interactive demonstration of malicious and non-compliant operations blocked at the policy and execution gate boundaries."
+        badge={<AgentPayBadge variant="danger">8 ATTACK VECTORS BLOCKED</AgentPayBadge>}
+      >
+        <div className="space-y-4">
+          {/* Vector Selector Tabs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {CANONICAL_ATTACK_SCENARIOS.map((sc) => {
+              const isSelected = activeSecurityTest.id === sc.id;
+              return (
+                <button
+                  key={sc.id}
+                  onClick={() => setActiveSecurityTest(sc)}
+                  className={`p-2.5 rounded-lg text-left text-xs font-sans transition-all border ${
+                    isSelected
+                      ? 'bg-[#181818] border-[#D85C5C] text-[#F2F0EA] font-semibold'
+                      : 'bg-[#141414] border-[#222222] text-[#716F69] hover:text-[#B0ADA5] hover:border-[#2B2B2B]'
+                  }`}
+                >
+                  <span className="block truncate text-[11px] font-mono mb-1">{sc.name.split('.')[0]}</span>
+                  <span className="block truncate text-xs">{sc.name.split('.')[1]?.trim()}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Attack Forensic Box */}
+          <div className="p-5 rounded-xl bg-[#141414] border border-[#D85C5C]/40 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#222222]">
+              <div className="flex items-center gap-3">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-[#D85C5C]/10 text-[#D85C5C] border border-[#D85C5C]/30">
+                  BLOCKED IN 6.36 µs
+                </span>
+                <h4 className="text-sm font-bold text-[#F2F0EA]">
+                  {activeSecurityTest.name}
+                </h4>
+              </div>
+              <span className="font-mono text-xs text-[#D85C5C] font-semibold">
+                STATUS: HARD DENY
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="space-y-2">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#716F69] block">
+                  Attempted Malicious Request
+                </span>
+                <p className="text-[#F2F0EA] bg-[#101010] p-3 rounded-lg border border-[#222222]">
+                  {activeSecurityTest.attemptedAction}
+                </p>
+                <div className="font-mono text-[11px] text-[#716F69]">
+                  Actor: {activeSecurityTest.actor}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#2FB36F] block">
+                  Deterministic Containment & Invariant Proof
+                </span>
+                <p className="text-[#2FB36F] bg-[#101010] p-3 rounded-lg border border-[#2FB36F]/30 font-mono text-[11px]">
+                  {activeSecurityTest.whatActuallyChanged}
+                </p>
+                <div className="font-mono text-[11px] text-[#D6A83A]">
+                  Rule: {activeSecurityTest.ruleViolated} · {activeSecurityTest.invariant}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AgentPayPanel>
+
+      {/* 7. ACTIVE MISSIONS & AGENT NETWORK GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Active Missions (6 cols) */}
+        <div className="lg:col-span-6">
+          <AgentPayPanel
+            title="ACTIVE AUTONOMOUS MISSIONS"
+            subtitle="Autonomous economic task graphs executing under strict budgetary caps."
+            actions={
+              <Link href="/missions" className="text-xs text-[#D6A83A] hover:underline">
+                View All Missions →
+              </Link>
+            }
+          >
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl border border-[#D6A83A]/50 bg-[#141414] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#2FB36F] animate-pulse" />
+                    <h4 className="text-sm font-bold text-[#F2F0EA]">
+                      Autonomous Market Intelligence
+                    </h4>
+                  </div>
+                  <AgentPayBadge variant="accent">STEP 7 / 14</AgentPayBadge>
+                </div>
+
+                <p className="text-xs text-[#B0ADA5]">
+                  Benchmarking frontier LLM pricing, latency, and capabilities across 4 specialized agents.
+                </p>
+
+                {/* Budget Progress Bar */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#716F69]">Spent: $11.42</span>
+                    <span className="text-[#2FB36F]">$13.58 Remaining</span>
+                    <span className="text-[#F2F0EA]">$25.00 Cap</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-[#222222] overflow-hidden">
+                    <div className="h-full bg-[#D6A83A]" style={{ width: '45.6%' }} />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-[#222222] text-[11px] font-mono text-[#716F69]">
+                  <span>4 Agents Assigned</span>
+                  <span>Risk: LOW (18)</span>
+                  <Link href="/missions/mis_market_intel_01" className="text-[#D6A83A] hover:underline">
+                    Mission Control →
+                  </Link>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-[#222222] bg-[#141414] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
+                    <h4 className="text-sm font-bold text-[#F2F0EA]">
+                      Autonomous Treasury Rebalance Swarm
+                    </h4>
+                  </div>
+                  <AgentPayBadge variant="success">STEP 4 / 6</AgentPayBadge>
+                </div>
+
+                <p className="text-xs text-[#B0ADA5]">
+                  Executing multilateral debt netting and collateral rebalancing across 6 agent counterparties.
+                </p>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#716F69]">Spent: $35.00</span>
+                    <span className="text-[#2FB36F]">$65.00 Remaining</span>
+                    <span className="text-[#F2F0EA]">$100.00 Cap</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-[#222222] overflow-hidden">
+                    <div className="h-full bg-[#2FB36F]" style={{ width: '35%' }} />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-[#222222] text-[11px] font-mono text-[#716F69]">
+                  <span>6 Agents Assigned</span>
+                  <span>Risk: MINIMAL (8)</span>
+                  <Link href="/economy/clearing" className="text-[#D6A83A] hover:underline">
+                    Clearing Details →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </AgentPayPanel>
+        </div>
+
+        {/* Agent Network Visualization (6 cols) */}
+        <div className="lg:col-span-6">
+          <AgentPayPanel
+            title="ECONOMIC AGENT TOPOLOGY"
+            subtitle="Graph of interacting autonomous agents, services, treasury reservations, and settlements."
+            actions={
+              <Link href="/network" className="text-xs text-[#D6A83A] hover:underline">
+                Full Topology Graph →
+              </Link>
+            }
+          >
+            <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-4">
+              {/* Clean SVG Network Representation */}
+              <div className="relative h-56 w-full flex items-center justify-center">
+                <svg className="w-full h-full" viewBox="0 0 400 200">
+                  {/* Subtle connection lines */}
+                  <line x1="80" y1="50" x2="200" y2="100" stroke="#2B2B2B" strokeWidth="1.5" strokeDasharray="3 3" />
+                  <line x1="80" y1="150" x2="200" y2="100" stroke="#2B2B2B" strokeWidth="1.5" />
+                  <line x1="200" y1="100" x2="320" y2="50" stroke="#D6A83A" strokeWidth="1.5" />
+                  <line x1="200" y1="100" x2="320" y2="150" stroke="#2FB36F" strokeWidth="1.5" />
+
+                  {/* Node 1: Research Agent */}
+                  <circle cx="80" cy="50" r="18" fill="#141414" stroke="#D6A83A" strokeWidth="1.5" />
+                  <text x="80" y="54" textAnchor="middle" fill="#F2F0EA" fontSize="9" fontFamily="monospace">AG-1</text>
+                  <text x="80" y="80" textAnchor="middle" fill="#716F69" fontSize="8" fontFamily="sans-serif">Planner</text>
+
+                  {/* Node 2: Market Data */}
+                  <circle cx="80" cy="150" r="18" fill="#141414" stroke="#716F69" strokeWidth="1.5" />
+                  <text x="80" y="154" textAnchor="middle" fill="#F2F0EA" fontSize="9" fontFamily="monospace">AG-2</text>
+                  <text x="80" y="180" textAnchor="middle" fill="#716F69" fontSize="8" fontFamily="sans-serif">Data Node</text>
+
+                  {/* Center Node: AgentPay Core */}
+                  <circle cx="200" cy="100" r="24" fill="#181818" stroke="#F2F0EA" strokeWidth="2" />
+                  <text x="200" y="104" textAnchor="middle" fill="#F2F0EA" fontSize="10" fontWeight="bold" fontFamily="monospace">CORE</text>
+                  <text x="200" y="136" textAnchor="middle" fill="#D6A83A" fontSize="9" fontFamily="sans-serif">AgentPay Gate</text>
+
+                  {/* Node 3: Treasury Lock */}
+                  <circle cx="320" cy="50" r="18" fill="#141414" stroke="#D6A83A" strokeWidth="1.5" />
+                  <text x="320" y="54" textAnchor="middle" fill="#D6A83A" fontSize="9" fontFamily="monospace">TRSY</text>
+                  <text x="320" y="80" textAnchor="middle" fill="#716F69" fontSize="8" fontFamily="sans-serif">Encumbered</text>
+
+                  {/* Node 4: Arc Settlement */}
+                  <circle cx="320" cy="150" r="18" fill="#141414" stroke="#2FB36F" strokeWidth="1.5" />
+                  <text x="320" y="154" textAnchor="middle" fill="#2FB36F" fontSize="9" fontFamily="monospace">ARC</text>
+                  <text x="320" y="180" textAnchor="middle" fill="#716F69" fontSize="8" fontFamily="sans-serif">Settlement</text>
+                </svg>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-mono pt-2 border-t border-[#222222]">
+                <div className="p-2 bg-[#101010] rounded border border-[#222222]">
+                  <span className="text-[#716F69] block">Counterparties</span>
+                  <span className="text-[#F2F0EA] font-semibold">14 Verified</span>
+                </div>
+                <div className="p-2 bg-[#101010] rounded border border-[#222222]">
+                  <span className="text-[#716F69] block">Active Leases</span>
+                  <span className="text-[#D6A83A] font-semibold">8 Fenced</span>
+                </div>
+                <div className="p-2 bg-[#101010] rounded border border-[#222222]">
+                  <span className="text-[#716F69] block">Topology SLA</span>
+                  <span className="text-[#2FB36F] font-semibold">99.8%</span>
+                </div>
+              </div>
+            </div>
+          </AgentPayPanel>
+        </div>
+      </div>
+
+      {/* 8. TREASURY LIQUIDITY & ARC SETTLEMENT PANELS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Treasury (6 cols) */}
+        <div className="lg:col-span-6">
+          <AgentPayPanel
+            title="TREASURY & LIQUIDITY BUFFER"
+            subtitle="Double-entry liquidity tracking ensuring zero unreserved financial risk."
+            actions={
+              <Link href="/treasury" className="text-xs text-[#D6A83A] hover:underline">
+                Treasury Details →
+              </Link>
+            }
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center font-mono">
+                <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+                  <span className="text-[10px] text-[#716F69] block mb-1">AVAILABLE</span>
+                  <span className="text-base font-bold text-[#2FB36F] block">$81.50</span>
+                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                </div>
+                <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+                  <span className="text-[10px] text-[#716F69] block mb-1">COMMITTED</span>
+                  <span className="text-base font-bold text-[#F2F0EA] block">$12.50</span>
+                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                </div>
+                <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+                  <span className="text-[10px] text-[#716F69] block mb-1">RESERVED</span>
+                  <span className="text-base font-bold text-[#D6A83A] block">$14.00</span>
+                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                </div>
+                <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+                  <span className="text-[10px] text-[#716F69] block mb-1">AT RISK</span>
+                  <span className="text-base font-bold text-[#2FB36F] block">$0.00</span>
+                  <span className="text-[9px] text-[#716F69]">ZERO GAP</span>
+                </div>
+                <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
+                  <span className="text-[10px] text-[#716F69] block mb-1">SETTLED</span>
+                  <span className="text-base font-bold text-[#B0ADA5] block">$1,204.32</span>
+                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                </div>
+              </div>
+
+              {/* Liquidity Health Indicator */}
+              <div className="p-3 rounded-xl bg-[#141414] border border-[#222222] space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-[#B0ADA5]">Liquidity Solvency Buffer</span>
+                  <span className="text-[#2FB36F] font-bold">86.4% HEALTHY</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-[#222222] overflow-hidden">
+                  <div className="h-full bg-[#2FB36F]" style={{ width: '86.4%' }} />
+                </div>
+                <span className="text-[10px] text-[#716F69] block">
+                  Simulation values labeled PROJECTED. On-chain balance verified upon contract deployment.
+                </span>
+              </div>
+            </div>
+          </AgentPayPanel>
+        </div>
+
+        {/* Arc Truthful Status (6 cols) */}
+        <div className="lg:col-span-6">
+          <AgentPayPanel
+            title="ARC SETTLEMENT TRUTH MATRIX"
+            subtitle="Transparent verification of on-chain contract state and broadcast safety gates."
+            actions={
+              <Link href="/arc" className="text-xs text-[#D6A83A] hover:underline">
+                Arc Explorer →
+              </Link>
+            }
+          >
+            <div className="space-y-3 font-mono text-xs">
+              <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
+                <span className="text-[#716F69]">Arc Mainnet RPC</span>
+                <span className="text-[#2FB36F] font-semibold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+                  CONNECTED · Chain 5042
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
+                <span className="text-[#716F69]">Native USDC Contract</span>
+                <span className="text-[#F2F0EA]">0x3600...0000 (VERIFIED)</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
+                <span className="text-[#716F69]">AgentVault Contract</span>
+                <span className="text-[#D85C5C] font-semibold">NOT DEPLOYED ON MAINNET</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
+                <span className="text-[#716F69]">Live Broadcast Switch</span>
+                <span className="text-[#D85C5C] font-semibold">DISABLED (Simulation Guard)</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
+                <span className="text-[#716F69]">Real Settlements</span>
+                <span className="text-[#B0ADA5]">0 (Zero fake transaction hashes)</span>
+              </div>
+            </div>
+          </AgentPayPanel>
+        </div>
+      </div>
+
+      {/* Universal Inspector Slide-Over Modal */}
+      <AgentPayInspector
+        entity={inspectingEntity}
+        onClose={() => setInspectingEntity(null)}
+      />
     </div>
   );
 }

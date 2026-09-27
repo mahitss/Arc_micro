@@ -12,26 +12,28 @@ export interface NavItem {
   isMatch: (pathname: string) => boolean;
 }
 
+// 1. PRIMARY Group (Task 36 & Task 38 Harmonized)
 export const PRIMARY_ITEMS: NavItem[] = [
   {
     id: 'control',
     label: 'CONTROL',
     href: '/control',
     icon: '⎈',
-    isMatch: (p) =>
-      p === '/control' ||
-      (p.startsWith('/control/') &&
-        !p.startsWith('/control/objectives') &&
-        !p.startsWith('/control/protocol') &&
-        !p.startsWith('/control/runtime') &&
-        !p.startsWith('/control/operations')),
+    isMatch: (p) => p === '/control' || p === '/',
   },
   {
     id: 'missions',
     label: 'MISSIONS',
     href: '/missions',
     icon: '◈',
-    isMatch: (p) => p.startsWith('/missions') && !p.includes('/replay'),
+    isMatch: (p) => p.startsWith('/missions'),
+  },
+  {
+    id: 'activity',
+    label: 'ACTIVITY',
+    href: '/activity',
+    icon: '☰',
+    isMatch: (p) => p.startsWith('/activity'),
   },
   {
     id: 'marketplace',
@@ -45,16 +47,14 @@ export const PRIMARY_ITEMS: NavItem[] = [
     label: 'ECONOMY',
     href: '/economy',
     icon: '📈',
-    isMatch: (p) =>
-      (p === '/economy' || p.startsWith('/economy/')) &&
-      !p.startsWith('/economy/clearing'),
+    isMatch: (p) => (p === '/economy' || p.startsWith('/economy/')) && !p.startsWith('/economy/clearing'),
   },
   {
     id: 'network',
     label: 'NETWORK',
     href: '/network',
     icon: '⛶',
-    isMatch: (p) => p.startsWith('/network'),
+    isMatch: (p) => p.startsWith('/network') || p.startsWith('/agents'),
   },
   {
     id: 'security',
@@ -72,47 +72,53 @@ export const PRIMARY_ITEMS: NavItem[] = [
   },
 ];
 
+// 2. OPERATIONS Group
 export const OPERATIONS_ITEMS: NavItem[] = [
   {
     id: 'objectives',
     label: 'OBJECTIVES',
     href: '/control/objectives',
     icon: '🎯',
-    isMatch: (p) => p.startsWith('/control/objectives') || p.startsWith('/objectives'),
+    isMatch: (p) => p.startsWith('/control/objectives'),
   },
   {
     id: 'protocol',
     label: 'PROTOCOL',
     href: '/control/protocol',
-    icon: '📜',
-    isMatch: (p) => p.startsWith('/control/protocol') || p.startsWith('/protocol'),
+    icon: '⛓',
+    isMatch: (p) => p.startsWith('/control/protocol'),
   },
   {
     id: 'runtime',
     label: 'RUNTIME',
     href: '/control/runtime',
     icon: '▶',
-    isMatch: (p) => p.startsWith('/control/runtime') || p.startsWith('/runtime'),
+    isMatch: (p) => p.startsWith('/control/runtime'),
   },
   {
     id: 'operations',
     label: 'OPERATIONS',
     href: '/control/operations',
     icon: '⚙',
-    isMatch: (p) =>
-      (p.startsWith('/control/operations') || p.startsWith('/operations')) &&
-      !p.includes('/replay') &&
-      !p.includes('/timeline'),
+    isMatch: (p) => p.startsWith('/control/operations'),
+  },
+  {
+    id: 'incidents',
+    label: 'INCIDENTS',
+    href: '/incidents',
+    icon: '⚠',
+    isMatch: (p) => p.startsWith('/incidents') || p.startsWith('/control/incidents'),
   },
 ];
 
+// 3. FINANCIAL Group
 export const FINANCIAL_ITEMS: NavItem[] = [
   {
     id: 'clearinghouse',
     label: 'CLEARINGHOUSE',
     href: '/economy/clearing',
     icon: '⚖',
-    isMatch: (p) => p.startsWith('/economy/clearing') || p.startsWith('/clearinghouse'),
+    isMatch: (p) => p.startsWith('/economy/clearing'),
   },
   {
     id: 'treasury',
@@ -123,6 +129,7 @@ export const FINANCIAL_ITEMS: NavItem[] = [
   },
 ];
 
+// 4. TOOLS Group
 export const TOOLS_ITEMS: NavItem[] = [
   {
     id: 'simulator',
@@ -136,8 +143,14 @@ export const TOOLS_ITEMS: NavItem[] = [
     label: 'REPLAY',
     href: '/control/operations/timeline',
     icon: '↺',
-    isMatch: (p) =>
-      p.includes('/replay') || p.startsWith('/replay') || p.includes('/timeline'),
+    isMatch: (p) => p.includes('/replay') || p.includes('/timeline'),
+  },
+  {
+    id: 'ai-providers',
+    label: 'AI PROVIDERS',
+    href: '/settings/ai',
+    icon: '⚡',
+    isMatch: (p) => p.startsWith('/settings/ai'),
   },
   {
     id: 'demo',
@@ -154,7 +167,7 @@ export function AgentPaySidebar() {
 
   const renderNavGroup = (title: string, items: NavItem[]) => (
     <div className="space-y-0.5">
-      <div className="hidden min-[1200px]:block px-2.5 pb-1 text-[9px] font-mono uppercase tracking-wider text-[#65635E] font-semibold">
+      <div className="hidden min-[1200px]:block px-2.5 pb-1 text-[10px] font-sans font-semibold uppercase tracking-wider text-[#716F69]">
         {title}
       </div>
       {items.map((item) => {
@@ -164,7 +177,7 @@ export function AgentPaySidebar() {
             key={item.id}
             href={item.href}
             title={item.label}
-            className={`flex items-center justify-center min-[1200px]:justify-between px-2.5 py-1.5 rounded text-xs font-mono tracking-wider transition-colors duration-150 ${
+            className={`flex items-center justify-center min-[1200px]:justify-between px-2.5 py-1.5 rounded-lg text-xs font-sans transition-colors duration-150 ${
               isActive
                 ? 'bg-[#151515] text-[#F2F0EA] border-l-2 border-[#D6A83A] font-semibold'
                 : 'text-[#8A8882] hover:text-[#F2F0EA] hover:bg-[#151515] border-l-2 border-transparent'
@@ -173,7 +186,7 @@ export function AgentPaySidebar() {
             <div className="flex items-center gap-2.5 min-w-0">
               <span
                 className={`text-sm shrink-0 w-4 text-center font-mono ${
-                  isActive ? 'text-[#D6A83A] opacity-100' : 'opacity-70'
+                  isActive ? 'text-[#D6A83A]' : 'text-[#716F69]'
                 }`}
               >
                 {item.icon}
@@ -181,10 +194,7 @@ export function AgentPaySidebar() {
               <span className="hidden min-[1200px]:inline truncate">{item.label}</span>
             </div>
             {isActive && (
-              <span className="hidden min-[1200px]:flex items-center gap-1 text-[9px] font-mono text-[#D6A83A]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A] animate-pulse" />
-                ACTIVE
-              </span>
+              <span className="hidden min-[1200px]:inline-block w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
             )}
           </Link>
         );
@@ -195,13 +205,13 @@ export function AgentPaySidebar() {
   return (
     <>
       {/* Mobile Drawer Bar (< 900px) */}
-      <div className="min-[900px]:hidden w-full border-b border-[#222222] bg-[#0A0A0A] px-4 py-2.5 flex items-center justify-between text-xs font-mono shrink-0">
+      <div className="min-[900px]:hidden w-full border-b border-[#222222] bg-[#0A0A0A] px-4 py-2.5 flex items-center justify-between text-xs font-sans shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-[#101010] border border-[#222222] flex items-center justify-center font-bold text-[#F2F0EA] text-[10px]">
+          <div className="w-6 h-6 rounded bg-[#101010] border border-[#222222] flex items-center justify-center font-bold text-[#F2F0EA] text-[10px] font-mono">
             AP
           </div>
-          <span className="font-bold text-[#F2F0EA] tracking-wide">COMMAND RAIL</span>
-          <span className="text-[#8A8882]">/</span>
+          <span className="font-bold text-[#F2F0EA] tracking-wide">CONTROL TOWER</span>
+          <span className="text-[#716F69]">/</span>
           <span className="text-[#D6A83A] truncate font-medium">
             {pathname.split('/')[1]?.toUpperCase() || 'WORKSPACE'}
           </span>
@@ -209,8 +219,8 @@ export function AgentPaySidebar() {
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-expanded={mobileOpen}
-          aria-label="Toggle Command Rail Navigation"
-          className="rounded border border-[#222222] bg-[#121212] px-2.5 py-1 text-[11px] text-[#F2F0EA] hover:bg-[#181818] transition-colors duration-150"
+          aria-label="Toggle Navigation"
+          className="rounded-lg border border-[#222222] bg-[#121212] px-2.5 py-1 text-[11px] text-[#F2F0EA] hover:bg-[#181818] transition-colors duration-150"
         >
           {mobileOpen ? 'CLOSE ✕' : 'MENU ☰'}
         </button>
@@ -218,9 +228,9 @@ export function AgentPaySidebar() {
 
       {/* Mobile Expanded Drawer (< 900px) */}
       {mobileOpen && (
-        <div className="min-[900px]:hidden w-full border-b border-[#222222] bg-[#0A0A0A] p-4 text-xs font-mono space-y-4 max-h-[80vh] overflow-y-auto shrink-0">
+        <div className="min-[900px]:hidden w-full border-b border-[#222222] bg-[#0A0A0A] p-4 text-xs font-sans space-y-4 max-h-[80vh] overflow-y-auto shrink-0">
           <div>
-            <span className="text-[10px] text-[#65635E] uppercase tracking-wider block mb-2 font-bold">
+            <span className="text-[10px] text-[#716F69] uppercase tracking-wider block mb-2 font-bold">
               PRIMARY
             </span>
             <div className="grid grid-cols-2 gap-1.5">
@@ -229,13 +239,13 @@ export function AgentPaySidebar() {
                   key={item.id}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded transition-colors duration-150 ${
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors duration-150 ${
                     item.isMatch(pathname)
                       ? 'bg-[#151515] text-[#F2F0EA] border-l-2 border-[#D6A83A] font-semibold'
                       : 'text-[#8A8882] hover:text-[#F2F0EA] hover:bg-[#151515]'
                   }`}
                 >
-                  <span className="opacity-80">{item.icon}</span>
+                  <span>{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               ))}
@@ -243,7 +253,7 @@ export function AgentPaySidebar() {
           </div>
 
           <div className="border-t border-[#222222] pt-3">
-            <span className="text-[10px] text-[#65635E] uppercase tracking-wider block mb-2 font-bold">
+            <span className="text-[10px] text-[#716F69] uppercase tracking-wider block mb-2 font-bold">
               OPERATIONS
             </span>
             <div className="grid grid-cols-2 gap-1.5">
@@ -252,13 +262,13 @@ export function AgentPaySidebar() {
                   key={item.id}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded transition-colors duration-150 ${
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors duration-150 ${
                     item.isMatch(pathname)
                       ? 'bg-[#151515] text-[#F2F0EA] border-l-2 border-[#D6A83A] font-semibold'
                       : 'text-[#8A8882] hover:text-[#F2F0EA] hover:bg-[#151515]'
                   }`}
                 >
-                  <span className="opacity-80">{item.icon}</span>
+                  <span>{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               ))}
@@ -266,7 +276,7 @@ export function AgentPaySidebar() {
           </div>
 
           <div className="border-t border-[#222222] pt-3">
-            <span className="text-[10px] text-[#65635E] uppercase tracking-wider block mb-2 font-bold">
+            <span className="text-[10px] text-[#716F69] uppercase tracking-wider block mb-2 font-bold">
               FINANCIAL & TOOLS
             </span>
             <div className="grid grid-cols-2 gap-1.5">
@@ -275,122 +285,86 @@ export function AgentPaySidebar() {
                   key={item.id}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded transition-colors duration-150 ${
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors duration-150 ${
                     item.isMatch(pathname)
                       ? 'bg-[#151515] text-[#F2F0EA] border-l-2 border-[#D6A83A] font-semibold'
                       : 'text-[#8A8882] hover:text-[#F2F0EA] hover:bg-[#151515]'
                   }`}
                 >
-                  <span className="opacity-80">{item.icon}</span>
+                  <span>{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               ))}
             </div>
           </div>
-
-          <div className="border-t border-[#222222] pt-3">
-            <span className="text-[10px] text-[#65635E] uppercase tracking-wider block mb-2 font-bold">
-              SYSTEM STATUS
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <div className="flex items-center justify-between p-2 rounded bg-[#101010] border border-[#222222]">
-                <span className="text-[#8A8882]">GATEWAY</span>
-                <span className="text-[#2FB36F] font-bold">● ONLINE</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded bg-[#101010] border border-[#222222]">
-                <span className="text-[#8A8882]">ARC</span>
-                <span className="text-[#D6A83A] font-bold">● SIM · 5042</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded bg-[#101010] border border-[#222222]">
-                <span className="text-[#8A8882]">LIVE EXECUTION</span>
-                <span className="text-[#D85C5C] font-bold">● DISABLED</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded bg-[#101010] border border-[#222222]">
-                <span className="text-[#8A8882]">AGENTVAULT</span>
-                <span className="text-[#D85C5C] font-bold">● NOT DEPLOYED</span>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* Desktop & Tablet Persistent Command Rail (>= 900px) */}
+      {/* Desktop Persistent Sidebar (>= 900px, 72px / 232px) */}
       <aside
-        aria-label="AgentPay Command Rail"
-        className="hidden min-[900px]:flex flex-col w-[72px] min-[1200px]:w-[230px] min-[1200px]:w-[232px] shrink-0 h-[calc(100vh-4rem)] bg-[#0A0A0A] border-r border-[#222222] select-none sticky top-16 z-30"
+        aria-label="AgentPay Command Sidebar"
+        className="hidden min-[900px]:flex flex-col w-[72px] min-[1200px]:w-[230px] min-[1200px]:w-[232px] shrink-0 h-[calc(100vh-3.5rem)] bg-[#0A0A0A] border-r border-[#222222] select-none sticky top-14 sticky top-16 z-30"
       >
-        {/* 1. Header Identity */}
-        <div className="p-3.5 min-[1200px]:p-4 border-b border-[#222222] flex items-center justify-center min-[1200px]:justify-start gap-2.5 shrink-0">
-          <div className="w-7 h-7 rounded bg-[#101010] border border-[#222222] flex items-center justify-center font-bold text-[#F2F0EA] text-[11px] font-mono shrink-0">
-            AP
-          </div>
-          <div className="hidden min-[1200px]:flex flex-col min-w-0">
-            <span className="font-bold text-xs tracking-tight text-[#F2F0EA] font-mono truncate">
-              AgentPay
-            </span>
-            <span className="text-[10px] text-[#65635E] tracking-wider uppercase font-mono truncate">
-              Financial Control Plane
-            </span>
-          </div>
-        </div>
-
-        {/* 2. Scrollable Navigation Rail */}
+        {/* Navigation Groups */}
         <div className="flex-1 py-3 px-2 space-y-3 overflow-y-auto">
           {renderNavGroup('PRIMARY', PRIMARY_ITEMS)}
-
           <div className="border-t border-[#222222] mx-1" />
-
           {renderNavGroup('OPERATIONS', OPERATIONS_ITEMS)}
-
           <div className="border-t border-[#222222] mx-1" />
-
           {renderNavGroup('FINANCIAL', FINANCIAL_ITEMS)}
-
           <div className="border-t border-[#222222] mx-1" />
-
           {renderNavGroup('TOOLS', TOOLS_ITEMS)}
         </div>
 
-        {/* 3. Pinned System Status Footer */}
-        <div className="p-3 border-t border-[#222222] bg-[#0A0A0A] text-[10px] font-mono space-y-2 mt-auto shrink-0">
-          <div className="hidden min-[1200px]:block text-[9px] uppercase tracking-wider text-[#65635E] font-bold px-1">
+        {/* Pinned Bottom Status & Settings */}
+        <div className="p-3 border-t border-[#222222] bg-[#0A0A0A] text-[10px] space-y-2 mt-auto shrink-0 font-mono">
+          <div className="hidden min-[1200px]:block text-[9px] uppercase tracking-wider text-[#716F69] font-bold px-1">
             SYSTEM STATUS
           </div>
 
-          {/* GATEWAY: ONLINE */}
           <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="GATEWAY: ONLINE">
-            <span className="hidden min-[1200px]:inline text-[#8A8882]">GATEWAY</span>
+            <span className="hidden min-[1200px]:inline text-[#716F69]">GATEWAY</span>
             <span className="flex items-center gap-1 font-semibold text-[#2FB36F]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
               <span className="hidden min-[1200px]:inline">ONLINE</span>
             </span>
           </div>
 
-          {/* ARC: SIMULATION · 5042 */}
-          <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="ARC: SIMULATION · 5042">
-            <span className="hidden min-[1200px]:inline text-[#8A8882]">ARC</span>
+          <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="ARC: SIMULATION">
+            <span className="hidden min-[1200px]:inline text-[#716F69]">ARC</span>
             <span className="flex items-center gap-1 font-semibold text-[#D6A83A]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
               <span className="hidden min-[1200px]:inline">SIMULATION · 5042</span>
             </span>
           </div>
 
-          {/* LIVE EXECUTION: DISABLED */}
           <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="LIVE EXECUTION: DISABLED">
-            <span className="hidden min-[1200px]:inline text-[#8A8882]">LIVE EXECUTION</span>
+            <span className="hidden min-[1200px]:inline text-[#716F69]">EXECUTION</span>
             <span className="flex items-center gap-1 font-semibold text-[#D85C5C]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
               <span className="hidden min-[1200px]:inline">DISABLED</span>
             </span>
           </div>
 
-          {/* AGENTVAULT: NOT DEPLOYED */}
           <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="AGENTVAULT: NOT DEPLOYED">
-            <span className="hidden min-[1200px]:inline text-[#8A8882]">AGENTVAULT</span>
+            <span className="hidden min-[1200px]:inline text-[#716F69]">VAULT</span>
             <span className="flex items-center gap-1 font-semibold text-[#D85C5C]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
               <span className="hidden min-[1200px]:inline">NOT DEPLOYED</span>
             </span>
+          </div>
+
+          <div className="border-t border-[#222222] pt-2 px-1">
+            <Link
+              href="/settings"
+              className="flex items-center justify-center min-[1200px]:justify-between text-[#8A8882] hover:text-[#F2F0EA] transition-colors font-sans text-xs"
+            >
+              <span className="flex items-center gap-2">
+                <span>⚙</span>
+                <span className="hidden min-[1200px]:inline">Settings</span>
+              </span>
+              <span className="hidden min-[1200px]:inline text-[10px] text-[#716F69]">v1.0</span>
+            </Link>
           </div>
         </div>
       </aside>
@@ -398,5 +372,4 @@ export function AgentPaySidebar() {
   );
 }
 
-// Alias for backwards compatibility
 export { AgentPaySidebar as SimulatorCommandRail };
