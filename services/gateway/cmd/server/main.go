@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -123,8 +124,16 @@ func main() {
 			log.Printf("[AgentPay Gateway] Warning: could not read system prompt file (%v), using default instructions", err)
 			systemPrompt = "You are an AI agent under the AgentPay protocol. You may request payments only through registered services."
 		}
-		agentModel = agent.NewHTTPModel("", cfg.AIModel, cfg.AIAPIKey, systemPrompt)
-		log.Printf("[AgentPay Gateway] Configured HTTP LLM agent model (Model: %s)", cfg.AIModel)
+		endpoint := cfg.AIEndpoint
+		if endpoint == "" {
+			if strings.EqualFold(cfg.AIProvider, "openrouter") {
+				endpoint = "https://openrouter.ai/api/v1/chat/completions"
+			} else {
+				endpoint = "https://api.openai.com/v1/chat/completions"
+			}
+		}
+		agentModel = agent.NewHTTPModel(endpoint, cfg.AIModel, cfg.AIAPIKey, systemPrompt)
+		log.Printf("[AgentPay Gateway] Configured HTTP LLM agent model (Provider: %s, Endpoint: %s, Model: %s)", cfg.AIProvider, endpoint, cfg.AIModel)
 	}
 
 	// Initialize AI Agent Service

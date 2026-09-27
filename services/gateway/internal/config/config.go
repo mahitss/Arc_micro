@@ -35,6 +35,7 @@ type Config struct {
 	AgentAutoExecution     bool
 	PaymentIntentTTLSeconds int
 	AIProvider             string
+	AIEndpoint             string
 	AIModel                string
 	AIAPIKey               string
 
@@ -144,7 +145,21 @@ func Load() *Config {
 
 	aiProvider := os.Getenv("AI_PROVIDER")
 	if aiProvider == "" {
-		aiProvider = "mock"
+		if os.Getenv("AI_API_KEY") != "" {
+			aiProvider = "openrouter"
+		} else {
+			aiProvider = "mock"
+		}
+	}
+
+	aiEndpoint := os.Getenv("AI_ENDPOINT")
+	if aiEndpoint == "" && strings.EqualFold(aiProvider, "openrouter") {
+		aiEndpoint = "https://openrouter.ai/api/v1/chat/completions"
+	}
+
+	aiModel := os.Getenv("AI_MODEL")
+	if aiModel == "" && strings.EqualFold(aiProvider, "openrouter") {
+		aiModel = "anthropic/claude-3.5-sonnet"
 	}
 
 	env := os.Getenv("APP_ENV")
@@ -227,7 +242,8 @@ func Load() *Config {
 		AgentAutoExecution:     agentAutoExecution,
 		PaymentIntentTTLSeconds: ttlSeconds,
 		AIProvider:             aiProvider,
-		AIModel:                os.Getenv("AI_MODEL"),
+		AIEndpoint:             aiEndpoint,
+		AIModel:                aiModel,
 		AIAPIKey:               os.Getenv("AI_API_KEY"),
 		AgentVaultAddress:      os.Getenv("AGENTVAULT_ADDRESS"),
 		SignerBackend:          os.Getenv("SIGNER_BACKEND"),

@@ -152,6 +152,10 @@ func (h *HTTPModel) GeneratePaymentIntent(ctx context.Context, task AgentTask) (
 	if h.apiKey != "" {
 		req.Header.Set("Authorization", "Bearer "+h.apiKey)
 	}
+	if strings.Contains(h.endpoint, "openrouter.ai") {
+		req.Header.Set("HTTP-Referer", "https://agentpay.arc.io")
+		req.Header.Set("X-Title", "AgentPay")
+	}
 
 	resp, err := h.client.Do(req)
 	if err != nil {
