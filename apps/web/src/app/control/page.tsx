@@ -565,6 +565,12 @@ export default function ControlTowerPage() {
           </div>
 
           <div className="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
+            <Link
+              href="/missions/demo/replay"
+              className="h-9 px-4 rounded-lg bg-[#D6A83A] hover:bg-[#D6A83A]/90 text-black text-xs font-bold transition-colors flex items-center justify-center text-center gap-1.5 shadow-sm"
+            >
+              ▶ Open Mission Replay
+            </Link>
             <button
               onClick={handleResetDemo}
               className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#B0ADA5] hover:text-[#F2F0EA] text-xs font-medium border border-[#222222] transition-colors"
@@ -940,33 +946,33 @@ export default function ControlTowerPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#2FB36F] animate-pulse" />
                     <h4 className="text-sm font-bold text-[#F2F0EA]">
-                      Autonomous Market Intelligence
+                      Autonomous Market Intelligence (Flagship Demo)
                     </h4>
                   </div>
-                  <AgentPayBadge variant="accent">STEP 7 / 14</AgentPayBadge>
+                  <AgentPayBadge variant="accent">22-STEP REPLAY</AgentPayBadge>
                 </div>
 
                 <p className="text-xs text-[#B0ADA5]">
-                  Benchmarking frontier LLM pricing, latency, and capabilities across 4 specialized agents.
+                  End-to-end autonomous research report. AI decomposition, marketplace quotes, Attack #1 blocked (<span className="text-[#D85C5C]">HARD DENY</span>), lease timeout fencing, and Provider C replan.
                 </p>
 
                 {/* Budget Progress Bar */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="text-[#716F69]">Spent: $11.42</span>
-                    <span className="text-[#2FB36F]">$13.58 Remaining</span>
+                    <span className="text-[#716F69]">Authorized: $8.50</span>
+                    <span className="text-[#D85C5C]">Blocked: $3.60</span>
+                    <span className="text-[#2FB36F]">$16.50 Remaining</span>
                     <span className="text-[#F2F0EA]">$25.00 Cap</span>
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-[#222222] overflow-hidden">
-                    <div className="h-full bg-[#D6A83A]" style={{ width: '45.6%' }} />
+                    <div className="h-full bg-[#D6A83A]" style={{ width: '34%' }} />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-[#222222] text-[11px] font-mono text-[#716F69]">
-                  <span>4 Agents Assigned</span>
-                  <span>Risk: LOW (18)</span>
-                  <Link href="/missions/mis_market_intel_01" className="text-[#D6A83A] hover:underline">
-                    Mission Control →
+                  <span>5 Agents · 1 Violation Blocked · 1 Recovered</span>
+                  <Link href="/missions/demo/replay" className="text-[#D6A83A] font-bold hover:underline">
+                    Open Replay Engine →
                   </Link>
                 </div>
               </div>

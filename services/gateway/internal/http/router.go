@@ -11,6 +11,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/constitution"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/control"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/demo"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
@@ -685,6 +686,27 @@ func NewRouter(
 		mux.HandleFunc("GET /api/marketplace/compare", mktHandler.HandleCompare)
 		mux.HandleFunc("GET /api/marketplace/health", mktHandler.HandleHealth)
 		mux.HandleFunc("POST /api/marketplace/simulate", mktHandler.HandleSimulate)
+
+		// Section 22: Task 39 Autonomous Mission Replay Engine APIs
+		demoEngine := demo.NewMissionReplayEngine()
+		demoHandler := handlers.NewDemoMissionHandler(demoEngine)
+
+		mux.HandleFunc("GET /api/demo/mission", demoHandler.HandleGetMission)
+		mux.HandleFunc("GET /v1/demo/mission", demoHandler.HandleGetMission)
+		mux.HandleFunc("POST /api/demo/mission/reset", demoHandler.HandleReset)
+		mux.HandleFunc("POST /v1/demo/mission/reset", demoHandler.HandleReset)
+		mux.HandleFunc("POST /api/demo/mission/start", demoHandler.HandleStart)
+		mux.HandleFunc("POST /v1/demo/mission/start", demoHandler.HandleStart)
+		mux.HandleFunc("POST /api/demo/mission/pause", demoHandler.HandlePause)
+		mux.HandleFunc("POST /v1/demo/mission/pause", demoHandler.HandlePause)
+		mux.HandleFunc("POST /api/demo/mission/step", demoHandler.HandleStep)
+		mux.HandleFunc("POST /v1/demo/mission/step", demoHandler.HandleStep)
+		mux.HandleFunc("GET /api/demo/mission/events", demoHandler.HandleGetEvents)
+		mux.HandleFunc("GET /v1/demo/mission/events", demoHandler.HandleGetEvents)
+		mux.HandleFunc("GET /api/demo/mission/trace", demoHandler.HandleGetTrace)
+		mux.HandleFunc("GET /v1/demo/mission/trace", demoHandler.HandleGetTrace)
+		mux.HandleFunc("GET /api/demo/mission/export", demoHandler.HandleExport)
+		mux.HandleFunc("GET /v1/demo/mission/export", demoHandler.HandleExport)
 
 		// Wire Execution Gate, Treasury, and Event Dispatcher into Intent Service if available
 		if intentService != nil {

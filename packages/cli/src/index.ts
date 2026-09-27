@@ -430,70 +430,138 @@ async function main(): Promise<void> {
     }
 
     if (action === 'mission' || !action) {
-      const canonicalSteps = [
-        { step: 1, name: 'User creates a mission', detail: 'Research the current market landscape for a specified technology.' },
-        { step: 2, name: 'AgentPay creates an economic objective', detail: 'Objective obj_market_intel_01 compiled with 25.00 USDC cap.' },
-        { step: 3, name: 'Planner decomposes the objective', detail: 'Blueprint compiled into DAG with 3 tasks (scan, analyze, report).' },
-        { step: 4, name: 'Marketplace discovers multiple specialist agents', detail: 'Discovered candidate providers: agent_fast_infer, agent_budget_ai, agent_deep.' },
-        { step: 5, name: 'Agents return structured quotes', detail: 'Quotes: agent_fast_infer (12.50 USDC), agent_budget_ai (14.00 USDC).' },
-        { step: 6, name: 'Deterministic matching selects providers', detail: 'Selected agent_fast_infer (Rank 1, lowest price within SLA).' },
-        { step: 7, name: 'Policy engine evaluates proposed spending', detail: 'Rust Policy Engine: evaluated in 6.36µs -> ALLOW (Allowlist, budget pass).' },
-        { step: 8, name: 'Treasury creates simulated reservations', detail: '14.00 USDC simulated reservation in treasury ledger (INV-76).' },
-        { step: 9, name: 'Mission begins', detail: 'Durable runtime initiates workflow execution and task dispatch.' },
-        { step: 10, name: 'One provider fails', detail: 'agent_fast_infer experiences simulated lease timeout (>2000ms heartbeat missing).' },
-        { step: 11, name: 'Runtime detects failure', detail: 'Incident recorded; worker fenced; payment NOT blindly retried (INV-101/103).' },
-        { step: 12, name: 'Replanning selects another provider', detail: 'Controlled replanner swaps task to agent_budget_ai (14.00 USDC within 25.00 USDC cap).' },
-        { step: 13, name: 'Replacement provider completes the task', detail: 'agent_budget_ai finishes compute deliverable in 850ms.' },
-        { step: 14, name: 'Critic/validator evaluates the result', detail: 'SHA-256 deliverable checksum and quality score (94/100) validated by Critic Agent.' },
-        { step: 15, name: 'Clearinghouse creates simulated obligations', detail: 'Simulated bilateral clearing obligation created for 14.00 USDC.' },
-        { step: 16, name: 'Settlement plan is generated', detail: 'Bilateral netting proposal calculated; remaining 11.00 USDC returned to treasury.' },
-        { step: 17, name: 'Simulator shows projected Arc settlement', detail: 'Chain ID 5042, Native USDC, deterministic trace sim_trace_intel_01.' },
-        { step: 18, name: 'Mission completes', detail: 'Objective marked COMPLETED; performance metrics recorded to EconomicMemory.' },
-        { step: 19, name: 'Control Tower displays complete causal trace', detail: '18-stage end-to-end audit trace available for operator inspection.' },
-        { step: 20, name: 'Final state declaration', detail: 'SIMULATION — NO FUNDS MOVED (INV-156: REAL ARC UNMUTATED).' },
+      const canonicalEvents = [
+        { id: 1, name: 'MISSION_CREATED', state: 'CREATED', actor: 'Operator', detail: 'Initialize Autonomous Objective: "Autonomous Market Intelligence" (25.00 USDC cap)', amount: 25.00, status: 'SUCCESS' },
+        { id: 2, name: 'PLAN_GENERATED', state: 'PLANNING', actor: 'AI Planner Layer', detail: 'Claude 3.5 Sonnet compiles DAG (Research, Market Data, Analysis, Critic, Synthesis)', amount: 0.00, status: 'SUCCESS' },
+        { id: 3, name: 'AGENT_DISCOVERED', state: 'DISCOVERING', actor: 'A2A Marketplace Registry', detail: 'Discover 4 candidates: Provider A, Provider B, Provider C, Malicious Interceptor', amount: 0.00, status: 'SUCCESS' },
+        { id: 4, name: 'QUOTE_RECEIVED', state: 'QUOTING', actor: 'Marketplace Ingestion', detail: 'Quotes: Provider A ($4.00, 2.1s), Provider B ($3.60, 1.8s), Provider C ($4.50, 1.4s)', amount: 0.00, status: 'SUCCESS' },
+        { id: 5, name: 'QUOTE_COMPARED', state: 'SELECTING', actor: 'AI Advisory Layer', detail: 'AI recommends Provider B ($3.60): lowest cost within SLA envelope', amount: 3.60, status: 'SUCCESS' },
+        { id: 6, name: 'SERVICE_SELECTED', state: 'SELECTING', actor: 'AgentPay Gate', detail: 'AgentPay authorizes Provider B with registry-resolved recipient: service_registry:provider-b', amount: 3.60, status: 'AUTHORIZED' },
+        { id: 7, name: 'NEGOTIATION_COMPLETED', state: 'NEGOTIATING', actor: 'A2A Protocol', detail: 'SLA finalized: max latency 2.5s, simulated reservation escrow locked', amount: 3.60, status: 'SUCCESS' },
+        { id: 8, name: 'POLICY_EVALUATED', state: 'POLICY_CHECK', actor: 'Rust Policy Engine', detail: 'Policy pre-check evaluated in 6.36µs -> ALLOW (Allowlist, per-tx limit pass)', amount: 3.60, status: 'ALLOW' },
+        { id: 9, name: 'RISK_EVALUATED', state: 'RISK_CHECK', actor: 'Risk Engine', detail: 'Risk score 18 (LOW), concentration ratio 0.144 (< 0.30 safe cap), approval not required', amount: 3.60, status: 'PASS' },
+        { id: 10, name: 'TREASURY_RESERVED', state: 'TREASURY_RESERVATION', actor: 'Treasury Orchestrator', detail: 'Simulated liquidity reservation res_sim_001_b encumbered in treasury ledger (INV-76)', amount: 3.60, status: 'RESERVED' },
+        { id: 11, name: 'PAYMENT_REQUESTED', state: 'EXECUTING', actor: 'Execution Gate', detail: 'Construct PaymentIntent for Provider B (3.60 USDC, pi_sim_prov_b_01)', amount: 3.60, status: 'PENDING_DISPATCH' },
+        { id: 12, name: 'SECURITY_VIOLATION_DETECTED', state: 'SECURITY_BLOCK', actor: 'Malicious Provider', detail: 'ATTACK #1: Recipient Substitution attempted to unauthorized attacker-wallet', amount: 3.60, status: 'ATTACK_DETECTED' },
+        { id: 13, name: 'PAYMENT_BLOCKED', state: 'SECURITY_BLOCK', actor: 'AgentPay Guardrail', detail: 'HARD DENY (INV-186 & INV-146): Payment blocked. FUNDS MOVED: 0.00 USDC', amount: 0.00, status: 'BLOCKED' },
+        { id: 14, name: 'PROVIDER_FAILED', state: 'PROVIDER_FAILURE', actor: 'Durable Runtime Monitor', detail: 'Provider B heartbeat timeout (>2000ms lease expired). Worker fenced (INV-101)', amount: 0.00, status: 'TIMEOUT_DETECTED' },
+        { id: 15, name: 'REPLAN_REQUESTED', state: 'REPLANNING', actor: 'AI Adaptive Loop', detail: 'AI replans: switch to Provider C ($4.50, +$0.90). Total $8.50 within $25.00 budget', amount: 4.50, status: 'PROPOSAL_SUBMITTED' },
+        { id: 16, name: 'ALTERNATIVE_PROVIDER_SELECTED', state: 'RECOVERY', actor: 'AgentPay Gate', detail: 'AgentPay validates replan: policy PASS, budget PASS, recipient PASS. Authority unchanged', amount: 4.50, status: 'AUTHORIZED' },
+        { id: 17, name: 'PAYMENT_REAUTHORIZED', state: 'EXECUTING', actor: 'Treasury & Intent Service', detail: 'Authorized simulated reservation res_sim_002_c for Provider C ($4.50)', amount: 4.50, status: 'AUTHORIZED' },
+        { id: 18, name: 'RESULT_RECEIVED', state: 'VALIDATING', actor: 'Provider C Service', detail: 'Deliverable received (142 items analyzed, latency 1.38s, payload hash verified)', amount: 0.00, status: 'DELIVERED' },
+        { id: 19, name: 'RESULT_VALIDATED', state: 'VALIDATING', actor: 'Critic Agent', detail: 'Critic Agent verifies deliverable quality: score 94/100 (threshold 80) -> PASS', amount: 0.00, status: 'PASS' },
+        { id: 20, name: 'CLEARING_RECORDED', state: 'CLEARING', actor: 'Autonomous Clearinghouse', detail: 'Obligations recorded: Provider A ($4.00), Provider B ($3.60 BLOCKED), Provider C ($4.50). Total authorized: $8.50', amount: 8.50, status: 'RECORDED' },
+        { id: 21, name: 'SETTLEMENT_SIMULATED', state: 'SETTLEMENT_READY', actor: 'Arc Simulator', detail: 'Projected Arc settlement on Chain 5042. BROADCAST: NONE. Real funds moved: 0.00 USDC', amount: 8.50, status: 'SIMULATED' },
+        { id: 22, name: 'MISSION_COMPLETED', state: 'COMPLETED', actor: 'Autonomous Economic Fabric', detail: 'Mission completed. Budget: $25.00, Authorized: $8.50, Blocked: $3.60, Unencumbered returned: $16.50', amount: 16.50, status: 'SUCCESS' },
       ];
+
+      const isReset = Boolean(flags['reset']);
+      const isStep = Boolean(flags['step']);
+      const isReplay = Boolean(flags['replay']);
+
+      if (isReset) {
+        if (isJson) {
+          printJson({
+            action: 'RESET',
+            status: 'RESET_SUCCESSFUL',
+            mission_id: 'msn_market_intel_001',
+            seed: 'agentpay-demo-001',
+            current_step_index: 0,
+            budget_cap_usdc: '25.00',
+            authorized_usdc: '8.50',
+            blocked_usdc: '3.60',
+            remaining_usdc: '16.50',
+            statement: 'SIMULATION — NO FUNDS MOVED',
+          });
+          return;
+        }
+        console.log('============================================================');
+        console.log('AGENTPAY DETERMINISTIC MISSION REPLAY — RESET');
+        console.log('============================================================');
+        console.log('Mission "msn_market_intel_001" has been reset to initial state (Step 0).');
+        console.log('Seed: agentpay-demo-001 | Budget: 25.00 USDC | Mode: SIMULATION');
+        console.log('============================================================');
+        return;
+      }
+
+      if (isStep) {
+        const stepNum = flags['step'] === true ? 1 : parseInt(flags['step'] as string, 10) || 1;
+        const targetEvent = canonicalEvents[Math.min(Math.max(stepNum - 1, 0), canonicalEvents.length - 1)];
+        if (isJson) {
+          printJson({
+            action: 'STEP',
+            event_number: targetEvent.id,
+            total_events: canonicalEvents.length,
+            event: targetEvent,
+            statement: 'SIMULATION — NO FUNDS MOVED',
+          });
+          return;
+        }
+        console.log(`[STEP ${targetEvent.id}/${canonicalEvents.length}: ${targetEvent.name}]`);
+        console.log(`  State:   ${targetEvent.state}`);
+        console.log(`  Actor:   ${targetEvent.actor}`);
+        console.log(`  Status:  ${targetEvent.status}`);
+        console.log(`  Amount:  ${targetEvent.amount > 0 ? targetEvent.amount.toFixed(2) + ' USDC' : '0.00 USDC'}`);
+        console.log(`  Detail:  ${targetEvent.detail}`);
+        return;
+      }
 
       if (isJson) {
         printJson({
-          mission_id: 'msn_market_intel_01',
-          scenario: 'Autonomous Market Intelligence Mission',
+          mission_id: 'msn_market_intel_001',
+          scenario: 'Autonomous Market Intelligence',
+          seed: 'agentpay-demo-001',
           status: 'COMPLETED',
           mode: 'SIMULATION',
           budget_cap_usdc: '25.00',
-          projected_settlement_usdc: '14.00',
-          unencumbered_return_usdc: '11.00',
+          authorized_spend_usdc: '8.50',
+          blocked_spend_usdc: '3.60',
+          unencumbered_return_usdc: '16.50',
+          total_events: canonicalEvents.length,
+          events: canonicalEvents,
+          security_violations_count: 1,
+          recovered_failures_count: 1,
           arc_settlement: {
             network: 'Arc Mainnet',
             chain_id: 5042,
             agent_vault_status: 'UNDEPLOYED',
             live_execution: 'DISABLED',
             broadcast: 'NONE',
+            real_settlements: 0,
             statement: 'SIMULATION — NO FUNDS MOVED',
           },
-          steps: canonicalSteps,
-          thesis: 'Autonomy can expand. Financial authority cannot.',
+          thesis: 'AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.',
+          secondary_thesis: 'AUTONOMY CAN EXPAND. FINANCIAL AUTHORITY CANNOT.',
         });
         return;
       }
 
       console.log('============================================================');
-      console.log('AGENTPAY AUTONOMOUS ECONOMIC FABRIC — FLAGSHIP DEMO');
-      console.log('MISSION: "Autonomous Market Intelligence Mission"');
+      console.log('AGENTPAY FLAGSHIP AUTONOMOUS MISSION REPLAY ENGINE');
+      console.log('SCENARIO: "Autonomous Market Intelligence"');
+      console.log('SEED: agentpay-demo-001 | MODE: SIMULATION — NO FUNDS MOVED');
       console.log('============================================================\n');
 
-      for (const s of canonicalSteps) {
-        console.log(`[STEP ${s.step}: ${s.name.toUpperCase()}]`);
-        console.log(`  ${s.detail}\n`);
+      for (const e of canonicalEvents) {
+        const marker = e.status === 'BLOCKED' ? '⚠ [SECURITY BLOCKED]' : e.state === 'RECOVERY' ? '↻ [AUTONOMOUS RECOVERY]' : '●';
+        console.log(`${marker} [STEP ${e.id.toString().padStart(2, '0')}: ${e.name}] (${e.state})`);
+        console.log(`   Actor:  ${e.actor} | Status: ${e.status}`);
+        console.log(`   Detail: ${e.detail}\n`);
       }
 
       console.log('============================================================');
-      console.log('FINAL SCREEN:');
-      console.log('  SIMULATION — NO FUNDS MOVED');
+      console.log('FINAL ECONOMIC SUMMARY:');
+      console.log('  Budget Cap:             $25.00 USDC');
+      console.log('  Authorized Spend:       $8.50 USDC');
+      console.log('  Blocked Adversarial:    $3.60 USDC');
+      console.log('  Unencumbered Returned:  $16.50 USDC');
+      console.log('  Security Violations:    1 Blocked');
+      console.log('  Recovered Incidents:    1 Resolved');
+      console.log('  Arc Settlement:         SIMULATED (BROADCAST: NONE)');
       console.log('============================================================');
-      console.log('CORE INVARIANTS VERIFIED:');
-      console.log('  - Failure does not create financial authority.');
-      console.log('  - Replan cannot increase spending limits or mission budget.');
-      console.log('  - Autonomy changes the plan. AgentPay controls the money.');
+      console.log('CORE PRINCIPLES VERIFIED:');
+      console.log('  1. AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.');
+      console.log('  2. AUTONOMY CAN EXPAND. FINANCIAL AUTHORITY CANNOT.');
       console.log('============================================================');
       return;
     }
