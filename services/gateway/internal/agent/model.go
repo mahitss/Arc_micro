@@ -80,24 +80,45 @@ func (m *MockAgentModel) GeneratePaymentIntent(ctx context.Context, task AgentTa
 
 // HTTPModel interacts with an OpenAI-compatible JSON-mode LLM endpoint.
 type HTTPModel struct {
-	endpoint   string
-	model      string
-	apiKey     string
-	systemText string
-	client     *http.Client
+	endpoint       string
+	model          string
+	fallbackModels []string
+	apiKey         string
+	systemText     string
+	client         *http.Client
 }
 
 // NewHTTPModel creates an HTTP-based AgentModel.
 func NewHTTPModel(endpoint, model, apiKey, systemPrompt string) *HTTPModel {
 	if endpoint == "" {
-		endpoint = "https://api.openai.com/v1/chat/completions"
+		endpoint = "https://openrouter.ai/api/v1/chat/completions"
+	}
+	var primaryModel string
+	var fallbackModels []string
+	if strings.Contains(model, ",") {
+		raw := strings.Split(model, ",")
+		for _, m := range raw {
+			trimmed := strings.TrimSpace(m)
+			if trimmed != "" {
+				fallbackModels = append(fallbackModels, trimmed)
+			}
+		}
+		if len(fallbackModels) > 0 {
+			primaryModel = fallbackModels[0]
+		}
+	} else {
+		primaryModel = strings.TrimSpace(model)
+		if primaryModel != "" {
+			fallbackModels = []string{primaryModel}
+		}
 	}
 	return &HTTPModel{
-		endpoint:   endpoint,
-		model:      model,
-		apiKey:     apiKey,
-		systemText: systemPrompt,
-		client:     &http.Client{Timeout: 30 * time.Second},
+		endpoint:       endpoint,
+		model:          primaryModel,
+		fallbackModels: fallbackModels,
+		apiKey:         apiKey,
+		systemText:     systemPrompt,
+		client:         &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
@@ -108,6 +129,7 @@ type openAIChatMessage struct {
 
 type openAIChatRequest struct {
 	Model          string              `json:"model"`
+	Models         []string            `json:"models,omitempty"`
 	Messages       []openAIChatMessage `json:"messages"`
 	ResponseFormat map[string]string   `json:"response_format,omitempty"`
 	Temperature    float64             `json:"temperature"`
@@ -130,7 +152,8 @@ func (h *HTTPModel) GeneratePaymentIntent(ctx context.Context, task AgentTask) (
 	userContent := fmt.Sprintf("<user_task>\n%s\n</user_task>", task.Task)
 
 	reqBody := openAIChatRequest{
-		Model: h.model,
+		Model:          h.model,
+		Models:         h.fallbackModels,
 		Messages: []openAIChatMessage{
 			{Role: "system", Content: h.systemText},
 			{Role: "user", Content: userContent},
