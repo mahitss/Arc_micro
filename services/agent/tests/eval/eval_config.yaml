@@ -1,0 +1,5 @@
+eval_sets:
+  - name: agentpay_invariants
+    dataset: datasets/eval-dataset.json
+    metrics:
+      - response_quality
