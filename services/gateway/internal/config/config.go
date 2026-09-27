@@ -143,9 +143,14 @@ func Load() *Config {
 		}
 	}
 
+	aiAPIKey := os.Getenv("AI_API_KEY")
+	if aiAPIKey == "" {
+		aiAPIKey = os.Getenv("OPENROUTER_API_KEY")
+	}
+
 	aiProvider := os.Getenv("AI_PROVIDER")
 	if aiProvider == "" {
-		if os.Getenv("AI_API_KEY") != "" {
+		if aiAPIKey != "" {
 			aiProvider = "openrouter"
 		} else {
 			aiProvider = "mock"
@@ -159,7 +164,7 @@ func Load() *Config {
 
 	aiModel := os.Getenv("AI_MODEL")
 	if aiModel == "" && strings.EqualFold(aiProvider, "openrouter") {
-		aiModel = "anthropic/claude-3.5-sonnet"
+		aiModel = "nvidia/nemotron-3-ultra-550b-a55b:free"
 	}
 
 	env := os.Getenv("APP_ENV")
@@ -244,7 +249,7 @@ func Load() *Config {
 		AIProvider:             aiProvider,
 		AIEndpoint:             aiEndpoint,
 		AIModel:                aiModel,
-		AIAPIKey:               os.Getenv("AI_API_KEY"),
+		AIAPIKey:               aiAPIKey,
 		AgentVaultAddress:      os.Getenv("AGENTVAULT_ADDRESS"),
 		SignerBackend:          os.Getenv("SIGNER_BACKEND"),
 		KMSKeyID:               os.Getenv("KMS_KEY_ID"),

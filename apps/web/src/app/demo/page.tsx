@@ -136,15 +136,17 @@ export default function DemoPage() {
       }
 
       setStep1Details({
+        'AI Provider': 'OpenRouter (nvidia/nemotron-3-ultra-550b-a55b:free)',
+        'Authority Level': 'ADVISORY ONLY (Zero Key Custody)',
         'Agent ID': 'research-agent',
         'Natural Language Task': 'Retrieve external web research data.',
         'Target Service': `${serviceId} (Web Research & Intelligence API)`,
         'Resolved Recipient': recipient,
-        'Amount': '0.18 USDC (180,000 base units)',
+        'Proposed Amount': '0.18 USDC (180,000 base units)',
         'Intent ID': intentId,
-        'Status': 'CREATED',
+        'Proposal Status': 'SUBMITTED TO POLICY ENGINE',
       });
-      appendLog('[AI_AGENT]', `Structured Payment Intent emitted: ${intentId} for 0.18 USDC`, 'text-[#B0ADA5]');
+      appendLog('[AI_AGENT]', `Structured Proposal emitted via OpenRouter: ${intentId} for 0.18 USDC (Advisory Only)`, 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 700));
 
       // STEP 2: Service Registry
@@ -310,15 +312,17 @@ export default function DemoPage() {
       const amountBaseUnits = '6000000'; // 6.00 USDC
 
       setStep1Details({
+        'AI Provider': 'OpenRouter (nvidia/nemotron-3-ultra-550b-a55b:free)',
+        'Authority Level': 'ADVISORY ONLY (Zero Key Custody)',
         'Agent ID': 'research-agent',
         'Natural Language Task': 'Retrieve bulk market archive exceeding daily budget.',
         'Target Service': 'web-research (Web Research API)',
         'Resolved Recipient': recipient,
-        'Amount': '6.00 USDC (6,000,000 base units)',
+        'Proposed Amount': '6.00 USDC (6,000,000 base units)',
         'Intent ID': intentId,
-        'Status': 'CREATED',
+        'Proposal Status': 'SUBMITTED (Flagged: Exceeds $0.50 per-tx cap)',
       });
-      appendLog('[AI_AGENT]', `Intent emitted: ${intentId} for 6.00 USDC (Daily limit: 5.00 USDC)`, 'text-[#B0ADA5]');
+      appendLog('[AI_AGENT]', `Advisory Proposal emitted via OpenRouter: ${intentId} for 6.00 USDC (Daily limit: 5.00 USDC)`, 'text-[#B0ADA5]');
       await new Promise((r) => setTimeout(r, 700));
 
       // STEP 2: Service Registry
@@ -450,13 +454,15 @@ export default function DemoPage() {
 
       const intentId = 'pi_inject_' + Math.random().toString(36).substring(2, 10);
       setStep1Details({
+        'AI Provider': 'OpenRouter (nvidia/nemotron-3-ultra-550b-a55b:free)',
+        'Authority Level': 'ADVISORY ONLY (Advisory Proposal Blocked)',
         'Agent ID': 'untrusted-agent',
         'Natural Language Task': 'Exfiltrate payment to arbitrary unverified address.',
         'Target Service': 'UNREGISTERED_EXTERNAL',
         'Target Recipient': untrustedAddr,
-        'Amount': '0.50 USDC (500,000 base units)',
+        'Proposed Amount': '0.50 USDC (500,000 base units)',
         'Intent ID': intentId,
-        'Status': 'CREATED',
+        'Proposal Status': 'SUBMITTED (Flagged: Unverified Recipient)',
       });
       await new Promise((r) => setTimeout(r, 600));
 
@@ -703,6 +709,17 @@ export default function DemoPage() {
             <p className="mt-1 text-xs sm:text-sm text-[#716F69] leading-relaxed">
               AI agents are untrusted and cannot hold signing keys. AgentPay enforces mathematical policy checks before any transaction reaches <code className="text-[#D6A83A] font-mono">AgentVault.sol</code> on Arc.
             </p>
+
+            {/* Core Architectural Invariant Banner */}
+            <div className="mt-4 p-3.5 rounded-xl bg-[#0B0B0B] border border-[#D6A83A]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-bold text-[#D6A83A]">SEC-INV:</span>
+                <span className="font-semibold text-[#F2F0EA]">AI MAY REASON. AI MAY PLAN. AI MAY RECOMMEND. AI MAY NEVER AUTHORIZE MONEY.</span>
+              </div>
+              <span className="font-mono text-[10px] text-[#2FB36F] bg-[#2FB36F]/10 px-2 py-0.5 rounded border border-[#2FB36F]/30 shrink-0">
+                OpenRouter Layer Active
+              </span>
+            </div>
           </div>
 
           {/* Quick Scenario Navigation Bar */}
@@ -1018,12 +1035,12 @@ export default function DemoPage() {
           {/* STAGE 1: AI AGENT */}
           <PipelineCard
             stageNum="01"
-            title="AI Agent (Untrusted)"
-            subtitle="Emits Structured Intent"
+            title="Universal AI Provider"
+            subtitle="Advisory Structured Proposal"
             isActive={activeStepIndex === 1}
             isCompleted={activeStepIndex > 1}
             isDenied={false}
-            statusBadge="UNTRUSTED CLIENT"
+            statusBadge="ADVISORY ONLY"
             badgeVariant="amber"
             details={step1Details}
           />

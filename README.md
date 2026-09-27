@@ -105,9 +105,20 @@ AgentPay integrates multi-language services into a single authoritative pipeline
 - **Go Gateway** (`services/gateway`): High-throughput API gateway, durable workflow runtime, event bus, and storage persistence.
 - **Rust Policy Engine** (`services/policy-engine`): High-performance deterministic policy evaluation core executing in <10 microseconds.
 - **Solidity Smart Contracts** (`contracts/src`): On-chain programmable vault (`AgentVault.sol`) on Arc.
+- **Universal AI Layer** (`services/gateway/internal/ai`): Provider-agnostic AI abstraction powered by OpenRouter, featuring dynamic task routing across 8 profiles, fallback cascades, prompt registry, telemetry tracer, and strict read-only tool boundaries.
 - **TypeScript & Python SDKs** (`packages/`): Fully typed client libraries with zero private key handling.
 - **Operator CLI** (`packages/cli`): Command-line utility for operations, simulations, and inspections.
-- **Control Tower** (`apps/web`): Real-time observability dashboard with live economic causal tracing.
+- **Control Tower** (`apps/web`): Real-time observability dashboard with live economic causal tracing and AI security boundary strip.
+
+---
+
+### Universal AI Provider Layer (Advisory Domain)
+
+AgentPay replaces single-vendor LLM dependencies with a universal, provider-agnostic AI layer using **OpenRouter**:
+- **Primary Reasoning Model**: `nvidia/nemotron-3-ultra-550b-a55b:free`
+- **Fallback Cascades**: `cohere/north-mini-code:free`, `google/gemma-4-31b-it:free`, `poolside/laguna-s-2.1:free`, `inclusionai/ling-3.0-flash-fin:free`
+- **20 Security Invariants**: Zero key custody, prohibited mutation tools (`execute_payment`, `sign_transaction`), read-only tools allowlist, SHA-256 proposal integrity hashing, integer atomic micro-unit enforcement, and fail-closed error handling.
+- **Strict Boundary**: AI outputs are strictly `AIProposal` records with status `PROPOSED`. AI may reason and recommend, but **deterministic Rust policy, risk engines, dual-custody approval, and treasury reservation** govern all financial authority.
 
 ---
 

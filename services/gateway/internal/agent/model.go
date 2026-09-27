@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/ai/types"
 )
 
 var (
@@ -76,6 +78,40 @@ func (m *MockAgentModel) GeneratePaymentIntent(ctx context.Context, task AgentTa
 	return &AIIntentResponse{
 		RequiresPayment: false,
 	}, nil
+}
+
+// UniversalAIModelAdapter bridges the canonical AIProvider to the legacy AgentModel interface.
+type UniversalAIModelAdapter struct {
+	provider     types.AIProvider
+	systemPrompt string
+}
+
+// NewUniversalAIModelAdapter creates an adapter around any AIProvider.
+func NewUniversalAIModelAdapter(p types.AIProvider, systemPrompt string) *UniversalAIModelAdapter {
+	return &UniversalAIModelAdapter{
+		provider:     p,
+		systemPrompt: systemPrompt,
+	}
+}
+
+func (a *UniversalAIModelAdapter) GeneratePaymentIntent(ctx context.Context, task AgentTask) (*AIIntentResponse, error) {
+	userContent := fmt.Sprintf("<user_task>\n%s\n</user_task>", task.Task)
+	req := types.AIRequest{
+		TaskType:          "PAYMENT_INTENT",
+		SystemInstruction: a.systemPrompt,
+		Messages: []types.AIMessage{
+			{Role: types.RoleUser, Content: userContent},
+		},
+		ResponseFormat: map[string]string{"type": "json_object"},
+		Temperature:    0.0,
+	}
+
+	var intentResp AIIntentResponse
+	_, err := a.provider.GenerateStructured(ctx, req, &intentResp)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrModelExecutionFailed, err)
+	}
+	return &intentResp, nil
 }
 
 // HTTPModel interacts with an OpenAI-compatible JSON-mode LLM endpoint.

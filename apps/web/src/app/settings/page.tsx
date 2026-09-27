@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { NetworkBadge } from '../../components/NetworkBadge';
 import { AutoExecutionBadge } from '../../components/AutoExecutionBadge';
 
@@ -13,7 +14,7 @@ export default function SettingsPage() {
     { label: 'Agent Auto-Execution', value: 'false (Manual confirmation required)' },
     { label: 'Live Blockchain Execution', value: 'false (Dry-run mode active)' },
     { label: 'Database Storage', value: 'PostgreSQL / Memory Repository' },
-    { label: 'AI Reasoning Engine', value: 'Pluggable AgentModel (OpenAI JSON Mode / Mock)' },
+    { label: 'AI Reasoning Engine', value: 'Universal AI Provider Layer (OpenRouter / Free Cascade)' },
   ];
 
   return (
@@ -36,6 +37,27 @@ export default function SettingsPage() {
           <NetworkBadge isVerifiedMainnet={false} />
           <AutoExecutionBadge autoExecutionEnabled={false} />
         </div>
+      </div>
+
+      {/* Universal AI Provider Quick-Link */}
+      <div className="p-4 rounded-xl bg-[#101010] border border-[#D6A83A]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-[#F2F0EA]">Universal AI Provider Layer</span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/30">
+              OpenRouter Active
+            </span>
+          </div>
+          <div className="text-[#B0ADA5] mt-1 text-[11px]">
+            Manage models, fallback cascades, telemetry, prompt versions, and deterministic authority separation.
+          </div>
+        </div>
+        <Link
+          href="/settings/ai"
+          className="h-8 px-3.5 bg-[#F2F0EA] hover:bg-white text-[#080808] rounded-lg text-xs font-semibold flex items-center justify-center shrink-0 transition-colors"
+        >
+          Configure AI Layer →
+        </Link>
       </div>
 
       <div className="rounded-2xl bg-[#101010] border border-[#222222] divide-y divide-[#222222] overflow-hidden">

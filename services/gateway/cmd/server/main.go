@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/ai"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/ai/provider"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
@@ -115,6 +116,15 @@ func main() {
 		cfg.AgentAutoExecution,
 	)
 
+	// Initialize Universal AI Service (Task 37)
+	aiService, err := ai.NewService(cfg.AIProvider)
+	if err != nil {
+		log.Printf("[AgentPay Gateway] Warning: failed to initialize AI provider %q (%v), falling back to mock provider", cfg.AIProvider, err)
+		aiService = ai.NewServiceWithProvider(provider.NewMockProvider())
+	} else {
+		log.Printf("[AgentPay Gateway] Universal AI Provider Layer active: Provider=%s, DefaultModel=%s", aiService.Provider().Name(), cfg.AIModel)
+	}
+
 	// Initialize AI Agent Model
 	var agentModel agent.AgentModel = &agent.MockAgentModel{}
 	if cfg.AIAPIKey != "" {
@@ -124,16 +134,8 @@ func main() {
 			log.Printf("[AgentPay Gateway] Warning: could not read system prompt file (%v), using default instructions", err)
 			systemPrompt = "You are an AI agent under the AgentPay protocol. You may request payments only through registered services."
 		}
-		endpoint := cfg.AIEndpoint
-		if endpoint == "" {
-			if strings.EqualFold(cfg.AIProvider, "openrouter") {
-				endpoint = "https://openrouter.ai/api/v1/chat/completions"
-			} else {
-				endpoint = "https://api.openai.com/v1/chat/completions"
-			}
-		}
-		agentModel = agent.NewHTTPModel(endpoint, cfg.AIModel, cfg.AIAPIKey, systemPrompt)
-		log.Printf("[AgentPay Gateway] Configured HTTP LLM agent model (Provider: %s, Endpoint: %s, Model: %s)", cfg.AIProvider, endpoint, cfg.AIModel)
+		agentModel = agent.NewUniversalAIModelAdapter(aiService.Provider(), systemPrompt)
+		log.Printf("[AgentPay Gateway] Configured Universal AI Model Adapter for Agent Service (Provider: %s)", aiService.Provider().Name())
 	}
 
 	// Initialize AI Agent Service
@@ -144,7 +146,7 @@ func main() {
 		cfg.AgentAutoExecution,
 	)
 
-	router := gwHttp.NewRouter(cfg, policyClient, execService, agentService, intentService, repo, serviceRegistry)
+	router := gwHttp.NewRouter(cfg, policyClient, execService, agentService, intentService, repo, serviceRegistry, aiService)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	srv := &http.Server{

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/ai"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/clearinghouse"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
@@ -43,8 +44,32 @@ func NewRouter(
 	intentService *intent.Service,
 	repo storage.Repository,
 	reg *registry.Registry,
+	aiServices ...*ai.Service,
 ) http.Handler {
 	mux := http.NewServeMux()
+
+	var aiSvc *ai.Service
+	if len(aiServices) > 0 {
+		aiSvc = aiServices[0]
+	}
+
+	// 0. Universal AI Provider Layer (Task 37)
+	aiHandler := handlers.NewAIHandler(aiSvc)
+	mux.HandleFunc("GET /control/ai/telemetry", aiHandler.HandleGetTelemetry)
+	mux.HandleFunc("GET /api/ai/telemetry", aiHandler.HandleGetTelemetry)
+	mux.HandleFunc("GET /v1/ai/telemetry", aiHandler.HandleGetTelemetry)
+	mux.HandleFunc("GET /control/ai/health", aiHandler.HandleGetHealth)
+	mux.HandleFunc("GET /api/ai/health", aiHandler.HandleGetHealth)
+	mux.HandleFunc("GET /v1/ai/health", aiHandler.HandleGetHealth)
+	mux.HandleFunc("GET /control/ai/models", aiHandler.HandleGetModels)
+	mux.HandleFunc("GET /api/ai/models", aiHandler.HandleGetModels)
+	mux.HandleFunc("GET /v1/ai/models", aiHandler.HandleGetModels)
+	mux.HandleFunc("GET /control/ai/prompts", aiHandler.HandleGetPrompts)
+	mux.HandleFunc("GET /api/ai/prompts", aiHandler.HandleGetPrompts)
+	mux.HandleFunc("GET /v1/ai/prompts", aiHandler.HandleGetPrompts)
+	mux.HandleFunc("POST /control/ai/proposals", aiHandler.HandleCreateProposal)
+	mux.HandleFunc("POST /api/ai/proposals", aiHandler.HandleCreateProposal)
+	mux.HandleFunc("POST /v1/ai/proposals", aiHandler.HandleCreateProposal)
 
 	// 1. Health, Readiness & Metrics
 	mux.HandleFunc("GET /health", health.Handler)
