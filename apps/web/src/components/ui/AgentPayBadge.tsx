@@ -1,7 +1,7 @@
 import React from 'react';
 
 export type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'accent';
-export type ProvenanceVariant = 'LIVE' | 'VERIFIED' | 'PROJECTED' | 'SIMULATED' | 'CACHED' | 'UNAVAILABLE';
+export type ProvenanceVariant = 'LIVE' | 'VERIFIED' | 'PROJECTED' | 'SIMULATED' | 'CACHED' | 'UNAVAILABLE' | 'HISTORICAL' | 'NOT DEPLOYED';
 
 export interface AgentPayBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
@@ -113,6 +113,18 @@ export function AgentPayProvenanceBadge({
           CACHED
         </AgentPayBadge>
       );
+    case 'HISTORICAL':
+      return (
+        <AgentPayBadge variant="neutral" dot className={className}>
+          HISTORICAL
+        </AgentPayBadge>
+      );
+    case 'NOT DEPLOYED':
+      return (
+        <AgentPayBadge variant="danger" dot className={className}>
+          NOT DEPLOYED
+        </AgentPayBadge>
+      );
     case 'UNAVAILABLE':
       return (
         <AgentPayBadge variant="danger" dot className={className}>
@@ -121,3 +133,4 @@ export function AgentPayProvenanceBadge({
       );
   }
 }
+

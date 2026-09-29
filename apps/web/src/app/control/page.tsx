@@ -228,18 +228,19 @@ const CANONICAL_ECONOMIC_TIMELINE: EconomicTraceEvent[] = [
     timestamp: '12:04:18',
     actor: 'Execution Gate & Signer',
     domain: 'EXECUTION',
-    action: 'EXECUTION',
-    economicImpact: 'PaymentIntent: pi_live_9941 ready',
-    policyDecision: 'SIGNED (EIP-712 nonced payload)',
+    action: 'SIMULATED EXECUTION',
+    economicImpact: 'Simulated Intent: pi_sim_9941 (NOT BROADCAST)',
+    policyDecision: 'AUTHORIZED (Deterministic Gate Approved)',
     status: 'EXECUTING',
     amount: '$12.50',
-    correlationId: 'pi_live_9941',
-    details: 'Agent received 0 private keys. Authoritative authorization token minted for relayer settlement.',
+    correlationId: 'pi_sim_9941',
+    details: 'Execution mode: SIMULATION. Agent received 0 private keys. No transaction signed or broadcast to mainnet (INV-107, INV-141). Deterministic authorization verified.',
     whyTitle: 'WHY DID AGENT RECEIVE ZERO PRIVATE KEYS?',
-    whyExplanation: 'Keyless agent security (INV-141): Agents generate intents; isolated HSM signer mints signed transactions.',
+    whyExplanation: 'Keyless agent security (INV-141): Agents generate intents; execution remains in simulation with zero broadcast.',
     whyNotTitle: 'WHY NOT DIRECT AGENT SIGNING?',
     whyNotExplanation: [
-      'Agent-held keys: Unacceptable risk of prompt injection or key extraction.'
+      'Agent-held keys: Unacceptable risk of prompt injection or key extraction.',
+      'Live signing disabled: Live execution is disabled (ENABLE_LIVE_EXECUTION=false).'
     ],
   },
   {
@@ -284,13 +285,13 @@ const CANONICAL_ECONOMIC_TIMELINE: EconomicTraceEvent[] = [
     timestamp: '12:04:25',
     actor: 'Arc Settlement Consensus',
     domain: 'SETTLEMENT',
-    action: 'ARC SETTLEMENT',
-    economicImpact: 'Settled: $14.00 USDC (SIMULATION / OPERATOR-GATED)',
-    policyDecision: 'CONFIRMED (Zero gas slippage)',
+    action: 'ARC SETTLEMENT (SIMULATED)',
+    economicImpact: 'Simulated Settlement: $14.00 USDC (0 REAL FUNDS MOVED)',
+    policyDecision: 'CONFIRMED (Simulation Model)',
     status: 'CONFIRMED',
     amount: '$14.00',
     correlationId: 'arc_tx_sim_01',
-    details: 'Block consensus verified. Production broadcast remains operator-gated (ENABLE_LIVE_EXECUTION=false).',
+    details: 'Block consensus simulated on Chain 5042. Live broadcast switch is DISABLED (ENABLE_LIVE_EXECUTION=false). Real settlements on Arc: 0.',
     whyTitle: 'WHY WAS THIS NOT BROADCAST TO ARC MAINNET?',
     whyExplanation: 'Live execution is disabled (ENABLE_LIVE_EXECUTION=false) and AgentVault is not deployed on Arc Mainnet.',
     whyNotTitle: 'WHY NOT BROADCAST MOCK TRANSACTION?',
@@ -538,10 +539,16 @@ export default function ControlTowerPage() {
               </AgentPayBadge>
               <span className="text-xs text-[#716F69]">·</span>
               <span className="text-xs text-[#B0ADA5]">
-                Arc Mainnet <span className="font-mono text-[#716F69]">(5042)</span>
+                Arc RPC: <span className="font-mono text-[#2FB36F]">CONNECTED (Chain 5042)</span>
               </span>
               <span className="text-xs text-[#716F69]">·</span>
-              <span className="text-xs text-[#D85C5C]">AgentVault Undeployed</span>
+              <span className="text-xs text-[#D6A83A]">
+                Settlement: <span className="font-mono">SIMULATION ONLY</span>
+              </span>
+              <span className="text-xs text-[#716F69]">·</span>
+              <span className="text-xs text-[#D85C5C]">
+                AgentVault: <span className="font-mono">NOT DEPLOYED (0x)</span>
+              </span>
             </div>
 
             <div>
@@ -596,20 +603,20 @@ export default function ControlTowerPage() {
 
       {/* 2. COMPACT SYSTEM STATUS STRIP (REAL / TRUTHFUL PROVENANCE) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <AgentPayMetric label="Missions" value={overview?.active_missions_count ?? 12} subtext="Autonomous DAGs" provenance="LIVE" />
-        <AgentPayMetric label="Active Agents" value={overview?.active_agents_count ?? 37} subtext="Keyless runtime" provenance="LIVE" />
-        <AgentPayMetric label="Committed" value="$182.40" subtext="In flight" provenance="PROJECTED" />
-        <AgentPayMetric label="At Risk" value="$24.10" subtext="Worst-case margin" provenance="PROJECTED" />
-        <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 3} subtext="Dual-custody >$20" provenance="LIVE" highlight />
-        <AgentPayMetric label="Running Workflows" value="8" subtext="Durable state" provenance="LIVE" />
-        <AgentPayMetric label="Settled" value="$1,204.32" subtext="Historical volume" provenance="PROJECTED" />
-        <AgentPayMetric label="Arc Mainnet" value="CONNECTED" subtext="Chain 5042" provenance="VERIFIED" />
+        <AgentPayMetric label="Missions" value={overview?.active_missions_count ?? 12} subtext="Autonomous DAGs" provenance="SIMULATED" />
+        <AgentPayMetric label="Active Agents" value={overview?.active_agents_count ?? 37} subtext="Keyless runtime" provenance="SIMULATED" />
+        <AgentPayMetric label="Committed" value="$182.40" subtext="Simulated in-flight" provenance="PROJECTED" />
+        <AgentPayMetric label="At Risk" value="$24.10" subtext="Simulated margin" provenance="PROJECTED" />
+        <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 3} subtext="Dual-custody >$20" provenance="SIMULATED" highlight />
+        <AgentPayMetric label="Running Workflows" value="8" subtext="Durable state" provenance="SIMULATED" />
+        <AgentPayMetric label="Simulated Settled" value="$1,204.32" subtext="0 Real Arc Settlements" provenance="PROJECTED" />
+        <AgentPayMetric label="Arc RPC" value="CONNECTED" subtext="Chain 5042 (0 Real Tx)" provenance="VERIFIED" />
       </div>
 
       {/* 3. AI VS AUTHORITY COMPARISON PANEL (TASK 38 SIGNATURE) */}
       <AgentPayPanel
         title="AI VS FINANCIAL AUTHORITY SEPARATION"
-        subtitle="AI reasoning is strictly advisory and probablistic. Financial execution is strictly deterministic and non-bypassable."
+        subtitle="AI reasoning is strictly advisory and probabilistic. Financial execution is strictly deterministic and non-bypassable."
         badge={<AgentPayBadge variant="accent">UNBREAKABLE INVARIANT</AgentPayBadge>}
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
@@ -629,8 +636,9 @@ export default function ControlTowerPage() {
               <div className="flex items-center gap-2 text-[#F2F0EA]"><span>✓</span> Merchant Discovery</div>
               <div className="flex items-center gap-2 text-[#F2F0EA]"><span>✓</span> Quote Benchmarking</div>
               <div className="flex items-center gap-2 text-[#F2F0EA]"><span>✓</span> Failure Replanning</div>
-              <div className="flex items-center gap-2 text-[#D85C5C]"><span>✗</span> Zero Key Custody (INV-01)</div>
-              <div className="flex items-center gap-2 text-[#D85C5C]"><span>✗</span> Zero Signing Authority (INV-02)</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Zero Key Custody (INV-01 PASS)</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Zero Signing Authority (INV-02 PASS)</div>
+              <div className="flex items-center gap-2 text-[#716F69]"><span>⊘</span> Direct Vault Call (BLOCKED)</div>
             </div>
           </div>
 
@@ -651,7 +659,8 @@ export default function ControlTowerPage() {
               <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Dual-Custody Approval Gate</div>
               <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Double-Entry Treasury Lock</div>
               <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Execution Gate Calldata Filter</div>
-              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Isolated KMS / HSM Signer</div>
+              <div className="flex items-center gap-2 text-[#2FB36F]"><span>✓</span> Local Calldata-Bound Signer (DEV/SIM)</div>
+              <div className="flex items-center gap-2 text-[#716F69]"><span>○</span> Enterprise KMS / HSM (NOT IMPLEMENTED)</div>
             </div>
           </div>
 
@@ -667,11 +676,12 @@ export default function ControlTowerPage() {
               Programmable on-chain vault releases native USDC micro-payments against verified EIP-712 nonces and deliverable hashes.
             </p>
             <div className="space-y-1.5 pt-1 font-mono text-[11px]">
-              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> Native USDC Token</div>
-              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> AgentVault.sol (On-Chain Guard)</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> Native USDC Token (Verified)</div>
+              <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> AgentVault.sol (Foundry Tested)</div>
               <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> Atomic Sub-Second Finality</div>
               <div className="flex items-center gap-2 text-[#F2F0EA]"><span>▲</span> Deterministic Gas Settlement</div>
-              <div className="flex items-center gap-2 text-[#B0ADA5]"><span>·</span> Simulation Mode: Gated</div>
+              <div className="flex items-center gap-2 text-[#D6A83A]"><span>·</span> Settlement Capability: SIMULATION ONLY</div>
+              <div className="flex items-center gap-2 text-[#D85C5C]"><span>·</span> AgentVault: Not Deployed on Mainnet (0x)</div>
               <div className="flex items-center gap-2 text-[#B0ADA5]"><span>·</span> Real Settlements: 0 Verified</div>
             </div>
           </div>
@@ -681,7 +691,7 @@ export default function ControlTowerPage() {
       {/* 4. FINANCIAL AUTHORITY PANEL (5-SECOND COMPREHENSION) */}
       <AgentPayPanel
         title="FINANCIAL AUTHORITY PIPELINE"
-        subtitle="Step-by-step verification demonstrating how a $25.00 AI request is bounded and authorized."
+        subtitle="Step-by-step verification demonstrating how a $25.00 AI request is bounded and authorized. In simulation mode, the authorization decision is ALLOWED while execution is NOT BROADCAST ($0.00 moved)."
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-2 text-center text-xs font-mono">
           <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
@@ -715,48 +725,49 @@ export default function ControlTowerPage() {
             <span className="text-[10px] text-[#716F69]">Encumbered</span>
           </div>
           <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
-            <span className="text-[10px] text-[#716F69] block mb-1">AUTHORIZED</span>
-            <span className="text-sm font-bold text-[#2FB36F] block">$25.00</span>
-            <span className="text-[10px] text-[#716F69]">Gate Approved</span>
+            <span className="text-[10px] text-[#716F69] block mb-1">AUTHORIZATION</span>
+            <span className="text-sm font-bold text-[#2FB36F] block">ALLOWED</span>
+            <span className="text-[10px] text-[#2FB36F]">Gate Approved</span>
           </div>
           <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
             <span className="text-[10px] text-[#716F69] block mb-1">RECIPIENT</span>
             <span className="text-sm font-bold text-[#6B8FD6] block">RESOLVED</span>
             <span className="text-[10px] text-[#716F69]">Registry Match</span>
           </div>
-          <div className="p-3 rounded-lg bg-[#141414] border border-[#2FB36F]/40">
-            <span className="text-[10px] text-[#2FB36F] block mb-1">EXECUTION</span>
-            <span className="text-sm font-bold text-[#2FB36F] block">ALLOWED</span>
-            <span className="text-[10px] text-[#2FB36F]">Relayer Signed</span>
+          <div className="p-3 rounded-lg bg-[#141414] border border-[#D6A83A]/40">
+            <span className="text-[10px] text-[#D6A83A] block mb-1">SIMULATED EXECUTION</span>
+            <span className="text-sm font-bold text-[#D6A83A] block">NOT BROADCAST</span>
+            <span className="text-[10px] text-[#716F69]">Simulation ($0.00)</span>
           </div>
         </div>
       </AgentPayPanel>
 
-      {/* 5. LIVE ECONOMIC TIMELINE (CENTERPIECE) */}
+      {/* 5. SIMULATED ECONOMIC TIMELINE (CENTERPIECE) */}
       <AgentPayPanel
-        title="LIVE ECONOMIC TIMELINE"
-        subtitle="End-to-end deterministic lifecycle execution stream. Click any step to inspect evidence and causal invariants."
-        badge={<AgentPayBadge variant="accent">14 CANONICAL STEPS</AgentPayBadge>}
+        title="SIMULATED ECONOMIC TIMELINE"
+        subtitle="End-to-end deterministic lifecycle execution stream in simulation mode. Click any step to inspect evidence and causal invariants with zero live broadcast."
+        badge={<AgentPayBadge variant="accent">14 CANONICAL STEPS (SIMULATED)</AgentPayBadge>}
       >
         <div className="space-y-4">
-          {/* Horizontal Step Slider Bar */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+          {/* Horizontal Step Slider Bar with fixed min-width to prevent truncation */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
             {CANONICAL_ECONOMIC_TIMELINE.map((step, idx) => {
               const isSelected = selectedEventIndex === idx;
               return (
                 <button
                   key={step.stepIndex}
                   onClick={() => setSelectedEventIndex(idx)}
-                  className={`px-3 py-2 rounded-lg text-xs font-mono shrink-0 transition-all text-left border ${
+                  title={`Step ${step.stepIndex}: ${step.action}`}
+                  className={`px-3.5 py-2.5 rounded-lg text-xs font-mono shrink-0 min-w-[145px] transition-all text-left border ${
                     isSelected
-                      ? 'bg-[#181818] border-[#D6A83A] text-[#F2F0EA] font-semibold'
+                      ? 'bg-[#181818] border-[#D6A83A] text-[#F2F0EA] font-semibold ring-1 ring-[#D6A83A]/50'
                       : 'bg-[#101010] border-[#222222] text-[#716F69] hover:text-[#B0ADA5] hover:border-[#2B2B2B]'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 mb-1">
+                  <div className="flex items-center justify-between gap-1.5 mb-1">
                     <span className="text-[10px] opacity-70">#{step.stepIndex}</span>
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
+                      className={`w-2 h-2 rounded-full ${
                         step.status === 'FAILED'
                           ? 'bg-[#D85C5C]'
                           : step.status === 'CONFIRMED' || step.status === 'VERIFIED'
@@ -765,8 +776,11 @@ export default function ControlTowerPage() {
                       }`}
                     />
                   </div>
-                  <span className="block truncate max-w-[110px] font-sans text-[11px]">
+                  <span className="block font-sans text-xs font-medium text-[#F2F0EA] whitespace-nowrap">
                     {step.action}
+                  </span>
+                  <span className="block text-[10px] text-[#716F69] mt-0.5 truncate">
+                    {step.domain}
                   </span>
                 </button>
               );
@@ -857,8 +871,8 @@ export default function ControlTowerPage() {
       {/* 6. BLOCKED ACTIONS ("BLOCKED BY AGENTPAY") */}
       <AgentPayPanel
         title="BLOCKED BY AGENTPAY (DETERMINISTIC SECURITY LAB)"
-        subtitle="Interactive demonstration of malicious and non-compliant operations blocked at the policy and execution gate boundaries."
-        badge={<AgentPayBadge variant="danger">8 ATTACK VECTORS BLOCKED</AgentPayBadge>}
+        subtitle="Interactive demonstration of malicious and non-compliant operations blocked at the policy and execution gate boundaries in simulation mode."
+        badge={<AgentPayBadge variant="danger">8 ATTACK VECTORS BLOCKED (SIMULATION)</AgentPayBadge>}
       >
         <div className="space-y-4">
           {/* Vector Selector Tabs */}
@@ -887,7 +901,7 @@ export default function ControlTowerPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#222222]">
               <div className="flex items-center gap-3">
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-[#D85C5C]/10 text-[#D85C5C] border border-[#D85C5C]/30">
-                  BLOCKED IN 6.36 µs
+                  SIMULATED DECISION LATENCY: 6.36 µs
                 </span>
                 <h4 className="text-sm font-bold text-[#F2F0EA]">
                   {activeSecurityTest.name}
@@ -932,8 +946,8 @@ export default function ControlTowerPage() {
         {/* Active Missions (6 cols) */}
         <div className="lg:col-span-6">
           <AgentPayPanel
-            title="ACTIVE AUTONOMOUS MISSIONS"
-            subtitle="Autonomous economic task graphs executing under strict budgetary caps."
+            title="ACTIVE AUTONOMOUS MISSIONS (SIMULATION)"
+            subtitle="Autonomous economic task graphs executing under strict budgetary caps in simulation mode."
             actions={
               <Link href="/missions" className="text-xs text-[#D6A83A] hover:underline">
                 View All Missions →
@@ -944,12 +958,12 @@ export default function ControlTowerPage() {
               <div className="p-4 rounded-xl border border-[#D6A83A]/50 bg-[#141414] space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#2FB36F] animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
                     <h4 className="text-sm font-bold text-[#F2F0EA]">
                       Autonomous Market Intelligence (Flagship Demo)
                     </h4>
                   </div>
-                  <AgentPayBadge variant="accent">22-STEP REPLAY</AgentPayBadge>
+                  <AgentPayBadge variant="accent">SIMULATION REPLAY</AgentPayBadge>
                 </div>
 
                 <p className="text-xs text-[#B0ADA5]">
@@ -980,12 +994,12 @@ export default function ControlTowerPage() {
               <div className="p-4 rounded-xl border border-[#222222] bg-[#141414] space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
+                    <span className="w-2 h-2 rounded-full bg-[#716F69]" />
                     <h4 className="text-sm font-bold text-[#F2F0EA]">
                       Autonomous Treasury Rebalance Swarm
                     </h4>
                   </div>
-                  <AgentPayBadge variant="success">STEP 4 / 6</AgentPayBadge>
+                  <AgentPayBadge variant="neutral">DEMO SCENARIO (STEP 4 / 6)</AgentPayBadge>
                 </div>
 
                 <p className="text-xs text-[#B0ADA5]">
@@ -1066,15 +1080,15 @@ export default function ControlTowerPage() {
               <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-mono pt-2 border-t border-[#222222]">
                 <div className="p-2 bg-[#101010] rounded border border-[#222222]">
                   <span className="text-[#716F69] block">Counterparties</span>
-                  <span className="text-[#F2F0EA] font-semibold">14 Verified</span>
+                  <span className="text-[#F2F0EA] font-semibold">14 DEMO AGENTS</span>
                 </div>
                 <div className="p-2 bg-[#101010] rounded border border-[#222222]">
                   <span className="text-[#716F69] block">Active Leases</span>
-                  <span className="text-[#D6A83A] font-semibold">8 Fenced</span>
+                  <span className="text-[#D6A83A] font-semibold">8 SIMULATED LEASES</span>
                 </div>
                 <div className="p-2 bg-[#101010] rounded border border-[#222222]">
                   <span className="text-[#716F69] block">Topology SLA</span>
-                  <span className="text-[#2FB36F] font-semibold">99.8%</span>
+                  <span className="text-[#2FB36F] font-semibold">99.8% PROJECTED SLA</span>
                 </div>
               </div>
             </div>
@@ -1088,7 +1102,7 @@ export default function ControlTowerPage() {
         <div className="lg:col-span-6">
           <AgentPayPanel
             title="TREASURY & LIQUIDITY BUFFER"
-            subtitle="Double-entry liquidity tracking ensuring zero unreserved financial risk."
+            subtitle="Double-entry liquidity tracking ensuring zero unreserved financial risk in simulation mode."
             actions={
               <Link href="/treasury" className="text-xs text-[#D6A83A] hover:underline">
                 Treasury Details →
@@ -1118,9 +1132,9 @@ export default function ControlTowerPage() {
                   <span className="text-[9px] text-[#716F69]">ZERO GAP</span>
                 </div>
                 <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
-                  <span className="text-[10px] text-[#716F69] block mb-1">SETTLED</span>
+                  <span className="text-[10px] text-[#716F69] block mb-1">SIMULATED SETTLED</span>
                   <span className="text-base font-bold text-[#B0ADA5] block">$1,204.32</span>
-                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                  <span className="text-[9px] text-[#716F69]">0 REAL ARC TX</span>
                 </div>
               </div>
 
@@ -1134,7 +1148,7 @@ export default function ControlTowerPage() {
                   <div className="h-full bg-[#2FB36F]" style={{ width: '86.4%' }} />
                 </div>
                 <span className="text-[10px] text-[#716F69] block">
-                  Simulation values labeled PROJECTED. On-chain balance verified upon contract deployment.
+                  Double-entry ledger simulation state. On-chain Arc settlements: 0 verified. Live balance verified upon contract deployment.
                 </span>
               </div>
             </div>
@@ -1166,11 +1180,19 @@ export default function ControlTowerPage() {
               </div>
               <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
                 <span className="text-[#716F69]">AgentVault Contract</span>
-                <span className="text-[#D85C5C] font-semibold">NOT DEPLOYED ON MAINNET</span>
+                <span className="text-[#D85C5C] font-semibold">NOT DEPLOYED ON MAINNET (0x)</span>
               </div>
               <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
                 <span className="text-[#716F69]">Live Broadcast Switch</span>
                 <span className="text-[#D85C5C] font-semibold">DISABLED (Simulation Guard)</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
+                <span className="text-[#716F69]">Settlement Stack</span>
+                <span className="text-[#D6A83A] font-semibold">NOT ACTIVE ON MAINNET (SIMULATED)</span>
+              </div>
+              <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
+                <span className="text-[#716F69]">Enterprise KMS</span>
+                <span className="text-[#B0ADA5]">NOT IMPLEMENTED (Fails Closed)</span>
               </div>
               <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
                 <span className="text-[#716F69]">Real Settlements</span>

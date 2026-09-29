@@ -228,21 +228,36 @@ export interface ControlSearchResult {
 }
 
 // -------------------------------------------------------------
-// Fallback deterministic fixtures for offline / demonstration
+// Canonical System Truth & Fallback deterministic fixtures
 // -------------------------------------------------------------
+
+export const CONTROL_PLANE_TRUTH = {
+  mode: 'SIMULATION' as const,
+  mode_notice: 'SIMULATION — NO FUNDS MOVED',
+  arc_rpc: 'CONNECTED',
+  arc_chain_id: '5042',
+  native_usdc: '0x3600000000000000000000000000000000000000',
+  agent_vault_status: 'NOT DEPLOYED ON MAINNET (0x bytecode)',
+  live_execution_status: 'DISABLED (Operator Gated)',
+  real_settlements: 0,
+  broadcast_count: 0,
+  kms_status: 'NOT IMPLEMENTED (Fails closed with ErrKMSSignerUnavailable)',
+  signer_status: 'LOCAL CALLDATA-BOUND SIGNER (DEV/SIM)',
+  settlement_capability: 'NOT ACTIVE ON MAINNET (SIMULATED ONLY)',
+};
 
 export const FALLBACK_STATE_STRIP: EconomicStateStrip = {
   treasury_status: 'HEALTHY',
   policy_version: 'v8 ACTIVE',
   risk_level: 'NORMAL',
-  execution_mode: 'LIVE',
+  execution_mode: 'SIMULATION',
   arc_status: 'VERIFIED',
   last_updated: new Date().toISOString(),
 };
 
 export const FALLBACK_OVERVIEW: ExecutiveOverview = {
   organization_id: 'org_default',
-  execution_mode: 'REAL',
+  execution_mode: 'SIMULATION',
   active_missions_count: 4,
   active_agents_count: 14,
   active_contracts_count: 8,
@@ -255,7 +270,7 @@ export const FALLBACK_OVERVIEW: ExecutiveOverview = {
   current_treasury_mode: 'NORMAL',
   security_status: 'NORMAL',
   arc_verified_balance: '125000000000', // 125,000 USDC
-  data_freshness: 'LIVE',
+  data_freshness: 'RECENT',
   state_strip: FALLBACK_STATE_STRIP,
   timestamp: new Date().toISOString(),
 };
