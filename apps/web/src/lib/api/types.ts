@@ -547,15 +547,38 @@ export interface ApprovalItem {
 
 export interface GlobalActivityEvent {
   id: string;
+  event_type: string;
   type: string;
+  title: string;
+  description?: string;
   category: 'MISSION' | 'PAYMENT' | 'POLICY' | 'RISK' | 'APPROVAL' | 'SECURITY' | 'ARC' | string;
+  source: string;
   actor: string;
-  mission_id?: string;
+  actor_id?: string;
+  actor_type?: string;
+  agent_id?: string;
+  status: 'SUCCESS' | 'PENDING' | 'BLOCKED' | 'FAILED' | 'INFO' | string;
+  financial_mode?: 'SIMULATION' | 'VERIFIED' | 'PROJECTED';
+  is_simulated?: boolean;
   amount?: string;
-  status: string;
+  formatted_amount?: string;
+  currency?: string;
+  mission_id?: string;
+  payment_intent_id?: string;
+  payment_id?: string;
+  execution_id?: string;
+  approval_id?: string;
   correlation_id: string;
+  causation_id?: string;
+  request_id?: string;
+  resource_type?: string;
+  resource_id?: string;
+  version?: number;
   timestamp: string;
+  display_time?: string;
   payload: Record<string, any>;
+  raw_metadata?: string;
+  raw_event?: Record<string, any>;
 }
 
 export interface SubsystemStatus {

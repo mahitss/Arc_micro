@@ -15,6 +15,7 @@ import {
   GlobalActivityEvent,
   SecuritySubsystemsReport,
 } from './types';
+import { normalizeActivityEvent } from '../activity/normalizer';
 
 export interface CreateMissionInput {
   organization_id?: string;
@@ -525,64 +526,80 @@ export async function rejectApproval(approvalId: string, approverId: string, rea
   });
 }
 
-export async function fetchGlobalActivity(options?: { useDemo?: boolean }): Promise<GlobalActivityEvent[]> {
+export async function fetchGlobalActivity(options?: {
+  useDemo?: boolean;
+  limit?: number;
+  eventType?: string;
+}): Promise<GlobalActivityEvent[]> {
   try {
-    const resp = await apiRequest<{ events: GlobalActivityEvent[] }>('/v1/events');
-    if (resp.events && resp.events.length > 0) {
-      return resp.events;
+    const limit = options?.limit || 50;
+    const path = `/v1/events?limit=${limit}${options?.eventType ? `&event_type=${encodeURIComponent(options.eventType)}` : ''}`;
+    const resp = await apiRequest<{ events: any[]; total?: number; limit?: number }>(path);
+    if (resp && Array.isArray(resp.events)) {
+      return resp.events.map(normalizeActivityEvent);
     }
-  } catch {}
+  } catch (err) {
+    if (!options?.useDemo) {
+      throw err;
+    }
+  }
 
   if (options?.useDemo) {
-    return [
+    const demoRaw = [
       {
         id: 'evt_act_01',
-        type: 'mission.created',
+        event_type: 'mission.created',
         category: 'MISSION',
-        actor: 'agent:research-agent',
+        actor_id: 'research-agent',
+        actor_type: 'AGENT',
         mission_id: 'msn_demo_weather_01',
         amount: '2000000',
         status: 'SUCCESS',
         correlation_id: 'corr_8f3d1b9e',
         timestamp: new Date(Date.now() - 3600000).toISOString(),
-        payload: { objective: 'Acquire verified real-time weather telemetry', budget: '2000000' },
+        metadata: { objective: 'Acquire verified real-time weather telemetry', budget: '2000000' },
       },
       {
         id: 'evt_act_02',
-        type: 'policy.evaluation.allowed',
+        event_type: 'policy.evaluation.allowed',
         category: 'POLICY',
-        actor: 'engine:policy_rust',
+        actor_id: 'policy_rust',
+        actor_type: 'ENGINE',
         mission_id: 'msn_demo_weather_01',
         amount: '500000',
         status: 'SUCCESS',
         correlation_id: 'corr_8f3d1b9e',
         timestamp: new Date(Date.now() - 3490000).toISOString(),
-        payload: { decision: 'ALLOW', reason: 'Within per-transaction limit' },
+        metadata: { decision: 'ALLOW', reason: 'Within per-transaction limit' },
       },
       {
         id: 'evt_act_03',
-        type: 'payment.executed',
+        event_type: 'payment.confirmed',
         category: 'PAYMENT',
-        actor: 'agentvault:signer',
+        actor_id: 'signer',
+        actor_type: 'SYSTEM',
         mission_id: 'msn_demo_weather_01',
+        payment_intent_id: 'pi_demo_weather_01',
         amount: '500000',
         status: 'SUCCESS',
         correlation_id: 'corr_8f3d1b9e',
         timestamp: new Date(Date.now() - 3460000).toISOString(),
-        payload: { service: 'web-research', recipient: '0x1111...1111' },
+        metadata: { service: 'web-research', recipient: '0x1111111111111111111111111111111111111111' },
       },
       {
         id: 'evt_act_04',
-        type: 'security.prompt_injection_blocked',
+        event_type: 'security.prompt_injection_blocked',
         category: 'SECURITY',
-        actor: 'engine:untrusted_boundary',
+        actor_id: 'untrusted_boundary',
+        actor_type: 'ENGINE',
         mission_id: 'msn_demo_adversarial_03',
         status: 'BLOCKED',
         correlation_id: 'corr_sec_audit',
         timestamp: new Date(Date.now() - 7100000).toISOString(),
-        payload: { attack_vector: 'Prompt injection in service output', financial_impact: 'NONE' },
+        metadata: { attack_vector: 'Prompt injection in service output', financial_impact: 'NONE' },
       },
     ];
+    return demoRaw.map(normalizeActivityEvent);
   }
 
   return [];
