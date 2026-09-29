@@ -100,10 +100,10 @@ func (h *ListHandler) HandleGetAgent(w http.ResponseWriter, r *http.Request) {
 		USDCBalance:    "12.48", // 12.48 USDC
 		Policy: map[string]interface{}{
 			"enabled":                  true,
-			"per_transaction_limit":    "500000",   // $0.50 USDC
-			"daily_spending_limit":     "5000000",  // $5.00 USDC
-			"daily_spent":              "2410000",  // $2.41 USDC
-			"remaining_daily_limit":    "2590000",  // $2.59 USDC
+			"per_transaction_limit":    "500000",  // $0.50 USDC
+			"daily_spending_limit":     "5000000", // $5.00 USDC
+			"daily_spent":              "2410000", // $2.41 USDC
+			"remaining_daily_limit":    "2590000", // $2.59 USDC
 			"max_transactions_per_day": 20,
 			"transactions_today":       7,
 			"allowed_recipients": []string{
@@ -163,18 +163,18 @@ func (h *ListHandler) HandleGetAgentBudget(w http.ResponseWriter, r *http.Reques
 	}
 
 	budget := map[string]interface{}{
-		"agent_id":                agent.ID,
-		"organization_id":         agent.OrganizationID,
-		"vault_address":           "0x1111111111111111111111111111111111111111",
-		"network":                 "Arc Network (Chain ID 5042)",
-		"usdc_balance":            "12.48",
-		"per_transaction_limit":   "500000",  // $0.50 USDC
-		"daily_spending_limit":    "5000000", // $5.00 USDC
-		"daily_spent":             "2410000", // $2.41 USDC
-		"remaining_daily_limit":   "2590000", // $2.59 USDC
+		"agent_id":                 agent.ID,
+		"organization_id":          agent.OrganizationID,
+		"vault_address":            "0x1111111111111111111111111111111111111111",
+		"network":                  "Arc Network (Chain ID 5042)",
+		"usdc_balance":             "12.48",
+		"per_transaction_limit":    "500000",  // $0.50 USDC
+		"daily_spending_limit":     "5000000", // $5.00 USDC
+		"daily_spent":              "2410000", // $2.41 USDC
+		"remaining_daily_limit":    "2590000", // $2.59 USDC
 		"max_transactions_per_day": 20,
-		"transactions_today":      7,
-		"is_paused":               agent.Status == "PAUSED",
+		"transactions_today":       7,
+		"is_paused":                agent.Status == "PAUSED",
 	}
 
 	w.Header().Set("Content-Type", "application/json")

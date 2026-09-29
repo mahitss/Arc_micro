@@ -21,7 +21,7 @@ const (
 	INV210_DisputedObligationsCannotSilentlySettle     = "INV-210: Disputed obligations cannot silently settle"
 	INV211_ExpiredObligationsCannotSettleWithoutReval  = "INV-211: Expired obligations cannot settle without revalidation"
 	INV212_RecurringObligationsRequirePerOccurrenceVal = "INV-212: Recurring obligations require per-occurrence validation"
-	INV213_CrossTenantObligationsAreIsolated          = "INV-213: Cross-tenant obligations are isolated"
+	INV213_CrossTenantObligationsAreIsolated           = "INV-213: Cross-tenant obligations are isolated"
 	INV214_CounterpartyExposureDerivedFromObligations  = "INV-214: Counterparty exposure is derived from authoritative obligations"
 	INV215_MarketplaceStateCannotDirectlyMutateLedger  = "INV-215: Marketplace state cannot directly mutate ledger state"
 	INV216_ProtocolMessagesCannotDirectlyMutateLedger  = "INV-216: Protocol messages cannot directly mutate ledger state"

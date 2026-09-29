@@ -40,14 +40,14 @@ type ProtocolStore interface {
 
 // MemoryProtocolStore implements in-memory protocol persistence.
 type MemoryProtocolStore struct {
-	mu           sync.RWMutex
-	messages     map[string]*ProtocolMessage
-	idempotency  map[string]*ProtocolMessage // tenant:key -> msg
-	manifests    map[string]*AgentManifest
-	quotes       map[string]*ProtocolQuote
-	contracts    map[string]*ProtocolContract
-	operations   map[string]map[string]interface{}
-	traffic      []*ProtocolTrafficEntry
+	mu          sync.RWMutex
+	messages    map[string]*ProtocolMessage
+	idempotency map[string]*ProtocolMessage // tenant:key -> msg
+	manifests   map[string]*AgentManifest
+	quotes      map[string]*ProtocolQuote
+	contracts   map[string]*ProtocolContract
+	operations  map[string]map[string]interface{}
+	traffic     []*ProtocolTrafficEntry
 }
 
 // NewMemoryProtocolStore constructs an in-memory store initialized with default fixtures.

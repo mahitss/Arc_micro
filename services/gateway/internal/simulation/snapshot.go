@@ -83,7 +83,7 @@ func (sm *SnapshotManager) CaptureSnapshot(
 				UpdatedAt:      now,
 			}
 			snap.Services = append(snap.Services, svc)
-			snap.Reputations[s.ID] = 9800        // default 98% baseline if not loaded
+			snap.Reputations[s.ID] = 9800       // default 98% baseline if not loaded
 			snap.LatencyAssumptions[s.ID] = 350 // default 350ms
 		}
 	} else {
@@ -162,9 +162,9 @@ func (sm *SnapshotManager) CaptureSnapshot(
 		ID:                  "default_sim_policy",
 		OrganizationID:      orgID,
 		Enabled:             true,
-		PerTransactionLimit: "2000000", // $2.00
+		PerTransactionLimit: "2000000",  // $2.00
 		DailyLimit:          "10000000", // $10.00
-		ApprovalThreshold:   "5000000", // $5.00
+		ApprovalThreshold:   "5000000",  // $5.00
 		AllowedAssets:       []string{"USDC"},
 		CreatedAt:           now,
 	}

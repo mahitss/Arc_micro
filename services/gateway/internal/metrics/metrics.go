@@ -8,27 +8,27 @@ import (
 
 // Metrics collects lightweight operational counters.
 type Metrics struct {
-	AuthAttempts              uint64 `json:"auth_attempts_total"`
-	AuthDenials               uint64 `json:"auth_denials_total"`
-	ExecAttempts              uint64 `json:"exec_attempts_total"`
-	ExecFailures              uint64 `json:"exec_failures_total"`
-	ConfirmedTxs              uint64 `json:"confirmed_txs_total"`
-	RPCFailures               uint64 `json:"rpc_failures_total"`
-	PolicyFailures            uint64 `json:"policy_engine_failures_total"`
-	MissionsCreated           uint64 `json:"missions_created_total"`
-	MissionsCompleted         uint64 `json:"missions_completed_total"`
-	MissionsFailed            uint64 `json:"missions_failed_total"`
-	ServicesDiscovered        uint64 `json:"services_discovered_total"`
-	QuotesGenerated           uint64 `json:"quotes_generated_total"`
-	QuotesSelected            uint64 `json:"quotes_selected_total"`
-	PaymentsProposed          uint64 `json:"payments_proposed_total"`
-	PaymentsAllowed           uint64 `json:"payments_allowed_total"`
-	PaymentsDenied            uint64 `json:"payments_denied_total"`
-	PaymentsApprovalRequired  uint64 `json:"payments_approval_required_total"`
-	MissionSpend              uint64 `json:"mission_spend_total"`
-	ServiceSpend              uint64 `json:"service_spend_total"`
-	ServiceSuccess            uint64 `json:"service_success_total"`
-	ServiceFailure            uint64 `json:"service_failure_total"`
+	AuthAttempts             uint64 `json:"auth_attempts_total"`
+	AuthDenials              uint64 `json:"auth_denials_total"`
+	ExecAttempts             uint64 `json:"exec_attempts_total"`
+	ExecFailures             uint64 `json:"exec_failures_total"`
+	ConfirmedTxs             uint64 `json:"confirmed_txs_total"`
+	RPCFailures              uint64 `json:"rpc_failures_total"`
+	PolicyFailures           uint64 `json:"policy_engine_failures_total"`
+	MissionsCreated          uint64 `json:"missions_created_total"`
+	MissionsCompleted        uint64 `json:"missions_completed_total"`
+	MissionsFailed           uint64 `json:"missions_failed_total"`
+	ServicesDiscovered       uint64 `json:"services_discovered_total"`
+	QuotesGenerated          uint64 `json:"quotes_generated_total"`
+	QuotesSelected           uint64 `json:"quotes_selected_total"`
+	PaymentsProposed         uint64 `json:"payments_proposed_total"`
+	PaymentsAllowed          uint64 `json:"payments_allowed_total"`
+	PaymentsDenied           uint64 `json:"payments_denied_total"`
+	PaymentsApprovalRequired uint64 `json:"payments_approval_required_total"`
+	MissionSpend             uint64 `json:"mission_spend_total"`
+	ServiceSpend             uint64 `json:"service_spend_total"`
+	ServiceSuccess           uint64 `json:"service_success_total"`
+	ServiceFailure           uint64 `json:"service_failure_total"`
 	// Phase 25: Agent-to-Agent Metrics
 	A2AQuotesTotal           uint64 `json:"a2a_quotes_total"`
 	A2AQuotesAcceptedTotal   uint64 `json:"a2a_quotes_accepted_total"`
@@ -84,41 +84,41 @@ type MetricsTracker struct {
 	negotiationRoundsTotal   atomic.Uint64
 }
 
-func (m *MetricsTracker) IncrAuthAttempts()              { m.authAttempts.Add(1) }
-func (m *MetricsTracker) IncrAuthDenials()               { m.authDenials.Add(1) }
-func (m *MetricsTracker) IncrExecAttempts()              { m.execAttempts.Add(1) }
-func (m *MetricsTracker) IncrExecFailures()              { m.execFailures.Add(1) }
-func (m *MetricsTracker) IncrConfirmedTxs()              { m.confirmedTxs.Add(1) }
-func (m *MetricsTracker) IncrRPCFailures()               { m.rpcFailures.Add(1) }
-func (m *MetricsTracker) IncrPolicyFailures()            { m.policyFailures.Add(1) }
-func (m *MetricsTracker) IncrMissionsCreated()           { m.missionsCreated.Add(1) }
-func (m *MetricsTracker) IncrMissionsCompleted()         { m.missionsCompleted.Add(1) }
-func (m *MetricsTracker) IncrMissionsFailed()            { m.missionsFailed.Add(1) }
-func (m *MetricsTracker) IncrServicesDiscovered()        { m.servicesDiscovered.Add(1) }
-func (m *MetricsTracker) IncrQuotesGenerated()           { m.quotesGenerated.Add(1) }
-func (m *MetricsTracker) IncrQuotesSelected()            { m.quotesSelected.Add(1) }
-func (m *MetricsTracker) IncrPaymentsProposed()          { m.paymentsProposed.Add(1) }
-func (m *MetricsTracker) IncrPaymentsAllowed()           { m.paymentsAllowed.Add(1) }
-func (m *MetricsTracker) IncrPaymentsDenied()            { m.paymentsDenied.Add(1) }
-func (m *MetricsTracker) IncrPaymentsApprovalRequired()  { m.paymentsApprovalRequired.Add(1) }
-func (m *MetricsTracker) AddMissionSpend(amt uint64)     { m.missionSpend.Add(amt) }
-func (m *MetricsTracker) AddServiceSpend(amt uint64)     { m.serviceSpend.Add(amt) }
-func (m *MetricsTracker) IncrServiceSuccess()            { m.serviceSuccess.Add(1) }
-func (m *MetricsTracker) IncrServiceFailure()            { m.serviceFailure.Add(1) }
+func (m *MetricsTracker) IncrAuthAttempts()             { m.authAttempts.Add(1) }
+func (m *MetricsTracker) IncrAuthDenials()              { m.authDenials.Add(1) }
+func (m *MetricsTracker) IncrExecAttempts()             { m.execAttempts.Add(1) }
+func (m *MetricsTracker) IncrExecFailures()             { m.execFailures.Add(1) }
+func (m *MetricsTracker) IncrConfirmedTxs()             { m.confirmedTxs.Add(1) }
+func (m *MetricsTracker) IncrRPCFailures()              { m.rpcFailures.Add(1) }
+func (m *MetricsTracker) IncrPolicyFailures()           { m.policyFailures.Add(1) }
+func (m *MetricsTracker) IncrMissionsCreated()          { m.missionsCreated.Add(1) }
+func (m *MetricsTracker) IncrMissionsCompleted()        { m.missionsCompleted.Add(1) }
+func (m *MetricsTracker) IncrMissionsFailed()           { m.missionsFailed.Add(1) }
+func (m *MetricsTracker) IncrServicesDiscovered()       { m.servicesDiscovered.Add(1) }
+func (m *MetricsTracker) IncrQuotesGenerated()          { m.quotesGenerated.Add(1) }
+func (m *MetricsTracker) IncrQuotesSelected()           { m.quotesSelected.Add(1) }
+func (m *MetricsTracker) IncrPaymentsProposed()         { m.paymentsProposed.Add(1) }
+func (m *MetricsTracker) IncrPaymentsAllowed()          { m.paymentsAllowed.Add(1) }
+func (m *MetricsTracker) IncrPaymentsDenied()           { m.paymentsDenied.Add(1) }
+func (m *MetricsTracker) IncrPaymentsApprovalRequired() { m.paymentsApprovalRequired.Add(1) }
+func (m *MetricsTracker) AddMissionSpend(amt uint64)    { m.missionSpend.Add(amt) }
+func (m *MetricsTracker) AddServiceSpend(amt uint64)    { m.serviceSpend.Add(amt) }
+func (m *MetricsTracker) IncrServiceSuccess()           { m.serviceSuccess.Add(1) }
+func (m *MetricsTracker) IncrServiceFailure()           { m.serviceFailure.Add(1) }
 
 // A2A metric increments
-func (m *MetricsTracker) IncrA2AQuotes()                 { m.a2aQuotesTotal.Add(1) }
-func (m *MetricsTracker) IncrA2AQuotesAccepted()         { m.a2aQuotesAcceptedTotal.Add(1) }
-func (m *MetricsTracker) IncrA2AQuotesRejected()         { m.a2aQuotesRejectedTotal.Add(1) }
-func (m *MetricsTracker) IncrA2AQuotesExpired()          { m.a2aQuotesExpiredTotal.Add(1) }
-func (m *MetricsTracker) IncrHiresCreated()              { m.hiresCreatedTotal.Add(1) }
-func (m *MetricsTracker) IncrHiresCompleted()            { m.hiresCompletedTotal.Add(1) }
-func (m *MetricsTracker) IncrHiresFailed()               { m.hiresFailedTotal.Add(1) }
-func (m *MetricsTracker) IncrAgentPayments()             { m.agentPaymentsTotal.Add(1) }
+func (m *MetricsTracker) IncrA2AQuotes()                   { m.a2aQuotesTotal.Add(1) }
+func (m *MetricsTracker) IncrA2AQuotesAccepted()           { m.a2aQuotesAcceptedTotal.Add(1) }
+func (m *MetricsTracker) IncrA2AQuotesRejected()           { m.a2aQuotesRejectedTotal.Add(1) }
+func (m *MetricsTracker) IncrA2AQuotesExpired()            { m.a2aQuotesExpiredTotal.Add(1) }
+func (m *MetricsTracker) IncrHiresCreated()                { m.hiresCreatedTotal.Add(1) }
+func (m *MetricsTracker) IncrHiresCompleted()              { m.hiresCompletedTotal.Add(1) }
+func (m *MetricsTracker) IncrHiresFailed()                 { m.hiresFailedTotal.Add(1) }
+func (m *MetricsTracker) IncrAgentPayments()               { m.agentPaymentsTotal.Add(1) }
 func (m *MetricsTracker) AddAgentPaymentVolume(amt uint64) { m.agentPaymentVolume.Add(amt) }
-func (m *MetricsTracker) IncrAgentResultFailures()       { m.agentResultFailuresTotal.Add(1) }
-func (m *MetricsTracker) IncrAgentDepthLimit()           { m.agentDepthLimitTotal.Add(1) }
-func (m *MetricsTracker) IncrNegotiationRounds()         { m.negotiationRoundsTotal.Add(1) }
+func (m *MetricsTracker) IncrAgentResultFailures()         { m.agentResultFailuresTotal.Add(1) }
+func (m *MetricsTracker) IncrAgentDepthLimit()             { m.agentDepthLimitTotal.Add(1) }
+func (m *MetricsTracker) IncrNegotiationRounds()           { m.negotiationRoundsTotal.Add(1) }
 
 // Snapshot returns a point-in-time copy of metrics counters.
 func (m *MetricsTracker) Snapshot() Metrics {

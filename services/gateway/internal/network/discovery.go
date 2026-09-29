@@ -91,22 +91,22 @@ func (s *AgentDiscoveryService) RegisterAgent(ctx context.Context, manifest *Age
 	}
 
 	identity := &AgentNetworkIdentity{
-		AgentID:                manifest.AgentID,
-		OrganizationID:         manifest.OrganizationID,
-		DisplayName:            manifest.Name,
-		Description:            manifest.Description,
-		Version:                manifest.Version,
-		ProtocolVersion:        manifest.ProtocolVersion,
-		Capabilities:           manifest.Capabilities,
-		PricingModels:          pricingModels,
-		Currencies:             []string{"USDC"},
-		SettlementMethods:      manifest.Settlement,
-		Availability:           "ACTIVE",
-		TrustMetadata:          manifest.TrustMetadata,
-		EndpointMetadata:       map[string]string{"task_url": manifest.Endpoints.TaskURL, "health_url": manifest.Endpoints.HealthURL},
-		Status:                 IdentityStatusActive,
-		CreatedAt:              now,
-		UpdatedAt:              now,
+		AgentID:           manifest.AgentID,
+		OrganizationID:    manifest.OrganizationID,
+		DisplayName:       manifest.Name,
+		Description:       manifest.Description,
+		Version:           manifest.Version,
+		ProtocolVersion:   manifest.ProtocolVersion,
+		Capabilities:      manifest.Capabilities,
+		PricingModels:     pricingModels,
+		Currencies:        []string{"USDC"},
+		SettlementMethods: manifest.Settlement,
+		Availability:      "ACTIVE",
+		TrustMetadata:     manifest.TrustMetadata,
+		EndpointMetadata:  map[string]string{"task_url": manifest.Endpoints.TaskURL, "health_url": manifest.Endpoints.HealthURL},
+		Status:            IdentityStatusActive,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 
 	if err := s.repo.SaveNetworkIdentity(ctx, identity); err != nil {

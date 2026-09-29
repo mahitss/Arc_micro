@@ -324,7 +324,6 @@ func TestIntentService_ApprovalRequiredIntent(t *testing.T) {
 	}
 }
 
-
 // Test 13: Confirmation without authorization.
 func TestIntentService_ConfirmationWithoutAuthorization(t *testing.T) {
 	svc, _, _, _ := setupIntentTestEnv(nil, nil, nil, false)

@@ -133,14 +133,14 @@ func (p *OpenRouterProvider) Name() string {
 
 // openAIChatPayload mirrors OpenRouter's OpenAI-compatible chat completion payload.
 type openAIChatPayload struct {
-	Model          string                 `json:"model"`
-	Models         []string               `json:"models,omitempty"`
-	Messages       []types.AIMessage      `json:"messages"`
-	ResponseFormat map[string]string      `json:"response_format,omitempty"`
-	Temperature    float64                `json:"temperature"`
-	MaxTokens      int                    `json:"max_tokens,omitempty"`
-	Tools          []types.AITool         `json:"tools,omitempty"`
-	Stream         bool                   `json:"stream,omitempty"`
+	Model          string            `json:"model"`
+	Models         []string          `json:"models,omitempty"`
+	Messages       []types.AIMessage `json:"messages"`
+	ResponseFormat map[string]string `json:"response_format,omitempty"`
+	Temperature    float64           `json:"temperature"`
+	MaxTokens      int               `json:"max_tokens,omitempty"`
+	Tools          []types.AITool    `json:"tools,omitempty"`
+	Stream         bool              `json:"stream,omitempty"`
 }
 
 type openAIChatResp struct {
@@ -415,11 +415,11 @@ func (p *OpenRouterProvider) executeWithRetry(ctx context.Context, req types.AIR
 		}
 
 		respObj = &types.AIResponse{
-			ID:           chatResp.ID,
-			Provider:     p.Name(),
-			Model:        actualModel,
-			Content:      choice.Message.Content,
-			ToolCalls:    choice.Message.ToolCalls,
+			ID:        chatResp.ID,
+			Provider:  p.Name(),
+			Model:     actualModel,
+			Content:   choice.Message.Content,
+			ToolCalls: choice.Message.ToolCalls,
 			Usage: types.AIUsage{
 				PromptTokens:     chatResp.Usage.PromptTokens,
 				CompletionTokens: chatResp.Usage.CompletionTokens,

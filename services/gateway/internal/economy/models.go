@@ -51,20 +51,20 @@ type Mission struct {
 
 // MissionStep represents a planned operational unit within a mission.
 type MissionStep struct {
-	StepID             string            `json:"step_id"`
-	MissionID          string            `json:"mission_id"`
-	Index              int               `json:"index"`
-	RequiredCapability string            `json:"required_capability"`
-	Category           string            `json:"category,omitempty"`
-	MaxBudget          string            `json:"max_budget"` // Max base units allocated to this step
-	SelectedServiceID  string            `json:"selected_service_id,omitempty"`
-	SelectedQuoteID    string            `json:"selected_quote_id,omitempty"`
-	PaymentIntentID    string            `json:"payment_intent_id,omitempty"`
-	Status             string            `json:"status"` // PENDING, EXECUTING, COMPLETED, FAILED, SKIPPED
-	ResultData         string            `json:"result_data,omitempty"`
-	Error              string            `json:"error,omitempty"`
-	StartedAt          *time.Time        `json:"started_at,omitempty"`
-	CompletedAt        *time.Time        `json:"completed_at,omitempty"`
+	StepID             string     `json:"step_id"`
+	MissionID          string     `json:"mission_id"`
+	Index              int        `json:"index"`
+	RequiredCapability string     `json:"required_capability"`
+	Category           string     `json:"category,omitempty"`
+	MaxBudget          string     `json:"max_budget"` // Max base units allocated to this step
+	SelectedServiceID  string     `json:"selected_service_id,omitempty"`
+	SelectedQuoteID    string     `json:"selected_quote_id,omitempty"`
+	PaymentIntentID    string     `json:"payment_intent_id,omitempty"`
+	Status             string     `json:"status"` // PENDING, EXECUTING, COMPLETED, FAILED, SKIPPED
+	ResultData         string     `json:"result_data,omitempty"`
+	Error              string     `json:"error,omitempty"`
+	StartedAt          *time.Time `json:"started_at,omitempty"`
+	CompletedAt        *time.Time `json:"completed_at,omitempty"`
 }
 
 // MissionPlan encapsulates the structured decomposition of an objective.
@@ -146,8 +146,8 @@ type ServiceReputation struct {
 	TotalVolumeSettled    *big.Int   `json:"total_volume_settled"` // micro-USDC
 	AveragePrice          *big.Int   `json:"average_price"`        // micro-USDC
 	AverageLatencyMs      int64      `json:"average_latency_ms"`
-	FailureRateBps        int64      `json:"failure_rate_bps"`        // Basis points (0-10000)
-	ReputationScore       int64      `json:"reputation_score"`       // Basis points (0-10000)
+	FailureRateBps        int64      `json:"failure_rate_bps"` // Basis points (0-10000)
+	ReputationScore       int64      `json:"reputation_score"` // Basis points (0-10000)
 	LastFailureAt         *time.Time `json:"last_failure_at,omitempty"`
 	LastSuccessAt         *time.Time `json:"last_success_at,omitempty"`
 	HistoricalReliability string     `json:"historical_reliability"` // e.g. "99.8%"
@@ -156,7 +156,7 @@ type ServiceReputation struct {
 
 // EconomicProfile summarizes agent or organization level spending metrics.
 type EconomicProfile struct {
-	EntityID            string    `json:"entity_id"` // agent_id or org_id
+	EntityID            string    `json:"entity_id"`   // agent_id or org_id
 	EntityType          string    `json:"entity_type"` // "AGENT", "ORGANIZATION"
 	MissionsCreated     uint64    `json:"missions_created"`
 	MissionsCompleted   uint64    `json:"missions_completed"`
@@ -179,27 +179,27 @@ type AgentCapability struct {
 
 // AgentService represents a registered economic service provided by a peer AI agent.
 type AgentService struct {
-	AgentID                string                 `json:"agent_id"`
-	ServiceID              string                 `json:"service_id"`
-	OrganizationID         string                 `json:"organization_id"`
-	Name                   string                 `json:"name"`
-	Description            string                 `json:"description"`
-	Capabilities           []string               `json:"capabilities"`
-	StructuredCapabilities []AgentCapability      `json:"structured_capabilities,omitempty"`
-	PricingModel           string                 `json:"pricing_model"` // FIXED, VARIABLE, QUOTE_REQUIRED
-	BasePrice              string                 `json:"base_price"`    // micro-USDC integer string
-	MaxPrice               string                 `json:"max_price"`     // micro-USDC integer string
-	SupportedAssets        []string               `json:"supported_assets"` // ["USDC"]
-	Availability           string                 `json:"availability"`  // ONLINE, BUSY, OFFLINE
-	Reputation             int64                  `json:"reputation"`    // Basis points (0-10000)
-	SuccessRateBps         int64                  `json:"success_rate_bps"`
-	AverageLatencyMs       int64                  `json:"average_latency_ms"`
-	RiskProfile            string                 `json:"risk_profile"`  // LOW, MEDIUM, HIGH
-	Enabled                bool                   `json:"enabled"`
-	Verified               bool                   `json:"verified"`
-	TrustMetadata          map[string]string      `json:"trust_metadata,omitempty"`
-	CreatedAt              time.Time              `json:"created_at"`
-	UpdatedAt              time.Time              `json:"updated_at"`
+	AgentID                string            `json:"agent_id"`
+	ServiceID              string            `json:"service_id"`
+	OrganizationID         string            `json:"organization_id"`
+	Name                   string            `json:"name"`
+	Description            string            `json:"description"`
+	Capabilities           []string          `json:"capabilities"`
+	StructuredCapabilities []AgentCapability `json:"structured_capabilities,omitempty"`
+	PricingModel           string            `json:"pricing_model"`    // FIXED, VARIABLE, QUOTE_REQUIRED
+	BasePrice              string            `json:"base_price"`       // micro-USDC integer string
+	MaxPrice               string            `json:"max_price"`        // micro-USDC integer string
+	SupportedAssets        []string          `json:"supported_assets"` // ["USDC"]
+	Availability           string            `json:"availability"`     // ONLINE, BUSY, OFFLINE
+	Reputation             int64             `json:"reputation"`       // Basis points (0-10000)
+	SuccessRateBps         int64             `json:"success_rate_bps"`
+	AverageLatencyMs       int64             `json:"average_latency_ms"`
+	RiskProfile            string            `json:"risk_profile"` // LOW, MEDIUM, HIGH
+	Enabled                bool              `json:"enabled"`
+	Verified               bool              `json:"verified"`
+	TrustMetadata          map[string]string `json:"trust_metadata,omitempty"`
+	CreatedAt              time.Time         `json:"created_at"`
+	UpdatedAt              time.Time         `json:"updated_at"`
 }
 
 // QuoteStatus represents the explicit lifecycle states of an inter-agent quote.
@@ -265,27 +265,27 @@ const MAX_AGENT_CALL_DEPTH = 3
 
 // Hire represents a binding economic agreement between two agents within a mission context.
 type Hire struct {
-	ID              string            `json:"id"`
-	OrganizationID  string            `json:"organization_id"`
-	BuyerAgentID    string            `json:"buyer_agent_id"`
-	SellerAgentID   string            `json:"seller_agent_id"`
-	ServiceID       string            `json:"service_id"`
-	Capability      string            `json:"capability"`
-	MissionID       string            `json:"mission_id"`
-	RootMissionID   string            `json:"root_mission_id"`
-	ParentHireID    string            `json:"parent_hire_id,omitempty"`
-	CallDepth       int               `json:"call_depth"`
-	QuoteID         string            `json:"quote_id"`
-	Price           string            `json:"price"` // micro-USDC base units
-	Asset           string            `json:"asset"` // "USDC"
-	PaymentIntentID string            `json:"payment_intent_id,omitempty"`
-	ExpectedResult  string            `json:"expected_result"`
-	Status          HireStatus        `json:"status"`
-	Result          *AgentResult      `json:"result,omitempty"`
-	Error           string            `json:"error,omitempty"`
-	CreatedAt       time.Time         `json:"created_at"`
-	UpdatedAt       time.Time         `json:"updated_at"`
-	CompletedAt     *time.Time        `json:"completed_at,omitempty"`
+	ID              string       `json:"id"`
+	OrganizationID  string       `json:"organization_id"`
+	BuyerAgentID    string       `json:"buyer_agent_id"`
+	SellerAgentID   string       `json:"seller_agent_id"`
+	ServiceID       string       `json:"service_id"`
+	Capability      string       `json:"capability"`
+	MissionID       string       `json:"mission_id"`
+	RootMissionID   string       `json:"root_mission_id"`
+	ParentHireID    string       `json:"parent_hire_id,omitempty"`
+	CallDepth       int          `json:"call_depth"`
+	QuoteID         string       `json:"quote_id"`
+	Price           string       `json:"price"` // micro-USDC base units
+	Asset           string       `json:"asset"` // "USDC"
+	PaymentIntentID string       `json:"payment_intent_id,omitempty"`
+	ExpectedResult  string       `json:"expected_result"`
+	Status          HireStatus   `json:"status"`
+	Result          *AgentResult `json:"result,omitempty"`
+	Error           string       `json:"error,omitempty"`
+	CreatedAt       time.Time    `json:"created_at"`
+	UpdatedAt       time.Time    `json:"updated_at"`
+	CompletedAt     *time.Time   `json:"completed_at,omitempty"`
 }
 
 // AgentResult represents structured output returned by an untrusted hired peer agent.
@@ -376,21 +376,21 @@ const (
 	ObservationMissionFailed    ObservationType = "MISSION_FAILED"
 
 	// Canonical Event Types (Task 9)
-	ObservationDiscovery   ObservationType = "DISCOVERY"
-	ObservationQuote       ObservationType = "QUOTE"
-	ObservationSelection   ObservationType = "SELECTION"
-	ObservationContract    ObservationType = "CONTRACT"
-	ObservationExecution   ObservationType = "EXECUTION"
-	ObservationSuccess     ObservationType = "SUCCESS"
-	ObservationFailure     ObservationType = "FAILURE"
-	ObservationTimeout     ObservationType = "TIMEOUT"
-	ObservationRetry       ObservationType = "RETRY"
+	ObservationDiscovery    ObservationType = "DISCOVERY"
+	ObservationQuote        ObservationType = "QUOTE"
+	ObservationSelection    ObservationType = "SELECTION"
+	ObservationContract     ObservationType = "CONTRACT"
+	ObservationExecution    ObservationType = "EXECUTION"
+	ObservationSuccess      ObservationType = "SUCCESS"
+	ObservationFailure      ObservationType = "FAILURE"
+	ObservationTimeout      ObservationType = "TIMEOUT"
+	ObservationRetry        ObservationType = "RETRY"
 	ObservationVerification ObservationType = "VERIFICATION"
-	ObservationPayment     ObservationType = "PAYMENT"
-	ObservationRefund      ObservationType = "REFUND"
-	ObservationDispute     ObservationType = "DISPUTE"
-	ObservationReplan      ObservationType = "REPLAN"
-	ObservationDelegation  ObservationType = "DELEGATION"
+	ObservationPayment      ObservationType = "PAYMENT"
+	ObservationRefund       ObservationType = "REFUND"
+	ObservationDispute      ObservationType = "DISPUTE"
+	ObservationReplan       ObservationType = "REPLAN"
+	ObservationDelegation   ObservationType = "DELEGATION"
 )
 
 // OutcomeStatus defines the high-level evaluation of an economic action.
@@ -429,8 +429,8 @@ const (
 type ConfidenceLevel string
 
 const (
-	ConfidenceInsufficientData ConfidenceLevel = "INSUFFICIENT_DATA" // < 5 observations
-	ConfidenceLowConfidence    ConfidenceLevel = "LOW_CONFIDENCE"    // 5-20 observations
+	ConfidenceInsufficientData   ConfidenceLevel = "INSUFFICIENT_DATA"   // < 5 observations
+	ConfidenceLowConfidence      ConfidenceLevel = "LOW_CONFIDENCE"      // 5-20 observations
 	ConfidenceModerateConfidence ConfidenceLevel = "MODERATE_CONFIDENCE" // 20-100 observations
 	ConfidenceHigherConfidence   ConfidenceLevel = "HIGHER_CONFIDENCE"   // 100+ observations
 
@@ -454,18 +454,18 @@ const (
 	FailureUnknown        FailureClass = "UNKNOWN"
 
 	// Canonical Failure Taxonomy (Task 9)
-	FailureProviderTimeout    FailureClass = "PROVIDER_TIMEOUT"
-	FailureInvalidResult      FailureClass = "INVALID_RESULT"
-	FailureSchemaMismatch     FailureClass = "SCHEMA_MISMATCH"
-	FailureVerificationFailed FailureClass = "VERIFICATION_FAILED"
-	FailureQuoteExpired       FailureClass = "QUOTE_EXPIRED"
-	FailurePolicyDenied       FailureClass = "POLICY_DENIED"
-	FailureRiskDenied         FailureClass = "RISK_DENIED"
-	FailureInsufficientBudget FailureClass = "INSUFFICIENT_BUDGET"
+	FailureProviderTimeout     FailureClass = "PROVIDER_TIMEOUT"
+	FailureInvalidResult       FailureClass = "INVALID_RESULT"
+	FailureSchemaMismatch      FailureClass = "SCHEMA_MISMATCH"
+	FailureVerificationFailed  FailureClass = "VERIFICATION_FAILED"
+	FailureQuoteExpired        FailureClass = "QUOTE_EXPIRED"
+	FailurePolicyDenied        FailureClass = "POLICY_DENIED"
+	FailureRiskDenied          FailureClass = "RISK_DENIED"
+	FailureInsufficientBudget  FailureClass = "INSUFFICIENT_BUDGET"
 	FailureTreasuryUnavailable FailureClass = "TREASURY_UNAVAILABLE"
-	FailureNetworkError       FailureClass = "NETWORK_ERROR"
-	FailureAgentUnavailable   FailureClass = "AGENT_UNAVAILABLE"
-	FailureDelegationFailure  FailureClass = "DELEGATION_FAILURE"
+	FailureNetworkError        FailureClass = "NETWORK_ERROR"
+	FailureAgentUnavailable    FailureClass = "AGENT_UNAVAILABLE"
+	FailureDelegationFailure   FailureClass = "DELEGATION_FAILURE"
 )
 
 // RecoveryStrategy defines deterministic recovery paths upon service or execution failure.
@@ -556,18 +556,18 @@ func (o *EconomicObservation) GetDurationMs() int64 {
 
 // QuoteAccuracyMetrics details systematic quote deviations.
 type QuoteAccuracyMetrics struct {
-	TotalQuotedCost        *big.Int `json:"total_quoted_cost"`
-	TotalSettledCost       *big.Int `json:"total_settled_cost"`
-	AbsoluteCostDiff       *big.Int `json:"absolute_cost_diff"`
-	CostErrorBps           int64    `json:"cost_error_bps"`
-	UnderquoteCostCount    uint64   `json:"underquote_cost_count"`
-	OverquoteCostCount     uint64   `json:"overquote_cost_count"`
-	TotalQuotedDurationMs  int64    `json:"total_quoted_duration_ms"`
-	TotalActualDurationMs  int64    `json:"total_actual_duration_ms"`
-	DurationErrorBps       int64    `json:"duration_error_bps"`
-	UnderquoteDurationCount uint64  `json:"underquote_duration_count"`
-	OverquoteDurationCount  uint64  `json:"overquote_duration_count"`
-	SampleCount            uint64   `json:"sample_count"`
+	TotalQuotedCost         *big.Int `json:"total_quoted_cost"`
+	TotalSettledCost        *big.Int `json:"total_settled_cost"`
+	AbsoluteCostDiff        *big.Int `json:"absolute_cost_diff"`
+	CostErrorBps            int64    `json:"cost_error_bps"`
+	UnderquoteCostCount     uint64   `json:"underquote_cost_count"`
+	OverquoteCostCount      uint64   `json:"overquote_cost_count"`
+	TotalQuotedDurationMs   int64    `json:"total_quoted_duration_ms"`
+	TotalActualDurationMs   int64    `json:"total_actual_duration_ms"`
+	DurationErrorBps        int64    `json:"duration_error_bps"`
+	UnderquoteDurationCount uint64   `json:"underquote_duration_count"`
+	OverquoteDurationCount  uint64   `json:"overquote_duration_count"`
+	SampleCount             uint64   `json:"sample_count"`
 }
 
 // LatencyPercentiles records deterministic percentile distribution.
@@ -582,14 +582,14 @@ type LatencyPercentiles struct {
 
 // EconomicCostModel details expected cost ranges and variances.
 type EconomicCostModel struct {
-	ExpectedCost    *big.Int `json:"expected_cost"` // micro-USDC
-	CostRangeMin    *big.Int `json:"cost_range_min"`
-	CostRangeMax    *big.Int `json:"cost_range_max"`
-	CostVariance    *big.Int `json:"cost_variance"`
+	ExpectedCost     *big.Int `json:"expected_cost"` // micro-USDC
+	CostRangeMin     *big.Int `json:"cost_range_min"`
+	CostRangeMax     *big.Int `json:"cost_range_max"`
+	CostVariance     *big.Int `json:"cost_variance"`
 	FailureRetryCost *big.Int `json:"failure_retry_cost"`
 	VerificationCost *big.Int `json:"verification_cost"`
-	DelegationCost  *big.Int `json:"delegation_cost"`
-	SampleCount     uint64   `json:"sample_count"`
+	DelegationCost   *big.Int `json:"delegation_cost"`
+	SampleCount      uint64   `json:"sample_count"`
 }
 
 // RecoveryPattern records historical recovery behavior.
@@ -606,44 +606,44 @@ type RecoveryPattern struct {
 
 // StrategyPerformance measures empirical performance by mission strategy.
 type StrategyPerformance struct {
-	Strategy             string   `json:"strategy"`
-	SuccessRateBps       int64    `json:"success_rate_bps"`
-	AverageCost          *big.Int `json:"average_cost"`
-	AverageLatencyMs     int64    `json:"average_latency_ms"`
-	ReliabilityBps       int64    `json:"reliability_bps"`
-	RecoverySuccessRateBps int64  `json:"recovery_success_rate_bps"`
-	SampleCount          uint64   `json:"sample_count"`
+	Strategy               string   `json:"strategy"`
+	SuccessRateBps         int64    `json:"success_rate_bps"`
+	AverageCost            *big.Int `json:"average_cost"`
+	AverageLatencyMs       int64    `json:"average_latency_ms"`
+	ReliabilityBps         int64    `json:"reliability_bps"`
+	RecoverySuccessRateBps int64    `json:"recovery_success_rate_bps"`
+	SampleCount            uint64   `json:"sample_count"`
 }
 
 // EconomicPerformanceProfile represents deterministic multi-signal economic intelligence.
 type EconomicPerformanceProfile struct {
-	EntityID                 string                           `json:"entity_id"`
-	EntityType               string                           `json:"entity_type"` // "agent", "service", "capability"
-	OrganizationID           string                           `json:"organization_id"`
-	Window                   PerformanceWindow                `json:"window"`
-	SimulationMode           SimulationMode                   `json:"simulation_mode"`
-	SuccessRateBps           int64                            `json:"success_rate_bps"`
-	CompletionRateBps        int64                            `json:"completion_rate_bps"`
-	TimeoutRateBps           int64                            `json:"timeout_rate_bps"`
-	VerificationSuccessRateBps int64                          `json:"verification_success_rate_bps"`
-	DisputeRateBps           int64                            `json:"dispute_rate_bps"`
-	RefundRateBps            int64                            `json:"refund_rate_bps"`
-	AverageCost              *big.Int                         `json:"average_cost"`
-	CostVariance             *big.Int                         `json:"cost_variance"`
-	AverageLatencyMs         int64                            `json:"average_latency_ms"`
-	LatencyVariance          int64                            `json:"latency_variance"`
-	Percentiles              LatencyPercentiles               `json:"percentiles"`
-	QuoteAccuracy            QuoteAccuracyMetrics             `json:"quote_accuracy"`
-	CostModel                EconomicCostModel                `json:"cost_model"`
-	RetryFrequencyBps        int64                            `json:"retry_frequency_bps"`
-	RecoverySuccessRateBps   int64                            `json:"recovery_success_rate_bps"`
-	TotalJobs                uint64                           `json:"total_jobs"`
-	RealJobs                 uint64                           `json:"real_jobs"`
-	SimulatedJobs            uint64                           `json:"simulated_jobs"`
-	ContextualBreakdown      map[string]ContextualPerformance `json:"contextual_breakdown,omitempty"`
-	Confidence               ConfidenceLevel                  `json:"confidence"`
-	AggregationVersion       string                           `json:"aggregation_version"`
-	UpdatedAt                time.Time                        `json:"updated_at"`
+	EntityID                   string                           `json:"entity_id"`
+	EntityType                 string                           `json:"entity_type"` // "agent", "service", "capability"
+	OrganizationID             string                           `json:"organization_id"`
+	Window                     PerformanceWindow                `json:"window"`
+	SimulationMode             SimulationMode                   `json:"simulation_mode"`
+	SuccessRateBps             int64                            `json:"success_rate_bps"`
+	CompletionRateBps          int64                            `json:"completion_rate_bps"`
+	TimeoutRateBps             int64                            `json:"timeout_rate_bps"`
+	VerificationSuccessRateBps int64                            `json:"verification_success_rate_bps"`
+	DisputeRateBps             int64                            `json:"dispute_rate_bps"`
+	RefundRateBps              int64                            `json:"refund_rate_bps"`
+	AverageCost                *big.Int                         `json:"average_cost"`
+	CostVariance               *big.Int                         `json:"cost_variance"`
+	AverageLatencyMs           int64                            `json:"average_latency_ms"`
+	LatencyVariance            int64                            `json:"latency_variance"`
+	Percentiles                LatencyPercentiles               `json:"percentiles"`
+	QuoteAccuracy              QuoteAccuracyMetrics             `json:"quote_accuracy"`
+	CostModel                  EconomicCostModel                `json:"cost_model"`
+	RetryFrequencyBps          int64                            `json:"retry_frequency_bps"`
+	RecoverySuccessRateBps     int64                            `json:"recovery_success_rate_bps"`
+	TotalJobs                  uint64                           `json:"total_jobs"`
+	RealJobs                   uint64                           `json:"real_jobs"`
+	SimulatedJobs              uint64                           `json:"simulated_jobs"`
+	ContextualBreakdown        map[string]ContextualPerformance `json:"contextual_breakdown,omitempty"`
+	Confidence                 ConfidenceLevel                  `json:"confidence"`
+	AggregationVersion         string                           `json:"aggregation_version"`
+	UpdatedAt                  time.Time                        `json:"updated_at"`
 }
 
 // RealPerformance and SimulationPerformance wrapper.
@@ -654,91 +654,91 @@ type DualPerformanceContainer struct {
 
 // PlanVsActual compares planned assumptions against reality.
 type PlanVsActual struct {
-	PlannedCost                   string  `json:"planned_cost"` // micro-USDC
-	ActualCost                    string  `json:"actual_cost"`  // micro-USDC
-	CostErrorPercent              float64 `json:"cost_error_percent"`
-	PlannedDurationMs             int64   `json:"planned_duration_ms"`
-	ActualDurationMs              int64   `json:"actual_duration_ms"`
-	DurationErrorPercent          float64 `json:"duration_error_percent"`
-	PlannedAgents                 []string `json:"planned_agents"`
-	ActualAgents                  []string `json:"actual_agents"`
-	AgentDifferences              []string `json:"agent_differences,omitempty"`
-	FailureDifferences            []string `json:"failure_differences,omitempty"`
-	SimulationPredictionErrorBps  int64    `json:"simulation_prediction_error_bps"`
+	PlannedCost                  string   `json:"planned_cost"` // micro-USDC
+	ActualCost                   string   `json:"actual_cost"`  // micro-USDC
+	CostErrorPercent             float64  `json:"cost_error_percent"`
+	PlannedDurationMs            int64    `json:"planned_duration_ms"`
+	ActualDurationMs             int64    `json:"actual_duration_ms"`
+	DurationErrorPercent         float64  `json:"duration_error_percent"`
+	PlannedAgents                []string `json:"planned_agents"`
+	ActualAgents                 []string `json:"actual_agents"`
+	AgentDifferences             []string `json:"agent_differences,omitempty"`
+	FailureDifferences           []string `json:"failure_differences,omitempty"`
+	SimulationPredictionErrorBps int64    `json:"simulation_prediction_error_bps"`
 }
 
 // MissionOutcomeSummary encapsulates immutable evidence from a completed mission.
 type MissionOutcomeSummary struct {
-	MissionID            string                 `json:"mission_id"`
-	OrganizationID       string                 `json:"organization_id"`
-	Objective            string                 `json:"objective"`
-	Strategy             string                 `json:"strategy"`
-	AgentsUsed           []string               `json:"agents_used"`
-	CapabilitiesUsed     []string               `json:"capabilities_used"`
-	TotalCost            string                 `json:"total_cost"`
-	ExpectedCost         string                 `json:"expected_cost"`
-	DurationMs           int64                  `json:"duration_ms"`
-	RetriesCount         int                    `json:"retries_count"`
-	FailuresCount        int                    `json:"failures_count"`
-	RecoveryOccurred     bool                   `json:"recovery_occurred"`
-	VerificationPassed   bool                   `json:"verification_passed"`
-	FinalOutcome         OutcomeStatus          `json:"final_outcome"`
-	PolicyDecisionsCount int                    `json:"policy_decisions_count"`
-	PlanVsActual         PlanVsActual           `json:"plan_vs_actual"`
-	CompletedAt          time.Time              `json:"completed_at"`
+	MissionID            string        `json:"mission_id"`
+	OrganizationID       string        `json:"organization_id"`
+	Objective            string        `json:"objective"`
+	Strategy             string        `json:"strategy"`
+	AgentsUsed           []string      `json:"agents_used"`
+	CapabilitiesUsed     []string      `json:"capabilities_used"`
+	TotalCost            string        `json:"total_cost"`
+	ExpectedCost         string        `json:"expected_cost"`
+	DurationMs           int64         `json:"duration_ms"`
+	RetriesCount         int           `json:"retries_count"`
+	FailuresCount        int           `json:"failures_count"`
+	RecoveryOccurred     bool          `json:"recovery_occurred"`
+	VerificationPassed   bool          `json:"verification_passed"`
+	FinalOutcome         OutcomeStatus `json:"final_outcome"`
+	PolicyDecisionsCount int           `json:"policy_decisions_count"`
+	PlanVsActual         PlanVsActual  `json:"plan_vs_actual"`
+	CompletedAt          time.Time     `json:"completed_at"`
 }
 
 // SwarmOutcomeSummary captures multi-agent swarm outcomes.
 type SwarmOutcomeSummary struct {
-	SwarmID              string                 `json:"swarm_id"`
-	OrganizationID       string                 `json:"organization_id"`
-	TaskCount            int                    `json:"task_count"`
-	AgentsUsed           []string               `json:"agents_used"`
-	ParallelismPlanned   int                    `json:"parallelism_planned"`
-	ParallelismActual    int                    `json:"parallelism_actual"`
-	TotalCost            string                 `json:"total_cost"`
-	DurationMs           int64                  `json:"duration_ms"`
-	TaskFailures         int                    `json:"task_failures"`
-	RecoveriesCount      int                    `json:"recoveries_count"`
-	ConsensusReached     bool                   `json:"consensus_reached"`
-	FinalQualityBps      int64                  `json:"final_quality_bps"`
-	PlanVsActual         PlanVsActual           `json:"plan_vs_actual"`
-	CompletedAt          time.Time              `json:"completed_at"`
+	SwarmID            string       `json:"swarm_id"`
+	OrganizationID     string       `json:"organization_id"`
+	TaskCount          int          `json:"task_count"`
+	AgentsUsed         []string     `json:"agents_used"`
+	ParallelismPlanned int          `json:"parallelism_planned"`
+	ParallelismActual  int          `json:"parallelism_actual"`
+	TotalCost          string       `json:"total_cost"`
+	DurationMs         int64        `json:"duration_ms"`
+	TaskFailures       int          `json:"task_failures"`
+	RecoveriesCount    int          `json:"recoveries_count"`
+	ConsensusReached   bool         `json:"consensus_reached"`
+	FinalQualityBps    int64        `json:"final_quality_bps"`
+	PlanVsActual       PlanVsActual `json:"plan_vs_actual"`
+	CompletedAt        time.Time    `json:"completed_at"`
 }
 
 // SimulatorCalibrationMetrics tracks prediction accuracy over time.
 type SimulatorCalibrationMetrics struct {
-	TotalRunsCompared              uint64  `json:"total_runs_compared"`
-	CostPredictionAccuracyBps      int64   `json:"cost_prediction_accuracy_bps"`
-	DurationPredictionAccuracyBps  int64   `json:"duration_prediction_accuracy_bps"`
-	FailurePredictionAccuracyBps   int64   `json:"failure_prediction_accuracy_bps"`
-	UnderestimationBiasBps         int64   `json:"underestimation_bias_bps"`
-	OverestimationBiasBps          int64   `json:"overestimation_bias_bps"`
-	LatencyBiasMs                  int64   `json:"latency_bias_ms"`
-	Confidence                     ConfidenceLevel `json:"confidence"`
-	UpdatedAt                      time.Time `json:"updated_at"`
+	TotalRunsCompared             uint64          `json:"total_runs_compared"`
+	CostPredictionAccuracyBps     int64           `json:"cost_prediction_accuracy_bps"`
+	DurationPredictionAccuracyBps int64           `json:"duration_prediction_accuracy_bps"`
+	FailurePredictionAccuracyBps  int64           `json:"failure_prediction_accuracy_bps"`
+	UnderestimationBiasBps        int64           `json:"underestimation_bias_bps"`
+	OverestimationBiasBps         int64           `json:"overestimation_bias_bps"`
+	LatencyBiasMs                 int64           `json:"latency_bias_ms"`
+	Confidence                    ConfidenceLevel `json:"confidence"`
+	UpdatedAt                     time.Time       `json:"updated_at"`
 }
 
 // EconomicRecommendation encapsulates advisory guidance generated from historical learning.
 // INVARIANT: Recommendations are advisory only and possess ZERO financial authority.
 type EconomicRecommendation struct {
-	ID                     string                 `json:"recommendation_id"`
-	OrganizationID         string                 `json:"organization_id"`
-	RecommendationType     string                 `json:"recommendation_type"` // "PREFER_PROVIDER", "USE_FALLBACK", "INCREASE_VERIFICATION", "ADJUST_STRATEGY"
-	TargetEntityID         string                 `json:"target_entity_id"`
-	TargetEntityType       string                 `json:"target_entity_type"`
-	Reason                 string                 `json:"reason"`
-	Why                    string                 `json:"why"`
-	Evidence               []string               `json:"evidence"`
-	SupportingObservations []string               `json:"supporting_observations"`
-	Confidence             ConfidenceLevel        `json:"confidence"`
-	SampleCount            uint64                 `json:"sample_count"`
-	ExpectedImpact         string                 `json:"expected_impact"`
-	DownsideRisk           string                 `json:"downside_risk"`
-	AffectedAgents         []string               `json:"affected_agents,omitempty"`
-	AffectedMissions       []string               `json:"affected_missions,omitempty"`
-	Status                 string                 `json:"status"` // "NEW", "ACCEPTED", "REJECTED", "EXPIRED", "OUTCOME_AVAILABLE"
-	CreatedAt              time.Time              `json:"created_at"`
+	ID                     string          `json:"recommendation_id"`
+	OrganizationID         string          `json:"organization_id"`
+	RecommendationType     string          `json:"recommendation_type"` // "PREFER_PROVIDER", "USE_FALLBACK", "INCREASE_VERIFICATION", "ADJUST_STRATEGY"
+	TargetEntityID         string          `json:"target_entity_id"`
+	TargetEntityType       string          `json:"target_entity_type"`
+	Reason                 string          `json:"reason"`
+	Why                    string          `json:"why"`
+	Evidence               []string        `json:"evidence"`
+	SupportingObservations []string        `json:"supporting_observations"`
+	Confidence             ConfidenceLevel `json:"confidence"`
+	SampleCount            uint64          `json:"sample_count"`
+	ExpectedImpact         string          `json:"expected_impact"`
+	DownsideRisk           string          `json:"downside_risk"`
+	AffectedAgents         []string        `json:"affected_agents,omitempty"`
+	AffectedMissions       []string        `json:"affected_missions,omitempty"`
+	Status                 string          `json:"status"` // "NEW", "ACCEPTED", "REJECTED", "EXPIRED", "OUTCOME_AVAILABLE"
+	CreatedAt              time.Time       `json:"created_at"`
 }
 
 // RecommendationOutcome closes the feedback loop on whether recommendations helped.
@@ -746,7 +746,7 @@ type RecommendationOutcome struct {
 	RecommendationID string    `json:"recommendation_id"`
 	Accepted         bool      `json:"accepted"`
 	Executed         bool      `json:"executed"`
-	Outcome          string    `json:"outcome"` // "SUCCESS", "FAILURE", "NEUTRAL"
+	Outcome          string    `json:"outcome"`    // "SUCCESS", "FAILURE", "NEUTRAL"
 	CostDelta        string    `json:"cost_delta"` // micro-USDC
 	LatencyDeltaMs   int64     `json:"latency_delta_ms"`
 	QualityDeltaBps  int64     `json:"quality_delta_bps"`
@@ -758,28 +758,28 @@ type RecommendationOutcome struct {
 type DriftSeverity string
 
 const (
-	DriftNormal       DriftSeverity = "NORMAL"
-	DriftWatch        DriftSeverity = "WATCH"
-	DriftDetected     DriftSeverity = "DRIFT"
-	DriftSevere       DriftSeverity = "SEVERE_DRIFT"
+	DriftNormal   DriftSeverity = "NORMAL"
+	DriftWatch    DriftSeverity = "WATCH"
+	DriftDetected DriftSeverity = "DRIFT"
+	DriftSevere   DriftSeverity = "SEVERE_DRIFT"
 )
 
 // EconomicDrift records detected statistical divergence.
 type EconomicDrift struct {
-	ID             string        `json:"id"`
-	OrganizationID string        `json:"organization_id"`
-	EntityID       string        `json:"entity_id"`
-	EntityType     string        `json:"entity_type"` // "provider", "agent", "capability"
-	Signal         string        `json:"signal"`      // "success_rate", "latency", "quote_accuracy", "cost_variance"
-	BaselineValue  string        `json:"baseline_value"`
-	RecentValue    string        `json:"recent_value"`
-	BaselineSample uint64        `json:"baseline_sample"`
-	RecentSample   uint64        `json:"recent_sample"`
-	DifferenceBps  int64         `json:"difference_bps"`
+	ID             string          `json:"id"`
+	OrganizationID string          `json:"organization_id"`
+	EntityID       string          `json:"entity_id"`
+	EntityType     string          `json:"entity_type"` // "provider", "agent", "capability"
+	Signal         string          `json:"signal"`      // "success_rate", "latency", "quote_accuracy", "cost_variance"
+	BaselineValue  string          `json:"baseline_value"`
+	RecentValue    string          `json:"recent_value"`
+	BaselineSample uint64          `json:"baseline_sample"`
+	RecentSample   uint64          `json:"recent_sample"`
+	DifferenceBps  int64           `json:"difference_bps"`
 	Confidence     ConfidenceLevel `json:"confidence"`
-	Severity       DriftSeverity `json:"severity"`
-	Details        string        `json:"details"`
-	DetectedAt     time.Time     `json:"detected_at"`
+	Severity       DriftSeverity   `json:"severity"`
+	Details        string          `json:"details"`
+	DetectedAt     time.Time       `json:"detected_at"`
 }
 
 // PerformanceFeature represents a deterministic feature in the lightweight feature store.
@@ -798,16 +798,16 @@ type PerformanceFeature struct {
 
 // EconomicForecast provides deterministic range-based expectations.
 type EconomicForecast struct {
-	OrganizationID       string          `json:"organization_id"`
-	ObjectiveOrCapability string         `json:"objective_or_capability"`
-	ExpectedCostMin      string          `json:"expected_cost_min"` // micro-USDC
-	ExpectedCostMax      string          `json:"expected_cost_max"`
-	ExpectedDurationMinMs int64          `json:"expected_duration_min_ms"`
-	ExpectedDurationMaxMs int64          `json:"expected_duration_max_ms"`
-	FailureProbabilityBps int64          `json:"failure_probability_bps"`
-	Confidence           ConfidenceLevel `json:"confidence"`
-	SampleSize           uint64          `json:"sample_size"`
-	GeneratedAt          time.Time       `json:"generated_at"`
+	OrganizationID        string          `json:"organization_id"`
+	ObjectiveOrCapability string          `json:"objective_or_capability"`
+	ExpectedCostMin       string          `json:"expected_cost_min"` // micro-USDC
+	ExpectedCostMax       string          `json:"expected_cost_max"`
+	ExpectedDurationMinMs int64           `json:"expected_duration_min_ms"`
+	ExpectedDurationMaxMs int64           `json:"expected_duration_max_ms"`
+	FailureProbabilityBps int64           `json:"failure_probability_bps"`
+	Confidence            ConfidenceLevel `json:"confidence"`
+	SampleSize            uint64          `json:"sample_size"`
+	GeneratedAt           time.Time       `json:"generated_at"`
 }
 
 // ContextualPerformance records capability-specific performance metrics for a service.
@@ -824,17 +824,17 @@ type ServicePerformance struct {
 	ServiceID            string                           `json:"service_id"`
 	OrganizationID       string                           `json:"organization_id"`
 	Window               PerformanceWindow                `json:"window"`
-	SuccessRateBps       int64                            `json:"success_rate_bps"`        // Basis points (0-10000)
-	FailureRateBps       int64                            `json:"failure_rate_bps"`        // Basis points (0-10000)
-	AveragePrice         *big.Int                         `json:"average_price"`           // micro-USDC
-	PriceVariance        *big.Int                         `json:"price_variance"`          // Variance in micro-USDC^2
+	SuccessRateBps       int64                            `json:"success_rate_bps"` // Basis points (0-10000)
+	FailureRateBps       int64                            `json:"failure_rate_bps"` // Basis points (0-10000)
+	AveragePrice         *big.Int                         `json:"average_price"`    // micro-USDC
+	PriceVariance        *big.Int                         `json:"price_variance"`   // Variance in micro-USDC^2
 	AverageLatencyMs     int64                            `json:"average_latency_ms"`
 	LatencyVariance      int64                            `json:"latency_variance"`
 	ResultQualityBps     int64                            `json:"result_quality_bps"`      // Basis points (0-10000)
 	RecentSuccessRateBps int64                            `json:"recent_success_rate_bps"` // Last 10 jobs
 	RecentFailureRateBps int64                            `json:"recent_failure_rate_bps"`
 	TotalJobs            uint64                           `json:"total_jobs"`
-	TotalVolume          *big.Int                         `json:"total_volume"`            // micro-USDC
+	TotalVolume          *big.Int                         `json:"total_volume"` // micro-USDC
 	LastSuccess          *time.Time                       `json:"last_success,omitempty"`
 	LastFailure          *time.Time                       `json:"last_failure,omitempty"`
 	ContextualBreakdown  map[string]ContextualPerformance `json:"contextual_breakdown,omitempty"`
@@ -925,4 +925,3 @@ type MissionIntelligence struct {
 	Confidence            ConfidenceLevel      `json:"confidence"`
 	Status                string               `json:"status"`
 }
-

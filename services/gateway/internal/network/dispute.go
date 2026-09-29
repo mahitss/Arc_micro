@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ErrDisputeNotOpen       = errors.New("dispute is not in an open or reviewable state")
+	ErrDisputeNotOpen        = errors.New("dispute is not in an open or reviewable state")
 	ErrUnauthorizedDisputant = errors.New("initiator is not a party to this contract")
 )
 

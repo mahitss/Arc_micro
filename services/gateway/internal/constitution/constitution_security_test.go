@@ -26,11 +26,11 @@ func TestAll30SecurityAttackScenarios(t *testing.T) {
 	// -------------------------------------------------------------------------
 	t.Run("1. Policy Injection", func(t *testing.T) {
 		maliciousPayload := PolicyEvaluationContext{
-			OrganizationID:   "org_secure_01'; DROP TABLE policies;--",
-			AgentID:          "agent_eval(`os.system('rm -rf /')`)",
-			Amount:           "1000000",
-			Currency:         "USDC",
-			Timestamp:        time.Now().UTC(),
+			OrganizationID: "org_secure_01'; DROP TABLE policies;--",
+			AgentID:        "agent_eval(`os.system('rm -rf /')`)",
+			Amount:         "1000000",
+			Currency:       "USDC",
+			Timestamp:      time.Now().UTC(),
 		}
 		// Evaluator treats all fields as declarative literals with zero eval
 		dec := eval.Evaluate(&c, maliciousPayload)
@@ -152,11 +152,11 @@ func TestAll30SecurityAttackScenarios(t *testing.T) {
 	t.Run("9. External Agent Escalation", func(t *testing.T) {
 		// External agent with 99.9% trust cannot bypass spending cap
 		highTrustCtx := PolicyEvaluationContext{
-			OrganizationID:   "org_secure_01",
-			ExternalAgentID:  "agent_external_top",
-			Amount:           "15000000", // 15 USDC > 10 USDC limit
-			Currency:         "USDC",
-			TrustScoreBps:    9990,
+			OrganizationID:  "org_secure_01",
+			ExternalAgentID: "agent_external_top",
+			Amount:          "15000000", // 15 USDC > 10 USDC limit
+			Currency:        "USDC",
+			TrustScoreBps:   9990,
 		}
 		dec := eval.Evaluate(&c, highTrustCtx)
 		if dec.Decision != domain.DecisionDeny {

@@ -23,7 +23,7 @@ type EconomicCounterparty struct {
 	IdentityStatus        CounterpartyStatus `json:"identity_status"` // UNVERIFIED, IDENTIFIED, VERIFIED, SUSPENDED
 	CapabilityReference   string             `json:"capability_reference,omitempty"`
 	ProtocolVersion       string             `json:"protocol_version"`
-	ExposureLimit         string             `json:"exposure_limit"`  // micro-USDC
+	ExposureLimit         string             `json:"exposure_limit"`   // micro-USDC
 	CurrentExposure       string             `json:"current_exposure"` // micro-USDC
 	HistoricalObligations int                `json:"historical_obligations"`
 	ActiveContracts       int                `json:"active_contracts"`
@@ -47,10 +47,10 @@ const (
 type BatchItemStatus string
 
 const (
-	BatchItemPending    BatchItemStatus = "PENDING"
-	BatchItemSubmitted  BatchItemStatus = "SUBMITTED"
-	BatchItemSettled    BatchItemStatus = "SETTLED"
-	BatchItemFailed     BatchItemStatus = "FAILED"
+	BatchItemPending     BatchItemStatus = "PENDING"
+	BatchItemSubmitted   BatchItemStatus = "SUBMITTED"
+	BatchItemSettled     BatchItemStatus = "SETTLED"
+	BatchItemFailed      BatchItemStatus = "FAILED"
 	BatchItemReconciling BatchItemStatus = "RECONCILING"
 )
 
@@ -88,22 +88,22 @@ type ProposedNetObligation struct {
 
 // MultiPartyNettingProposal captures multi-party or cycle graph netting offsets.
 type MultiPartyNettingProposal struct {
-	ProposalID              string                   `json:"proposal_id"`
-	TenantID                string                   `json:"tenant_id"`
-	OrganizationID          string                   `json:"organization_id"`
-	Currency                string                   `json:"currency"`
-	OriginalObligations     []string                 `json:"original_obligations"`
-	ProposedNetObligations  []*ProposedNetObligation `json:"proposed_net_obligations"`
-	GrossValue              string                   `json:"gross_value"`
-	NetValue                string                   `json:"net_value"`
-	SavingsValue            string                   `json:"savings_value"`
-	Counterparties          []string                 `json:"counterparties"`
-	ApprovalStatus          NettingApprovalStatus    `json:"approval_status"` // AUTOMATICALLY_ELIGIBLE, REQUIRES_APPROVAL, BLOCKED
-	Status                  NettingStatus            `json:"status"`          // PROPOSED, ELIGIBLE, APPROVED, EXECUTED, REJECTED, EXPIRED
-	EconomicImpact          string                   `json:"economic_impact"`
-	CreatedAt               time.Time                `json:"created_at"`
-	ExpiresAt               time.Time                `json:"expires_at"`
-	ExecutedAt              *time.Time               `json:"executed_at,omitempty"`
+	ProposalID             string                   `json:"proposal_id"`
+	TenantID               string                   `json:"tenant_id"`
+	OrganizationID         string                   `json:"organization_id"`
+	Currency               string                   `json:"currency"`
+	OriginalObligations    []string                 `json:"original_obligations"`
+	ProposedNetObligations []*ProposedNetObligation `json:"proposed_net_obligations"`
+	GrossValue             string                   `json:"gross_value"`
+	NetValue               string                   `json:"net_value"`
+	SavingsValue           string                   `json:"savings_value"`
+	Counterparties         []string                 `json:"counterparties"`
+	ApprovalStatus         NettingApprovalStatus    `json:"approval_status"` // AUTOMATICALLY_ELIGIBLE, REQUIRES_APPROVAL, BLOCKED
+	Status                 NettingStatus            `json:"status"`          // PROPOSED, ELIGIBLE, APPROVED, EXECUTED, REJECTED, EXPIRED
+	EconomicImpact         string                   `json:"economic_impact"`
+	CreatedAt              time.Time                `json:"created_at"`
+	ExpiresAt              time.Time                `json:"expires_at"`
+	ExecutedAt             *time.Time               `json:"executed_at,omitempty"`
 }
 
 // DisputeStatus represents lifecycle states of an obligation dispute.
@@ -139,14 +139,14 @@ type ClearingDispute struct {
 type ReconItemStatus string
 
 const (
-	ReconItemMatched          ReconItemStatus = "MATCHED"
-	ReconItemMissingReceipt   ReconItemStatus = "MISSING_RECEIPT"
-	ReconItemUnmatchedReceipt ReconItemStatus = "UNMATCHED_RECEIPT"
-	ReconItemAmountMismatch   ReconItemStatus = "AMOUNT_MISMATCH"
+	ReconItemMatched           ReconItemStatus = "MATCHED"
+	ReconItemMissingReceipt    ReconItemStatus = "MISSING_RECEIPT"
+	ReconItemUnmatchedReceipt  ReconItemStatus = "UNMATCHED_RECEIPT"
+	ReconItemAmountMismatch    ReconItemStatus = "AMOUNT_MISMATCH"
 	ReconItemRecipientMismatch ReconItemStatus = "RECIPIENT_MISMATCH"
-	ReconItemChainMismatch    ReconItemStatus = "CHAIN_MISMATCH"
+	ReconItemChainMismatch     ReconItemStatus = "CHAIN_MISMATCH"
 	ReconItemDuplicateEvidence ReconItemStatus = "DUPLICATE_EVIDENCE"
-	ReconItemAmbiguous        ReconItemStatus = "AMBIGUOUS"
+	ReconItemAmbiguous         ReconItemStatus = "AMBIGUOUS"
 )
 
 // ReconSeverity indicates operational impact of a reconciliation item.
@@ -204,27 +204,27 @@ type EconomicCausalLink struct {
 
 // FinancialTrace provides complete, clickable end-to-end auditability.
 type FinancialTrace struct {
-	TraceID              string                `json:"trace_id"`
-	ObjectiveID          string                `json:"objective_id,omitempty"`
-	MissionID            string                `json:"mission_id,omitempty"`
-	TaskID               string                `json:"task_id,omitempty"`
-	AgentID              string                `json:"agent_id"`
-	ContractID           string                `json:"contract_id,omitempty"`
-	Obligation           *EconomicObligation   `json:"obligation"`
-	PolicyDecision       string                `json:"policy_decision"`
-	RiskScore            int                   `json:"risk_score"`
-	ApprovalStatus       string                `json:"approval_status"`
-	ReservationID        string                `json:"reservation_id,omitempty"`
-	PaymentIntentID      string                `json:"payment_intent_id,omitempty"`
-	VaultAddress         string                `json:"vault_address,omitempty"`
-	ArcChainID           string                `json:"arc_chain_id,omitempty"`
-	TransactionHash      string                `json:"transaction_hash,omitempty"`
-	BlockNumber          int64                 `json:"block_number,omitempty"`
-	ReceiptStatus        int                   `json:"receipt_status,omitempty"`
-	ReconciliationRecord *ReconciliationRecord `json:"reconciliation_record,omitempty"`
+	TraceID              string                 `json:"trace_id"`
+	ObjectiveID          string                 `json:"objective_id,omitempty"`
+	MissionID            string                 `json:"mission_id,omitempty"`
+	TaskID               string                 `json:"task_id,omitempty"`
+	AgentID              string                 `json:"agent_id"`
+	ContractID           string                 `json:"contract_id,omitempty"`
+	Obligation           *EconomicObligation    `json:"obligation"`
+	PolicyDecision       string                 `json:"policy_decision"`
+	RiskScore            int                    `json:"risk_score"`
+	ApprovalStatus       string                 `json:"approval_status"`
+	ReservationID        string                 `json:"reservation_id,omitempty"`
+	PaymentIntentID      string                 `json:"payment_intent_id,omitempty"`
+	VaultAddress         string                 `json:"vault_address,omitempty"`
+	ArcChainID           string                 `json:"arc_chain_id,omitempty"`
+	TransactionHash      string                 `json:"transaction_hash,omitempty"`
+	BlockNumber          int64                  `json:"block_number,omitempty"`
+	ReceiptStatus        int                    `json:"receipt_status,omitempty"`
+	ReconciliationRecord *ReconciliationRecord  `json:"reconciliation_record,omitempty"`
 	LedgerEntries        []*ClearingLedgerEntry `json:"ledger_entries,omitempty"`
-	VerifiedOnChain      bool                  `json:"verified_on_chain"`
-	Timestamp            time.Time             `json:"timestamp"`
+	VerifiedOnChain      bool                   `json:"verified_on_chain"`
+	Timestamp            time.Time              `json:"timestamp"`
 }
 
 // UnsettledExplanation provides transparent rationale for why an obligation has not settled.
@@ -250,7 +250,7 @@ const (
 // ClearingHealth summarizes operational clearinghouse health without obscuring details.
 type ClearingHealth struct {
 	OpenObligations       int       `json:"open_obligations"`
-	OverdueObligations     int       `json:"overdue_obligations"`
+	OverdueObligations    int       `json:"overdue_obligations"`
 	PendingSettlements    int       `json:"pending_settlements"`
 	ReconciliationBacklog int       `json:"reconciliation_backlog"`
 	DisputedValue         string    `json:"disputed_value"` // micro-USDC
@@ -273,26 +273,26 @@ type ExposureLimits struct {
 
 // ObligationGraphNode represents an entity in the economic network graph.
 type ObligationGraphNode struct {
-	ID             string `json:"id"`
-	Type           string `json:"type"` // "AGENT", "ORGANIZATION", "CONTRACT"
-	Label          string `json:"label"`
-	Exposure       string `json:"exposure"`
-	ActiveCount    int    `json:"active_count"`
-	SettledAmount  string `json:"settled_amount"`
-	PendingAmount  string `json:"pending_amount"`
+	ID            string `json:"id"`
+	Type          string `json:"type"` // "AGENT", "ORGANIZATION", "CONTRACT"
+	Label         string `json:"label"`
+	Exposure      string `json:"exposure"`
+	ActiveCount   int    `json:"active_count"`
+	SettledAmount string `json:"settled_amount"`
+	PendingAmount string `json:"pending_amount"`
 }
 
 // ObligationGraphEdge represents an economic relationship or obligation between nodes.
 type ObligationGraphEdge struct {
-	ID             string `json:"id"`
-	Source         string `json:"source"`
-	Target         string `json:"target"`
-	Relationship   string `json:"relationship"` // "OWES", "OWED_BY", "CONTRACTED_WITH", "DISPUTED_WITH"
-	Amount         string `json:"amount"`
-	Currency       string `json:"currency"`
-	ObligationID   string `json:"obligation_id,omitempty"`
-	ContractID     string `json:"contract_id,omitempty"`
-	Status         string `json:"status"`
+	ID           string `json:"id"`
+	Source       string `json:"source"`
+	Target       string `json:"target"`
+	Relationship string `json:"relationship"` // "OWES", "OWED_BY", "CONTRACTED_WITH", "DISPUTED_WITH"
+	Amount       string `json:"amount"`
+	Currency     string `json:"currency"`
+	ObligationID string `json:"obligation_id,omitempty"`
+	ContractID   string `json:"contract_id,omitempty"`
+	Status       string `json:"status"`
 }
 
 // ObligationGraph represents the complete derived network topology.
@@ -324,15 +324,15 @@ type ClearingSimulationResult struct {
 
 // ClearingCounterfactual provides side-by-side current vs projected comparison.
 type ClearingCounterfactual struct {
-	CurrentGrossValue     string                    `json:"current_gross_value"`
-	CurrentNetValue       string                    `json:"current_net_value"`
-	CurrentTransactions   int                       `json:"current_transactions"`
-	ProposedGrossValue    string                    `json:"proposed_gross_value"`
-	ProposedNetValue      string                    `json:"proposed_net_value"`
-	ProposedTransactions  int                       `json:"proposed_transactions"`
-	SavingsValue          string                    `json:"savings_value"`
-	RiskChange            string                    `json:"risk_change"`
-	LiquidityImpact       string                    `json:"liquidity_impact"`
-	Counterparties        []string                  `json:"counterparties"`
-	NettingProposal       *MultiPartyNettingProposal `json:"netting_proposal,omitempty"`
+	CurrentGrossValue    string                     `json:"current_gross_value"`
+	CurrentNetValue      string                     `json:"current_net_value"`
+	CurrentTransactions  int                        `json:"current_transactions"`
+	ProposedGrossValue   string                     `json:"proposed_gross_value"`
+	ProposedNetValue     string                     `json:"proposed_net_value"`
+	ProposedTransactions int                        `json:"proposed_transactions"`
+	SavingsValue         string                     `json:"savings_value"`
+	RiskChange           string                     `json:"risk_change"`
+	LiquidityImpact      string                     `json:"liquidity_impact"`
+	Counterparties       []string                   `json:"counterparties"`
+	NettingProposal      *MultiPartyNettingProposal `json:"netting_proposal,omitempty"`
 }

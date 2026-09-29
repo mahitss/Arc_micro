@@ -30,15 +30,15 @@ func NewOutcomeEvaluator() *OutcomeEvaluator {
 
 // EvaluationInput specifies the execution context and returned output to be evaluated.
 type EvaluationInput struct {
-	ExpectedCapability string
-	ExpectedSchema     map[string]interface{}
+	ExpectedCapability  string
+	ExpectedSchema      map[string]interface{}
 	MaxAllowedLatencyMs int64
-	AgreedPrice        string
-	ActualResultRaw    string
-	ResultChecksum     string
-	ObservedLatencyMs  int64
-	ExecutionError     string
-	ServiceStatus      string // "ONLINE", "BUSY", "OFFLINE"
+	AgreedPrice         string
+	ActualResultRaw     string
+	ResultChecksum      string
+	ObservedLatencyMs   int64
+	ExecutionError      string
+	ServiceStatus       string // "ONLINE", "BUSY", "OFFLINE"
 }
 
 // Evaluate analyzes the execution parameters and determines the canonical outcome.

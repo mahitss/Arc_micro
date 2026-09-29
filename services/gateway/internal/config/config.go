@@ -24,31 +24,31 @@ type Config struct {
 	ArcConfirmationTimeout time.Duration
 
 	// Task 6: AI Agent & Storage Configuration
-	DatabaseURL            string
-	StorageMode            string // "memory" or "postgres"
-	Environment            string
-	DBMaxOpenConns         int
-	DBMaxIdleConns         int
-	DBConnMaxLifetime      time.Duration
-	DBConnMaxIdleTime      time.Duration
-	AutoMigrate            bool
-	AgentAutoExecution     bool
+	DatabaseURL             string
+	StorageMode             string // "memory" or "postgres"
+	Environment             string
+	DBMaxOpenConns          int
+	DBMaxIdleConns          int
+	DBConnMaxLifetime       time.Duration
+	DBConnMaxIdleTime       time.Duration
+	AutoMigrate             bool
+	AgentAutoExecution      bool
 	PaymentIntentTTLSeconds int
-	AIProvider             string
-	AIEndpoint             string
-	AIModel                string
-	AIAPIKey               string
+	AIProvider              string
+	AIEndpoint              string
+	AIModel                 string
+	AIAPIKey                string
 
 	// Task 8: Verified AgentVault address
-	AgentVaultAddress      string
+	AgentVaultAddress string
 
 	// Day 6: Webhook security configuration
 	AllowLocalhostWebhooks bool
 
 	// Day 3 Hardening: Blockchain Signer Boundary
-	SignerBackend          string // "local" or "kms"
-	KMSKeyID               string
-	KMSRegion              string
+	SignerBackend string // "local" or "kms"
+	KMSKeyID      string
+	KMSRegion     string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -241,24 +241,24 @@ func Load() *Config {
 		ArcRPCTimeout:          time.Duration(rpcTimeoutMs) * time.Millisecond,
 		ArcConfirmationTimeout: time.Duration(confirmationTimeoutMs) * time.Millisecond,
 
-		DatabaseURL:            os.Getenv("DATABASE_URL"),
-		StorageMode:            storageMode,
-		Environment:            env,
-		DBMaxOpenConns:         maxOpenConns,
-		DBMaxIdleConns:         maxIdleConns,
-		DBConnMaxLifetime:      connMaxLifetime,
-		DBConnMaxIdleTime:      connMaxIdleTime,
-		AutoMigrate:            autoMigrate,
-		AgentAutoExecution:     agentAutoExecution,
+		DatabaseURL:             os.Getenv("DATABASE_URL"),
+		StorageMode:             storageMode,
+		Environment:             env,
+		DBMaxOpenConns:          maxOpenConns,
+		DBMaxIdleConns:          maxIdleConns,
+		DBConnMaxLifetime:       connMaxLifetime,
+		DBConnMaxIdleTime:       connMaxIdleTime,
+		AutoMigrate:             autoMigrate,
+		AgentAutoExecution:      agentAutoExecution,
 		PaymentIntentTTLSeconds: ttlSeconds,
-		AIProvider:             aiProvider,
-		AIEndpoint:             aiEndpoint,
-		AIModel:                aiModel,
-		AIAPIKey:               aiAPIKey,
-		AgentVaultAddress:      os.Getenv("AGENTVAULT_ADDRESS"),
-		SignerBackend:          os.Getenv("SIGNER_BACKEND"),
-		KMSKeyID:               os.Getenv("KMS_KEY_ID"),
-		KMSRegion:              os.Getenv("KMS_REGION"),
+		AIProvider:              aiProvider,
+		AIEndpoint:              aiEndpoint,
+		AIModel:                 aiModel,
+		AIAPIKey:                aiAPIKey,
+		AgentVaultAddress:       os.Getenv("AGENTVAULT_ADDRESS"),
+		SignerBackend:           os.Getenv("SIGNER_BACKEND"),
+		KMSKeyID:                os.Getenv("KMS_KEY_ID"),
+		KMSRegion:               os.Getenv("KMS_REGION"),
 	}
 }
 
@@ -321,4 +321,3 @@ type SafetyCheckError struct {
 func (e *SafetyCheckError) Error() string {
 	return "mainnet safety check failed: " + e.Reason
 }
-

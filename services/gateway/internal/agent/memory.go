@@ -10,32 +10,32 @@ import (
 
 // EconomicDecisionLog records a single cost-aware decision made by the agent.
 type EconomicDecisionLog struct {
-	TaskContext         string   `json:"task_context"`
-	RequiredCapability  string   `json:"required_capability"`
-	Candidates          []string `json:"candidates"`
-	SelectedServiceID   string   `json:"selected_service_id"`
-	SelectedQuoteID     string   `json:"selected_quote_id,omitempty"`
-	CostBaseUnits       string   `json:"cost_base_units"`
-	BudgetBefore        string   `json:"budget_before"`
-	BudgetAfter         string   `json:"budget_after"`
-	DecisionExplanation string   `json:"decision_explanation"`
+	TaskContext         string    `json:"task_context"`
+	RequiredCapability  string    `json:"required_capability"`
+	Candidates          []string  `json:"candidates"`
+	SelectedServiceID   string    `json:"selected_service_id"`
+	SelectedQuoteID     string    `json:"selected_quote_id,omitempty"`
+	CostBaseUnits       string    `json:"cost_base_units"`
+	BudgetBefore        string    `json:"budget_before"`
+	BudgetAfter         string    `json:"budget_after"`
+	DecisionExplanation string    `json:"decision_explanation"`
 	Timestamp           time.Time `json:"timestamp"`
 }
 
 // TaskEconomicMemory captures bounded, in-memory economic state for a single autonomous task run.
 type TaskEconomicMemory struct {
 	mu                      sync.RWMutex
-	TaskID                  string                 `json:"task_id"`
-	AgentID                 string                 `json:"agent_id"`
-	InitialBudget           *big.Int               `json:"initial_budget"`
-	ServicesConsidered      []DiscoveredService    `json:"services_considered"`
-	QuotesReceived          []*registry.Quote      `json:"quotes_received"`
-	SelectedServices        []string               `json:"selected_services"`
-	TotalSpent              *big.Int               `json:"total_spent"`
-	PaymentAttempts         []string               `json:"payment_attempts"` // IntentIDs
-	FailedPayments          []string               `json:"failed_payments"`
+	TaskID                  string                  `json:"task_id"`
+	AgentID                 string                  `json:"agent_id"`
+	InitialBudget           *big.Int                `json:"initial_budget"`
+	ServicesConsidered      []DiscoveredService     `json:"services_considered"`
+	QuotesReceived          []*registry.Quote       `json:"quotes_received"`
+	SelectedServices        []string                `json:"selected_services"`
+	TotalSpent              *big.Int                `json:"total_spent"`
+	PaymentAttempts         []string                `json:"payment_attempts"` // IntentIDs
+	FailedPayments          []string                `json:"failed_payments"`
 	CompletedServiceResults []UntrustedExternalData `json:"completed_service_results"`
-	Decisions               []EconomicDecisionLog  `json:"decisions"`
+	Decisions               []EconomicDecisionLog   `json:"decisions"`
 }
 
 // NewTaskEconomicMemory initializes memory for a task.

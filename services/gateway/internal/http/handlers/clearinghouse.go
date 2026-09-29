@@ -657,11 +657,11 @@ func (h *ClearinghouseHandler) HandleProposeMultiPartyNetting(w http.ResponseWri
 		return
 	}
 	var req struct {
-		TenantID      string   `json:"tenant_id"`
+		TenantID       string   `json:"tenant_id"`
 		OrganizationID string   `json:"organization_id"`
-		Currency      string   `json:"currency"`
-		ObligationIDs []string `json:"obligation_ids"`
-		TTLSeconds    int      `json:"ttl_seconds"`
+		Currency       string   `json:"currency"`
+		ObligationIDs  []string `json:"obligation_ids"`
+		TTLSeconds     int      `json:"ttl_seconds"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -860,4 +860,3 @@ func (h *ClearinghouseHandler) HandleGetClearingNetworkHealth(w http.ResponseWri
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(health)
 }
-

@@ -14,8 +14,8 @@ import (
 // Observations can ONLY be submitted by internal execution gates (settled payments, verified results,
 // validated timeouts, or the deterministic simulation sandbox). Untrusted user input is rejected.
 type ObservationPipeline struct {
-	mu           sync.RWMutex
-	memoryStore  *EconomicMemoryStore
+	mu             sync.RWMutex
+	memoryStore    *EconomicMemoryStore
 	learningEngine *EconomicLearningEngine
 }
 
@@ -90,20 +90,20 @@ func (p *ObservationPipeline) IngestQuote(ctx context.Context, orgID, agentID, s
 	}
 
 	obs := &EconomicObservation{
-		OrganizationID: orgID,
-		AgentID:        agentID,
-		ServiceID:      serviceID,
-		Provider:       serviceID,
-		Capability:     capability,
-		EventType:      ObservationQuote,
-		Outcome:        OutcomeSuccess,
-		QuotedCost:     quotedCost,
-		Price:          quotedCost,
+		OrganizationID:    orgID,
+		AgentID:           agentID,
+		ServiceID:         serviceID,
+		Provider:          serviceID,
+		Capability:        capability,
+		EventType:         ObservationQuote,
+		Outcome:           OutcomeSuccess,
+		QuotedCost:        quotedCost,
+		Price:             quotedCost,
 		ExecutionDuration: quotedDurationMs,
-		LatencyMs:      quotedDurationMs,
-		Success:        true,
-		SimulationFlag: mode,
-		Metadata:       metadata,
+		LatencyMs:         quotedDurationMs,
+		Success:           true,
+		SimulationFlag:    mode,
+		Metadata:          metadata,
 	}
 
 	return p.IngestObservation(ctx, obs)

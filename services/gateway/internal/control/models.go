@@ -145,21 +145,21 @@ type MissionPolicySummary struct {
 
 // RejectedAlternativeAgent details why an alternative candidate was not selected.
 type RejectedAlternativeAgent struct {
-	AgentID          string `json:"agent_id"`
-	QuotedPrice      string `json:"quoted_price"`
-	RejectionReason  string `json:"rejection_reason"`
-	ScoreDifference  string `json:"score_difference"`
+	AgentID         string `json:"agent_id"`
+	QuotedPrice     string `json:"quoted_price"`
+	RejectionReason string `json:"rejection_reason"`
+	ScoreDifference string `json:"score_difference"`
 }
 
 // MissionAgentInfo details an active agent in a mission.
 type MissionAgentInfo struct {
-	AgentID               string                     `json:"agent_id"`
-	DisplayName           string                     `json:"display_name"`
-	Capability            string                     `json:"capability"`
-	QuotedPrice           string                     `json:"quoted_price"`
-	SelectionReason       string                     `json:"selection_reason"`
-	VerificationRate      float64                    `json:"verification_rate"`
-	RiskLevel             string                     `json:"risk_level"`
+	AgentID              string                     `json:"agent_id"`
+	DisplayName          string                     `json:"display_name"`
+	Capability           string                     `json:"capability"`
+	QuotedPrice          string                     `json:"quoted_price"`
+	SelectionReason      string                     `json:"selection_reason"`
+	VerificationRate     float64                    `json:"verification_rate"`
+	RiskLevel            string                     `json:"risk_level"`
 	RejectedAlternatives []RejectedAlternativeAgent `json:"rejected_alternatives,omitempty"`
 }
 

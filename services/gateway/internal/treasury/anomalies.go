@@ -95,7 +95,6 @@ func (d *DefaultAnomalyDetector) DetectAnomalies(ctx context.Context, orgID stri
 		}
 	}
 
-	
 	if state.OperationalMode == OperationalModeEmergency {
 		anomalies = append(anomalies, &LiquidityAnomaly{
 			AnomalyID:      "anom_" + generateID("an_"),

@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	ErrMaxRoundsReached  = errors.New("maximum negotiation rounds reached (max 3 rounds)")
-	ErrQuoteNotNegotiable = errors.New("quote cannot be negotiated in current status")
-	ErrCounterExceedsCap = errors.New("counter-offer price exceeds allowable limit or budget")
+	ErrMaxRoundsReached    = errors.New("maximum negotiation rounds reached (max 3 rounds)")
+	ErrQuoteNotNegotiable  = errors.New("quote cannot be negotiated in current status")
+	ErrCounterExceedsCap   = errors.New("counter-offer price exceeds allowable limit or budget")
 	ErrInvalidCounterPrice = errors.New("counter price must be a valid positive integer string")
 )
 

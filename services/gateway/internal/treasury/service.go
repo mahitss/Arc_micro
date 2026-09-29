@@ -30,11 +30,11 @@ type BalanceProvider interface {
 type TreasurySummary struct {
 	OrganizationID  string `json:"organization_id"`
 	VaultAddress    string `json:"vault_address"`
-	OnChainBalance  string `json:"on_chain_balance"`  // micro-USDC base units
-	ReservedAmount  string `json:"reserved_amount"`   // micro-USDC base units
-	AvailableAmount string `json:"available_amount"`  // micro-USDC base units
-	Asset           string `json:"asset"`             // "USDC"
-	Decimals        int    `json:"decimals"`          // 6
+	OnChainBalance  string `json:"on_chain_balance"` // micro-USDC base units
+	ReservedAmount  string `json:"reserved_amount"`  // micro-USDC base units
+	AvailableAmount string `json:"available_amount"` // micro-USDC base units
+	Asset           string `json:"asset"`            // "USDC"
+	Decimals        int    `json:"decimals"`         // 6
 }
 
 // Service defines high-level treasury and liquidity orchestration operations.

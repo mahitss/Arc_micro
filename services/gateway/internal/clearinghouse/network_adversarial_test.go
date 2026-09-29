@@ -653,10 +653,10 @@ func TestAdversarialScenario_31_ConcentrationAttack(t *testing.T) {
 
 	// Register counterparty with low exposure limit
 	cp, _ := svc.RegisterCounterparty(ctx, &EconomicCounterparty{
-		TenantID:       "tenant_1",
-		OrganizationID: "org_1",
-		AgentID:        "agent_whale",
-		ExposureLimit:  "50000000", // 50 USDC
+		TenantID:        "tenant_1",
+		OrganizationID:  "org_1",
+		AgentID:         "agent_whale",
+		ExposureLimit:   "50000000", // 50 USDC
 		CurrentExposure: "45000000",
 	})
 

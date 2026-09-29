@@ -37,12 +37,12 @@ type AgentStepRecord struct {
 
 // AgentTaskExecutionResult holds the comprehensive result of an autonomous agent run.
 type AgentTaskExecutionResult struct {
-	TaskID          string               `json:"task_id"`
-	AgentID         string               `json:"agent_id"`
-	State           AgentState           `json:"state"`
-	Task            string               `json:"task"`
-	Steps           []AgentStepRecord    `json:"steps"`
-	PaymentIntentID string               `json:"payment_intent_id,omitempty"`
+	TaskID          string                `json:"task_id"`
+	AgentID         string                `json:"agent_id"`
+	State           AgentState            `json:"state"`
+	Task            string                `json:"task"`
+	Steps           []AgentStepRecord     `json:"steps"`
+	PaymentIntentID string                `json:"payment_intent_id,omitempty"`
 	PaymentIntent   *intent.PaymentIntent `json:"payment_intent,omitempty"`
 	ServiceUsed     string                `json:"service_used,omitempty"`
 	ExternalData    string                `json:"external_data,omitempty"`

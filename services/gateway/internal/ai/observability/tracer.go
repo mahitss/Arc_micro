@@ -33,17 +33,17 @@ type AITraceRecord struct {
 
 // AITelemetrySummary provides aggregated operational metrics for the Control Tower.
 type AITelemetrySummary struct {
-	TotalRequests      int64              `json:"total_requests"`
-	SuccessfulRequests int64              `json:"successful_requests"`
-	FailedRequests     int64              `json:"failed_requests"`
-	AverageLatencyMS   float64            `json:"average_latency_ms"`
-	TotalTokens        int64              `json:"total_tokens"`
-	TotalCostUSD       float64            `json:"total_cost_usd"`
-	LastError          string             `json:"last_error,omitempty"`
-	ActiveProvider     string             `json:"active_provider"`
-	ActiveModel        string             `json:"active_model"`
-	RequestsByTaskType map[string]int64   `json:"requests_by_task_type"`
-	RequestsByModel    map[string]int64   `json:"requests_by_model"`
+	TotalRequests      int64            `json:"total_requests"`
+	SuccessfulRequests int64            `json:"successful_requests"`
+	FailedRequests     int64            `json:"failed_requests"`
+	AverageLatencyMS   float64          `json:"average_latency_ms"`
+	TotalTokens        int64            `json:"total_tokens"`
+	TotalCostUSD       float64          `json:"total_cost_usd"`
+	LastError          string           `json:"last_error,omitempty"`
+	ActiveProvider     string           `json:"active_provider"`
+	ActiveModel        string           `json:"active_model"`
+	RequestsByTaskType map[string]int64 `json:"requests_by_task_type"`
+	RequestsByModel    map[string]int64 `json:"requests_by_model"`
 }
 
 // AITracer collects and serves sanitized AI telemetry records.

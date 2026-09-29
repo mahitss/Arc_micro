@@ -43,11 +43,11 @@ type MarketplaceStore interface {
 // MemoryMarketplaceStore provides thread-safe in-memory storage with pre-seeded fixtures.
 type MemoryMarketplaceStore struct {
 	mu            sync.RWMutex
-	listings      map[string]*ServiceListing        // key: "tenant:listing_id"
+	listings      map[string]*ServiceListing         // key: "tenant:listing_id"
 	opportunities map[string]*MarketplaceOpportunity // key: "tenant:opp_id"
-	matches       map[string]*CandidateSet          // key: "tenant:opp_id"
-	metrics       map[string]*MarketplaceMetrics    // key: "tenant:provider:capability"
-	anomalies     map[string][]*MarketplaceAnomaly  // key: "tenant:provider"
+	matches       map[string]*CandidateSet           // key: "tenant:opp_id"
+	metrics       map[string]*MarketplaceMetrics     // key: "tenant:provider:capability"
+	anomalies     map[string][]*MarketplaceAnomaly   // key: "tenant:provider"
 }
 
 func NewMemoryMarketplaceStore() *MemoryMarketplaceStore {

@@ -35,21 +35,21 @@ type RuntimeWorkflowProvider interface {
 
 // OperationsService is the top-level supervisory facade for the Operations OS.
 type OperationsService struct {
-	store          OperationsStore
-	wfProvider     RuntimeWorkflowProvider
-	supervisor     *OperationsSupervisor
-	decisionEngine *OperationsDecisionEngine
-	priorityEngine *PriorityEngine
-	scheduler      *ResourceScheduler
-	queueManager   *QueueManager
-	prober         *HealthProber
-	incidentEngine *IncidentCorrelationEngine
-	causalEngine   *CausalEngine
-	planManager    *PlanManager
-	graphBuilder   *OperationalGraphBuilder
-	replayEngine   *ReplayEngine
-	timeTravel     *TimeTravelDebugger
-	nextResolver   *NextActionResolver
+	store           OperationsStore
+	wfProvider      RuntimeWorkflowProvider
+	supervisor      *OperationsSupervisor
+	decisionEngine  *OperationsDecisionEngine
+	priorityEngine  *PriorityEngine
+	scheduler       *ResourceScheduler
+	queueManager    *QueueManager
+	prober          *HealthProber
+	incidentEngine  *IncidentCorrelationEngine
+	causalEngine    *CausalEngine
+	planManager     *PlanManager
+	graphBuilder    *OperationalGraphBuilder
+	replayEngine    *ReplayEngine
+	timeTravel      *TimeTravelDebugger
+	nextResolver    *NextActionResolver
 	circuitBreakers *CircuitBreakerRegistry
 }
 
@@ -81,21 +81,21 @@ func NewOperationsService(
 	)
 
 	return &OperationsService{
-		store:          store,
-		wfProvider:     wfProvider,
-		supervisor:     supervisor,
-		decisionEngine: decEngine,
-		priorityEngine: priEngine,
-		scheduler:      sched,
-		queueManager:   qMgr,
-		prober:         prober,
-		incidentEngine: incEngine,
-		causalEngine:   causal,
-		planManager:    planMgr,
-		graphBuilder:   NewOperationalGraphBuilder(),
-		replayEngine:   NewReplayEngine(),
-		timeTravel:     NewTimeTravelDebugger(),
-		nextResolver:   NewNextActionResolver(),
+		store:           store,
+		wfProvider:      wfProvider,
+		supervisor:      supervisor,
+		decisionEngine:  decEngine,
+		priorityEngine:  priEngine,
+		scheduler:       sched,
+		queueManager:    qMgr,
+		prober:          prober,
+		incidentEngine:  incEngine,
+		causalEngine:    causal,
+		planManager:     planMgr,
+		graphBuilder:    NewOperationalGraphBuilder(),
+		replayEngine:    NewReplayEngine(),
+		timeTravel:      NewTimeTravelDebugger(),
+		nextResolver:    NewNextActionResolver(),
 		circuitBreakers: breakers,
 	}
 }

@@ -27,10 +27,10 @@ type MemoryAuthenticator struct {
 func NewMemoryAuthenticator() *MemoryAuthenticator {
 	return &MemoryAuthenticator{
 		secrets: map[string]string{
-			"agent_research_01":  "sec_res_secret_12345",
-			"agent_security_02":  "sec_sec_secret_67890",
-			"agent_verifier_03":  "sec_ver_secret_11223",
-			"agent_operator_00":  "sec_opr_secret_99887",
+			"agent_research_01": "sec_res_secret_12345",
+			"agent_security_02": "sec_sec_secret_67890",
+			"agent_verifier_03": "sec_ver_secret_11223",
+			"agent_operator_00": "sec_opr_secret_99887",
 		},
 	}
 }

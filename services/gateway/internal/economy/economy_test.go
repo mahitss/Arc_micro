@@ -319,12 +319,12 @@ func TestMission_LifecycleAndStateTransitions(t *testing.T) {
 		from MissionStatus
 		to   MissionStatus
 	}{
-		{StatusCreated, StatusExecuting},        // Cannot jump directly to executing without planning/discovery
-		{StatusPlanning, StatusCompleted},       // Cannot complete directly from planning
-		{StatusCompleted, StatusExecuting},      // Terminal state cannot transition
-		{StatusFailed, StatusPlanning},          // Terminal state cannot restart
-		{StatusCancelled, StatusCreated},        // Terminal state cannot revert
-		{StatusBudgetExhausted, StatusSelecting},// Terminal state cannot select
+		{StatusCreated, StatusExecuting},         // Cannot jump directly to executing without planning/discovery
+		{StatusPlanning, StatusCompleted},        // Cannot complete directly from planning
+		{StatusCompleted, StatusExecuting},       // Terminal state cannot transition
+		{StatusFailed, StatusPlanning},           // Terminal state cannot restart
+		{StatusCancelled, StatusCreated},         // Terminal state cannot revert
+		{StatusBudgetExhausted, StatusSelecting}, // Terminal state cannot select
 	}
 
 	for _, step := range invalidFlows {

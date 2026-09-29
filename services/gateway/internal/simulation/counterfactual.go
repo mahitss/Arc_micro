@@ -99,7 +99,7 @@ func (ce *CounterfactualEngine) RunCounterfactual(
 	comparison := &CounterfactualComparison{
 		BaselineRunID:            baseline.ID,
 		CounterfactualRunID:      executedCfRun.ID,
-		PerturbationDescription: description,
+		PerturbationDescription:  description,
 		BaselineSpend:            baseline.Economics.ProjectedSpend,
 		CounterfactualSpend:      executedCfRun.Economics.ProjectedSpend,
 		DeltaSpend:               fmt.Sprintf("%s%s", deltaSign, formatUnits(deltaSpendBig.String())),
@@ -138,7 +138,7 @@ func (ce *CounterfactualEngine) CompareRuns(runA *SimulationRun, runB *Simulatio
 	return &CounterfactualComparison{
 		BaselineRunID:            runA.ID,
 		CounterfactualRunID:      runB.ID,
-		PerturbationDescription: fmt.Sprintf("Comparison: %s vs %s", runA.Scenario.Name, runB.Scenario.Name),
+		PerturbationDescription:  fmt.Sprintf("Comparison: %s vs %s", runA.Scenario.Name, runB.Scenario.Name),
 		BaselineSpend:            runA.Economics.ProjectedSpend,
 		CounterfactualSpend:      runB.Economics.ProjectedSpend,
 		DeltaSpend:               fmt.Sprintf("%s%s", deltaSign, formatUnits(deltaSpendBig.String())),

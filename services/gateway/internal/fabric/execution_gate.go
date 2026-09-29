@@ -8,18 +8,18 @@ import (
 
 // ExecutionGateCheckInput contains all pre-flight conditions required for execution
 type ExecutionGateCheckInput struct {
-	Objective          *EconomicObjective
-	Blueprint          *ExecutionBlueprint
-	ActivePolicyHash   string
-	PolicyDecision     string // "ALLOW", "DENY", "APPROVAL_REQUIRED"
-	RiskScore          int
-	RequiresApproval   bool
-	ApprovalApproved   bool
-	ApprovalExpiry     time.Time
-	TreasuryReserved   bool
-	ClearingVerified   bool
-	SimulationFresh    bool
-	ExecutionMode      string // "SIMULATION" or "LIVE"
+	Objective        *EconomicObjective
+	Blueprint        *ExecutionBlueprint
+	ActivePolicyHash string
+	PolicyDecision   string // "ALLOW", "DENY", "APPROVAL_REQUIRED"
+	RiskScore        int
+	RequiresApproval bool
+	ApprovalApproved bool
+	ApprovalExpiry   time.Time
+	TreasuryReserved bool
+	ClearingVerified bool
+	SimulationFresh  bool
+	ExecutionMode    string // "SIMULATION" or "LIVE"
 }
 
 // EconomicExecutionGate integrates all domain pre-flight conditions before execution

@@ -163,23 +163,23 @@ type DefaultClearinghouseService struct {
 	ledgerEntries   []*ClearingLedgerEntry
 
 	// Task 18 additions
-	counterparties  map[string]*EconomicCounterparty
-	mpNettingProps  map[string]*MultiPartyNettingProposal
-	batchItems      map[string][]*SettlementBatchItem
-	disputes        map[string]*ClearingDispute
-	reconItems      map[string]*ReconciliationItem
-	causalLinks     map[string]*EconomicCausalLink
+	counterparties map[string]*EconomicCounterparty
+	mpNettingProps map[string]*MultiPartyNettingProposal
+	batchItems     map[string][]*SettlementBatchItem
+	disputes       map[string]*ClearingDispute
+	reconItems     map[string]*ReconciliationItem
+	causalLinks    map[string]*EconomicCausalLink
 
-	stateMachine   *StateMachine
-	verifier       *MilestoneVerifier
-	validator      *InvoiceValidator
-	nettingEngine  *NettingEngine
-	reconciler     *ClearingReconciliationEngine
-	exposureCalc   *ExposureCalculator
-	router         *SettlementRouter
-	treasury       treasury.Service
-	registry       *registry.Registry
-	publisher      EventPublisher
+	stateMachine  *StateMachine
+	verifier      *MilestoneVerifier
+	validator     *InvoiceValidator
+	nettingEngine *NettingEngine
+	reconciler    *ClearingReconciliationEngine
+	exposureCalc  *ExposureCalculator
+	router        *SettlementRouter
+	treasury      treasury.Service
+	registry      *registry.Registry
+	publisher     EventPublisher
 }
 
 func NewClearinghouseService(

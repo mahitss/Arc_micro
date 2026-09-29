@@ -25,17 +25,17 @@ type SelectionTask struct {
 
 // CandidateRanking provides an explainable utility score for a candidate agent.
 type CandidateRanking struct {
-	AgentID        string  `json:"agent_id"`
-	DisplayName    string  `json:"display_name"`
-	PriceBaseUnits string  `json:"price_base_units"`
-	UtilityScore   int64   `json:"utility_score"` // 0 - 10000 basis points
-	PriceScore     int64   `json:"price_score"`
-	TrustScore     int64   `json:"trust_score"`
-	LatencyScore   int64   `json:"latency_score"`
-	MatchScore     int64   `json:"match_score"`
-	RiskScore      int64   `json:"risk_score"`
-	Selected       bool    `json:"selected"`
-	Explanation    string  `json:"explanation"`
+	AgentID        string   `json:"agent_id"`
+	DisplayName    string   `json:"display_name"`
+	PriceBaseUnits string   `json:"price_base_units"`
+	UtilityScore   int64    `json:"utility_score"` // 0 - 10000 basis points
+	PriceScore     int64    `json:"price_score"`
+	TrustScore     int64    `json:"trust_score"`
+	LatencyScore   int64    `json:"latency_score"`
+	MatchScore     int64    `json:"match_score"`
+	RiskScore      int64    `json:"risk_score"`
+	Selected       bool     `json:"selected"`
+	Explanation    string   `json:"explanation"`
 	Warnings       []string `json:"warnings,omitempty"`
 }
 

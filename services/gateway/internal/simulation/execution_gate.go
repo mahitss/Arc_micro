@@ -29,19 +29,19 @@ type StalenessReport struct {
 
 // LiveExecutionPayload represents the verified, revalidated payload ready for live mission orchestration.
 type LiveExecutionPayload struct {
-	PlanID           string                       `json:"plan_id"`
-	OriginalRunID    string                       `json:"original_run_id"`
-	OrganizationID   string                       `json:"organization_id"`
-	Objective        string                       `json:"objective"`
-	FreshBudget      string                       `json:"fresh_budget"`
-	RevalidatedSteps []SimulationPlanStep         `json:"revalidated_steps"`
+	PlanID           string               `json:"plan_id"`
+	OriginalRunID    string               `json:"original_run_id"`
+	OrganizationID   string               `json:"organization_id"`
+	Objective        string               `json:"objective"`
+	FreshBudget      string               `json:"fresh_budget"`
+	RevalidatedSteps []SimulationPlanStep `json:"revalidated_steps"`
 	TotalLiveCost    string               `json:"total_live_cost"`
 	MaxLiveExposure  string               `json:"max_live_exposure"`
 	PolicyDecision   domain.Decision      `json:"policy_decision"`
 	ProjectedRisk    int                  `json:"projected_risk"`
-	RequiresApproval bool                         `json:"requires_approval"`
-	Mode             ExecutionMode                `json:"mode"`
-	PreparedAt       time.Time                    `json:"prepared_at"`
+	RequiresApproval bool                 `json:"requires_approval"`
+	Mode             ExecutionMode        `json:"mode"`
+	PreparedAt       time.Time            `json:"prepared_at"`
 }
 
 // ExecutionGate ensures strict boundaries between SIMULATION and LIVE modes,

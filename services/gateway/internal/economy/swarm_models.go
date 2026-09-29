@@ -26,15 +26,15 @@ const (
 type AgentRole string
 
 const (
-	RoleOrchestrator  AgentRole = "ORCHESTRATOR"
-	RoleResearcher    AgentRole = "RESEARCHER"
-	RoleDataProvider  AgentRole = "DATA_PROVIDER"
-	RoleAnalyst       AgentRole = "ANALYST"
-	RoleCoder         AgentRole = "CODER"
-	RoleVerifier      AgentRole = "VERIFIER"
-	RoleCritic        AgentRole = "CRITIC"
-	RoleSynthesizer   AgentRole = "SYNTHESIZER"
-	RoleSpecialist    AgentRole = "SPECIALIST"
+	RoleOrchestrator AgentRole = "ORCHESTRATOR"
+	RoleResearcher   AgentRole = "RESEARCHER"
+	RoleDataProvider AgentRole = "DATA_PROVIDER"
+	RoleAnalyst      AgentRole = "ANALYST"
+	RoleCoder        AgentRole = "CODER"
+	RoleVerifier     AgentRole = "VERIFIER"
+	RoleCritic       AgentRole = "CRITIC"
+	RoleSynthesizer  AgentRole = "SYNTHESIZER"
+	RoleSpecialist   AgentRole = "SPECIALIST"
 )
 
 // TaskStatus represents the lifecycle state of a specific node in the swarm task graph.
@@ -88,8 +88,8 @@ type TaskNode struct {
 	AssignedRole       AgentRole       `json:"assigned_role"`
 	RequiredCapability string          `json:"required_capability"`
 	Status             TaskStatus      `json:"status"`
-	Budget             string          `json:"budget"` // allocated micro-USDC integer string
-	Spent              string          `json:"spent"`  // settled micro-USDC integer string
+	Budget             string          `json:"budget"`       // allocated micro-USDC integer string
+	Spent              string          `json:"spent"`        // settled micro-USDC integer string
 	Dependencies       []string        `json:"dependencies"` // task_ids that must complete before this can run
 	InputRefs          []string        `json:"input_refs"`   // explicit references e.g. result://swarm/s1/task/t1
 	OutputRefs         []string        `json:"output_refs,omitempty"`

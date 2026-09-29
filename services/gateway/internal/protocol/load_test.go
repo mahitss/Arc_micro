@@ -29,10 +29,10 @@ func TestProtocol_LoadAndStressSimulation(t *testing.T) {
 			DisplayName:     fmt.Sprintf("Autonomous Agent #%d", i),
 			Capabilities: []CapabilityDescriptor{
 				{
-					CapabilityID: "compute-analysis",
-					Name:         "Compute Analysis Engine",
-					Version:      "1.0.0",
-					PricingModel: "FIXED",
+					CapabilityID:    "compute-analysis",
+					Name:            "Compute Analysis Engine",
+					Version:         "1.0.0",
+					PricingModel:    "FIXED",
 					SupportedAssets: []string{"USDC"},
 				},
 			},
@@ -77,11 +77,11 @@ func TestProtocol_LoadAndStressSimulation(t *testing.T) {
 		go func(idx int) {
 			defer wgReq.Done()
 			req := &ServiceRequest{
-				RequestID:    fmt.Sprintf("req_load_%04d", idx),
-				RequesterID:  fmt.Sprintf("agent_%03d", idx%numAgents),
-				Capability:   "compute-analysis",
-				BudgetCap:    "10.00",
-				Deadline:     time.Now().UTC().Add(24 * time.Hour),
+				RequestID:   fmt.Sprintf("req_load_%04d", idx),
+				RequesterID: fmt.Sprintf("agent_%03d", idx%numAgents),
+				Capability:  "compute-analysis",
+				BudgetCap:   "10.00",
+				Deadline:    time.Now().UTC().Add(24 * time.Hour),
 			}
 			if err := svc.validator.ValidateServiceRequest(req); err == nil {
 				atomic.AddInt64(&requestSuccessCount, 1)

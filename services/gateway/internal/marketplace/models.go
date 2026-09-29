@@ -19,13 +19,13 @@ const (
 type PricingModel string
 
 const (
-	PricingFixed       PricingModel = "FIXED"
-	PricingPerTask     PricingModel = "PER_TASK"
-	PricingPerUnit     PricingModel = "PER_UNIT"
-	PricingMilestone   PricingModel = "MILESTONE"
-	PricingTimeBased   PricingModel = "TIME_BASED"
-	PricingUsageBased  PricingModel = "USAGE_BASED"
-	PricingNegotiated  PricingModel = "NEGOTIATED"
+	PricingFixed      PricingModel = "FIXED"
+	PricingPerTask    PricingModel = "PER_TASK"
+	PricingPerUnit    PricingModel = "PER_UNIT"
+	PricingMilestone  PricingModel = "MILESTONE"
+	PricingTimeBased  PricingModel = "TIME_BASED"
+	PricingUsageBased PricingModel = "USAGE_BASED"
+	PricingNegotiated PricingModel = "NEGOTIATED"
 )
 
 // OpportunityStatus represents the lifecycle state of a MarketplaceOpportunity.
@@ -43,8 +43,8 @@ const (
 	OpportunityStatusCompleted   OpportunityStatus = "COMPLETED"
 	OpportunityStatusCancelled   OpportunityStatus = "CANCELLED"
 	OpportunityStatusDisputed    OpportunityStatus = "DISPUTED"
-	OpportunityStatusExpired      OpportunityStatus = "EXPIRED"
-	OpportunityStatusFailed       OpportunityStatus = "FAILED"
+	OpportunityStatusExpired     OpportunityStatus = "EXPIRED"
+	OpportunityStatusFailed      OpportunityStatus = "FAILED"
 )
 
 // AvailabilityStatus represents the real-time operational availability of a provider.
@@ -106,22 +106,22 @@ type MarketplaceOpportunity struct {
 
 // CandidateMatch represents an individual provider evaluated by the Matching Engine.
 type CandidateMatch struct {
-	ProviderID            string                 `json:"provider_id"`
-	ListingID             string                 `json:"listing_id"`
-	CapabilityMatch       bool                   `json:"capability_match"`
-	Availability          AvailabilityStatus     `json:"availability"`
-	EstimatedCostUSDC     string                 `json:"estimated_cost_usdc"`
-	EstimatedLatencyMS    int                    `json:"estimated_latency_ms"`
-	HistoricalSuccessRate float64                `json:"historical_success_rate"`
-	ContextualScore       float64                `json:"contextual_score"`
-	RiskScore             int                    `json:"risk_score"`
-	PolicyCompatible      bool                   `json:"policy_compatible"`
-	Confidence            float64                `json:"confidence"`
-	SampleSize            int                    `json:"sample_size"`
-	Rank                  int                    `json:"rank"`
-	Score                 float64                `json:"score"`
-	MatchReasons          []string               `json:"match_reasons"`
-	Disqualification      string                 `json:"disqualification,omitempty"`
+	ProviderID            string             `json:"provider_id"`
+	ListingID             string             `json:"listing_id"`
+	CapabilityMatch       bool               `json:"capability_match"`
+	Availability          AvailabilityStatus `json:"availability"`
+	EstimatedCostUSDC     string             `json:"estimated_cost_usdc"`
+	EstimatedLatencyMS    int                `json:"estimated_latency_ms"`
+	HistoricalSuccessRate float64            `json:"historical_success_rate"`
+	ContextualScore       float64            `json:"contextual_score"`
+	RiskScore             int                `json:"risk_score"`
+	PolicyCompatible      bool               `json:"policy_compatible"`
+	Confidence            float64            `json:"confidence"`
+	SampleSize            int                `json:"sample_size"`
+	Rank                  int                `json:"rank"`
+	Score                 float64            `json:"score"`
+	MatchReasons          []string           `json:"match_reasons"`
+	Disqualification      string             `json:"disqualification,omitempty"`
 }
 
 // MatchExplanation provides structured, human- and machine-readable transparency for provider selection.
@@ -229,13 +229,13 @@ type MarketplaceSimulationRequest struct {
 
 // MarketplaceSimulationResult returns the projected outcome of a simulation without mutating live state.
 type MarketplaceSimulationResult struct {
-	ScenarioType         string   `json:"scenario_type"`
-	Feasible             bool     `json:"feasible"`
-	ProjectedWinnerID    string   `json:"projected_winner_id,omitempty"`
-	ProjectedCostUSDC    string   `json:"projected_cost_usdc"`
-	ProjectedDurationMS  int      `json:"projected_duration_ms"`
-	RemainingCandidateCount int   `json:"remaining_candidate_count"`
-	WorstCaseExposureUSDC string `json:"worst_case_exposure_usdc"`
-	PolicyClearance      string   `json:"policy_clearance"`
-	SimulationOnlyLabel  string   `json:"simulation_only_label"` // "SIMULATION ONLY: NO MONEY MOVED (INV-192)"
+	ScenarioType            string `json:"scenario_type"`
+	Feasible                bool   `json:"feasible"`
+	ProjectedWinnerID       string `json:"projected_winner_id,omitempty"`
+	ProjectedCostUSDC       string `json:"projected_cost_usdc"`
+	ProjectedDurationMS     int    `json:"projected_duration_ms"`
+	RemainingCandidateCount int    `json:"remaining_candidate_count"`
+	WorstCaseExposureUSDC   string `json:"worst_case_exposure_usdc"`
+	PolicyClearance         string `json:"policy_clearance"`
+	SimulationOnlyLabel     string `json:"simulation_only_label"` // "SIMULATION ONLY: NO MONEY MOVED (INV-192)"
 }

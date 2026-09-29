@@ -14,37 +14,37 @@ import (
 
 // SimulatedStepTrace records the dry-run projection for a planned step.
 type SimulatedStepTrace struct {
-	StepID             string            `json:"step_id"`
-	RequiredCapability string            `json:"required_capability"`
-	Category           string            `json:"category"`
-	AllocatedBudget    string            `json:"allocated_budget"`
-	CandidatesFound    int               `json:"candidates_found"`
-	SelectedServiceID  string            `json:"selected_service_id"`
-	SelectedQuotePrice string            `json:"selected_quote_price"`
-	UtilityScore       int64             `json:"utility_score"`
-	PolicyDecision     string            `json:"policy_decision"`
-	PolicyReason       string            `json:"policy_reason"`
-	RequiresApproval   bool              `json:"requires_approval"`
-	ProjectedSpend     string            `json:"projected_spend"`
-	Explanation        string            `json:"explanation"`
+	StepID             string `json:"step_id"`
+	RequiredCapability string `json:"required_capability"`
+	Category           string `json:"category"`
+	AllocatedBudget    string `json:"allocated_budget"`
+	CandidatesFound    int    `json:"candidates_found"`
+	SelectedServiceID  string `json:"selected_service_id"`
+	SelectedQuotePrice string `json:"selected_quote_price"`
+	UtilityScore       int64  `json:"utility_score"`
+	PolicyDecision     string `json:"policy_decision"`
+	PolicyReason       string `json:"policy_reason"`
+	RequiresApproval   bool   `json:"requires_approval"`
+	ProjectedSpend     string `json:"projected_spend"`
+	Explanation        string `json:"explanation"`
 }
 
 // MissionSimulationResult encapsulates the dry-run outcome of an autonomous mission.
 // INVARIANT: Simulation MUST NEVER sign, broadcast, or mutate real treasury state.
 type MissionSimulationResult struct {
-	SimulationOnly     bool                 `json:"simulation_only"` // Strictly true
-	MissionID          string               `json:"mission_id"`
-	Objective          string               `json:"objective"`
-	AuthorizedBudget   string               `json:"authorized_budget"`
-	Currency           string               `json:"currency"`
-	PlannedStepsCount  int                  `json:"planned_steps_count"`
-	ProjectedSpend     string               `json:"projected_spend"`
-	MaxFinancialRisk   string               `json:"max_financial_risk"`
-	SimulatedSteps     []SimulatedStepTrace `json:"simulated_steps"`
-	AllStepsApproved   bool                 `json:"all_steps_approved"`
-	ApprovalRequired   bool                 `json:"approval_required"`
-	PolicyViolations   []string             `json:"policy_violations,omitempty"`
-	GeneratedAt        time.Time            `json:"generated_at"`
+	SimulationOnly    bool                 `json:"simulation_only"` // Strictly true
+	MissionID         string               `json:"mission_id"`
+	Objective         string               `json:"objective"`
+	AuthorizedBudget  string               `json:"authorized_budget"`
+	Currency          string               `json:"currency"`
+	PlannedStepsCount int                  `json:"planned_steps_count"`
+	ProjectedSpend    string               `json:"projected_spend"`
+	MaxFinancialRisk  string               `json:"max_financial_risk"`
+	SimulatedSteps    []SimulatedStepTrace `json:"simulated_steps"`
+	AllStepsApproved  bool                 `json:"all_steps_approved"`
+	ApprovalRequired  bool                 `json:"approval_required"`
+	PolicyViolations  []string             `json:"policy_violations,omitempty"`
+	GeneratedAt       time.Time            `json:"generated_at"`
 }
 
 // MissionSimulator evaluates autonomous missions in a zero-risk simulation sandbox.
@@ -221,18 +221,18 @@ func (s *MissionSimulator) Simulate(ctx context.Context, m *Mission) (*MissionSi
 	}
 
 	return &MissionSimulationResult{
-		SimulationOnly:     true, // INVARIANT: Strictly true
-		MissionID:          m.ID,
-		Objective:          m.Objective,
-		AuthorizedBudget:   m.Budget,
-		Currency:           m.Currency,
-		PlannedStepsCount:  len(plan.Steps),
-		ProjectedSpend:     totalProjected.String(),
-		MaxFinancialRisk:   m.Budget,
-		SimulatedSteps:     traces,
-		AllStepsApproved:   allApproved,
-		ApprovalRequired:   requiresApproval,
-		PolicyViolations:   violations,
-		GeneratedAt:        time.Now().UTC(),
+		SimulationOnly:    true, // INVARIANT: Strictly true
+		MissionID:         m.ID,
+		Objective:         m.Objective,
+		AuthorizedBudget:  m.Budget,
+		Currency:          m.Currency,
+		PlannedStepsCount: len(plan.Steps),
+		ProjectedSpend:    totalProjected.String(),
+		MaxFinancialRisk:  m.Budget,
+		SimulatedSteps:    traces,
+		AllStepsApproved:  allApproved,
+		ApprovalRequired:  requiresApproval,
+		PolicyViolations:  violations,
+		GeneratedAt:       time.Now().UTC(),
 	}, nil
 }

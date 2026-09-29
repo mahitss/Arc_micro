@@ -53,18 +53,18 @@ func (ws *WorkflowSupervisor) InspectWorkflow(
 
 // OperationsSupervisor continuously observes the system and orchestrates workflows across queues and workers.
 type OperationsSupervisor struct {
-	mu             sync.RWMutex
-	decisionEngine *OperationsDecisionEngine
-	priorityEngine *PriorityEngine
-	scheduler      *ResourceScheduler
-	queueManager   *QueueManager
-	prober         *HealthProber
-	incidentEngine *IncidentCorrelationEngine
-	wfSupervisor   *WorkflowSupervisor
-	causalEngine   *CausalEngine
-	planManager    *PlanManager
+	mu              sync.RWMutex
+	decisionEngine  *OperationsDecisionEngine
+	priorityEngine  *PriorityEngine
+	scheduler       *ResourceScheduler
+	queueManager    *QueueManager
+	prober          *HealthProber
+	incidentEngine  *IncidentCorrelationEngine
+	wfSupervisor    *WorkflowSupervisor
+	causalEngine    *CausalEngine
+	planManager     *PlanManager
 	circuitBreakers *CircuitBreakerRegistry
-	nextResolver   *NextActionResolver
+	nextResolver    *NextActionResolver
 }
 
 // NewOperationsSupervisor constructs the central OperationsSupervisor.
@@ -80,17 +80,17 @@ func NewOperationsSupervisor(
 	breakers *CircuitBreakerRegistry,
 ) *OperationsSupervisor {
 	return &OperationsSupervisor{
-		decisionEngine: decisionEngine,
-		priorityEngine: priorityEngine,
-		scheduler:      scheduler,
-		queueManager:   queueManager,
-		prober:         prober,
-		incidentEngine: incidentEngine,
-		wfSupervisor:   NewWorkflowSupervisor(15 * time.Minute),
-		causalEngine:   causalEngine,
-		planManager:    planManager,
+		decisionEngine:  decisionEngine,
+		priorityEngine:  priorityEngine,
+		scheduler:       scheduler,
+		queueManager:    queueManager,
+		prober:          prober,
+		incidentEngine:  incidentEngine,
+		wfSupervisor:    NewWorkflowSupervisor(15 * time.Minute),
+		causalEngine:    causalEngine,
+		planManager:     planManager,
 		circuitBreakers: breakers,
-		nextResolver:   NewNextActionResolver(),
+		nextResolver:    NewNextActionResolver(),
 	}
 }
 

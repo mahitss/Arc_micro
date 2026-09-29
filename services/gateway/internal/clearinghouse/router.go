@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	ErrZeroAmountPayment         = errors.New("cannot route payment with zero amount")
-	ErrObligationNotExecutable   = errors.New("obligation state does not permit routing to settlement")
-	ErrBatchObligationInvalid   = errors.New("one or more obligations in settlement batch failed pre-flight verification")
+	ErrZeroAmountPayment       = errors.New("cannot route payment with zero amount")
+	ErrObligationNotExecutable = errors.New("obligation state does not permit routing to settlement")
+	ErrBatchObligationInvalid  = errors.New("one or more obligations in settlement batch failed pre-flight verification")
 )
 
 // IntentCreator defines the interface for creating and initiating canonical payment intents.

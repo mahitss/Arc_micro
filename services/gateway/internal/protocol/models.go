@@ -15,15 +15,15 @@ const ProtocolVersion = "1.0"
 // Message Type Categories
 const (
 	// Discovery
-	MsgAgentAnnounce     = "AgentAnnounce"
-	MsgCapabilityQuery   = "CapabilityQuery"
+	MsgAgentAnnounce      = "AgentAnnounce"
+	MsgCapabilityQuery    = "CapabilityQuery"
 	MsgCapabilityResponse = "CapabilityResponse"
 
 	// Economic
-	MsgServiceRequest     = "ServiceRequest"
-	MsgQuoteRequest       = "QuoteRequest"
-	MsgQuoteResponse      = "QuoteResponse"
-	MsgNegotiationRequest = "NegotiationRequest"
+	MsgServiceRequest      = "ServiceRequest"
+	MsgQuoteRequest        = "QuoteRequest"
+	MsgQuoteResponse       = "QuoteResponse"
+	MsgNegotiationRequest  = "NegotiationRequest"
 	MsgNegotiationResponse = "NegotiationResponse"
 
 	// Contract
@@ -46,13 +46,13 @@ const (
 	MsgResultDisputed  = "ResultDisputed"
 
 	// Financial
-	MsgPaymentRequest   = "PaymentRequest"
+	MsgPaymentRequest    = "PaymentRequest"
 	MsgPaymentAuthorized = "PaymentAuthorized"
-	MsgPaymentDenied    = "PaymentDenied"
-	MsgPaymentPending   = "PaymentPending"
-	MsgPaymentSubmitted = "PaymentSubmitted"
-	MsgPaymentConfirmed = "PaymentConfirmed"
-	MsgPaymentFailed    = "PaymentFailed"
+	MsgPaymentDenied     = "PaymentDenied"
+	MsgPaymentPending    = "PaymentPending"
+	MsgPaymentSubmitted  = "PaymentSubmitted"
+	MsgPaymentConfirmed  = "PaymentConfirmed"
+	MsgPaymentFailed     = "PaymentFailed"
 
 	// Control
 	MsgPauseRequest     = "PauseRequest"
@@ -143,7 +143,7 @@ type AgentManifest struct {
 	OrganizationID       string                 `json:"organization_id"`
 	DisplayName          string                 `json:"display_name"`
 	Capabilities         []CapabilityDescriptor `json:"capabilities"`
-	Endpoints            map[string]string      `json:"endpoints"` // task, health, status, webhook
+	Endpoints            map[string]string      `json:"endpoints"`           // task, health, status, webhook
 	SupportedProtocols   []string               `json:"supported_protocols"` // ["agentpay.protocol.v1"]
 	Pricing              []ManifestPricing      `json:"pricing"`
 	Availability         string                 `json:"availability"` // AVAILABLE, BUSY, OFFLINE
@@ -157,7 +157,7 @@ type AgentManifest struct {
 // ManifestPricing describes pricing per capability.
 type ManifestPricing struct {
 	Capability string `json:"capability"`
-	Model      string `json:"model"` // FIXED, VARIABLE, QUOTE_REQUIRED
+	Model      string `json:"model"`      // FIXED, VARIABLE, QUOTE_REQUIRED
 	BasePrice  string `json:"base_price"` // in USDC, e.g. "10.00"
 	MaxPrice   string `json:"max_price,omitempty"`
 	Currency   string `json:"currency"` // "USDC"
@@ -181,13 +181,13 @@ type CapabilityDescriptor struct {
 
 // ServiceRequest represents a formal demand for an agent capability (Section 7).
 type ServiceRequest struct {
-	RequestID          string                 `json:"request_id"`
-	RequesterID        string                 `json:"requester_id"`
-	Capability         string                 `json:"capability"`
-	InputData          map[string]interface{} `json:"input_data"`
-	Constraints        map[string]interface{} `json:"constraints,omitempty"`
-	Deadline           time.Time              `json:"deadline"`
-	BudgetCap          string                 `json:"budget_cap"` // USDC
+	RequestID           string                 `json:"request_id"`
+	RequesterID         string                 `json:"requester_id"`
+	Capability          string                 `json:"capability"`
+	InputData           map[string]interface{} `json:"input_data"`
+	Constraints         map[string]interface{} `json:"constraints,omitempty"`
+	Deadline            time.Time              `json:"deadline"`
+	BudgetCap           string                 `json:"budget_cap"` // USDC
 	QualityRequirements map[string]interface{} `json:"quality_requirements,omitempty"`
 	RiskRequirements    map[string]interface{} `json:"risk_requirements,omitempty"`
 	ResultRequirements  map[string]interface{} `json:"result_requirements,omitempty"`
@@ -211,36 +211,36 @@ type ProtocolQuote struct {
 
 // NegotiationPayload represents negotiation round offers (Section 9).
 type NegotiationPayload struct {
-	NegotiationID   string                 `json:"negotiation_id"`
-	ContractID      string                 `json:"contract_id,omitempty"`
-	Round           int                    `json:"round"`
-	SenderID        string                 `json:"sender_id"`
-	ProposedPrice   string                 `json:"proposed_price"`
-	ProposedDeadline *time.Time            `json:"proposed_deadline,omitempty"`
-	Deliverables    []string               `json:"deliverables,omitempty"`
-	Terms           map[string]string      `json:"terms,omitempty"`
-	ExpiresAt       time.Time              `json:"expires_at"`
+	NegotiationID    string            `json:"negotiation_id"`
+	ContractID       string            `json:"contract_id,omitempty"`
+	Round            int               `json:"round"`
+	SenderID         string            `json:"sender_id"`
+	ProposedPrice    string            `json:"proposed_price"`
+	ProposedDeadline *time.Time        `json:"proposed_deadline,omitempty"`
+	Deliverables     []string          `json:"deliverables,omitempty"`
+	Terms            map[string]string `json:"terms,omitempty"`
+	ExpiresAt        time.Time         `json:"expires_at"`
 }
 
 // ProtocolContract represents a formal agreement between agents (Section 10).
 type ProtocolContract struct {
-	ContractID         string                 `json:"contract_id"`
-	TenantID           string                 `json:"tenant_id"`
-	RequesterID        string                 `json:"requester_id"`
-	ProviderID         string                 `json:"provider_id"`
-	Capability         string                 `json:"capability"`
-	Deliverables       []string               `json:"deliverables"`
-	Milestones         []ContractMilestone    `json:"milestones"`
-	TotalAmount        string                 `json:"total_amount"` // USDC
-	Currency           string                 `json:"currency"`
-	Deadline           time.Time              `json:"deadline"`
-	VerificationPolicy string                 `json:"verification_policy"`
-	DisputeTerms       string                 `json:"dispute_terms"`
-	PolicySnapshotHash string                 `json:"policy_snapshot_hash"`
-	State              ContractState          `json:"state"`
-	CreatedAt          time.Time              `json:"created_at"`
-	AcceptedAt         *time.Time             `json:"accepted_at,omitempty"`
-	ExpiresAt          time.Time              `json:"expires_at"`
+	ContractID         string              `json:"contract_id"`
+	TenantID           string              `json:"tenant_id"`
+	RequesterID        string              `json:"requester_id"`
+	ProviderID         string              `json:"provider_id"`
+	Capability         string              `json:"capability"`
+	Deliverables       []string            `json:"deliverables"`
+	Milestones         []ContractMilestone `json:"milestones"`
+	TotalAmount        string              `json:"total_amount"` // USDC
+	Currency           string              `json:"currency"`
+	Deadline           time.Time           `json:"deadline"`
+	VerificationPolicy string              `json:"verification_policy"`
+	DisputeTerms       string              `json:"dispute_terms"`
+	PolicySnapshotHash string              `json:"policy_snapshot_hash"`
+	State              ContractState       `json:"state"`
+	CreatedAt          time.Time           `json:"created_at"`
+	AcceptedAt         *time.Time          `json:"accepted_at,omitempty"`
+	ExpiresAt          time.Time           `json:"expires_at"`
 }
 
 // ContractMilestone models intermediate progress checkpoints (Section 31).
@@ -270,13 +270,13 @@ type ResultSubmittedPayload struct {
 
 // PaymentRequestPayload models a demand for milestone disbursement (Section 13).
 type PaymentRequestPayload struct {
-	ContractID          string `json:"contract_id"`
-	MilestoneID         string `json:"milestone_id"`
-	Amount              string `json:"amount"` // USDC
-	Currency            string `json:"currency"`
-	RecipientServiceID  string `json:"recipient_service_id"`
-	ResultReference     string `json:"result_reference"`
-	EvidenceReference   string `json:"evidence_reference"`
+	ContractID            string `json:"contract_id"`
+	MilestoneID           string `json:"milestone_id"`
+	Amount                string `json:"amount"` // USDC
+	Currency              string `json:"currency"`
+	RecipientServiceID    string `json:"recipient_service_id"`
+	ResultReference       string `json:"result_reference"`
+	EvidenceReference     string `json:"evidence_reference"`
 	ProposedJustification string `json:"proposed_justification,omitempty"`
 }
 
@@ -298,7 +298,7 @@ type AgentHeartbeat struct {
 	AgentID            string    `json:"agent_id"`
 	ContractID         string    `json:"contract_id"`
 	Timestamp          time.Time `json:"timestamp"`
-	Status             string    `json:"status"` // RUNNING, WAITING, BLOCKED
+	Status             string    `json:"status"`              // RUNNING, WAITING, BLOCKED
 	ProgressPercentage int       `json:"progress_percentage"` // 0-100
 	ExpectedCompletion time.Time `json:"expected_completion"`
 	DiagnosticMessage  string    `json:"diagnostic_message,omitempty"`
@@ -323,13 +323,13 @@ type ProtocolDispute struct {
 type ReputationMetrics struct {
 	AgentID          string    `json:"agent_id"`
 	SampleSize       uint64    `json:"sample_size"`
-	CompletionRate   float64   `json:"completion_rate"`   // 0.0 - 1.0
+	CompletionRate   float64   `json:"completion_rate"` // 0.0 - 1.0
 	AverageLatencyMs int64     `json:"average_latency_ms"`
 	ResultQualityAvg float64   `json:"result_quality_avg"` // 0.0 - 1.0
-	DisputeRate      float64   `json:"dispute_rate"`      // 0.0 - 1.0
-	QuoteAccuracy    float64   `json:"quote_accuracy"`    // 0.0 - 1.0
+	DisputeRate      float64   `json:"dispute_rate"`       // 0.0 - 1.0
+	QuoteAccuracy    float64   `json:"quote_accuracy"`     // 0.0 - 1.0
 	ObservationDays  int       `json:"observation_days"`
-	ConfidenceScore  float64   `json:"confidence_score"`  // 0.0 - 1.0
+	ConfidenceScore  float64   `json:"confidence_score"` // 0.0 - 1.0
 	LastEvaluatedAt  time.Time `json:"last_evaluated_at"`
 }
 
@@ -343,13 +343,13 @@ type SimulationRequest struct {
 
 // SimulationResponse models dry-run pre-flight findings without moving money.
 type SimulationResponse struct {
-	SimulatedMode        string   `json:"simulated_mode"` // "DRY_RUN_NO_MONEY_MOVED"
-	PolicyDecision       string   `json:"policy_decision"` // ALLOW, DENY, APPROVAL_REQUIRED
-	RiskScore            int      `json:"risk_score"`
-	EstimatedCost        string   `json:"estimated_cost"`
-	RequiresHumanApproval bool    `json:"requires_human_approval"`
-	TreasurySolvent      bool     `json:"treasury_solvent"`
-	ExecutionPath        []string `json:"execution_path"`
+	SimulatedMode         string   `json:"simulated_mode"`  // "DRY_RUN_NO_MONEY_MOVED"
+	PolicyDecision        string   `json:"policy_decision"` // ALLOW, DENY, APPROVAL_REQUIRED
+	RiskScore             int      `json:"risk_score"`
+	EstimatedCost         string   `json:"estimated_cost"`
+	RequiresHumanApproval bool     `json:"requires_human_approval"`
+	TreasurySolvent       bool     `json:"treasury_solvent"`
+	ExecutionPath         []string `json:"execution_path"`
 }
 
 // PrecheckRequest models eligibility verification (Section 51).
@@ -416,9 +416,9 @@ const (
 )
 
 var (
-	ErrMalformedEnvelope   = errors.New("malformed protocol envelope")
-	ErrReplayBlocked       = errors.New("message replay blocked by nonce cache")
-	ErrSignatureFailed     = errors.New("cryptographic signature verification failed")
-	ErrPayloadTooLarge     = errors.New("message payload exceeds maximum size limit (10MB)")
-	ErrContractTransition  = errors.New("illegal contract state transition")
+	ErrMalformedEnvelope  = errors.New("malformed protocol envelope")
+	ErrReplayBlocked      = errors.New("message replay blocked by nonce cache")
+	ErrSignatureFailed    = errors.New("cryptographic signature verification failed")
+	ErrPayloadTooLarge    = errors.New("message payload exceeds maximum size limit (10MB)")
+	ErrContractTransition = errors.New("illegal contract state transition")
 )

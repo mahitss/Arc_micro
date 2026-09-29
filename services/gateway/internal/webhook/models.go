@@ -110,4 +110,3 @@ func HashSecret(secret string) string {
 	h := sha256.Sum256([]byte(secret))
 	return hex.EncodeToString(h[:])
 }
-

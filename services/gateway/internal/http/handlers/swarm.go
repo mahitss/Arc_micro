@@ -286,12 +286,12 @@ func (h *SwarmsHandler) HandleReplan(w http.ResponseWriter, r *http.Request) {
 
 	// Trigger replanning proposal
 	proposal := economy.ReplanProposal{
-		MissionID:              swarm.RootMissionID,
-		Reason:                 "SWARM_RECOVERY: Automatic adaptation triggered by task failure or timeout",
-		Strategy:               economy.StrategyTryAlternativeService,
-		ProposedSteps:          []economy.ProposedStep{},
-		EstimatedCost:          "350000",
-		EstimatedDurationMs:    450,
+		MissionID:           swarm.RootMissionID,
+		Reason:              "SWARM_RECOVERY: Automatic adaptation triggered by task failure or timeout",
+		Strategy:            economy.StrategyTryAlternativeService,
+		ProposedSteps:       []economy.ProposedStep{},
+		EstimatedCost:       "350000",
+		EstimatedDurationMs: 450,
 		Confidence:          economy.ConfidenceHigh,
 		RequiresHuman:       false,
 		Explanation:         "Discovered alternative counterparty within authorized task budget ceiling",

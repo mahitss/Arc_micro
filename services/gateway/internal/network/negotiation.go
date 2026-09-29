@@ -179,8 +179,8 @@ func (e *NegotiationEngine) FinalizeNegotiation(
 		ActorID:    acceptorID,
 		AgentID:    acceptorID,
 		Data: map[string]interface{}{
-			"contract_id":    lastMsg.ContractID,
-			"accepted":       accepted,
+			"contract_id":     lastMsg.ContractID,
+			"accepted":        accepted,
 			"finalized_price": lastMsg.ProposedPrice,
 		},
 	})

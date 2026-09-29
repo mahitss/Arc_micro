@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	ErrListingInvalid         = errors.New("invalid service listing specification")
-	ErrOpportunityInvalid     = errors.New("invalid marketplace opportunity specification")
-	ErrQuoteInvalid           = errors.New("quote is invalid or expired")
-	ErrOpportunityNotOpen     = errors.New("opportunity is not in open or matching status")
-	ErrOpportunityNoWinner    = errors.New("no qualified winning provider found")
+	ErrListingInvalid      = errors.New("invalid service listing specification")
+	ErrOpportunityInvalid  = errors.New("invalid marketplace opportunity specification")
+	ErrQuoteInvalid        = errors.New("quote is invalid or expired")
+	ErrOpportunityNotOpen  = errors.New("opportunity is not in open or matching status")
+	ErrOpportunityNoWinner = errors.New("no qualified winning provider found")
 )
 
 // MarketplaceService coordinates all high-level business flows of the marketplace.

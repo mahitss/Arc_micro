@@ -75,18 +75,18 @@ func (pm *PlanManager) MutatePlan(
 	now := time.Now().UTC()
 
 	diff := &OperationPlanDiff{
-		DiffID:                      "diff_" + uuid.NewString()[:8],
-		TenantID:                    tenantID,
-		PlanID:                      current.PlanID,
-		FromVersion:                 current.PlanVersion,
-		ToVersion:                   current.PlanVersion + 1,
-		AddedSteps:                  []string{},
-		RemovedSteps:                []string{},
-		ChangedDependencies:         []string{},
-		ChangedDeadlines:            []string{},
-		ChangedProviders:            []string{},
-		PolicyRevalidationRequired:  false,
-		CreatedAt:                   now,
+		DiffID:                     "diff_" + uuid.NewString()[:8],
+		TenantID:                   tenantID,
+		PlanID:                     current.PlanID,
+		FromVersion:                current.PlanVersion,
+		ToVersion:                  current.PlanVersion + 1,
+		AddedSteps:                 []string{},
+		RemovedSteps:               []string{},
+		ChangedDependencies:        []string{},
+		ChangedDeadlines:           []string{},
+		ChangedProviders:           []string{},
+		PolicyRevalidationRequired: false,
+		CreatedAt:                  now,
 	}
 
 	// Compute step differences

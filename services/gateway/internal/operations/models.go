@@ -17,26 +17,26 @@ const (
 // OperationsSnapshot is the top-level aggregated read-model projection.
 // It is explicitly NOT the source of financial truth.
 type OperationsSnapshot struct {
-	SnapshotID           string                 `json:"snapshot_id"`
-	TenantID             string                 `json:"tenant_id"`
-	SnapshotVersion      int                    `json:"snapshot_version"`
-	Freshness            Freshness              `json:"freshness"`
-	ActiveWorkflows      int                    `json:"active_workflows"`
-	QueuedWorkflows      int                    `json:"queued_workflows"`
-	BlockedWorkflows     int                    `json:"blocked_workflows"`
-	FailedWorkflows      int                    `json:"failed_workflows"`
-	RecoveringWorkflows  int                    `json:"recovering_workflows"`
-	ActiveAgents         int                    `json:"active_agents"`
-	AvailableWorkers     int                    `json:"available_workers"`
-	TreasuryState        string                 `json:"treasury_state"`
-	LiquidityState       string                 `json:"liquidity_state"`
-	ClearingState        string                 `json:"clearing_state"`
-	SecurityState        string                 `json:"security_state"`
-	PolicyState          string                 `json:"policy_state"`
-	ArcState             string                 `json:"arc_state"`
-	IncidentCount        int                    `json:"incident_count"`
-	GeneratedAt          time.Time              `json:"generated_at"`
-	Metadata             map[string]interface{} `json:"metadata,omitempty"`
+	SnapshotID          string                 `json:"snapshot_id"`
+	TenantID            string                 `json:"tenant_id"`
+	SnapshotVersion     int                    `json:"snapshot_version"`
+	Freshness           Freshness              `json:"freshness"`
+	ActiveWorkflows     int                    `json:"active_workflows"`
+	QueuedWorkflows     int                    `json:"queued_workflows"`
+	BlockedWorkflows    int                    `json:"blocked_workflows"`
+	FailedWorkflows     int                    `json:"failed_workflows"`
+	RecoveringWorkflows int                    `json:"recovering_workflows"`
+	ActiveAgents        int                    `json:"active_agents"`
+	AvailableWorkers    int                    `json:"available_workers"`
+	TreasuryState       string                 `json:"treasury_state"`
+	LiquidityState      string                 `json:"liquidity_state"`
+	ClearingState       string                 `json:"clearing_state"`
+	SecurityState       string                 `json:"security_state"`
+	PolicyState         string                 `json:"policy_state"`
+	ArcState            string                 `json:"arc_state"`
+	IncidentCount       int                    `json:"incident_count"`
+	GeneratedAt         time.Time              `json:"generated_at"`
+	Metadata            map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // DecisionType represents deterministic supervisory decisions.
@@ -137,18 +137,18 @@ type PlanStep struct {
 
 // OperationPlanDiff records differences when an OperationPlan is modified.
 type OperationPlanDiff struct {
-	DiffID                      string    `json:"diff_id"`
-	TenantID                    string    `json:"tenant_id"`
-	PlanID                      string    `json:"plan_id"`
-	FromVersion                 int       `json:"from_version"`
-	ToVersion                   int       `json:"to_version"`
-	AddedSteps                  []string  `json:"added_steps,omitempty"`
-	RemovedSteps                []string  `json:"removed_steps,omitempty"`
-	ChangedDependencies         []string  `json:"changed_dependencies,omitempty"`
-	ChangedDeadlines            []string  `json:"changed_deadlines,omitempty"`
-	ChangedProviders            []string  `json:"changed_providers,omitempty"`
-	PolicyRevalidationRequired  bool      `json:"policy_revalidation_required"`
-	CreatedAt                   time.Time `json:"created_at"`
+	DiffID                     string    `json:"diff_id"`
+	TenantID                   string    `json:"tenant_id"`
+	PlanID                     string    `json:"plan_id"`
+	FromVersion                int       `json:"from_version"`
+	ToVersion                  int       `json:"to_version"`
+	AddedSteps                 []string  `json:"added_steps,omitempty"`
+	RemovedSteps               []string  `json:"removed_steps,omitempty"`
+	ChangedDependencies        []string  `json:"changed_dependencies,omitempty"`
+	ChangedDeadlines           []string  `json:"changed_deadlines,omitempty"`
+	ChangedProviders           []string  `json:"changed_providers,omitempty"`
+	PolicyRevalidationRequired bool      `json:"policy_revalidation_required"`
+	CreatedAt                  time.Time `json:"created_at"`
 }
 
 // QueueName represents durable queue categories.
@@ -280,21 +280,21 @@ const (
 
 // OperationsIncident captures correlated operational failures.
 type OperationsIncident struct {
-	IncidentID         string                 `json:"incident_id"`
-	TenantID           string                 `json:"tenant_id"`
-	Severity           IncidentSeverity       `json:"severity"`
-	Category           string                 `json:"category"`
-	State              IncidentState          `json:"state"`
-	RootCause          string                 `json:"root_cause,omitempty"`
-	AffectedWorkflows  []string               `json:"affected_workflows,omitempty"`
-	AffectedResources  []string               `json:"affected_resources,omitempty"`
-	MitigationActions  []string               `json:"mitigation_actions,omitempty"`
-	CorrelationID      string                 `json:"correlation_id,omitempty"`
-	DetectedAt         time.Time              `json:"detected_at"`
-	TriagedAt          *time.Time             `json:"triaged_at,omitempty"`
-	ResolvedAt         *time.Time             `json:"resolved_at,omitempty"`
-	ClosedAt           *time.Time             `json:"closed_at,omitempty"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	IncidentID        string                 `json:"incident_id"`
+	TenantID          string                 `json:"tenant_id"`
+	Severity          IncidentSeverity       `json:"severity"`
+	Category          string                 `json:"category"`
+	State             IncidentState          `json:"state"`
+	RootCause         string                 `json:"root_cause,omitempty"`
+	AffectedWorkflows []string               `json:"affected_workflows,omitempty"`
+	AffectedResources []string               `json:"affected_resources,omitempty"`
+	MitigationActions []string               `json:"mitigation_actions,omitempty"`
+	CorrelationID     string                 `json:"correlation_id,omitempty"`
+	DetectedAt        time.Time              `json:"detected_at"`
+	TriagedAt         *time.Time             `json:"triaged_at,omitempty"`
+	ResolvedAt        *time.Time             `json:"resolved_at,omitempty"`
+	ClosedAt          *time.Time             `json:"closed_at,omitempty"`
+	Metadata          map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // CircuitBreakerState models circuit breaker states.
@@ -325,29 +325,29 @@ type CircuitBreaker struct {
 
 // CausalLink tracks causal relationships between events ("Why did this happen?").
 type CausalLink struct {
-	LinkID           string    `json:"link_id"`
-	TenantID         string    `json:"tenant_id"`
-	EventID          string    `json:"event_id"`
-	CausedByEventID  string    `json:"caused_by_event_id,omitempty"`
-	CausalType       string    `json:"causal_type"` // TIMEOUT, LEASE_EXPIRED, RETRY, REPLAN, POLICY_DENY, etc.
-	Trigger          string    `json:"trigger"`
-	Evidence         string    `json:"evidence,omitempty"`
-	CreatedAt        time.Time `json:"created_at"`
+	LinkID          string    `json:"link_id"`
+	TenantID        string    `json:"tenant_id"`
+	EventID         string    `json:"event_id"`
+	CausedByEventID string    `json:"caused_by_event_id,omitempty"`
+	CausalType      string    `json:"causal_type"` // TIMEOUT, LEASE_EXPIRED, RETRY, REPLAN, POLICY_DENY, etc.
+	Trigger         string    `json:"trigger"`
+	Evidence        string    `json:"evidence,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // Explanation provides a structured explanation for a decision or event.
 type Explanation struct {
-	CurrentState       string                 `json:"current_state"`
-	PreviousState      string                 `json:"previous_state,omitempty"`
-	Trigger            string                 `json:"trigger"`
-	Evidence           string                 `json:"evidence"`
-	Policy             string                 `json:"policy,omitempty"`
-	Risk               string                 `json:"risk,omitempty"`
-	ResourceConstraint string                 `json:"resource_constraint,omitempty"`
-	EconomicConstraint string                 `json:"economic_constraint,omitempty"`
-	Decision           DecisionType           `json:"decision"`
-	NextAction         string                 `json:"next_action"`
-	FinancialAuthority string                 `json:"financial_authority"` // "UNCHANGED"
+	CurrentState       string       `json:"current_state"`
+	PreviousState      string       `json:"previous_state,omitempty"`
+	Trigger            string       `json:"trigger"`
+	Evidence           string       `json:"evidence"`
+	Policy             string       `json:"policy,omitempty"`
+	Risk               string       `json:"risk,omitempty"`
+	ResourceConstraint string       `json:"resource_constraint,omitempty"`
+	EconomicConstraint string       `json:"economic_constraint,omitempty"`
+	Decision           DecisionType `json:"decision"`
+	NextAction         string       `json:"next_action"`
+	FinancialAuthority string       `json:"financial_authority"` // "UNCHANGED"
 }
 
 // NextAction models a deterministic prediction of the next operational step.
@@ -400,22 +400,22 @@ type ReplayTraceEntry struct {
 
 // OperationalReplay holds the complete historical replay of a workflow. Read-only.
 type OperationalReplay struct {
-	WorkflowID  string             `json:"workflow_id"`
-	TenantID    string             `json:"tenant_id"`
-	TotalSteps  int                `json:"total_steps"`
-	FinalState  string             `json:"final_state"`
-	Entries     []ReplayTraceEntry `json:"entries"`
-	ReplayedAt  time.Time          `json:"replayed_at"`
+	WorkflowID string             `json:"workflow_id"`
+	TenantID   string             `json:"tenant_id"`
+	TotalSteps int                `json:"total_steps"`
+	FinalState string             `json:"final_state"`
+	Entries    []ReplayTraceEntry `json:"entries"`
+	ReplayedAt time.Time          `json:"replayed_at"`
 }
 
 // SystemStateAtSnapshot models the reconstructed state at historical timestamp T.
 type SystemStateAtSnapshot struct {
-	Timestamp            time.Time                 `json:"timestamp"`
-	TenantID             string                    `json:"tenant_id"`
-	ReconstructedFrom    string                    `json:"reconstructed_from"` // "EVENTS_AND_CHECKPOINTS"
-	ActiveWorkflows      int                       `json:"active_workflows"`
-	WorkflowStates       map[string]string         `json:"workflow_states"`
-	ActiveWorkers        []string                  `json:"active_workers"`
-	Incidents            []string                  `json:"incidents"`
-	FinancialStateFrozen bool                      `json:"financial_state_frozen"`
+	Timestamp            time.Time         `json:"timestamp"`
+	TenantID             string            `json:"tenant_id"`
+	ReconstructedFrom    string            `json:"reconstructed_from"` // "EVENTS_AND_CHECKPOINTS"
+	ActiveWorkflows      int               `json:"active_workflows"`
+	WorkflowStates       map[string]string `json:"workflow_states"`
+	ActiveWorkers        []string          `json:"active_workers"`
+	Incidents            []string          `json:"incidents"`
+	FinancialStateFrozen bool              `json:"financial_state_frozen"`
 }

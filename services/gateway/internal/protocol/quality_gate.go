@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	ErrResultSchemaInvalid  = errors.New("result payload does not match declared output schema")
+	ErrResultSchemaInvalid    = errors.New("result payload does not match declared output schema")
 	ErrResultChecksumMismatch = errors.New("result SHA-256 hash does not match computed deliverable hash")
-	ErrResultQualityTooLow  = errors.New("deliverable quality score is below required minimum threshold")
-	ErrResultDeadlinePast   = errors.New("deliverable was submitted after contract deadline")
-	ErrFraudulentResult     = errors.New("deliverable triggered fraud or security anomaly detection")
+	ErrResultQualityTooLow    = errors.New("deliverable quality score is below required minimum threshold")
+	ErrResultDeadlinePast     = errors.New("deliverable was submitted after contract deadline")
+	ErrFraudulentResult       = errors.New("deliverable triggered fraud or security anomaly detection")
 )
 
 // QualityGateDecision represents the output of the ResultQualityGate.
@@ -29,11 +29,11 @@ const (
 
 // QualityEvaluationResult contains evaluation findings.
 type QualityEvaluationResult struct {
-	Decision      QualityGateDecision `json:"decision"`
-	Confidence    float64             `json:"confidence"`
-	Reason        string              `json:"reason"`
-	ComputedHash  string              `json:"computed_hash"`
-	EligibleForPay bool               `json:"eligible_for_payment"`
+	Decision       QualityGateDecision `json:"decision"`
+	Confidence     float64             `json:"confidence"`
+	Reason         string              `json:"reason"`
+	ComputedHash   string              `json:"computed_hash"`
+	EligibleForPay bool                `json:"eligible_for_payment"`
 }
 
 // ResultQualityGate validates agent deliverables before payment consideration (Sections 15 & 16).

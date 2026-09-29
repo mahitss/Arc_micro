@@ -11,22 +11,22 @@ import (
 
 // Security Invariants INV-55 to INV-70
 const (
-	INV55_ObligationsDoNotAuthorizePayments               = "INV-55: Obligations do not authorize payments"
-	INV56_InvoicesCannotCreateArbitraryRecipients          = "INV-56: Invoices cannot create arbitrary payment recipients"
-	INV57_VerifiedMilestoneRequiredBeforeSettlement       = "INV-57: Verified milestone is required before milestone settlement"
-	INV58_RecurringSchedulesDoNotGrantPermanentAuth       = "INV-58: Recurring schedules do not grant permanent authorization"
-	INV59_EveryRecurringPaymentRevalidatesCurrentPolicy   = "INV-59: Every recurring payment revalidates current policy"
-	INV60_NettingCannotIncreaseFinancialAuthority         = "INV-60: Netting cannot increase financial authority"
-	INV61_NettingPreservesOriginalObligationHistory       = "INV-61: Netting preserves original obligation history"
-	INV62_SettlementBatchesCannotBypassIndividualPolicy   = "INV-62: Settlement batches cannot bypass individual policy"
-	INV63_InternalClearingLedgerCannotCreateRealFunds     = "INV-63: Internal clearing ledger cannot create real funds"
-	INV64_SimulatedSettlementCannotBecomeRealSettlement   = "INV-64: Simulated settlement cannot become real settlement"
-	INV65_OnlyVerifiedBlockchainEvidenceMarksRealSettled  = "INV-65: Only verified blockchain evidence can mark real settlement complete"
-	INV66_RefundCannotExceedOriginalSettledAmount         = "INV-66: Refund cannot exceed original settled amount"
-	INV67_CreditCannotBeMintedByExternalAgents            = "INV-67: Credit cannot be minted by external agents"
-	INV68_ReconciliationNeverSilentlyRepairsMismatches    = "INV-68: Reconciliation never silently repairs mismatches"
-	INV69_AmbiguousBlockchainStateCannotBeMarkedSettled   = "INV-69: Ambiguous blockchain state cannot be marked settled"
-	INV70_ChildObligationsCannotExceedParentAuth          = "INV-70: Child obligations cannot exceed parent financial authority"
+	INV55_ObligationsDoNotAuthorizePayments              = "INV-55: Obligations do not authorize payments"
+	INV56_InvoicesCannotCreateArbitraryRecipients        = "INV-56: Invoices cannot create arbitrary payment recipients"
+	INV57_VerifiedMilestoneRequiredBeforeSettlement      = "INV-57: Verified milestone is required before milestone settlement"
+	INV58_RecurringSchedulesDoNotGrantPermanentAuth      = "INV-58: Recurring schedules do not grant permanent authorization"
+	INV59_EveryRecurringPaymentRevalidatesCurrentPolicy  = "INV-59: Every recurring payment revalidates current policy"
+	INV60_NettingCannotIncreaseFinancialAuthority        = "INV-60: Netting cannot increase financial authority"
+	INV61_NettingPreservesOriginalObligationHistory      = "INV-61: Netting preserves original obligation history"
+	INV62_SettlementBatchesCannotBypassIndividualPolicy  = "INV-62: Settlement batches cannot bypass individual policy"
+	INV63_InternalClearingLedgerCannotCreateRealFunds    = "INV-63: Internal clearing ledger cannot create real funds"
+	INV64_SimulatedSettlementCannotBecomeRealSettlement  = "INV-64: Simulated settlement cannot become real settlement"
+	INV65_OnlyVerifiedBlockchainEvidenceMarksRealSettled = "INV-65: Only verified blockchain evidence can mark real settlement complete"
+	INV66_RefundCannotExceedOriginalSettledAmount        = "INV-66: Refund cannot exceed original settled amount"
+	INV67_CreditCannotBeMintedByExternalAgents           = "INV-67: Credit cannot be minted by external agents"
+	INV68_ReconciliationNeverSilentlyRepairsMismatches   = "INV-68: Reconciliation never silently repairs mismatches"
+	INV69_AmbiguousBlockchainStateCannotBeMarkedSettled  = "INV-69: Ambiguous blockchain state cannot be marked settled"
+	INV70_ChildObligationsCannotExceedParentAuth         = "INV-70: Child obligations cannot exceed parent financial authority"
 )
 
 // ObligationStatus represents the discrete lifecycle states of an economic obligation.
@@ -355,13 +355,13 @@ type ClearingLedgerEntry struct {
 
 // NettingProposal holds calculated bilateral offsets between peer agents.
 type NettingProposal struct {
-	ProposalID     string        `json:"proposal_id"`
-	OrganizationID string        `json:"organization_id"`
-	AgentA         string        `json:"agent_a"`
-	AgentB         string        `json:"agent_b"`
-	Currency       string        `json:"currency"`
-	ObligationsAtoB []string      `json:"obligations_a_to_b"` // IDs of obligations where A owes B
-	ObligationsBtoA []string      `json:"obligations_b_to_a"` // IDs of obligations where B owes A
+	ProposalID      string        `json:"proposal_id"`
+	OrganizationID  string        `json:"organization_id"`
+	AgentA          string        `json:"agent_a"`
+	AgentB          string        `json:"agent_b"`
+	Currency        string        `json:"currency"`
+	ObligationsAtoB []string      `json:"obligations_a_to_b"`  // IDs of obligations where A owes B
+	ObligationsBtoA []string      `json:"obligations_b_to_a"`  // IDs of obligations where B owes A
 	GrossAmountAtoB string        `json:"gross_amount_a_to_b"` // micro-USDC
 	GrossAmountBtoA string        `json:"gross_amount_b_to_a"` // micro-USDC
 	GrossTotal      string        `json:"gross_total"`
@@ -380,16 +380,16 @@ type NettingProposal struct {
 
 // SettlementBatch represents an aggregated package of authorized payments for scheduled settlement.
 type SettlementBatch struct {
-	BatchID         string        `json:"batch_id"`
-	OrganizationID  string        `json:"organization_id"`
-	Currency        string        `json:"currency"`
-	ObligationIDs   []string      `json:"obligation_ids"`
-	GrossAmount     string        `json:"gross_amount"`
-	NetAmount       string        `json:"net_amount"`
-	Savings         string        `json:"savings"`
-	Status          BatchStatus   `json:"status"`
-	FailureReason   string        `json:"failure_reason,omitempty"`
-	PaymentIntentIDs []string     `json:"payment_intent_ids,omitempty"`
+	BatchID          string                 `json:"batch_id"`
+	OrganizationID   string                 `json:"organization_id"`
+	Currency         string                 `json:"currency"`
+	ObligationIDs    []string               `json:"obligation_ids"`
+	GrossAmount      string                 `json:"gross_amount"`
+	NetAmount        string                 `json:"net_amount"`
+	Savings          string                 `json:"savings"`
+	Status           BatchStatus            `json:"status"`
+	FailureReason    string                 `json:"failure_reason,omitempty"`
+	PaymentIntentIDs []string               `json:"payment_intent_ids,omitempty"`
 	ExecutionMode    ExecutionMode          `json:"execution_mode"`
 	TenantID         string                 `json:"tenant_id,omitempty"`
 	SettlementWindow SettlementWindow       `json:"settlement_window,omitempty"`
@@ -423,74 +423,74 @@ type RefundRequest struct {
 
 // EconomicCredit represents an authorized adjustment credit tied to a verified prior event.
 type EconomicCredit struct {
-	CreditID        string        `json:"credit_id"`
-	OrganizationID  string        `json:"organization_id"`
-	AgentID         string        `json:"agent_id"`
-	ObligationRef   string        `json:"obligation_ref,omitempty"`
-	ContractRef     string        `json:"contract_ref,omitempty"`
-	Amount          string        `json:"amount"` // micro-USDC
-	Currency        string        `json:"currency"`
-	Reason          string        `json:"reason"`
-	IssuedBy        string        `json:"issued_by"` // Governance/System authority only
-	ExpiresAt       time.Time     `json:"expires_at"`
-	RemainingAmount string        `json:"remaining_amount"`
-	CreatedAt       time.Time     `json:"created_at"`
+	CreditID        string    `json:"credit_id"`
+	OrganizationID  string    `json:"organization_id"`
+	AgentID         string    `json:"agent_id"`
+	ObligationRef   string    `json:"obligation_ref,omitempty"`
+	ContractRef     string    `json:"contract_ref,omitempty"`
+	Amount          string    `json:"amount"` // micro-USDC
+	Currency        string    `json:"currency"`
+	Reason          string    `json:"reason"`
+	IssuedBy        string    `json:"issued_by"` // Governance/System authority only
+	ExpiresAt       time.Time `json:"expires_at"`
+	RemainingAmount string    `json:"remaining_amount"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // ReconciliationRecord captures a machine-checked audit comparison between expected and actual state.
 type ReconciliationRecord struct {
-	RecordID             string               `json:"record_id"`
-	OrganizationID       string               `json:"organization_id"`
-	ObligationID         string               `json:"obligation_id"`
-	PaymentIntentID      string               `json:"payment_intent_id"`
-	TransactionHash      string               `json:"transaction_hash,omitempty"`
-	Status               ReconciliationStatus `json:"status"`
-	ExpectedAmount       string               `json:"expected_amount"`
-	ActualAmount         string               `json:"actual_amount"`
-	ExpectedRecipient    string               `json:"expected_recipient"`
-	ActualRecipient      string               `json:"actual_recipient"`
-	ChainID              string               `json:"chain_id"`
-	TargetContract       string               `json:"target_contract"`
-	DiscrepancyNotes     string               `json:"discrepancy_notes,omitempty"`
-	RecommendedAction    string               `json:"recommended_action,omitempty"`
-	ExecutionMode        ExecutionMode        `json:"execution_mode"`
-	ReconciledAt         time.Time            `json:"reconciled_at"`
+	RecordID          string               `json:"record_id"`
+	OrganizationID    string               `json:"organization_id"`
+	ObligationID      string               `json:"obligation_id"`
+	PaymentIntentID   string               `json:"payment_intent_id"`
+	TransactionHash   string               `json:"transaction_hash,omitempty"`
+	Status            ReconciliationStatus `json:"status"`
+	ExpectedAmount    string               `json:"expected_amount"`
+	ActualAmount      string               `json:"actual_amount"`
+	ExpectedRecipient string               `json:"expected_recipient"`
+	ActualRecipient   string               `json:"actual_recipient"`
+	ChainID           string               `json:"chain_id"`
+	TargetContract    string               `json:"target_contract"`
+	DiscrepancyNotes  string               `json:"discrepancy_notes,omitempty"`
+	RecommendedAction string               `json:"recommended_action,omitempty"`
+	ExecutionMode     ExecutionMode        `json:"execution_mode"`
+	ReconciledAt      time.Time            `json:"reconciled_at"`
 }
 
 // CounterpartyExposure breaks down financial exposure per external agent or provider.
 type CounterpartyExposure struct {
-	AgentID               string `json:"agent_id"`
-	TotalContracts        int    `json:"total_contracts"`
-	ActiveObligations     int    `json:"active_obligations"`
-	AmountOwed            string `json:"amount_owed"` // micro-USDC
-	AmountPaid            string `json:"amount_paid"`
-	AmountReserved        string `json:"amount_reserved"`
-	AmountDisputed        string `json:"amount_disputed"`
-	AmountRefunded        string `json:"amount_refunded"`
-	MaxPossibleExposure   string `json:"max_possible_exposure"`
+	AgentID             string `json:"agent_id"`
+	TotalContracts      int    `json:"total_contracts"`
+	ActiveObligations   int    `json:"active_obligations"`
+	AmountOwed          string `json:"amount_owed"` // micro-USDC
+	AmountPaid          string `json:"amount_paid"`
+	AmountReserved      string `json:"amount_reserved"`
+	AmountDisputed      string `json:"amount_disputed"`
+	AmountRefunded      string `json:"amount_refunded"`
+	MaxPossibleExposure string `json:"max_possible_exposure"`
 }
 
 // EconomicExposureSnapshot aggregates total potential liability across an organization.
 type EconomicExposureSnapshot struct {
-	OrganizationID            string                            `json:"organization_id"`
-	SnapshotTimestamp         time.Time                         `json:"snapshot_timestamp"`
-	CurrentExposure           string                            `json:"current_exposure"` // micro-USDC
-	MaxPossibleExposure       string                            `json:"max_possible_exposure"`
-	OutstandingObligations    string                            `json:"outstanding_obligations"`
-	ReservedFunds             string                            `json:"reserved_funds"`
-	PendingInvoices           string                            `json:"pending_invoices"`
-	ScheduledPayments         string                            `json:"scheduled_payments"`
-	DisputedValue             string                            `json:"disputed_value"`
+	OrganizationID             string                           `json:"organization_id"`
+	SnapshotTimestamp          time.Time                        `json:"snapshot_timestamp"`
+	CurrentExposure            string                           `json:"current_exposure"` // micro-USDC
+	MaxPossibleExposure        string                           `json:"max_possible_exposure"`
+	OutstandingObligations     string                           `json:"outstanding_obligations"`
+	ReservedFunds              string                           `json:"reserved_funds"`
+	PendingInvoices            string                           `json:"pending_invoices"`
+	ScheduledPayments          string                           `json:"scheduled_payments"`
+	DisputedValue              string                           `json:"disputed_value"`
 	PotentialMilestoneExposure string                           `json:"potential_milestone_exposure"`
-	CounterpartyBreakdown     map[string]*CounterpartyExposure  `json:"counterparty_breakdown"`
-	ExecutionMode             ExecutionMode                     `json:"execution_mode"`
+	CounterpartyBreakdown      map[string]*CounterpartyExposure `json:"counterparty_breakdown"`
+	ExecutionMode              ExecutionMode                    `json:"execution_mode"`
 }
 
 // EconomicHealthSnapshot provides multi-dimensional health metrics without hiding details.
 type EconomicHealthSnapshot struct {
 	OrganizationID              string        `json:"organization_id"`
 	Timestamp                   time.Time     `json:"timestamp"`
-	AvailableFunds              string        `json:"available_funds"`   // micro-USDC
+	AvailableFunds              string        `json:"available_funds"` // micro-USDC
 	ReservedFunds               string        `json:"reserved_funds"`
 	OutstandingObligations      string        `json:"outstanding_obligations"`
 	PendingSettlement           string        `json:"pending_settlement"`

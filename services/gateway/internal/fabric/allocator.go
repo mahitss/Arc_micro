@@ -7,18 +7,18 @@ import (
 
 // ResourceAllocationRequest specifies requested compute and concurrency
 type ResourceAllocationRequest struct {
-	ObjectiveID          string
-	TenantID             string
-	RequestedWorkers     int
-	RequestedParallelism int
+	ObjectiveID            string
+	TenantID               string
+	RequestedWorkers       int
+	RequestedParallelism   int
 	RequestedProviderCalls int
 }
 
 // ResourceAllocationResult provides granted operational allocation
 type ResourceAllocationResult struct {
-	AllocatedWorkers     int
-	AllocatedParallelism int
-	AllocatedCalls       int
+	AllocatedWorkers         int
+	AllocatedParallelism     int
+	AllocatedCalls           int
 	GrantsFinancialAuthority bool
 }
 
@@ -54,9 +54,9 @@ func (a *ResourceAllocator) Allocate(ctx context.Context, env ResourceEnvelope, 
 	}
 
 	result := &ResourceAllocationResult{
-		AllocatedWorkers:     workers,
-		AllocatedParallelism: parallelism,
-		AllocatedCalls:       calls,
+		AllocatedWorkers:         workers,
+		AllocatedParallelism:     parallelism,
+		AllocatedCalls:           calls,
 		GrantsFinancialAuthority: false, // Invariant INV-150: Never grants financial authority
 	}
 

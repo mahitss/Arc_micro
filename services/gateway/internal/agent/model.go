@@ -188,8 +188,8 @@ func (h *HTTPModel) GeneratePaymentIntent(ctx context.Context, task AgentTask) (
 	userContent := fmt.Sprintf("<user_task>\n%s\n</user_task>", task.Task)
 
 	reqBody := openAIChatRequest{
-		Model:          h.model,
-		Models:         h.fallbackModels,
+		Model:  h.model,
+		Models: h.fallbackModels,
 		Messages: []openAIChatMessage{
 			{Role: "system", Content: h.systemText},
 			{Role: "user", Content: userContent},

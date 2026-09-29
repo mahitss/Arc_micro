@@ -58,7 +58,7 @@ type Service struct {
 	Asset          string        `json:"asset"`     // Default "USDC"
 	Status         ServiceStatus `json:"status"`
 	Enabled        bool          `json:"enabled"`
-	MaxPrice       string        `json:"max_price"`            // micro-USDC integer string
+	MaxPrice       string        `json:"max_price"`             // micro-USDC integer string
 	FixedPrice     string        `json:"fixed_price,omitempty"` // micro-USDC integer string
 	CreatedAt      time.Time     `json:"created_at"`
 	UpdatedAt      time.Time     `json:"updated_at"`
@@ -73,10 +73,10 @@ type Policy struct {
 	OrganizationID        string    `json:"organization_id"`
 	AgentID               string    `json:"agent_id"`
 	Enabled               bool      `json:"enabled"`
-	PerTransactionLimit   string    `json:"per_transaction_limit"`   // micro-USDC integer string
-	DailyLimit            string    `json:"daily_limit"`             // micro-USDC integer string
+	PerTransactionLimit   string    `json:"per_transaction_limit"` // micro-USDC integer string
+	DailyLimit            string    `json:"daily_limit"`           // micro-USDC integer string
 	MaxTransactionsPerDay int       `json:"max_transactions_per_day"`
-	ApprovalThreshold     string    `json:"approval_threshold"`       // micro-USDC integer string
+	ApprovalThreshold     string    `json:"approval_threshold"` // micro-USDC integer string
 	AllowedAssets         []string  `json:"allowed_assets"`
 	AllowedRecipients     []string  `json:"allowed_recipients,omitempty"`
 	BlockedRecipients     []string  `json:"blocked_recipients,omitempty"`
@@ -138,45 +138,45 @@ type TreasuryReservation struct {
 type AuditEventType string
 
 const (
-	AuditEventAgentCreated           AuditEventType = "agent.created"
-	AuditEventAgentUpdated           AuditEventType = "agent.updated"
-	AuditEventAgentPaused            AuditEventType = "agent.paused"
-	AuditEventAgentResumed           AuditEventType = "agent.resumed"
-	AuditEventOrgPaused              AuditEventType = "organization.paused"
-	AuditEventOrgResumed             AuditEventType = "organization.resumed"
-	AuditEventSystemExecutionPaused  AuditEventType = "system.execution_paused"
-	AuditEventSystemExecutionResumed AuditEventType = "system.execution_resumed"
-	AuditEventServiceCreated         AuditEventType = "service.created"
-	AuditEventServiceUpdated         AuditEventType = "service.updated"
-	AuditEventServicePaused          AuditEventType = "service.paused"
-	AuditEventPolicyUpdated          AuditEventType = "policy.updated"
-	AuditEventPaymentCreated         AuditEventType = "payment.created"
-	AuditEventPaymentAuthorized      AuditEventType = "payment.authorized"
-	AuditEventPaymentDenied          AuditEventType = "payment.denied"
-	AuditEventPaymentApprovalReq     AuditEventType = "payment.approval_required"
-	AuditEventPaymentApproved        AuditEventType = "payment.approved"
-	AuditEventPaymentRejected        AuditEventType = "payment.rejected"
-	AuditEventPaymentApprovalExpired AuditEventType = "payment.approval_expired"
-	AuditEventPaymentSubmitted       AuditEventType = "payment.submitted"
-	AuditEventPaymentConfirmed       AuditEventType = "payment.confirmed"
-	AuditEventPaymentFailed          AuditEventType = "payment.failed"
-	AuditEventTreasuryReserved       AuditEventType = "treasury.reserved"
-	AuditEventTreasuryReleased       AuditEventType = "treasury.released"
-	AuditEventTreasurySettled        AuditEventType = "treasury.settled"
-	AuditEventAgentTaskStarted       AuditEventType = "agent.task.started"
-	AuditEventAgentServiceDiscovered AuditEventType = "agent.service.discovered"
-	AuditEventAgentQuoteRequested    AuditEventType = "agent.quote.requested"
-	AuditEventAgentQuoteReceived     AuditEventType = "agent.quote.received"
-	AuditEventAgentServiceSelected   AuditEventType = "agent.service.selected"
-	AuditEventAgentBudgetChecked     AuditEventType = "agent.budget.checked"
-	AuditEventAgentPaymentRequested  AuditEventType = "agent.payment.requested"
-	AuditEventAgentPaymentAuthorized AuditEventType = "agent.payment.authorized"
-	AuditEventAgentPaymentDenied     AuditEventType = "agent.payment.denied"
+	AuditEventAgentCreated            AuditEventType = "agent.created"
+	AuditEventAgentUpdated            AuditEventType = "agent.updated"
+	AuditEventAgentPaused             AuditEventType = "agent.paused"
+	AuditEventAgentResumed            AuditEventType = "agent.resumed"
+	AuditEventOrgPaused               AuditEventType = "organization.paused"
+	AuditEventOrgResumed              AuditEventType = "organization.resumed"
+	AuditEventSystemExecutionPaused   AuditEventType = "system.execution_paused"
+	AuditEventSystemExecutionResumed  AuditEventType = "system.execution_resumed"
+	AuditEventServiceCreated          AuditEventType = "service.created"
+	AuditEventServiceUpdated          AuditEventType = "service.updated"
+	AuditEventServicePaused           AuditEventType = "service.paused"
+	AuditEventPolicyUpdated           AuditEventType = "policy.updated"
+	AuditEventPaymentCreated          AuditEventType = "payment.created"
+	AuditEventPaymentAuthorized       AuditEventType = "payment.authorized"
+	AuditEventPaymentDenied           AuditEventType = "payment.denied"
+	AuditEventPaymentApprovalReq      AuditEventType = "payment.approval_required"
+	AuditEventPaymentApproved         AuditEventType = "payment.approved"
+	AuditEventPaymentRejected         AuditEventType = "payment.rejected"
+	AuditEventPaymentApprovalExpired  AuditEventType = "payment.approval_expired"
+	AuditEventPaymentSubmitted        AuditEventType = "payment.submitted"
+	AuditEventPaymentConfirmed        AuditEventType = "payment.confirmed"
+	AuditEventPaymentFailed           AuditEventType = "payment.failed"
+	AuditEventTreasuryReserved        AuditEventType = "treasury.reserved"
+	AuditEventTreasuryReleased        AuditEventType = "treasury.released"
+	AuditEventTreasurySettled         AuditEventType = "treasury.settled"
+	AuditEventAgentTaskStarted        AuditEventType = "agent.task.started"
+	AuditEventAgentServiceDiscovered  AuditEventType = "agent.service.discovered"
+	AuditEventAgentQuoteRequested     AuditEventType = "agent.quote.requested"
+	AuditEventAgentQuoteReceived      AuditEventType = "agent.quote.received"
+	AuditEventAgentServiceSelected    AuditEventType = "agent.service.selected"
+	AuditEventAgentBudgetChecked      AuditEventType = "agent.budget.checked"
+	AuditEventAgentPaymentRequested   AuditEventType = "agent.payment.requested"
+	AuditEventAgentPaymentAuthorized  AuditEventType = "agent.payment.authorized"
+	AuditEventAgentPaymentDenied      AuditEventType = "agent.payment.denied"
 	AuditEventAgentPaymentApprovalReq AuditEventType = "agent.payment.approval_required"
-	AuditEventAgentPaymentConfirmed  AuditEventType = "agent.payment.confirmed"
-	AuditEventAgentTaskCompleted     AuditEventType = "agent.task.completed"
-	AuditEventAPIKeyCreated          AuditEventType = "api_key.created"
-	AuditEventAPIKeyRevoked          AuditEventType = "api_key.revoked"
+	AuditEventAgentPaymentConfirmed   AuditEventType = "agent.payment.confirmed"
+	AuditEventAgentTaskCompleted      AuditEventType = "agent.task.completed"
+	AuditEventAPIKeyCreated           AuditEventType = "api_key.created"
+	AuditEventAPIKeyRevoked           AuditEventType = "api_key.revoked"
 )
 
 // --- 8. API Keys & Scopes (Day 5) ---

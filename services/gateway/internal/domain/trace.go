@@ -14,26 +14,26 @@ const (
 
 // Canonical Trace Step Types
 const (
-	TraceStepPaymentRequested       = "PAYMENT_REQUESTED"
-	TraceStepIdentityVerified       = "IDENTITY_VERIFIED"
-	TraceStepServiceResolved        = "SERVICE_RESOLVED"
-	TraceStepQuoteSelected          = "QUOTE_SELECTED"
-	TraceStepPolicyEvaluated        = "POLICY_EVALUATED"
-	TraceStepRiskEvaluated          = "RISK_EVALUATED"
-	TraceStepApprovalRequired       = "APPROVAL_REQUIRED"
-	TraceStepPaymentApproved        = "PAYMENT_APPROVED"
-	TraceStepPaymentRejected        = "PAYMENT_REJECTED"
-	TraceStepPaymentDenied          = "PAYMENT_DENIED"
-	TraceStepTreasuryReserved       = "TREASURY_RESERVED"
-	TraceStepTreasuryReleased       = "TREASURY_RELEASED"
-	TraceStepExecutionStarted       = "EXECUTION_STARTED"
-	TraceStepTransactionBuilt       = "TRANSACTION_BUILT"
-	TraceStepTransactionSigned      = "TRANSACTION_SIGNED"
-	TraceStepTransactionBroadcast  = "TRANSACTION_BROADCAST"
-	TraceStepTransactionAmbiguous  = "TRANSACTION_AMBIGUOUS"
-	TraceStepTransactionConfirmed  = "TRANSACTION_CONFIRMED"
-	TraceStepTransactionFailed     = "TRANSACTION_FAILED"
-	TraceStepPaymentCompleted       = "PAYMENT_COMPLETED"
+	TraceStepPaymentRequested     = "PAYMENT_REQUESTED"
+	TraceStepIdentityVerified     = "IDENTITY_VERIFIED"
+	TraceStepServiceResolved      = "SERVICE_RESOLVED"
+	TraceStepQuoteSelected        = "QUOTE_SELECTED"
+	TraceStepPolicyEvaluated      = "POLICY_EVALUATED"
+	TraceStepRiskEvaluated        = "RISK_EVALUATED"
+	TraceStepApprovalRequired     = "APPROVAL_REQUIRED"
+	TraceStepPaymentApproved      = "PAYMENT_APPROVED"
+	TraceStepPaymentRejected      = "PAYMENT_REJECTED"
+	TraceStepPaymentDenied        = "PAYMENT_DENIED"
+	TraceStepTreasuryReserved     = "TREASURY_RESERVED"
+	TraceStepTreasuryReleased     = "TREASURY_RELEASED"
+	TraceStepExecutionStarted     = "EXECUTION_STARTED"
+	TraceStepTransactionBuilt     = "TRANSACTION_BUILT"
+	TraceStepTransactionSigned    = "TRANSACTION_SIGNED"
+	TraceStepTransactionBroadcast = "TRANSACTION_BROADCAST"
+	TraceStepTransactionAmbiguous = "TRANSACTION_AMBIGUOUS"
+	TraceStepTransactionConfirmed = "TRANSACTION_CONFIRMED"
+	TraceStepTransactionFailed    = "TRANSACTION_FAILED"
+	TraceStepPaymentCompleted     = "PAYMENT_COMPLETED"
 )
 
 // TraceStep represents a single discrete, verified action in the payment lifecycle.
@@ -41,7 +41,7 @@ type TraceStep struct {
 	StepNumber    int                    `json:"step_number"` // Monotonic ordering sequence: 1, 2, 3...
 	StepID        string                 `json:"step_id"`
 	TraceID       string                 `json:"trace_id"`
-	Type          string                 `json:"type"` // One of TraceStep* constants
+	Type          string                 `json:"type"`   // One of TraceStep* constants
 	Status        string                 `json:"status"` // "COMPLETED", "FAILED", "PENDING", "SKIPPED"
 	Timestamp     time.Time              `json:"timestamp"`
 	Actor         string                 `json:"actor"` // "AGENT:{id}", "USER:{id}", "SYSTEM"
@@ -124,7 +124,7 @@ type PaymentTrace struct {
 	AgentID            string              `json:"agent_id"`
 	PaymentIntentID    string              `json:"payment_intent_id"`
 	PaymentExecutionID string              `json:"payment_execution_id,omitempty"`
-	Status             string              `json:"status"` // Current lifecycle status
+	Status             string              `json:"status"`         // Current lifecycle status
 	ExecutionMode      ExecutionMode       `json:"execution_mode"` // "LIVE" or "SIMULATION"
 	CreatedAt          time.Time           `json:"created_at"`
 	UpdatedAt          time.Time           `json:"updated_at"`

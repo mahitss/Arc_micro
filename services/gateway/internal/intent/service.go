@@ -17,13 +17,13 @@ import (
 )
 
 var (
-	ErrIntentNotFound    = errors.New("payment intent not found")
-	ErrIntentExpired     = errors.New("payment intent has expired")
-	ErrNotAuthorized     = errors.New("payment intent must be authorized before confirmation")
-	ErrAlreadyConfirmed  = errors.New("payment intent is already confirmed")
-	ErrAlreadyExecuting  = errors.New("payment intent is currently being executed")
-	ErrExecutionFailed      = errors.New("payment intent execution failed")
-	ErrIdempotencyConflict  = errors.New("idempotency conflict: key already used with different request parameters")
+	ErrIntentNotFound      = errors.New("payment intent not found")
+	ErrIntentExpired       = errors.New("payment intent has expired")
+	ErrNotAuthorized       = errors.New("payment intent must be authorized before confirmation")
+	ErrAlreadyConfirmed    = errors.New("payment intent is already confirmed")
+	ErrAlreadyExecuting    = errors.New("payment intent is currently being executed")
+	ErrExecutionFailed     = errors.New("payment intent execution failed")
+	ErrIdempotencyConflict = errors.New("idempotency conflict: key already used with different request parameters")
 )
 
 // Clock allows injecting time for deterministic testing.
@@ -601,11 +601,11 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 				intent.RequestID,
 				correlationID,
 				map[string]interface{}{
-					"intent_id":         intent.IntentID,
-					"transaction_hash":  execResult.TransactionHash,
-					"status":            string(StatusConfirmed),
-					"amount":            intent.Amount,
-					"recipient":         intent.Recipient,
+					"intent_id":        intent.IntentID,
+					"transaction_hash": execResult.TransactionHash,
+					"status":           string(StatusConfirmed),
+					"amount":           intent.Amount,
+					"recipient":        intent.Recipient,
 				},
 			)
 			evt.PaymentIntentID = intent.IntentID
@@ -638,12 +638,12 @@ func (s *Service) ConfirmIntent(ctx context.Context, intentID string) (*PaymentI
 				intent.RequestID,
 				correlationID,
 				map[string]interface{}{
-					"intent_id":         intent.IntentID,
-					"transaction_hash":  execResult.TransactionHash,
-					"status":            string(blockchain.StateAmbiguous),
-					"amount":            intent.Amount,
-					"recipient":         intent.Recipient,
-					"reason":            "broadcast attempted but receipt confirmation timed out; flagged for reconciliation",
+					"intent_id":        intent.IntentID,
+					"transaction_hash": execResult.TransactionHash,
+					"status":           string(blockchain.StateAmbiguous),
+					"amount":           intent.Amount,
+					"recipient":        intent.Recipient,
+					"reason":           "broadcast attempted but receipt confirmation timed out; flagged for reconciliation",
 				},
 			)
 			evt.PaymentIntentID = intent.IntentID

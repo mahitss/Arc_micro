@@ -51,11 +51,11 @@ type LiquidityReservationRequest struct {
 
 // DefaultLiquidityOrchestrator manages bounded treasury liquidity without fund movement authority.
 type DefaultLiquidityOrchestrator struct {
-	mu           sync.RWMutex
-	states       map[string]*TreasuryState          // key: orgID:mode
-	reservations map[string]*LiquidityReservation   // key: reservationID
-	commitments  map[string]*LiquidityCommitment    // key: commitmentID
-	inflows      map[string]*ExpectedInflow         // key: inflowID
+	mu             sync.RWMutex
+	states         map[string]*TreasuryState         // key: orgID:mode
+	reservations   map[string]*LiquidityReservation  // key: reservationID
+	commitments    map[string]*LiquidityCommitment   // key: commitmentID
+	inflows        map[string]*ExpectedInflow        // key: inflowID
 	bufferPolicies map[string]*LiquidityBufferPolicy // key: orgID:scope:scopeID
 }
 

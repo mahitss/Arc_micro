@@ -68,15 +68,15 @@ func (s *DefaultService) GetPaymentTrace(ctx context.Context, orgID, intentID st
 	}
 
 	trace := &domain.PaymentTrace{
-		TraceID:            fmt.Sprintf("trc_%s", intent.IntentID),
-		OrganizationID:     intent.OrganizationID,
-		AgentID:            intent.AgentID,
-		PaymentIntentID:    intent.IntentID,
-		Status:             string(intent.Status),
-		ExecutionMode:      execMode,
-		CreatedAt:          intent.CreatedAt,
-		UpdatedAt:          intent.UpdatedAt,
-		Steps:              make([]domain.TraceStep, 0),
+		TraceID:         fmt.Sprintf("trc_%s", intent.IntentID),
+		OrganizationID:  intent.OrganizationID,
+		AgentID:         intent.AgentID,
+		PaymentIntentID: intent.IntentID,
+		Status:          string(intent.Status),
+		ExecutionMode:   execMode,
+		CreatedAt:       intent.CreatedAt,
+		UpdatedAt:       intent.UpdatedAt,
+		Steps:           make([]domain.TraceStep, 0),
 		PaymentSummary: domain.PaymentSummary{
 			IntentID:       intent.IntentID,
 			OrganizationID: intent.OrganizationID,

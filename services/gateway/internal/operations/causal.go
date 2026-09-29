@@ -10,9 +10,9 @@ import (
 // CausalEngine manages causal dependency links and powers the "Why?" inspector.
 type CausalEngine struct {
 	mu           sync.RWMutex
-	links        map[string]*CausalLink   // link_id -> link
-	eventLinks   map[string]*CausalLink   // event_id -> link
-	explanations map[string]*Explanation  // event_id -> Explanation
+	links        map[string]*CausalLink  // link_id -> link
+	eventLinks   map[string]*CausalLink  // event_id -> link
+	explanations map[string]*Explanation // event_id -> Explanation
 }
 
 // NewCausalEngine creates an instance of CausalEngine.

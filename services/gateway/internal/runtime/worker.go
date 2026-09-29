@@ -24,14 +24,14 @@ type WorkerStore interface {
 
 // WorkerCoordinator manages worker lifecycles, heartbeats, and stale worker detection.
 type WorkerCoordinator struct {
-	mu          sync.RWMutex
-	store       WorkerStore
-	workerID    string
-	workerType  string
-	hostname    string
-	version     string
-	stopChan    chan struct{}
-	isRunning   bool
+	mu         sync.RWMutex
+	store      WorkerStore
+	workerID   string
+	workerType string
+	hostname   string
+	version    string
+	stopChan   chan struct{}
+	isRunning  bool
 }
 
 // NewWorkerCoordinator initializes a worker coordinator.

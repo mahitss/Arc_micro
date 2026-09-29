@@ -13,18 +13,18 @@ import (
 )
 
 var (
-	ErrIntentNotFound             = errors.New("payment intent not found")
-	ErrAlreadyConfirmed           = errors.New("payment intent has already executed and confirmed on-chain")
-	ErrAlreadyExecuting           = errors.New("payment intent is currently executing or submitted")
-	ErrExecutionNotPermitted      = errors.New("payment intent status does not permit execution")
-	ErrPolicyDenied               = errors.New("execution blocked: payment intent was denied by policy (hard denial invariant)")
-	ErrIntentExpired              = errors.New("execution blocked: payment intent has expired")
-	ErrGlobalExecutionPaused      = errors.New("execution blocked: global payment execution kill switch is active")
-	ErrOrganizationPaused         = errors.New("execution blocked: organization is paused")
-	ErrAgentNotActive             = errors.New("execution blocked: agent is paused or not active")
-	ErrServiceNotActive           = errors.New("execution blocked: target service is disabled or not active")
-	ErrApprovalRequired           = errors.New("execution blocked: payment requires valid human approval")
-	ErrApprovalExpired            = errors.New("execution blocked: human approval has expired")
+	ErrIntentNotFound              = errors.New("payment intent not found")
+	ErrAlreadyConfirmed            = errors.New("payment intent has already executed and confirmed on-chain")
+	ErrAlreadyExecuting            = errors.New("payment intent is currently executing or submitted")
+	ErrExecutionNotPermitted       = errors.New("payment intent status does not permit execution")
+	ErrPolicyDenied                = errors.New("execution blocked: payment intent was denied by policy (hard denial invariant)")
+	ErrIntentExpired               = errors.New("execution blocked: payment intent has expired")
+	ErrGlobalExecutionPaused       = errors.New("execution blocked: global payment execution kill switch is active")
+	ErrOrganizationPaused          = errors.New("execution blocked: organization is paused")
+	ErrAgentNotActive              = errors.New("execution blocked: agent is paused or not active")
+	ErrServiceNotActive            = errors.New("execution blocked: target service is disabled or not active")
+	ErrApprovalRequired            = errors.New("execution blocked: payment requires valid human approval")
+	ErrApprovalExpired             = errors.New("execution blocked: human approval has expired")
 	ErrAgentSelfApprovalProhibited = errors.New("execution blocked: agent cannot approve its own payment")
 )
 
@@ -44,9 +44,9 @@ type Gate interface {
 
 // DefaultGate enforces the 10-point execution safety matrix in deterministic order.
 type DefaultGate struct {
-	repo       storage.Repository
-	emergency  emergency.Controller
-	clock      Clock
+	repo      storage.Repository
+	emergency emergency.Controller
+	clock     Clock
 }
 
 // NewExecutionGate creates a new DefaultGate instance.

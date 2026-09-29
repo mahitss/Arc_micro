@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ErrDisputeNotFound   = errors.New("dispute record not found")
-	ErrDisputeClosed     = errors.New("cannot perform action on closed dispute")
+	ErrDisputeNotFound     = errors.New("dispute record not found")
+	ErrDisputeClosed       = errors.New("cannot perform action on closed dispute")
 	ErrDirectMutationBlock = errors.New("dispute engine cannot directly mutate treasury ledger balances (INV-178)")
 )
 

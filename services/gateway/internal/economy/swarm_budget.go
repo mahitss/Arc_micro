@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	ErrSwarmNotFound          = errors.New("swarm not found")
-	ErrSwarmBudgetExceeded    = errors.New("requested allocation exceeds remaining swarm budget ceiling")
+	ErrSwarmNotFound           = errors.New("swarm not found")
+	ErrSwarmBudgetExceeded     = errors.New("requested allocation exceeds remaining swarm budget ceiling")
 	ErrTaskReservationNotFound = errors.New("task budget reservation not found")
-	ErrDuplicateReservation   = errors.New("task already holds an active budget reservation")
+	ErrDuplicateReservation    = errors.New("task already holds an active budget reservation")
 )
 
 // TaskReservation tracks an active in-flight commitment for a specific task.
@@ -24,7 +24,7 @@ type TaskReservation struct {
 // SwarmBudgetManager enforces atomic, concurrency-safe, multi-tenant budget allocations.
 type SwarmBudgetManager struct {
 	mu           sync.RWMutex
-	swarms       map[string]*Swarm                    // swarm_id -> Swarm
+	swarms       map[string]*Swarm                      // swarm_id -> Swarm
 	reservations map[string]map[string]*TaskReservation // swarm_id -> task_id -> TaskReservation
 }
 

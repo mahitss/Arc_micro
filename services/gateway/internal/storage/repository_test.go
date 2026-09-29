@@ -214,14 +214,14 @@ func TestRepository_OpenAgentNetworkPersistence(t *testing.T) {
 
 	// 5. Dispute
 	dispute := &network.DisputeRecord{
-		DisputeID:        "dispute_01",
-		ContractID:       "contract_01",
-		OrganizationID:   "org_default",
-		InitiatorAgentID: "agent_research_01",
+		DisputeID:         "dispute_01",
+		ContractID:        "contract_01",
+		OrganizationID:    "org_default",
+		InitiatorAgentID:  "agent_research_01",
 		RespondentAgentID: "agent_sec_01",
-		Reason:           "Delayed deliverable",
-		State:            network.DisputeStateOpen,
-		CreatedAt:        now,
+		Reason:            "Delayed deliverable",
+		State:             network.DisputeStateOpen,
+		CreatedAt:         now,
 	}
 	if err := repo.SaveDispute(ctx, dispute); err != nil {
 		t.Fatalf("failed to save dispute: %v", err)

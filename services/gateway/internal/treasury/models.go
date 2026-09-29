@@ -7,20 +7,20 @@ import (
 
 // Security Invariant Identifiers (INV-71 to INV-85)
 const (
-	INV71_ExpectedInflowsNotAvailableFunds      = "INV-71: Expected inflows cannot be treated as available funds."
-	INV72_ReservationsCannotExceedAvailable     = "INV-72: Reservations cannot exceed available liquidity."
-	INV73_NoConcurrentOversubscription          = "INV-73: Concurrent reservations cannot oversubscribe treasury."
-	INV74_ChildEnvelopeCannotExceedParent       = "INV-74: Child liquidity envelopes cannot exceed parent authority."
-	INV75_RecurringCannotReserveInfinite        = "INV-75: Recurring obligations cannot reserve infinite funds."
-	INV76_SimulationCannotAffectRealTreasury    = "INV-76: Simulation liquidity cannot affect real treasury."
-	INV77_ForecastsCannotAuthorizePayments      = "INV-77: Treasury forecasts cannot authorize payments."
-	INV78_AnalyticsCannotModifyPolicy           = "INV-78: Treasury analytics cannot modify policy."
+	INV71_ExpectedInflowsNotAvailableFunds         = "INV-71: Expected inflows cannot be treated as available funds."
+	INV72_ReservationsCannotExceedAvailable        = "INV-72: Reservations cannot exceed available liquidity."
+	INV73_NoConcurrentOversubscription             = "INV-73: Concurrent reservations cannot oversubscribe treasury."
+	INV74_ChildEnvelopeCannotExceedParent          = "INV-74: Child liquidity envelopes cannot exceed parent authority."
+	INV75_RecurringCannotReserveInfinite           = "INV-75: Recurring obligations cannot reserve infinite funds."
+	INV76_SimulationCannotAffectRealTreasury       = "INV-76: Simulation liquidity cannot affect real treasury."
+	INV77_ForecastsCannotAuthorizePayments         = "INV-77: Treasury forecasts cannot authorize payments."
+	INV78_AnalyticsCannotModifyPolicy              = "INV-78: Treasury analytics cannot modify policy."
 	INV79_OnlyVerifiedBlockchainStateAuthoritative = "INV-79: Only verified blockchain state can establish verified on-chain balance."
-	INV80_InternalStateCannotFabricateSettlement  = "INV-80: Internal treasury state cannot fabricate blockchain settlement."
-	INV81_MismatchCannotSilentlyMatch           = "INV-81: Reconciliation mismatch cannot silently become MATCHED."
-	INV82_UnverifiedInflowsCannotIncreaseCapacity = "INV-82: Expected inflows cannot increase authorization capacity until verified."
-	INV83_RefundCannotExceedActualVerified      = "INV-83: A refund cannot increase treasury beyond the actual verified refund."
-	INV84_NoCalculationCanCreateFunds           = "INV-84: No liquidity calculation can create funds."
+	INV80_InternalStateCannotFabricateSettlement   = "INV-80: Internal treasury state cannot fabricate blockchain settlement."
+	INV81_MismatchCannotSilentlyMatch              = "INV-81: Reconciliation mismatch cannot silently become MATCHED."
+	INV82_UnverifiedInflowsCannotIncreaseCapacity  = "INV-82: Expected inflows cannot increase authorization capacity until verified."
+	INV83_RefundCannotExceedActualVerified         = "INV-83: A refund cannot increase treasury beyond the actual verified refund."
+	INV84_NoCalculationCanCreateFunds              = "INV-84: No liquidity calculation can create funds."
 	INV85_TreasuryIntelligenceCannotBypassApproval = "INV-85: Treasury intelligence cannot bypass approval."
 )
 
@@ -181,8 +181,8 @@ type TreasuryState struct {
 	TreasuryID        string          `json:"treasury_id"`
 	OrganizationID    string          `json:"organization_id"`
 	VaultAddress      string          `json:"vault_address"`
-	Currency          string          `json:"currency"` // strictly "USDC"
-	Mode              ExecutionMode   `json:"mode"`     // REAL or SIMULATION
+	Currency          string          `json:"currency"`           // strictly "USDC"
+	Mode              ExecutionMode   `json:"mode"`               // REAL or SIMULATION
 	TotalBalance      string          `json:"total_balance"`      // integer micro-units
 	AvailableBalance  string          `json:"available_balance"`  // unencumbered & unreserved
 	ReservedBalance   string          `json:"reserved_balance"`   // active reservations
@@ -329,19 +329,19 @@ type LiquidityStressResult struct {
 
 // AllocationCandidate represents an obligation awaiting liquidity allocation
 type AllocationCandidate struct {
-	CandidateID   string     `json:"candidate_id"`
-	ObligationID  string     `json:"obligation_id"`
-	AgentID       string     `json:"agent_id"`
-	MissionID     string     `json:"mission_id"`
-	Amount        string     `json:"amount"`
-	Currency      string     `json:"currency"`
-	Deadline      time.Time  `json:"deadline"`
-	Scope         ScopeLevel `json:"scope"`
-	PriorityScore float64    `json:"priority_score"`
-	DeferralCount int        `json:"deferral_count"`
+	CandidateID   string        `json:"candidate_id"`
+	ObligationID  string        `json:"obligation_id"`
+	AgentID       string        `json:"agent_id"`
+	MissionID     string        `json:"mission_id"`
+	Amount        string        `json:"amount"`
+	Currency      string        `json:"currency"`
+	Deadline      time.Time     `json:"deadline"`
+	Scope         ScopeLevel    `json:"scope"`
+	PriorityScore float64       `json:"priority_score"`
+	DeferralCount int           `json:"deferral_count"`
 	WaitDuration  time.Duration `json:"wait_duration"`
-	IsMilestone   bool       `json:"is_milestone"`
-	CriticalPath  bool       `json:"critical_path"`
+	IsMilestone   bool          `json:"is_milestone"`
+	CriticalPath  bool          `json:"critical_path"`
 }
 
 // LiquidityAllocationProposal represents non-executable allocation plan
@@ -360,53 +360,53 @@ type LiquidityAllocationProposal struct {
 
 // LiquidityAnomaly records detected behavioral anomalies
 type LiquidityAnomaly struct {
-	AnomalyID     string    `json:"anomaly_id"`
-	OrganizationID string   `json:"organization_id"`
-	Type          string    `json:"type"` // SPIKE, CONCENTRATION, UNUSUAL_OUTFLOW, REPEATED_CANCELLATION
-	Severity      string    `json:"severity"` // LOW, MEDIUM, HIGH, CRITICAL
-	AffectedScope string    `json:"affected_scope"`
-	Evidence      string    `json:"evidence"`
-	DetectedAt    time.Time `json:"detected_at"`
-	Status        string    `json:"status"` // OPEN, ACKNOWLEDGED, RESOLVED
+	AnomalyID      string    `json:"anomaly_id"`
+	OrganizationID string    `json:"organization_id"`
+	Type           string    `json:"type"`     // SPIKE, CONCENTRATION, UNUSUAL_OUTFLOW, REPEATED_CANCELLATION
+	Severity       string    `json:"severity"` // LOW, MEDIUM, HIGH, CRITICAL
+	AffectedScope  string    `json:"affected_scope"`
+	Evidence       string    `json:"evidence"`
+	DetectedAt     time.Time `json:"detected_at"`
+	Status         string    `json:"status"` // OPEN, ACKNOWLEDGED, RESOLVED
 }
 
 // TreasuryReconciliationReport captures 4-way balance comparison
 type TreasuryReconciliationReport struct {
-	ReportID                 string               `json:"report_id"`
-	OrganizationID           string               `json:"organization_id"`
-	Status                   ReconciliationStatus `json:"status"` // MATCHED, MISMATCH, PENDING, AMBIGUOUS, REQUIRES_REVIEW, UNVERIFIED
-	InternalLedgerBalance    string               `json:"internal_ledger_balance"`
-	RepositoryBalance        string               `json:"repository_balance"`
-	VaultBalance             string               `json:"vault_balance"`
-	BlockchainBalance        string               `json:"blockchain_balance"`
-	DiscrepancyAmount        string               `json:"discrepancy_amount"`
-	ChainID                  string               `json:"chain_id"`
-	VaultAddress             string               `json:"vault_address"`
-	TokenAddress             string               `json:"token_address"`
-	VaultPaused              bool                 `json:"vault_paused"`
-	VaultOwner               string               `json:"vault_owner"`
-	VerifiedAt               time.Time            `json:"verified_at"`
-	Evidence                 string               `json:"evidence"`
+	ReportID              string               `json:"report_id"`
+	OrganizationID        string               `json:"organization_id"`
+	Status                ReconciliationStatus `json:"status"` // MATCHED, MISMATCH, PENDING, AMBIGUOUS, REQUIRES_REVIEW, UNVERIFIED
+	InternalLedgerBalance string               `json:"internal_ledger_balance"`
+	RepositoryBalance     string               `json:"repository_balance"`
+	VaultBalance          string               `json:"vault_balance"`
+	BlockchainBalance     string               `json:"blockchain_balance"`
+	DiscrepancyAmount     string               `json:"discrepancy_amount"`
+	ChainID               string               `json:"chain_id"`
+	VaultAddress          string               `json:"vault_address"`
+	TokenAddress          string               `json:"token_address"`
+	VaultPaused           bool                 `json:"vault_paused"`
+	VaultOwner            string               `json:"vault_owner"`
+	VerifiedAt            time.Time            `json:"verified_at"`
+	Evidence              string               `json:"evidence"`
 }
 
 // TreasuryHealthSnapshot aggregates health telemetry
 type TreasuryHealthSnapshot struct {
-	OrganizationID              string               `json:"organization_id"`
-	Mode                        ExecutionMode        `json:"mode"`
-	TotalBalance                string               `json:"total_balance"`
-	AvailableBalance            string               `json:"available_balance"`
-	ReservedBalance             string               `json:"reserved_balance"`
-	CommittedBalance            string               `json:"committed_balance"`
-	PendingSettlement           string               `json:"pending_settlement"`
-	DisputedBalance             string               `json:"disputed_balance"`
-	MinimumBuffer               string               `json:"minimum_buffer"`
-	SafeCapacity                string               `json:"safe_capacity"`
-	WorstCaseExposure           string               `json:"worst_case_exposure"`
-	SolvencyRatio               float64              `json:"solvency_ratio"`
-	OperationalMode             OperationalMode      `json:"operational_mode"` // NORMAL, CONSTRAINED, EMERGENCY
-	ReconciliationStatus        ReconciliationStatus `json:"reconciliation_status"`
-	LastVerifiedOnChainBalance  string               `json:"last_verified_on_chain_balance"`
-	VerificationTimestamp       time.Time            `json:"verification_timestamp"`
-	ActiveReservationsCount     int                  `json:"active_reservations_count"`
-	ActiveAnomaliesCount        int                  `json:"active_anomalies_count"`
+	OrganizationID             string               `json:"organization_id"`
+	Mode                       ExecutionMode        `json:"mode"`
+	TotalBalance               string               `json:"total_balance"`
+	AvailableBalance           string               `json:"available_balance"`
+	ReservedBalance            string               `json:"reserved_balance"`
+	CommittedBalance           string               `json:"committed_balance"`
+	PendingSettlement          string               `json:"pending_settlement"`
+	DisputedBalance            string               `json:"disputed_balance"`
+	MinimumBuffer              string               `json:"minimum_buffer"`
+	SafeCapacity               string               `json:"safe_capacity"`
+	WorstCaseExposure          string               `json:"worst_case_exposure"`
+	SolvencyRatio              float64              `json:"solvency_ratio"`
+	OperationalMode            OperationalMode      `json:"operational_mode"` // NORMAL, CONSTRAINED, EMERGENCY
+	ReconciliationStatus       ReconciliationStatus `json:"reconciliation_status"`
+	LastVerifiedOnChainBalance string               `json:"last_verified_on_chain_balance"`
+	VerificationTimestamp      time.Time            `json:"verification_timestamp"`
+	ActiveReservationsCount    int                  `json:"active_reservations_count"`
+	ActiveAnomaliesCount       int                  `json:"active_anomalies_count"`
 }

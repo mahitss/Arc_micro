@@ -256,15 +256,15 @@ type Repository interface {
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
 type MemoryRepository struct {
-	mu            sync.RWMutex
-	organizations map[string]*Organization
-	agents        map[string]*Agent
-	services      map[string]*registry.Service
-	policies      map[string]*Policy
-	intents       map[string]*intent.PaymentIntent
-	executions    map[string]*intent.PaymentExecutionRecord
-	approvals     map[string]*Approval
-	reservations  map[string]*TreasuryReservation
+	mu                sync.RWMutex
+	organizations     map[string]*Organization
+	agents            map[string]*Agent
+	services          map[string]*registry.Service
+	policies          map[string]*Policy
+	intents           map[string]*intent.PaymentIntent
+	executions        map[string]*intent.PaymentExecutionRecord
+	approvals         map[string]*Approval
+	reservations      map[string]*TreasuryReservation
 	systemStates      map[string]*SystemState
 	auditEvents       []*AuditEvent
 	apiKeys           map[string]*APIKey

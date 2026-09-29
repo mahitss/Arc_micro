@@ -293,8 +293,8 @@ func (h *SimulationSuiteHandler) HandleGetPlan(w http.ResponseWriter, r *http.Re
 
 // CounterfactualBody represents incoming counterfactual parameters.
 type CounterfactualBody struct {
-	Description  string                         `json:"description"`
-	Perturbation simulation.SimulationScenario  `json:"perturbation"`
+	Description  string                        `json:"description"`
+	Perturbation simulation.SimulationScenario `json:"perturbation"`
 }
 
 // HandleCounterfactual handles POST /v1/simulations/{id}/counterfactual.
@@ -321,8 +321,8 @@ func (h *SimulationSuiteHandler) HandleCounterfactual(w http.ResponseWriter, r *
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"comparison":          comparison,
-		"counterfactual_run":  cfRun,
+		"comparison":         comparison,
+		"counterfactual_run": cfRun,
 	})
 }
 
@@ -418,9 +418,9 @@ func (h *SimulationSuiteHandler) HandleExecutePlan(w http.ResponseWriter, r *htt
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"status":   "PLAN_VERIFIED_AND_PREPARED",
-		"mode":     "LIVE",
-		"payload":  payload,
+		"status":      "PLAN_VERIFIED_AND_PREPARED",
+		"mode":        "LIVE",
+		"payload":     payload,
 		"revalidated": true,
 	})
 }

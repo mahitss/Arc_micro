@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	ErrMissingSignature = errors.New("missing cryptographic message signature")
+	ErrMissingSignature  = errors.New("missing cryptographic message signature")
 	ErrSignatureMismatch = errors.New("cryptographic signature mismatch")
-	ErrReplayedNonce    = errors.New("replay attack detected: nonce already utilized")
-	ErrExpiredTimestamp = errors.New("message timestamp expired outside tolerance window")
+	ErrReplayedNonce     = errors.New("replay attack detected: nonce already utilized")
+	ErrExpiredTimestamp  = errors.New("message timestamp expired outside tolerance window")
 )
 
 const (

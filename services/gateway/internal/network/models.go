@@ -63,20 +63,20 @@ type AgentNetworkIdentity struct {
 
 // ReputationSummary summarizes long-term historical performance.
 type ReputationSummary struct {
-	TotalJobs          uint64  `json:"total_jobs"`
-	CompletedJobs      uint64  `json:"completed_jobs"`
-	FailedJobs         uint64  `json:"failed_jobs"`
-	DisputedJobs       uint64  `json:"disputed_jobs"`
-	CompletionRateBps  int64   `json:"completion_rate_bps"`  // Basis points (0-10000)
-	ReputationScoreBps int64   `json:"reputation_score_bps"` // Basis points (0-10000)
-	AverageLatencyMs   int64   `json:"average_latency_ms"`
+	TotalJobs          uint64   `json:"total_jobs"`
+	CompletedJobs      uint64   `json:"completed_jobs"`
+	FailedJobs         uint64   `json:"failed_jobs"`
+	DisputedJobs       uint64   `json:"disputed_jobs"`
+	CompletionRateBps  int64    `json:"completion_rate_bps"`  // Basis points (0-10000)
+	ReputationScoreBps int64    `json:"reputation_score_bps"` // Basis points (0-10000)
+	AverageLatencyMs   int64    `json:"average_latency_ms"`
 	TotalSettledUSDC   *big.Int `json:"total_settled_usdc"`
 }
 
 // ManifestPricing defines pricing declarations for a capability within an agent manifest.
 type ManifestPricing struct {
 	Capability string `json:"capability"`
-	Model      string `json:"model"` // FIXED, VARIABLE, QUOTE_REQUIRED
+	Model      string `json:"model"`      // FIXED, VARIABLE, QUOTE_REQUIRED
 	BasePrice  string `json:"base_price"` // micro-USDC base units
 	MaxPrice   string `json:"max_price,omitempty"`
 	Currency   string `json:"currency"` // "USDC"
@@ -143,22 +143,22 @@ type TrustEvaluation struct {
 
 // AgentTrustProfile holds persistent trust signals for an agent.
 type AgentTrustProfile struct {
-	AgentID                 string    `json:"agent_id"`
-	OrganizationID          string    `json:"organization_id"`
-	SuccessfulJobs          uint64    `json:"successful_jobs"`
-	FailedJobs              uint64    `json:"failed_jobs"`
-	TimeoutCount            uint64    `json:"timeout_count"`
-	DisputeCount            uint64    `json:"dispute_count"`
-	VerificationSuccesses   uint64    `json:"verification_successes"`
-	VerificationFailures    uint64    `json:"verification_failures"`
-	HistoricalCostAccurate  uint64    `json:"historical_cost_accurate"`
-	HistoricalCostDeviated  uint64    `json:"historical_cost_deviated"`
-	AverageLatencyMs        int64     `json:"average_latency_ms"`
-	PolicyViolationsCount   uint64    `json:"policy_violations_count"`
-	SecurityIncidentsCount  uint64    `json:"security_incidents_count"`
-	FirstSeenAt             time.Time `json:"first_seen_at"`
-	LastActiveAt            time.Time `json:"last_active_at"`
-	UpdatedAt               time.Time `json:"updated_at"`
+	AgentID                string    `json:"agent_id"`
+	OrganizationID         string    `json:"organization_id"`
+	SuccessfulJobs         uint64    `json:"successful_jobs"`
+	FailedJobs             uint64    `json:"failed_jobs"`
+	TimeoutCount           uint64    `json:"timeout_count"`
+	DisputeCount           uint64    `json:"dispute_count"`
+	VerificationSuccesses  uint64    `json:"verification_successes"`
+	VerificationFailures   uint64    `json:"verification_failures"`
+	HistoricalCostAccurate uint64    `json:"historical_cost_accurate"`
+	HistoricalCostDeviated uint64    `json:"historical_cost_deviated"`
+	AverageLatencyMs       int64     `json:"average_latency_ms"`
+	PolicyViolationsCount  uint64    `json:"policy_violations_count"`
+	SecurityIncidentsCount uint64    `json:"security_incidents_count"`
+	FirstSeenAt            time.Time `json:"first_seen_at"`
+	LastActiveAt           time.Time `json:"last_active_at"`
+	UpdatedAt              time.Time `json:"updated_at"`
 }
 
 // ContractState represents the finite state machine of an AgentServiceContract.
@@ -195,8 +195,8 @@ type AgentServiceContract struct {
 	DelegationDepth    int                    `json:"delegation_depth"`
 	InputSpec          map[string]interface{} `json:"input_spec"`
 	OutputSpec         map[string]interface{} `json:"output_spec,omitempty"`
-	Price              string                 `json:"price"` // micro-USDC
-	Currency           string                 `json:"currency"` // "USDC"
+	Price              string                 `json:"price"`          // micro-USDC
+	Currency           string                 `json:"currency"`       // "USDC"
 	BudgetCeiling      string                 `json:"budget_ceiling"` // micro-USDC
 	Deadline           time.Time              `json:"deadline"`
 	Expiration         time.Time              `json:"expiration"`
@@ -246,7 +246,7 @@ type NetworkQuote struct {
 	QuoteID            string            `json:"quote_id"`
 	ProviderAgentID    string            `json:"provider_agent_id"`
 	Capability         string            `json:"capability"`
-	Price              string            `json:"price"` // micro-USDC
+	Price              string            `json:"price"`    // micro-USDC
 	Currency           string            `json:"currency"` // "USDC"
 	EstimatedLatencyMs int64             `json:"estimated_latency_ms"`
 	ValidUntil         time.Time         `json:"valid_until"`
@@ -260,29 +260,29 @@ type NetworkQuote struct {
 
 // AgentResultPayload represents an untrusted output returned by an external provider agent.
 type AgentResultPayload struct {
-	ContractID       string                 `json:"contract_id"`
-	ProviderAgentID  string                 `json:"provider_agent_id"`
-	Output           map[string]interface{} `json:"output"`
-	SchemaVersion    string                 `json:"schema_version"`
-	ExecutionMetadata map[string]string     `json:"execution_metadata,omitempty"`
-	ClaimedCost      string                 `json:"claimed_cost"` // micro-USDC
-	ClaimedDurationMs int64                 `json:"claimed_duration_ms"`
-	Evidence         string                 `json:"evidence,omitempty"`
-	ChecksumSHA256   string                 `json:"checksum_sha256"`
-	Timestamp        time.Time              `json:"timestamp"`
+	ContractID        string                 `json:"contract_id"`
+	ProviderAgentID   string                 `json:"provider_agent_id"`
+	Output            map[string]interface{} `json:"output"`
+	SchemaVersion     string                 `json:"schema_version"`
+	ExecutionMetadata map[string]string      `json:"execution_metadata,omitempty"`
+	ClaimedCost       string                 `json:"claimed_cost"` // micro-USDC
+	ClaimedDurationMs int64                  `json:"claimed_duration_ms"`
+	Evidence          string                 `json:"evidence,omitempty"`
+	ChecksumSHA256    string                 `json:"checksum_sha256"`
+	Timestamp         time.Time              `json:"timestamp"`
 }
 
 // VerificationReport details the outcome of AgentResultVerifier evaluation.
 type VerificationReport struct {
-	ContractID     string    `json:"contract_id"`
-	Passed         bool      `json:"passed"`
-	SchemaValid    bool      `json:"schema_valid"`
-	ChecksumValid  bool      `json:"checksum_valid"`
-	DeadlineMet    bool      `json:"deadline_met"`
-	CostCompliant  bool      `json:"cost_compliant"`
-	ScoreBasisPoints int64   `json:"score_basis_points"` // 0-10000
-	Reason         string    `json:"reason"`
-	VerifiedAt     time.Time `json:"verified_at"`
+	ContractID       string    `json:"contract_id"`
+	Passed           bool      `json:"passed"`
+	SchemaValid      bool      `json:"schema_valid"`
+	ChecksumValid    bool      `json:"checksum_valid"`
+	DeadlineMet      bool      `json:"deadline_met"`
+	CostCompliant    bool      `json:"cost_compliant"`
+	ScoreBasisPoints int64     `json:"score_basis_points"` // 0-10000
+	Reason           string    `json:"reason"`
+	VerifiedAt       time.Time `json:"verified_at"`
 }
 
 // DisputeState represents the lifecycle of a contract dispute.
@@ -300,18 +300,18 @@ const (
 
 // DisputeRecord represents a formal dispute opened against a contract.
 type DisputeRecord struct {
-	DisputeID        string       `json:"dispute_id"`
-	ContractID       string       `json:"contract_id"`
-	OrganizationID   string       `json:"organization_id"`
-	InitiatorAgentID string       `json:"initiator_agent_id"`
-	RespondentAgentID string      `json:"respondent_agent_id"`
-	Reason           string       `json:"reason"`
-	Evidence         string       `json:"evidence,omitempty"`
-	State            DisputeState `json:"state"`
-	ResolutionNotes  string       `json:"resolution_notes,omitempty"`
-	RefundAmount     string       `json:"refund_amount,omitempty"`
-	CreatedAt        time.Time    `json:"created_at"`
-	ResolvedAt       *time.Time   `json:"resolved_at,omitempty"`
+	DisputeID         string       `json:"dispute_id"`
+	ContractID        string       `json:"contract_id"`
+	OrganizationID    string       `json:"organization_id"`
+	InitiatorAgentID  string       `json:"initiator_agent_id"`
+	RespondentAgentID string       `json:"respondent_agent_id"`
+	Reason            string       `json:"reason"`
+	Evidence          string       `json:"evidence,omitempty"`
+	State             DisputeState `json:"state"`
+	ResolutionNotes   string       `json:"resolution_notes,omitempty"`
+	RefundAmount      string       `json:"refund_amount,omitempty"`
+	CreatedAt         time.Time    `json:"created_at"`
+	ResolvedAt        *time.Time   `json:"resolved_at,omitempty"`
 }
 
 // GraphNode represents an entity in the economic network graph.

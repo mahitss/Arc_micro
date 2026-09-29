@@ -17,7 +17,7 @@ type MemoryRuntimeStore struct {
 	mu          sync.RWMutex
 	workflows   map[string]*runtime.Workflow
 	steps       map[string]*runtime.ExecutionStep
-	leases      map[string]*runtime.Lease      // key: resource_type + ":" + resource_id
+	leases      map[string]*runtime.Lease        // key: resource_type + ":" + resource_id
 	checkpoints map[string][]*runtime.Checkpoint // key: workflow_id
 	workers     map[string]*runtime.Worker
 	decisions   map[string][]*runtime.RuntimeDecision // key: workflow_id

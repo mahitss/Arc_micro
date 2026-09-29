@@ -55,18 +55,18 @@ type Service struct {
 	Description           string            `json:"description"`
 	Category              string            `json:"category"`
 	Capabilities          []string          `json:"capabilities,omitempty"`
-	Recipient             string            `json:"recipient"`      // Authoritative server-side settlement address
-	Asset                 string            `json:"asset"`          // Default "USDC"
+	Recipient             string            `json:"recipient"` // Authoritative server-side settlement address
+	Asset                 string            `json:"asset"`     // Default "USDC"
 	Enabled               bool              `json:"enabled"`
 	Verified              bool              `json:"verified"`
-	MaxPrice              string            `json:"max_price"`      // Maximum allowable price in base units
+	MaxPrice              string            `json:"max_price"` // Maximum allowable price in base units
 	FixedPrice            string            `json:"fixed_price,omitempty"`
-	PricingModel          string            `json:"pricing_model"`  // FIXED, VARIABLE, QUOTE_REQUIRED
-	TrustStatus           string            `json:"trust_status"`   // TRUSTED, VERIFIED, UNVERIFIED, DISABLED
+	PricingModel          string            `json:"pricing_model"` // FIXED, VARIABLE, QUOTE_REQUIRED
+	TrustStatus           string            `json:"trust_status"`  // TRUSTED, VERIFIED, UNVERIFIED, DISABLED
 	HistoricalReliability string            `json:"historical_reliability,omitempty"`
-	SuccessRateBps        int64             `json:"success_rate_bps"`        // Basis points (0-10000)
-	AverageLatencyMs      int64             `json:"average_latency_ms"`      // Milliseconds
-	RiskScore             uint32            `json:"risk_score"`             // 0-100
+	SuccessRateBps        int64             `json:"success_rate_bps"`   // Basis points (0-10000)
+	AverageLatencyMs      int64             `json:"average_latency_ms"` // Milliseconds
+	RiskScore             uint32            `json:"risk_score"`         // 0-100
 	HistoricalTxCount     uint64            `json:"historical_tx_count"`
 	Metadata              map[string]string `json:"metadata,omitempty"`
 	CreatedAt             string            `json:"created_at"`

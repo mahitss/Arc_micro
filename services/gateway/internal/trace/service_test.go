@@ -296,13 +296,13 @@ func TestTraceService_GetPaymentTrace_Ambiguous(t *testing.T) {
 
 func TestTraceService_ZeroSecretLeakage(t *testing.T) {
 	meta := map[string]interface{}{
-		"amount":          "1000",
-		"private_key":     "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-		"secret_token":    "my-super-secret-key",
-		"password":        "admin123",
-		"authorization":   "Bearer sensitive_token",
-		"service_id":      "compute-service",
-		"signer_key":      "kms_key_blob",
+		"amount":        "1000",
+		"private_key":   "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+		"secret_token":  "my-super-secret-key",
+		"password":      "admin123",
+		"authorization": "Bearer sensitive_token",
+		"service_id":    "compute-service",
+		"signer_key":    "kms_key_blob",
 	}
 
 	sanitizeMetadata(meta)

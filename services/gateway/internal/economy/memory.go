@@ -34,14 +34,14 @@ type EconomicMemoryStore struct {
 	byCapabilitySim      map[string][]*EconomicObservation // key: orgID:capability
 	bySwarm              map[string][]*EconomicObservation // key: orgID:swarmID
 	recoveryPatterns     []*RecoveryPattern
-	strategyPerformances map[string]*StrategyPerformance   // key: strategy
-	missionSummaries     map[string]*MissionOutcomeSummary // key: orgID:missionID
-	swarmSummaries       map[string]*SwarmOutcomeSummary   // key: orgID:swarmID
-	features             map[string][]*PerformanceFeature  // key: orgID:entityID
+	strategyPerformances map[string]*StrategyPerformance      // key: strategy
+	missionSummaries     map[string]*MissionOutcomeSummary    // key: orgID:missionID
+	swarmSummaries       map[string]*SwarmOutcomeSummary      // key: orgID:swarmID
+	features             map[string][]*PerformanceFeature     // key: orgID:entityID
 	recommendations      map[string][]*EconomicRecommendation // key: orgID
 	recByID              map[string]*EconomicRecommendation
-	recOutcomes          map[string][]*RecommendationOutcome  // key: recID
-	drifts               map[string][]*EconomicDrift          // key: orgID
+	recOutcomes          map[string][]*RecommendationOutcome // key: recID
+	drifts               map[string][]*EconomicDrift         // key: orgID
 }
 
 // NewEconomicMemoryStore initializes the in-memory append-only observation store.

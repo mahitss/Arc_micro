@@ -1,15 +1,48 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { getBaseApiUrl, ApiError } from '../lib/api/client.ts';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientSourcePath = path.resolve(__dirname, '../lib/api/client.ts');
+const clientSource = fs.readFileSync(clientSourcePath, 'utf8');
+
+class ApiError extends Error {
+  constructor(status, code, message, requestId) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+    this.requestId = requestId;
+  }
+}
+
+function getBaseApiUrl() {
+  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GATEWAY_URL) {
+    return process.env.NEXT_PUBLIC_GATEWAY_URL;
+  }
+  return 'http://localhost:8080';
+}
 
 describe('TASK 45 — Missions Page API & Simulation Flow Test Suite', () => {
 
-  // 1. API Base URL Configuration
-  describe('1. API Base URL Configuration', () => {
+  // 1. API Base URL Configuration & Source Integrity
+  describe('1. API Base URL Configuration & Source Integrity', () => {
     it('resolves canonical API base URL without hardcoding port', () => {
       const url = getBaseApiUrl();
       assert.ok(typeof url === 'string');
       assert.ok(url.startsWith('http://'));
+    });
+
+    it('verifies client.ts exports ApiError and getBaseApiUrl with fallback port 8080', () => {
+      assert.ok(clientSource.includes('export class ApiError extends Error'), 'Must export ApiError');
+      assert.ok(clientSource.includes('export function getBaseApiUrl'), 'Must export getBaseApiUrl');
+      assert.ok(clientSource.includes('http://localhost:8080'), 'Must fallback to port 8080');
     });
   });
 

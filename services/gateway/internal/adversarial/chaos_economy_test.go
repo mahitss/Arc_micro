@@ -168,8 +168,8 @@ func TestChaosEconomySuite_Section18(t *testing.T) {
 	t.Run("Scenario: Policy Change During Mission", func(t *testing.T) {
 		missionPlannedUnderLimit := int64(50000000) // 50 USDC
 		_ = missionPlannedUnderLimit
-		newPolicyLimit := int64(20000000)          // Tightened to 20 USDC
-		paymentAmount := int64(30000000)           // 30 USDC
+		newPolicyLimit := int64(20000000) // Tightened to 20 USDC
+		paymentAmount := int64(30000000)  // 30 USDC
 
 		// Execution gate evaluates against current policy, NOT plan-time policy
 		allowedAtExecution := paymentAmount <= newPolicyLimit

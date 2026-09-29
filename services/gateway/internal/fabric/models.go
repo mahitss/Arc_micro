@@ -26,11 +26,11 @@ const (
 type ActionAuthorityLevel string
 
 const (
-	AuthorityNonFinancial       ActionAuthorityLevel = "NON_FINANCIAL"
-	AuthorityFinancialRead      ActionAuthorityLevel = "FINANCIAL_READ"
-	AuthorityFinancialProposal  ActionAuthorityLevel = "FINANCIAL_PROPOSAL"
+	AuthorityNonFinancial        ActionAuthorityLevel = "NON_FINANCIAL"
+	AuthorityFinancialRead       ActionAuthorityLevel = "FINANCIAL_READ"
+	AuthorityFinancialProposal   ActionAuthorityLevel = "FINANCIAL_PROPOSAL"
 	AuthorityFinancialAuthorized ActionAuthorityLevel = "FINANCIAL_AUTHORIZED"
-	AuthorityFinancialExecution ActionAuthorityLevel = "FINANCIAL_EXECUTION"
+	AuthorityFinancialExecution  ActionAuthorityLevel = "FINANCIAL_EXECUTION"
 )
 
 // ObjectiveConstraints defines explicit machine-readable boundaries
@@ -81,29 +81,29 @@ type EconomicEnvelope struct {
 
 // RiskEnvelope defines boundaries preventing constitutional degradation (INV-149)
 type RiskEnvelope struct {
-	EnvelopeID           string   `json:"envelope_id"`
-	ObjectiveID          string   `json:"objective_id"`
-	TenantID             string   `json:"tenant_id"`
-	MaxRiskScore         int      `json:"max_risk_score"`
-	AllowedRiskClasses   []string `json:"allowed_risk_classes"`
-	EscalationThreshold  int      `json:"escalation_threshold"`
-	ConfidenceThreshold  float64  `json:"confidence_threshold"`
-	SecurityRequirements []string `json:"security_requirements"`
+	EnvelopeID           string    `json:"envelope_id"`
+	ObjectiveID          string    `json:"objective_id"`
+	TenantID             string    `json:"tenant_id"`
+	MaxRiskScore         int       `json:"max_risk_score"`
+	AllowedRiskClasses   []string  `json:"allowed_risk_classes"`
+	EscalationThreshold  int       `json:"escalation_threshold"`
+	ConfidenceThreshold  float64   `json:"confidence_threshold"`
+	SecurityRequirements []string  `json:"security_requirements"`
 	CreatedAt            time.Time `json:"created_at"`
 }
 
 // ResourceEnvelope defines bounds on operational compute and concurrency (INV-150)
 type ResourceEnvelope struct {
-	EnvelopeID         string    `json:"envelope_id"`
-	ObjectiveID        string    `json:"objective_id"`
-	TenantID           string    `json:"tenant_id"`
-	MaxWorkers         int       `json:"max_workers"`
-	MaxParallelTasks   int       `json:"max_parallel_tasks"`
-	MaxProviderCalls   int       `json:"max_provider_calls"`
-	MaxAgentDepth      int       `json:"max_agent_depth"`
-	MaxRuntimeSeconds  int       `json:"max_runtime_seconds"`
-	MaxRetries         int       `json:"max_retries"`
-	CreatedAt          time.Time `json:"created_at"`
+	EnvelopeID        string    `json:"envelope_id"`
+	ObjectiveID       string    `json:"objective_id"`
+	TenantID          string    `json:"tenant_id"`
+	MaxWorkers        int       `json:"max_workers"`
+	MaxParallelTasks  int       `json:"max_parallel_tasks"`
+	MaxProviderCalls  int       `json:"max_provider_calls"`
+	MaxAgentDepth     int       `json:"max_agent_depth"`
+	MaxRuntimeSeconds int       `json:"max_runtime_seconds"`
+	MaxRetries        int       `json:"max_retries"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 // BlueprintTask represents an operational unit in the blueprint DAG
@@ -121,23 +121,23 @@ type BlueprintTask struct {
 
 // ExecutionBlueprint is the immutable compiled plan for an objective
 type ExecutionBlueprint struct {
-	BlueprintID              string                 `json:"blueprint_id"`
-	ObjectiveID              string                 `json:"objective_id"`
-	TenantID                 string                 `json:"tenant_id"`
-	Version                  int                    `json:"version"`
-	Tasks                    []BlueprintTask        `json:"tasks"`
-	AgentAssignments         map[string]string      `json:"agent_assignments"`
-	ServiceCandidates        []string               `json:"service_candidates"`
-	EconomicEnvelope         EconomicEnvelope       `json:"economic_envelope"`
-	RiskEnvelope             RiskEnvelope           `json:"risk_envelope"`
-	ResourceEnvelope         ResourceEnvelope       `json:"resource_envelope"`
-	PolicyReferences         []string               `json:"policy_references"`
-	SimulationID             string                 `json:"simulation_id,omitempty"`
-	SimulationTimestamp      time.Time              `json:"simulation_timestamp,omitempty"`
-	SimulationStale          bool                   `json:"simulation_stale"`
-	PolicyHash               string                 `json:"policy_hash"`
-	Status                   string                 `json:"status"` // "COMPILED", "SIMULATED", "ACTIVE", "SUPERSEDED"
-	CreatedAt                time.Time              `json:"created_at"`
+	BlueprintID         string            `json:"blueprint_id"`
+	ObjectiveID         string            `json:"objective_id"`
+	TenantID            string            `json:"tenant_id"`
+	Version             int               `json:"version"`
+	Tasks               []BlueprintTask   `json:"tasks"`
+	AgentAssignments    map[string]string `json:"agent_assignments"`
+	ServiceCandidates   []string          `json:"service_candidates"`
+	EconomicEnvelope    EconomicEnvelope  `json:"economic_envelope"`
+	RiskEnvelope        RiskEnvelope      `json:"risk_envelope"`
+	ResourceEnvelope    ResourceEnvelope  `json:"resource_envelope"`
+	PolicyReferences    []string          `json:"policy_references"`
+	SimulationID        string            `json:"simulation_id,omitempty"`
+	SimulationTimestamp time.Time         `json:"simulation_timestamp,omitempty"`
+	SimulationStale     bool              `json:"simulation_stale"`
+	PolicyHash          string            `json:"policy_hash"`
+	Status              string            `json:"status"` // "COMPILED", "SIMULATED", "ACTIVE", "SUPERSEDED"
+	CreatedAt           time.Time         `json:"created_at"`
 }
 
 // BlueprintVersion tracks historical versions during controlled replanning
@@ -238,15 +238,15 @@ type WhyNotExplanation struct {
 
 // AutonomyMetrics measures real dimensions of autonomy without vague scores
 type AutonomyMetrics struct {
-	TenantID              string  `json:"tenant_id"`
-	AutomationPercentage  float64 `json:"automation_percentage"`  // % steps executed without human intervention
-	RecoveryPercentage    float64 `json:"recovery_percentage"`    // % failures automatically recovered
-	HumanEscalationCount  int     `json:"human_escalation_count"`
-	PolicyBlockCount      int     `json:"policy_block_count"`
-	FinancialActionCount  int     `json:"financial_action_count"`
-	SimulatedActionCount  int     `json:"simulated_action_count"`
-	TotalObjectives       int     `json:"total_objectives"`
-	ActiveObjectives      int     `json:"active_objectives"`
+	TenantID             string  `json:"tenant_id"`
+	AutomationPercentage float64 `json:"automation_percentage"` // % steps executed without human intervention
+	RecoveryPercentage   float64 `json:"recovery_percentage"`   // % failures automatically recovered
+	HumanEscalationCount int     `json:"human_escalation_count"`
+	PolicyBlockCount     int     `json:"policy_block_count"`
+	FinancialActionCount int     `json:"financial_action_count"`
+	SimulatedActionCount int     `json:"simulated_action_count"`
+	TotalObjectives      int     `json:"total_objectives"`
+	ActiveObjectives     int     `json:"active_objectives"`
 }
 
 // SimulationCompareResult compares simulation projections with live execution readiness

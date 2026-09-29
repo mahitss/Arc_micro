@@ -238,9 +238,9 @@ func (s *MissionService) CreateMission(ctx context.Context, p CreateMissionParam
 	}
 
 	s.recordAudit(ctx, mission, "mission.created", map[string]interface{}{
-		"objective":    mission.Objective,
-		"budget":       mission.Budget,
-		"steps_count":  len(plan.Steps),
+		"objective":   mission.Objective,
+		"budget":      mission.Budget,
+		"steps_count": len(plan.Steps),
 	})
 
 	return mission, plan, nil
@@ -1142,4 +1142,3 @@ func (s *MissionService) GetReplanningEngine() *ReplanningEngine {
 func (s *MissionService) GetOutcomeEvaluator() *OutcomeEvaluator {
 	return s.evaluator
 }
-

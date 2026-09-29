@@ -15,12 +15,12 @@ import (
 // PRODUCTION READINESS STATUS: NOT IMPLEMENTED
 //
 // Cryptographic Signing Requirements for KMS Implementation:
-// 1. Key Spec: ECC_SECG_P256K1 (secp256k1) with KeyUsage = SIGN_VERIFY.
-// 2. Hash Algorithm: Keccak-256 (pre-computed off-KMS before calling Sign API with MessageType=DIGEST).
-// 3. Signature Conversion: AWS KMS returns an ASN.1 DER-encoded ECDSA signature. Ethereum EIP-1559
-//    requires 65-byte (R, S, V) format where S must be low-S (canonical malleable check) and V is the recovery ID (0 or 1).
-// 4. Recovery ID Calculation: Must be derived by recovering the public key from (R, S) and checking which candidate (v=0 or v=1)
-//    matches the KMS public key.
+//  1. Key Spec: ECC_SECG_P256K1 (secp256k1) with KeyUsage = SIGN_VERIFY.
+//  2. Hash Algorithm: Keccak-256 (pre-computed off-KMS before calling Sign API with MessageType=DIGEST).
+//  3. Signature Conversion: AWS KMS returns an ASN.1 DER-encoded ECDSA signature. Ethereum EIP-1559
+//     requires 65-byte (R, S, V) format where S must be low-S (canonical malleable check) and V is the recovery ID (0 or 1).
+//  4. Recovery ID Calculation: Must be derived by recovering the public key from (R, S) and checking which candidate (v=0 or v=1)
+//     matches the KMS public key.
 //
 // In accordance with Day 3 instructions, this adapter refuses to fabricate fake KMS responses
 // and strictly fails closed when configured.

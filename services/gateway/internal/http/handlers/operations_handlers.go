@@ -34,12 +34,12 @@ func (h *OperationsHandler) HandleGetStatus(w http.ResponseWriter, r *http.Reque
 	health := h.opsService.GetHealth(r.Context(), tenantID)
 
 	resp := map[string]interface{}{
-		"system":      "AgentPay Autonomous Operations OS",
-		"status":      "OPERATIONAL",
-		"snapshot":    snap,
-		"health":      health.OverallState,
-		"arc_state":   health.Arc.StatusText,
-		"timestamp":   time.Now().UTC(),
+		"system":    "AgentPay Autonomous Operations OS",
+		"status":    "OPERATIONAL",
+		"snapshot":  snap,
+		"health":    health.OverallState,
+		"arc_state": health.Arc.StatusText,
+		"timestamp": time.Now().UTC(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

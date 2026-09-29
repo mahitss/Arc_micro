@@ -11,20 +11,20 @@ import (
 )
 
 var (
-	ErrContractNotFound            = errors.New("referenced contract not found")
-	ErrProviderMismatch            = errors.New("invoice provider does not match contract provider")
-	ErrPayerMismatch               = errors.New("invoice requester does not match contract payer")
-	ErrCapabilityMismatch          = errors.New("capability does not match contract declaration")
-	ErrAmountExceedsContract       = errors.New("invoice amount exceeds remaining contract value")
-	ErrMilestoneRefMissing         = errors.New("referenced milestone does not exist on contract")
-	ErrMilestoneNotVerified        = errors.New("referenced milestone has not been verified (INV-57)")
-	ErrDuplicateInvoice            = errors.New("duplicate invoice detected (same ID, hash, or milestone)")
-	ErrInvoiceExpired              = errors.New("invoice due date is expired")
-	ErrCurrencyMismatch            = errors.New("invoice currency does not match contract settlement currency")
-	ErrPolicySnapshotMissing       = errors.New("active economic policy snapshot is missing")
-	ErrInsufficientEvidence        = errors.New("verification rejected: insufficient evidence submitted")
-	ErrChecksumMismatch            = errors.New("verification rejected: result checksum does not match payload")
-	ErrPromptInjectionDetected     = errors.New("verification rejected: untrusted prompt injection attempt detected")
+	ErrContractNotFound        = errors.New("referenced contract not found")
+	ErrProviderMismatch        = errors.New("invoice provider does not match contract provider")
+	ErrPayerMismatch           = errors.New("invoice requester does not match contract payer")
+	ErrCapabilityMismatch      = errors.New("capability does not match contract declaration")
+	ErrAmountExceedsContract   = errors.New("invoice amount exceeds remaining contract value")
+	ErrMilestoneRefMissing     = errors.New("referenced milestone does not exist on contract")
+	ErrMilestoneNotVerified    = errors.New("referenced milestone has not been verified (INV-57)")
+	ErrDuplicateInvoice        = errors.New("duplicate invoice detected (same ID, hash, or milestone)")
+	ErrInvoiceExpired          = errors.New("invoice due date is expired")
+	ErrCurrencyMismatch        = errors.New("invoice currency does not match contract settlement currency")
+	ErrPolicySnapshotMissing   = errors.New("active economic policy snapshot is missing")
+	ErrInsufficientEvidence    = errors.New("verification rejected: insufficient evidence submitted")
+	ErrChecksumMismatch        = errors.New("verification rejected: result checksum does not match payload")
+	ErrPromptInjectionDetected = errors.New("verification rejected: untrusted prompt injection attempt detected")
 )
 
 // VerificationOutcome represents the result of evaluating milestone completion evidence.
@@ -52,13 +52,13 @@ type MilestoneVerificationRequest struct {
 
 // MilestoneVerificationResult holds the decision and audit trails.
 type MilestoneVerificationResult struct {
-	MilestoneID   string              `json:"milestone_id"`
-	Outcome       VerificationOutcome `json:"outcome"`
-	VerifiedHash  string              `json:"verified_hash"`
-	Reason        string              `json:"reason"`
-	ChecksPassed  []string            `json:"checks_passed"`
-	ChecksFailed  []string            `json:"checks_failed"`
-	VerifiedAt    time.Time           `json:"verified_at"`
+	MilestoneID  string              `json:"milestone_id"`
+	Outcome      VerificationOutcome `json:"outcome"`
+	VerifiedHash string              `json:"verified_hash"`
+	Reason       string              `json:"reason"`
+	ChecksPassed []string            `json:"checks_passed"`
+	ChecksFailed []string            `json:"checks_failed"`
+	VerifiedAt   time.Time           `json:"verified_at"`
 }
 
 // MilestoneVerifier validates deliverable completion before allowing settlement.

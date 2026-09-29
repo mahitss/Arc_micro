@@ -148,12 +148,12 @@ func (e *PolicyDiffEngine) compareRule(oldR, newR ConstitutionRule) (RuleModific
 // CalculateAuthorityDelta evaluates whether Constitution B expands, narrows, or maintains financial authority.
 func (e *PolicyDiffEngine) CalculateAuthorityDelta(oldC, newC *EconomicConstitution, diff PolicyDiff) AuthorityDelta {
 	delta := AuthorityDelta{
-		Classification: "UNCHANGED",
-		SpendingDelta:  "No net spend ceiling change",
-		RecipientDelta: "Recipient allowlist unchanged",
-		DelegationDelta: "Delegation limits unchanged",
+		Classification:     "UNCHANGED",
+		SpendingDelta:      "No net spend ceiling change",
+		RecipientDelta:     "Recipient allowlist unchanged",
+		DelegationDelta:    "Delegation limits unchanged",
 		RiskToleranceDelta: "Risk thresholds unchanged",
-		ApprovalDelta:  "Approval thresholds unchanged",
+		ApprovalDelta:      "Approval thresholds unchanged",
 	}
 
 	var hasIncrease, hasDecrease bool

@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	ErrCyclicTaskGraph          = errors.New("cyclic dependency detected in swarm task graph")
-	ErrMaxTasksExceeded         = errors.New("swarm task count exceeds maximum ceiling")
-	ErrMaxDepthExceeded         = errors.New("swarm dependency depth exceeds maximum ceiling")
-	ErrTaskBudgetExceedsSwarm   = errors.New("cumulative task budgets exceed authorized swarm budget")
-	ErrMissingTaskDependency    = errors.New("task references a non-existent dependency")
-	ErrInvalidTaskCapability    = errors.New("task has invalid or empty capability")
-	ErrDuplicateTaskID          = errors.New("duplicate task ID detected in swarm graph")
-	ErrCrossSwarmReference      = errors.New("cross-swarm reference detected in task graph")
+	ErrCyclicTaskGraph        = errors.New("cyclic dependency detected in swarm task graph")
+	ErrMaxTasksExceeded       = errors.New("swarm task count exceeds maximum ceiling")
+	ErrMaxDepthExceeded       = errors.New("swarm dependency depth exceeds maximum ceiling")
+	ErrTaskBudgetExceedsSwarm = errors.New("cumulative task budgets exceed authorized swarm budget")
+	ErrMissingTaskDependency  = errors.New("task references a non-existent dependency")
+	ErrInvalidTaskCapability  = errors.New("task has invalid or empty capability")
+	ErrDuplicateTaskID        = errors.New("duplicate task ID detected in swarm graph")
+	ErrCrossSwarmReference    = errors.New("cross-swarm reference detected in task graph")
 )
 
 const (

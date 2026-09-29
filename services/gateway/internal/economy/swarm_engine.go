@@ -22,23 +22,23 @@ const (
 
 // SwarmEngine orchestrates the multi-agent swarm DAG execution lifecycle.
 type SwarmEngine struct {
-	mu             sync.RWMutex
-	swarms         map[string]*Swarm
-	tasks          map[string]map[string]*TaskNode // swarm_id -> task_id -> TaskNode
-	traces         map[string][]SwarmExecutionTraceEntry
-	planner        *SwarmPlanner
-	validator      *SwarmGraphValidator
-	budgetManager  *SwarmBudgetManager
-	reg            *registry.Registry
-	agentCoord     *AgentCoordinator
-	hiringService  *HiringService
-	econEngine     *EconomyEngine
-	intentService  *intent.Service
-	policyClient   policy.Client
-	evaluator      *OutcomeEvaluator
-	detector       *AnomalyDetector
-	replanningEng  *ReplanningEngine
-	workerLimit    int
+	mu            sync.RWMutex
+	swarms        map[string]*Swarm
+	tasks         map[string]map[string]*TaskNode // swarm_id -> task_id -> TaskNode
+	traces        map[string][]SwarmExecutionTraceEntry
+	planner       *SwarmPlanner
+	validator     *SwarmGraphValidator
+	budgetManager *SwarmBudgetManager
+	reg           *registry.Registry
+	agentCoord    *AgentCoordinator
+	hiringService *HiringService
+	econEngine    *EconomyEngine
+	intentService *intent.Service
+	policyClient  policy.Client
+	evaluator     *OutcomeEvaluator
+	detector      *AnomalyDetector
+	replanningEng *ReplanningEngine
+	workerLimit   int
 }
 
 // NewSwarmEngine initializes the SwarmEngine.

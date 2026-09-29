@@ -790,7 +790,7 @@ func (r *LabRunner) runAttack14_SignerFailure(ctx context.Context) SecurityScena
 	// Simulated signer key failure
 	actual := "Signer failure halts execution prior to broadcast; audit record logged, no false confirmation created."
 	evidence := map[string]interface{}{
-		"signer_error_handling": "ABORT_BEFORE_BROADCAST",
+		"signer_error_handling":   "ABORT_BEFORE_BROADCAST",
 		"false_success_prevented": true,
 	}
 
@@ -866,7 +866,7 @@ func (r *LabRunner) runAttack16_DatabaseFailure(ctx context.Context) SecuritySce
 	// Simulated storage rollback
 	actual := "Database transaction failure aborts intent pipeline before fund reservation; zero orphan on-chain transactions."
 	evidence := map[string]interface{}{
-		"storage_rollback": "ATOMIC_TRANSACTION",
+		"storage_rollback":    "ATOMIC_TRANSACTION",
 		"orphan_tx_prevented": true,
 	}
 
@@ -955,7 +955,7 @@ func (r *LabRunner) runAttack18_TransactionMutation(ctx context.Context) Securit
 	// Tampering post-authorization
 	actual := "Signer binds calldata and recipient strictly to authorized intent parameters; post-authorization tampering rejected."
 	evidence := map[string]interface{}{
-		"intent_binding": "CRYPTOGRAPHIC_HASH",
+		"intent_binding":            "CRYPTOGRAPHIC_HASH",
 		"calldata_tamper_prevented": true,
 	}
 
@@ -980,9 +980,9 @@ func (r *LabRunner) runAttack19_SimulationEscape(ctx context.Context) SecuritySc
 	// Simulation mode execution
 	actual := "Simulations execute via pure in-memory evaluation without invoking blockchain executor or signer."
 	evidence := map[string]interface{}{
-		"simulation_mode": true,
+		"simulation_mode":     true,
 		"broadcast_attempted": false,
-		"signer_invoked": false,
+		"signer_invoked":      false,
 	}
 
 	return SecurityScenario{

@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	ErrNoQuotesProvided    = errors.New("no candidate quotes provided for economic selection")
-	ErrZeroStepBudget      = errors.New("step budget must be greater than zero for price normalization")
-	ErrQuoteExceedsBudget  = errors.New("candidate quote price exceeds step budget")
+	ErrNoQuotesProvided     = errors.New("no candidate quotes provided for economic selection")
+	ErrZeroStepBudget       = errors.New("step budget must be greater than zero for price normalization")
+	ErrQuoteExceedsBudget   = errors.New("candidate quote price exceeds step budget")
 	ErrQuoteCurrencyInvalid = errors.New("candidate quote currency does not match requested asset")
 )
 

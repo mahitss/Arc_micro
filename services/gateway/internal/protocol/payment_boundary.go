@@ -13,7 +13,7 @@ import (
 var (
 	ErrRawRecipientProhibited = errors.New("external agents cannot supply arbitrary raw recipient blockchain addresses (INV-163)")
 	ErrDeliverableNotVerified = errors.New("payment cannot be requested before deliverable is accepted by ResultQualityGate (INV-173)")
-	ErrPolicyGatedDenial     = errors.New("payment request denied by deterministic policy engine (INV-165)")
+	ErrPolicyGatedDenial      = errors.New("payment request denied by deterministic policy engine (INV-165)")
 )
 
 // ServiceResolver maps service IDs to approved on-chain recipient addresses.
@@ -30,15 +30,15 @@ type MemoryServiceResolver struct {
 func NewMemoryServiceResolver() *MemoryServiceResolver {
 	return &MemoryServiceResolver{
 		recipients: map[string]string{
-			"sec-audit":           "0x1111111111111111111111111111111111111111",
-			"market-research":     "0x2222222222222222222222222222222222222222",
-			"zk-verification":     "0x3333333333333333333333333333333333333333",
-			"provider-alpha":      "0x4444444444444444444444444444444444444444",
-			"provider-beta":       "0x5555555555555555555555555555555555555555",
-			"agent_scanner_01":    "0x6666666666666666666666666666666666666666",
-			"agent_security_02":   "0x7777777777777777777777777777777777777777",
-			"agent_verifier_03":   "0x8888888888888888888888888888888888888888",
-			"service_audit_pro":   "0x9999999999999999999999999999999999999999",
+			"sec-audit":         "0x1111111111111111111111111111111111111111",
+			"market-research":   "0x2222222222222222222222222222222222222222",
+			"zk-verification":   "0x3333333333333333333333333333333333333333",
+			"provider-alpha":    "0x4444444444444444444444444444444444444444",
+			"provider-beta":     "0x5555555555555555555555555555555555555555",
+			"agent_scanner_01":  "0x6666666666666666666666666666666666666666",
+			"agent_security_02": "0x7777777777777777777777777777777777777777",
+			"agent_verifier_03": "0x8888888888888888888888888888888888888888",
+			"service_audit_pro": "0x9999999999999999999999999999999999999999",
 		},
 	}
 }

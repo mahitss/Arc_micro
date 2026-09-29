@@ -12,11 +12,11 @@ const (
 
 // AIMessage represents a single message in an AI interaction.
 type AIMessage struct {
-	Role       AIRole        `json:"role"`
-	Content    string        `json:"content"`
-	Name       string        `json:"name,omitempty"`
-	ToolCalls  []AIToolCall  `json:"tool_calls,omitempty"`
-	ToolCallID string        `json:"tool_call_id,omitempty"`
+	Role       AIRole       `json:"role"`
+	Content    string       `json:"content"`
+	Name       string       `json:"name,omitempty"`
+	ToolCalls  []AIToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string       `json:"tool_call_id,omitempty"`
 }
 
 // AIRequest represents a canonical request to the universal AI provider layer.

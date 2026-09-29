@@ -30,8 +30,8 @@ const MaxTaskLength = 4096
 
 // TaskResponse represents the API response for an agent task evaluation.
 type TaskResponse struct {
-	TaskID        string               `json:"task_id"`
-	Status        string               `json:"status"` // "PAYMENT_REQUIRED" or "NO_PAYMENT_REQUIRED"
+	TaskID        string                `json:"task_id"`
+	Status        string                `json:"status"` // "PAYMENT_REQUIRED" or "NO_PAYMENT_REQUIRED"
 	PaymentIntent *intent.PaymentIntent `json:"payment_intent,omitempty"`
 }
 

@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	ErrSSRFBlocked            = errors.New("webhook destination URL is blocked by SSRF policy")
-	ErrInvalidURLScheme       = errors.New("webhook destination must use HTTPS (HTTP prohibited in production)")
+	ErrSSRFBlocked             = errors.New("webhook destination URL is blocked by SSRF policy")
+	ErrInvalidURLScheme        = errors.New("webhook destination must use HTTPS (HTTP prohibited in production)")
 	ErrMetadataEndpointBlocked = errors.New("access to cloud metadata endpoints (169.254.x.x) is strictly prohibited")
-	ErrPrivateIPBlocked       = errors.New("access to private or internal network IP addresses is prohibited")
-	ErrLoopbackBlocked        = errors.New("access to loopback addresses (127.0.0.1 / localhost) is prohibited")
+	ErrPrivateIPBlocked        = errors.New("access to private or internal network IP addresses is prohibited")
+	ErrLoopbackBlocked         = errors.New("access to loopback addresses (127.0.0.1 / localhost) is prohibited")
 )
 
 // Private and reserved IP blocks for SSRF enforcement

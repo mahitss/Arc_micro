@@ -102,7 +102,6 @@ type AuthorizationDecision struct {
 	Simulation          bool        `json:"simulation,omitempty"`
 }
 
-
 // ErrorDetail contains error code and human-readable explanation.
 type ErrorDetail struct {
 	Code    string `json:"code"`

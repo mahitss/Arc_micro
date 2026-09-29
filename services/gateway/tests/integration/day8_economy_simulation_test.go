@@ -28,11 +28,11 @@ func (m *mockSimulationPolicyClient) Simulate(ctx context.Context, req domain.Pa
 	// If amount is 25 USDC (25000000 base units), simulate APPROVAL_REQUIRED
 	if req.Amount == "25000000" {
 		return domain.AuthorizationDecision{
-			RequestID:   req.RequestID,
-			Decision:    domain.DecisionApprovalRequired,
-			ReasonCode:  domain.ReasonAboveApprovalThreshold,
-			Reason:      "Amount exceeds single transaction instant execution threshold",
-			Simulation:  true,
+			RequestID:  req.RequestID,
+			Decision:   domain.DecisionApprovalRequired,
+			ReasonCode: domain.ReasonAboveApprovalThreshold,
+			Reason:     "Amount exceeds single transaction instant execution threshold",
+			Simulation: true,
 		}, nil
 	}
 

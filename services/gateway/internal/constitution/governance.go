@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	ErrChangeNotApproved       = errors.New("cannot activate change request: status must be APPROVED")
-	ErrInvalidProposer         = errors.New("proposer actor identity is required")
-	ErrInvalidApprover         = errors.New("approver actor identity is required")
+	ErrChangeNotApproved        = errors.New("cannot activate change request: status must be APPROVED")
+	ErrInvalidProposer          = errors.New("proposer actor identity is required")
+	ErrInvalidApprover          = errors.New("approver actor identity is required")
 	ErrStalePolicyAuthorization = errors.New("stale policy authorization detected: policy has advanced since intent was authorized (INV-49)")
 )
 

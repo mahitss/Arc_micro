@@ -435,4 +435,3 @@ func TestIntegration_Day8DeveloperPlatform(t *testing.T) {
 		}
 	})
 }
-

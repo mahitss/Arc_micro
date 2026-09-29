@@ -139,7 +139,7 @@ func (e *MatchingEngine) Match(params MatchParams) (*CandidateSet, error) {
 			c.SampleSize = m.SampleSize
 			c.HistoricalSuccessRate = m.CompletionRate
 			c.Confidence = calculateConfidence(m.SampleSize)
-			c.ContextualScore = m.CompletionRate * 0.7 + m.ResultAcceptanceRate * 0.3
+			c.ContextualScore = m.CompletionRate*0.7 + m.ResultAcceptanceRate*0.3
 		} else {
 			// Unobserved new candidate: baseline prior
 			c.SampleSize = 0

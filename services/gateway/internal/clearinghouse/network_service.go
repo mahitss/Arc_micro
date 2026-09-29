@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	ErrCounterpartyNotFound = errors.New("economic counterparty not found")
-	ErrCounterpartySuspended = errors.New("economic counterparty is suspended")
-	ErrDisputeNotFound       = errors.New("clearing dispute record not found")
-	ErrMultiPartyNettingNotFound = errors.New("multi-party netting proposal not found")
+	ErrCounterpartyNotFound       = errors.New("economic counterparty not found")
+	ErrCounterpartySuspended      = errors.New("economic counterparty is suspended")
+	ErrDisputeNotFound            = errors.New("clearing dispute record not found")
+	ErrMultiPartyNettingNotFound  = errors.New("multi-party netting proposal not found")
 	ErrReconciliationItemNotFound = errors.New("reconciliation item not found")
 )
 

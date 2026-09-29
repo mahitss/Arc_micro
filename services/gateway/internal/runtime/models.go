@@ -78,13 +78,13 @@ const (
 type RetryCategory string
 
 const (
-	RetryImmediately         RetryCategory = "RETRY_IMMEDIATELY"
-	RetryWithBackoff         RetryCategory = "RETRY_WITH_BACKOFF"
+	RetryImmediately          RetryCategory = "RETRY_IMMEDIATELY"
+	RetryWithBackoff          RetryCategory = "RETRY_WITH_BACKOFF"
 	RetryWaitForExternalEvent RetryCategory = "WAIT_FOR_EXTERNAL_EVENT"
-	RetryReconcile           RetryCategory = "RECONCILE"
-	RetryEscalate            RetryCategory = "ESCALATE"
-	RetryPermanentFailure    RetryCategory = "PERMANENT_FAILURE"
-	RetryDeny                RetryCategory = "DENY"
+	RetryReconcile            RetryCategory = "RECONCILE"
+	RetryEscalate             RetryCategory = "ESCALATE"
+	RetryPermanentFailure     RetryCategory = "PERMANENT_FAILURE"
+	RetryDeny                 RetryCategory = "DENY"
 )
 
 // IncidentSeverity defines severity of operational runtime incidents.

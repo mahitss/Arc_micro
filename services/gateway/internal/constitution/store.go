@@ -23,7 +23,7 @@ type Store interface {
 	SaveConstitution(ctx context.Context, c *EconomicConstitution) error
 	ActivateConstitution(ctx context.Context, orgID string, targetVersion uint64, expectedPrevVersion uint64, actor string) (*EconomicConstitution, error)
 	RollbackConstitution(ctx context.Context, orgID string, targetVersion uint64, actor string) (*EconomicConstitution, error)
-	
+
 	// Snapshots
 	SaveSnapshot(ctx context.Context, snapshot *PolicySnapshot) error
 	GetSnapshot(ctx context.Context, snapshotID string) (*PolicySnapshot, error)
@@ -38,9 +38,9 @@ type Store interface {
 type MemoryStore struct {
 	mu             sync.RWMutex
 	constitutions  map[string]map[uint64]*EconomicConstitution // orgID -> version -> constitution
-	activeVersions map[string]uint64                          // orgID -> activeVersion
-	snapshots      map[string]*PolicySnapshot                 // snapshotID -> snapshot
-	changeRequests map[string]*PolicyChangeRequest            // requestID -> changeRequest
+	activeVersions map[string]uint64                           // orgID -> activeVersion
+	snapshots      map[string]*PolicySnapshot                  // snapshotID -> snapshot
+	changeRequests map[string]*PolicyChangeRequest             // requestID -> changeRequest
 }
 
 // NewMemoryStore creates a new MemoryStore.

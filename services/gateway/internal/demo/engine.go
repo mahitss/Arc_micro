@@ -13,55 +13,55 @@ import (
 type MissionState string
 
 const (
-	StateCreated            MissionState = "CREATED"
-	StatePlanning           MissionState = "PLANNING"
-	StateDiscovering        MissionState = "DISCOVERING"
-	StateQuoting            MissionState = "QUOTING"
-	StateSelecting          MissionState = "SELECTING"
-	StateNegotiating        MissionState = "NEGOTIATING"
-	StatePolicyCheck        MissionState = "POLICY_CHECK"
-	StateRiskCheck          MissionState = "RISK_CHECK"
-	StateApprovalCheck      MissionState = "APPROVAL_CHECK"
+	StateCreated             MissionState = "CREATED"
+	StatePlanning            MissionState = "PLANNING"
+	StateDiscovering         MissionState = "DISCOVERING"
+	StateQuoting             MissionState = "QUOTING"
+	StateSelecting           MissionState = "SELECTING"
+	StateNegotiating         MissionState = "NEGOTIATING"
+	StatePolicyCheck         MissionState = "POLICY_CHECK"
+	StateRiskCheck           MissionState = "RISK_CHECK"
+	StateApprovalCheck       MissionState = "APPROVAL_CHECK"
 	StateTreasuryReservation MissionState = "TREASURY_RESERVATION"
-	StateExecuting          MissionState = "EXECUTING"
-	StateProviderFailure    MissionState = "PROVIDER_FAILURE"
-	StateSecurityBlock      MissionState = "SECURITY_BLOCK"
-	StateReplanning         MissionState = "REPLANNING"
-	StateRecovery           MissionState = "RECOVERY"
-	StateValidating         MissionState = "VALIDATING"
-	StateSynthesis          MissionState = "SYNTHESIS"
-	StateClearing           MissionState = "CLEARING"
-	StateSettlementReady    MissionState = "SETTLEMENT_READY"
-	StateCompleted          MissionState = "COMPLETED"
-	StateFailed             MissionState = "FAILED"
+	StateExecuting           MissionState = "EXECUTING"
+	StateProviderFailure     MissionState = "PROVIDER_FAILURE"
+	StateSecurityBlock       MissionState = "SECURITY_BLOCK"
+	StateReplanning          MissionState = "REPLANNING"
+	StateRecovery            MissionState = "RECOVERY"
+	StateValidating          MissionState = "VALIDATING"
+	StateSynthesis           MissionState = "SYNTHESIS"
+	StateClearing            MissionState = "CLEARING"
+	StateSettlementReady     MissionState = "SETTLEMENT_READY"
+	StateCompleted           MissionState = "COMPLETED"
+	StateFailed              MissionState = "FAILED"
 )
 
 // CanonicalEventName represents the canonical event types in the timeline.
 type CanonicalEventName string
 
 const (
-	EventMissionCreated               CanonicalEventName = "MISSION_CREATED"
-	EventPlanGenerated                CanonicalEventName = "PLAN_GENERATED"
-	EventAgentDiscovered              CanonicalEventName = "AGENT_DISCOVERED"
-	EventQuoteReceived                CanonicalEventName = "QUOTE_RECEIVED"
-	EventQuoteCompared                CanonicalEventName = "QUOTE_COMPARED"
-	EventServiceSelected              CanonicalEventName = "SERVICE_SELECTED"
-	EventNegotiationCompleted         CanonicalEventName = "NEGOTIATION_COMPLETED"
-	EventPolicyEvaluated              CanonicalEventName = "POLICY_EVALUATED"
-	EventRiskEvaluated                CanonicalEventName = "RISK_EVALUATED"
-	EventTreasuryReserved             CanonicalEventName = "TREASURY_RESERVED"
-	EventPaymentRequested             CanonicalEventName = "PAYMENT_REQUESTED"
-	EventSecurityViolationDetected    CanonicalEventName = "SECURITY_VIOLATION_DETECTED"
-	EventPaymentBlocked               CanonicalEventName = "PAYMENT_BLOCKED"
-	EventProviderFailed               CanonicalEventName = "PROVIDER_FAILED"
-	EventReplanRequested              CanonicalEventName = "REPLAN_REQUESTED"
-	EventAlternativeProviderSelected  CanonicalEventName = "ALTERNATIVE_PROVIDER_SELECTED"
-	EventPaymentReauthorized          CanonicalEventName = "PAYMENT_REAUTHORIZED"
-	EventResultReceived               CanonicalEventName = "RESULT_RECEIVED"
-	EventResultValidated              CanonicalEventName = "RESULT_VALIDATED"
-	EventClearingRecorded             CanonicalEventName = "CLEARING_RECORDED"
-	EventSettlementSimulated          CanonicalEventName = "SETTLEMENT_SIMULATED"
-	EventMissionCompleted             CanonicalEventName = "MISSION_COMPLETED"
+	EventMissionCreated              CanonicalEventName = "MISSION_CREATED"
+	EventPlanGenerated               CanonicalEventName = "PLAN_GENERATED"
+	EventAgentDiscovered             CanonicalEventName = "AGENT_DISCOVERED"
+	EventQuoteReceived               CanonicalEventName = "QUOTE_RECEIVED"
+	EventQuoteCompared               CanonicalEventName = "QUOTE_COMPARED"
+	EventServiceSelected             CanonicalEventName = "SERVICE_SELECTED"
+	EventNegotiationCompleted        CanonicalEventName = "NEGOTIATION_COMPLETED"
+	EventPolicyEvaluated             CanonicalEventName = "POLICY_EVALUATED"
+	EventRiskEvaluated               CanonicalEventName = "RISK_EVALUATED"
+	EventTreasuryReserved            CanonicalEventName = "TREASURY_RESERVED"
+	EventPaymentRequested            CanonicalEventName = "PAYMENT_REQUESTED"
+	EventSecurityViolationDetected   CanonicalEventName = "SECURITY_VIOLATION_DETECTED"
+	EventPaymentBlocked              CanonicalEventName = "PAYMENT_BLOCKED"
+	EventProviderFailed              CanonicalEventName = "PROVIDER_FAILED"
+	EventReplanRequested             CanonicalEventName = "REPLAN_REQUESTED"
+	EventAlternativeProviderSelected CanonicalEventName = "ALTERNATIVE_PROVIDER_SELECTED"
+	EventPaymentReauthorized         CanonicalEventName = "PAYMENT_REAUTHORIZED"
+	EventResultReceived              CanonicalEventName = "RESULT_RECEIVED"
+	EventResultValidated             CanonicalEventName = "RESULT_VALIDATED"
+	EventClearingRecorded            CanonicalEventName = "CLEARING_RECORDED"
+	EventSettlementSimulated         CanonicalEventName = "SETTLEMENT_SIMULATED"
+	EventMissionCompleted            CanonicalEventName = "MISSION_COMPLETED"
 )
 
 // MissionEvent represents a single canonical mission event.
@@ -84,15 +84,15 @@ type MissionEvent struct {
 
 // ProviderInfo holds quote and metadata for marketplace providers.
 type ProviderInfo struct {
-	ID                 string  `json:"id"`
-	Name               string  `json:"name"`
-	Capability         string  `json:"capability"`
-	QuoteUSDC          float64 `json:"quote_usdc"`
-	LatencySeconds     float64 `json:"latency_seconds"`
-	Reliability        string  `json:"reliability"`
-	IsMalicious        bool    `json:"is_malicious,omitempty"`
-	AttemptedAttack    string  `json:"attempted_attack,omitempty"`
-	Status             string  `json:"status"` // "AVAILABLE", "SELECTED", "BLOCKED", "FAILED", "SUPERSEDED", "SETTLED"
+	ID              string  `json:"id"`
+	Name            string  `json:"name"`
+	Capability      string  `json:"capability"`
+	QuoteUSDC       float64 `json:"quote_usdc"`
+	LatencySeconds  float64 `json:"latency_seconds"`
+	Reliability     string  `json:"reliability"`
+	IsMalicious     bool    `json:"is_malicious,omitempty"`
+	AttemptedAttack string  `json:"attempted_attack,omitempty"`
+	Status          string  `json:"status"` // "AVAILABLE", "SELECTED", "BLOCKED", "FAILED", "SUPERSEDED", "SETTLED"
 }
 
 // ClearingObligation represents an obligation in the clearinghouse.
@@ -107,12 +107,12 @@ type ClearingObligation struct {
 
 // EconomicTraceNode represents a node in the financial trace.
 type EconomicTraceNode struct {
-	Stage       string `json:"stage"`
-	Label       string `json:"label"`
-	State       string `json:"state"`
-	Authority   string `json:"authority"` // "ADVISORY" vs "AUTHORITATIVE"
+	Stage       string  `json:"stage"`
+	Label       string  `json:"label"`
+	State       string  `json:"state"`
+	Authority   string  `json:"authority"` // "ADVISORY" vs "AUTHORITATIVE"
 	ImpactUSDC  float64 `json:"impact_usdc"`
-	Description string `json:"description"`
+	Description string  `json:"description"`
 }
 
 // AITraceNode represents an action taken by an AI model.
@@ -130,46 +130,46 @@ type AITraceNode struct {
 
 // AuthorityTraceStage represents a gateway authority checkpoint.
 type AuthorityTraceStage struct {
-	Gate        string `json:"gate"`
-	InputState  string `json:"input_state"`
-	Evaluator   string `json:"evaluator"`
-	Decision    string `json:"decision"` // "PASS", "FAIL", "HARD_DENY", "PENDING"
-	EnforcedRule string `json:"enforced_rule"`
-	FundsMoved  float64 `json:"funds_moved_usdc"`
+	Gate         string  `json:"gate"`
+	InputState   string  `json:"input_state"`
+	Evaluator    string  `json:"evaluator"`
+	Decision     string  `json:"decision"` // "PASS", "FAIL", "HARD_DENY", "PENDING"
+	EnforcedRule string  `json:"enforced_rule"`
+	FundsMoved   float64 `json:"funds_moved_usdc"`
 }
 
 // FlagshipMissionSummary captures the complete deterministic scenario state.
 type FlagshipMissionSummary struct {
-	MissionID          string               `json:"mission_id"`
-	Name               string               `json:"name"`
-	Objective          string               `json:"objective"`
-	BudgetCapUSDC      float64              `json:"budget_cap_usdc"`
-	AuthorizedUSDC     float64              `json:"authorized_usdc"`
-	BlockedUSDC        float64              `json:"blocked_usdc"`
-	RemainingUSDC      float64              `json:"remaining_usdc"`
-	Mode               string               `json:"mode"`
-	ModeNotice         string               `json:"mode_notice"`
-	Seed               string               `json:"seed"`
-	CurrentState       MissionState         `json:"current_state"`
-	CurrentStepIndex   int                  `json:"current_step_index"`
-	TotalSteps         int                  `json:"total_steps"`
-	IsPaused           bool                 `json:"is_paused"`
-	IsCompleted        bool                 `json:"is_completed"`
-	AgentsCount        int                  `json:"agents_count"`
-	SecurityViolations int                  `json:"security_violations_count"`
-	RecoveredFailures  int                  `json:"recovered_failures_count"`
+	MissionID          string                 `json:"mission_id"`
+	Name               string                 `json:"name"`
+	Objective          string                 `json:"objective"`
+	BudgetCapUSDC      float64                `json:"budget_cap_usdc"`
+	AuthorizedUSDC     float64                `json:"authorized_usdc"`
+	BlockedUSDC        float64                `json:"blocked_usdc"`
+	RemainingUSDC      float64                `json:"remaining_usdc"`
+	Mode               string                 `json:"mode"`
+	ModeNotice         string                 `json:"mode_notice"`
+	Seed               string                 `json:"seed"`
+	CurrentState       MissionState           `json:"current_state"`
+	CurrentStepIndex   int                    `json:"current_step_index"`
+	TotalSteps         int                    `json:"total_steps"`
+	IsPaused           bool                   `json:"is_paused"`
+	IsCompleted        bool                   `json:"is_completed"`
+	AgentsCount        int                    `json:"agents_count"`
+	SecurityViolations int                    `json:"security_violations_count"`
+	RecoveredFailures  int                    `json:"recovered_failures_count"`
 	ArcSettlement      map[string]interface{} `json:"arc_settlement"`
-	Events             []MissionEvent       `json:"events"`
-	Providers          []ProviderInfo       `json:"providers"`
+	Events             []MissionEvent         `json:"events"`
+	Providers          []ProviderInfo         `json:"providers"`
 	ClearingSummary    struct {
-		TotalAuthorized float64              `json:"total_authorized_usdc"`
-		TotalBlocked    float64              `json:"total_blocked_usdc"`
-		SimulatedSettled float64             `json:"simulated_settled_usdc"`
-		Obligations     []ClearingObligation `json:"obligations"`
+		TotalAuthorized  float64              `json:"total_authorized_usdc"`
+		TotalBlocked     float64              `json:"total_blocked_usdc"`
+		SimulatedSettled float64              `json:"simulated_settled_usdc"`
+		Obligations      []ClearingObligation `json:"obligations"`
 	} `json:"clearing_summary"`
-	EconomicTrace     []EconomicTraceNode   `json:"economic_trace"`
-	AITrace           []AITraceNode         `json:"ai_trace"`
-	AuthorityTrace    []AuthorityTraceStage `json:"authority_trace"`
+	EconomicTrace     []EconomicTraceNode    `json:"economic_trace"`
+	AITrace           []AITraceNode          `json:"ai_trace"`
+	AuthorityTrace    []AuthorityTraceStage  `json:"authority_trace"`
 	WhyExplanation    map[string]interface{} `json:"why_explanation"`
 	WhyNotExplanation map[string]interface{} `json:"why_not_explanation"`
 }
@@ -971,15 +971,15 @@ func (e *MissionReplayEngine) buildCanonicalTimeline() {
 		Events:    events[:1],
 		Providers: providers,
 		ClearingSummary: struct {
-			TotalAuthorized float64              `json:"total_authorized_usdc"`
-			TotalBlocked    float64              `json:"total_blocked_usdc"`
-			SimulatedSettled float64             `json:"simulated_settled_usdc"`
-			Obligations     []ClearingObligation `json:"obligations"`
+			TotalAuthorized  float64              `json:"total_authorized_usdc"`
+			TotalBlocked     float64              `json:"total_blocked_usdc"`
+			SimulatedSettled float64              `json:"simulated_settled_usdc"`
+			Obligations      []ClearingObligation `json:"obligations"`
 		}{
-			TotalAuthorized: 8.50,
-			TotalBlocked:    3.60,
+			TotalAuthorized:  8.50,
+			TotalBlocked:     3.60,
 			SimulatedSettled: 8.50,
-			Obligations:     obligations,
+			Obligations:      obligations,
 		},
 		EconomicTrace:     econTrace,
 		AITrace:           aiTrace,
@@ -1008,15 +1008,15 @@ func (e *MissionReplayEngine) ExportJSON() (string, error) {
 	defer e.mu.RUnlock()
 
 	data := map[string]interface{}{
-		"export_type":        "AGENTPAY_FLAGSHIP_MISSION_TRACE",
-		"export_version":     "2.0",
-		"timestamp":          time.Now().UTC().Format(time.RFC3339),
-		"seed":               e.seed,
-		"thesis":             "AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.",
-		"secondary_thesis":   "AUTONOMY CAN EXPAND. FINANCIAL AUTHORITY CANNOT.",
-		"mission_summary":    e.summary,
-		"all_events":         e.allEvents,
-		"checksum_sha256":    e.ComputeDeterministicChecksum(),
+		"export_type":      "AGENTPAY_FLAGSHIP_MISSION_TRACE",
+		"export_version":   "2.0",
+		"timestamp":        time.Now().UTC().Format(time.RFC3339),
+		"seed":             e.seed,
+		"thesis":           "AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.",
+		"secondary_thesis": "AUTONOMY CAN EXPAND. FINANCIAL AUTHORITY CANNOT.",
+		"mission_summary":  e.summary,
+		"all_events":       e.allEvents,
+		"checksum_sha256":  e.ComputeDeterministicChecksum(),
 	}
 
 	bytes, err := json.MarshalIndent(data, "", "  ")

@@ -418,11 +418,11 @@ func (sm *StateMachine) ValidateRefundTransition(from, to RefundStatus) error {
 
 // TransitionRecord creates an auditable record of an entity state change.
 type TransitionRecord struct {
-	EntityID     string    `json:"entity_id"`
-	EntityType   string    `json:"entity_type"`
-	FromState    string    `json:"from_state"`
-	ToState      string    `json:"to_state"`
-	TriggeredBy  string    `json:"triggered_by"`
-	Reason       string    `json:"reason,omitempty"`
-	Timestamp    time.Time `json:"timestamp"`
+	EntityID    string    `json:"entity_id"`
+	EntityType  string    `json:"entity_type"`
+	FromState   string    `json:"from_state"`
+	ToState     string    `json:"to_state"`
+	TriggeredBy string    `json:"triggered_by"`
+	Reason      string    `json:"reason,omitempty"`
+	Timestamp   time.Time `json:"timestamp"`
 }

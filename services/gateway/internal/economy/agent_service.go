@@ -79,7 +79,7 @@ func (ac *AgentCoordinator) initDefaultAgents() {
 				},
 			},
 			PricingModel:     "QUOTE_REQUIRED",
-			BasePrice:        "400000", // $0.40 USDC
+			BasePrice:        "400000",  // $0.40 USDC
 			MaxPrice:         "1000000", // $1.00 USDC
 			SupportedAssets:  []string{"USDC"},
 			Availability:     "ONLINE",
@@ -495,4 +495,3 @@ func (ac *AgentCoordinator) RejectQuote(quoteID string, reason string) (*AgentQu
 	copyQ := *q
 	return &copyQ, nil
 }
-

@@ -82,16 +82,16 @@ type CreateWorkflowParams struct {
 
 // DefaultService implements the runtime Service interface.
 type DefaultService struct {
-	mu           sync.RWMutex
-	wfStore      WorkflowStore
-	leaseMgr     *LeaseManager
+	mu            sync.RWMutex
+	wfStore       WorkflowStore
+	leaseMgr      *LeaseManager
 	checkpointMgr *CheckpointManager
-	workerCoord  *WorkerCoordinator
-	barrier      *FinancialBarrier
-	retryEngine  *RetryEngine
-	decLogger    *DecisionLogger
-	outboxMgr    *OutboxManager
-	scheduler    *DurableScheduler
+	workerCoord   *WorkerCoordinator
+	barrier       *FinancialBarrier
+	retryEngine   *RetryEngine
+	decLogger     *DecisionLogger
+	outboxMgr     *OutboxManager
+	scheduler     *DurableScheduler
 }
 
 // NewService constructs a DefaultService instance.
@@ -600,9 +600,9 @@ func (s *DefaultService) GetMetrics(ctx context.Context, tenantID string) (*Runt
 	return &RuntimeMetrics{
 		ActiveWorkflows:         active,
 		WaitingWorkflows:        waiting,
-		RetryRateBps:            250, // 2.5%
-		FailureRateBps:          50,  // 0.5%
-		RecoveryRateBps:         9850,// 98.5%
+		RetryRateBps:            250,  // 2.5%
+		FailureRateBps:          50,   // 0.5%
+		RecoveryRateBps:         9850, // 98.5%
 		AverageStepDurationMs:   350,
 		LeaseExpirationsCount:   0,
 		StaleWorkerCount:        0,

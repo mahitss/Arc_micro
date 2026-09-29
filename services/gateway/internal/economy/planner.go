@@ -13,7 +13,7 @@ import (
 var (
 	ErrPlanExceedsBudget       = errors.New("total planned step budget exceeds authorized mission budget")
 	ErrStepExceedsMaxExecution = errors.New("step budget exceeds maximum allowed execution amount")
-	ErrInvalidObjective       = errors.New("mission objective cannot be empty")
+	ErrInvalidObjective        = errors.New("mission objective cannot be empty")
 	ErrZeroBudget              = errors.New("mission budget must be a positive integer base unit string")
 )
 

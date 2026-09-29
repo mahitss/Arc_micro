@@ -55,13 +55,13 @@ const (
 
 // SpendingLimitRule defines deterministic financial spend ceilings in base units (e.g., micro-USDC).
 type SpendingLimitRule struct {
-	MaxSinglePayment   string `json:"max_single_payment,omitempty"`   // Maximum allowable spend for a single transaction
-	DailyBudgetLimit   string `json:"daily_budget_limit,omitempty"`   // Daily spend ceiling
+	MaxSinglePayment    string `json:"max_single_payment,omitempty"`    // Maximum allowable spend for a single transaction
+	DailyBudgetLimit    string `json:"daily_budget_limit,omitempty"`    // Daily spend ceiling
 	HourlyVelocityLimit string `json:"hourly_velocity_limit,omitempty"` // Hourly velocity spend ceiling
-	MaxMissionSpend    string `json:"max_mission_spend,omitempty"`    // Max budget for an autonomous mission
-	MaxSwarmSpend      string `json:"max_swarm_spend,omitempty"`      // Max collective budget for a swarm
-	MaxAgentDailySpend string `json:"max_agent_daily_spend,omitempty"`// Max daily spend per agent
-	Currency           string `json:"currency"`                      // Authorized asset (e.g., "USDC")
+	MaxMissionSpend     string `json:"max_mission_spend,omitempty"`     // Max budget for an autonomous mission
+	MaxSwarmSpend       string `json:"max_swarm_spend,omitempty"`       // Max collective budget for a swarm
+	MaxAgentDailySpend  string `json:"max_agent_daily_spend,omitempty"` // Max daily spend per agent
+	Currency            string `json:"currency"`                        // Authorized asset (e.g., "USDC")
 }
 
 // RecipientRule defines allowlists and denylists for Counterparties, Services, and Organizations.
@@ -101,10 +101,10 @@ type RiskRule struct {
 
 // ApprovalRule establishes deterministic triggers for mandatory human authorization.
 type ApprovalRule struct {
-	AmountThreshold              string `json:"amount_threshold,omitempty"`                // Amount in base units requiring approval
-	RequireOnNewRecipient        bool   `json:"require_on_new_recipient,omitempty"`         // Require approval if counterparty has no prior tx
-	RequireOnExternalAgent       bool   `json:"require_on_external_agent,omitempty"`        // Require approval for any third-party agent
-	RequireOnHighRiskCapability  bool   `json:"require_on_high_risk_capability,omitempty"` // Require approval for high-risk capabilities
+	AmountThreshold             string `json:"amount_threshold,omitempty"`                // Amount in base units requiring approval
+	RequireOnNewRecipient       bool   `json:"require_on_new_recipient,omitempty"`        // Require approval if counterparty has no prior tx
+	RequireOnExternalAgent      bool   `json:"require_on_external_agent,omitempty"`       // Require approval for any third-party agent
+	RequireOnHighRiskCapability bool   `json:"require_on_high_risk_capability,omitempty"` // Require approval for high-risk capabilities
 }
 
 // DelegationRule enforces bounded subcontracting invariants.
@@ -125,10 +125,10 @@ type MissionRule struct {
 
 // SwarmRule configures constraints for agent collectives.
 type SwarmRule struct {
-	MaxSwarmBudget     string `json:"max_swarm_budget,omitempty"`     // Swarm budget ceiling
-	MaxTaskFanOut      int    `json:"max_task_fan_out,omitempty"`      // Max fan-out factor
-	MaxConcurrentAgents int   `json:"max_concurrent_agents,omitempty"`// Max active agents
-	MaxDelegatedSpend  string `json:"max_delegated_spend,omitempty"`  // Max spend across subcontracts
+	MaxSwarmBudget      string `json:"max_swarm_budget,omitempty"`      // Swarm budget ceiling
+	MaxTaskFanOut       int    `json:"max_task_fan_out,omitempty"`      // Max fan-out factor
+	MaxConcurrentAgents int    `json:"max_concurrent_agents,omitempty"` // Max active agents
+	MaxDelegatedSpend   string `json:"max_delegated_spend,omitempty"`   // Max spend across subcontracts
 }
 
 // HardDenyRule represents an absolute prohibition that CANNOT be overridden by human approval.
@@ -147,7 +147,7 @@ type ConstitutionRule struct {
 	Description    string             `json:"description"`
 	HardDeny       bool               `json:"hard_deny"`
 	Priority       int                `json:"priority"` // Higher evaluates first
-	SpendingLimit  *SpendingLimitRule  `json:"spending_limit,omitempty"`
+	SpendingLimit  *SpendingLimitRule `json:"spending_limit,omitempty"`
 	RecipientRule  *RecipientRule     `json:"recipient_rule,omitempty"`
 	AssetRule      *AssetRule         `json:"asset_rule,omitempty"`
 	TimeRule       *TimeRule          `json:"time_rule,omitempty"`
@@ -221,8 +221,8 @@ type PolicyEvaluationContext struct {
 	Amount                string    `json:"amount"` // Base units (e.g. "1000000" = 1 USDC)
 	Currency              string    `json:"currency"`
 	RecipientAddress      string    `json:"recipient_address"`
-	RiskLevel             string    `json:"risk_level,omitempty"` // "LOW", "MEDIUM", "HIGH"
-	RiskScore             uint32    `json:"risk_score,omitempty"` // 0 - 100
+	RiskLevel             string    `json:"risk_level,omitempty"`      // "LOW", "MEDIUM", "HIGH"
+	RiskScore             uint32    `json:"risk_score,omitempty"`      // 0 - 100
 	TrustScoreBps         uint32    `json:"trust_score_bps,omitempty"` // 0 - 10000
 	AnomalyScore          float64   `json:"anomaly_score,omitempty"`
 	DelegationDepth       int       `json:"delegation_depth"`
@@ -254,36 +254,36 @@ type ConstitutionDecision struct {
 
 // PolicySnapshot captures immutable policy state at transaction authorization time.
 type PolicySnapshot struct {
-	SnapshotID             string            `json:"snapshot_id"`
-	ConstitutionID         string            `json:"constitution_id"`
-	Version                uint64            `json:"version"`
-	PolicyHash             string            `json:"policy_hash"`
-	Decision               domain.Decision   `json:"decision"`
-	EvaluationContextHash  string            `json:"evaluation_context_hash"`
-	EffectiveLimits        map[string]string `json:"effective_limits"`
-	MatchedRules           []string          `json:"matched_rules"`
-	EvaluatedAt            time.Time         `json:"evaluated_at"`
+	SnapshotID            string            `json:"snapshot_id"`
+	ConstitutionID        string            `json:"constitution_id"`
+	Version               uint64            `json:"version"`
+	PolicyHash            string            `json:"policy_hash"`
+	Decision              domain.Decision   `json:"decision"`
+	EvaluationContextHash string            `json:"evaluation_context_hash"`
+	EffectiveLimits       map[string]string `json:"effective_limits"`
+	MatchedRules          []string          `json:"matched_rules"`
+	EvaluatedAt           time.Time         `json:"evaluated_at"`
 }
 
 // AuthorityDelta summarizes the quantitative shift in financial authority between two policy versions.
 type AuthorityDelta struct {
-	SpendingDelta       string `json:"spending_delta"`        // E.g. "+30.00 USDC" or "-10.00 USDC"
-	RecipientDelta      string `json:"recipient_delta"`       // E.g. "+2 services, -1 organization"
-	DelegationDelta     string `json:"delegation_delta"`      // E.g. "Depth 2 -> 4"
-	RiskToleranceDelta  string `json:"risk_tolerance_delta"`  // E.g. "Max Risk 80 -> 90"
-	ApprovalDelta       string `json:"approval_delta"`        // E.g. "Threshold 10 -> 25 USDC"
-	Classification      string `json:"classification"`        // "MORE_RESTRICTIVE", "UNCHANGED", "MORE_PERMISSIVE"
-	Explanation         string `json:"explanation"`
+	SpendingDelta      string `json:"spending_delta"`       // E.g. "+30.00 USDC" or "-10.00 USDC"
+	RecipientDelta     string `json:"recipient_delta"`      // E.g. "+2 services, -1 organization"
+	DelegationDelta    string `json:"delegation_delta"`     // E.g. "Depth 2 -> 4"
+	RiskToleranceDelta string `json:"risk_tolerance_delta"` // E.g. "Max Risk 80 -> 90"
+	ApprovalDelta      string `json:"approval_delta"`       // E.g. "Threshold 10 -> 25 USDC"
+	Classification     string `json:"classification"`       // "MORE_RESTRICTIVE", "UNCHANGED", "MORE_PERMISSIVE"
+	Explanation        string `json:"explanation"`
 }
 
 // RuleModification tracks diff details for a specific rule.
 type RuleModification struct {
-	RuleID      string `json:"rule_id"`
+	RuleID      string   `json:"rule_id"`
 	Type        RuleType `json:"type"`
-	Description string `json:"description"`
-	OldDetails  string `json:"old_details"`
-	NewDetails  string `json:"new_details"`
-	ChangeType  string `json:"change_type"` // "AUTHORITY_INCREASE", "AUTHORITY_DECREASE", "NEUTRAL"
+	Description string   `json:"description"`
+	OldDetails  string   `json:"old_details"`
+	NewDetails  string   `json:"new_details"`
+	ChangeType  string   `json:"change_type"` // "AUTHORITY_INCREASE", "AUTHORITY_DECREASE", "NEUTRAL"
 }
 
 // PolicyDiff details structural differences between Constitution A and Constitution B.

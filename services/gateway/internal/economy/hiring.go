@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	ErrHireNotFound         = errors.New("hire contract not found")
+	ErrHireNotFound          = errors.New("hire contract not found")
 	ErrInvalidHireTransition = errors.New("invalid hire state transition")
 	ErrMaxCallDepthExceeded  = errors.New("nested agent hiring recursion ceiling exceeded (max depth 3)")
-	ErrHireBudgetExceeded   = errors.New("hire contract price exceeds authorized mission budget")
-	ErrResultQualityTooLow  = errors.New("returned service result failed quality threshold requirement")
+	ErrHireBudgetExceeded    = errors.New("hire contract price exceeds authorized mission budget")
+	ErrResultQualityTooLow   = errors.New("returned service result failed quality threshold requirement")
 )
 
 // HiringService manages formal inter-agent hiring contracts, payment pipeline invocation, and result validation.

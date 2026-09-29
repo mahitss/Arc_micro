@@ -442,21 +442,51 @@ func (s *DefaultService) GetFinancialTrace(ctx context.Context, orgID string, ta
 			Timestamp:   now.Add(-10 * time.Minute),
 		},
 		{
-			StepNumber:  10,
-			Stage:       "VAULT",
-			Status:      func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "TRANSFERRED" }; return "SIMULATED" }(),
+			StepNumber: 10,
+			Stage:      "VAULT",
+			Status: func() string {
+				if s.cfg != nil && s.cfg.EnableLiveExecution {
+					return "TRANSFERRED"
+				}
+				return "SIMULATED"
+			}(),
 			ReferenceID: "0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852",
-			Description: func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "AgentVault smart contract verified daily cap and authorized transfer" }; return "AgentVault smart contract verified daily cap and authorized transfer (SIMULATION -- NOT DEPLOYED ON MAINNET)" }(),
-			Timestamp:   now.Add(-8 * time.Minute),
+			Description: func() string {
+				if s.cfg != nil && s.cfg.EnableLiveExecution {
+					return "AgentVault smart contract verified daily cap and authorized transfer"
+				}
+				return "AgentVault smart contract verified daily cap and authorized transfer (SIMULATION -- NOT DEPLOYED ON MAINNET)"
+			}(),
+			Timestamp: now.Add(-8 * time.Minute),
 		},
 		{
-			StepNumber:  11,
-			Stage:       "ARC",
-			Status:      func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "CONFIRMED" }; return "PROJECTED" }(),
-			ReferenceID: func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344" }; return "sim_tx_projected_arc_settlement" }(),
-			Description: func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "Arc consensus confirmed block 1492041 with 0 gas failure" }; return "Arc settlement payload projected for Chain ID 5042 (SIMULATION -- ZERO ON-CHAIN TRANSACTIONS BROADCAST)" }(),
-			Hash:        func() string { if s.cfg != nil && s.cfg.EnableLiveExecution { return "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344" }; return "sim_tx_projected_arc_settlement" }(),
-			Timestamp:   now.Add(-5 * time.Minute),
+			StepNumber: 11,
+			Stage:      "ARC",
+			Status: func() string {
+				if s.cfg != nil && s.cfg.EnableLiveExecution {
+					return "CONFIRMED"
+				}
+				return "PROJECTED"
+			}(),
+			ReferenceID: func() string {
+				if s.cfg != nil && s.cfg.EnableLiveExecution {
+					return "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344"
+				}
+				return "sim_tx_projected_arc_settlement"
+			}(),
+			Description: func() string {
+				if s.cfg != nil && s.cfg.EnableLiveExecution {
+					return "Arc consensus confirmed block 1492041 with 0 gas failure"
+				}
+				return "Arc settlement payload projected for Chain ID 5042 (SIMULATION -- ZERO ON-CHAIN TRANSACTIONS BROADCAST)"
+			}(),
+			Hash: func() string {
+				if s.cfg != nil && s.cfg.EnableLiveExecution {
+					return "0x3f9821a08e71b2938471c0981a2839174f9e1208a9834710189a72b0c11223344"
+				}
+				return "sim_tx_projected_arc_settlement"
+			}(),
+			Timestamp: now.Add(-5 * time.Minute),
 		},
 		{
 			StepNumber:  12,

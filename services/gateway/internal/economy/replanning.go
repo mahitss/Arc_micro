@@ -243,12 +243,12 @@ func (r *ReplanningEngine) ProposeRecovery(ctx context.Context, rc ReplanContext
 	ranked, err := r.economyEngine.RankCandidatesAdaptive(rc.FailedStep, quotes, reps, perfs)
 	if err != nil || len(ranked) == 0 {
 		return &ReplanProposal{
-			MissionID:     rc.Mission.ID,
-			Reason:        "RANKING_FAILED",
-			Strategy:      StrategyAbortMission,
-			Confidence:    ConfidenceLow,
-			Explanation:   "Failed to rank candidate alternative quotes",
-			CreatedAt:     now,
+			MissionID:   rc.Mission.ID,
+			Reason:      "RANKING_FAILED",
+			Strategy:    StrategyAbortMission,
+			Confidence:  ConfidenceLow,
+			Explanation: "Failed to rank candidate alternative quotes",
+			CreatedAt:   now,
 		}, err
 	}
 

@@ -10,14 +10,14 @@ import (
 type TaskType string
 
 const (
-	TaskTypePlanning          TaskType = "AI_TASK_PLANNING"
-	TaskTypeNegotiation       TaskType = "AI_SERVICE_NEGOTIATION"
-	TaskTypeEvaluation        TaskType = "AI_RESULT_EVALUATION"
-	TaskTypeReplanning        TaskType = "AI_REPLANNING"
-	TaskTypeSwarm             TaskType = "AI_SWARM_SYNTHESIS"
-	TaskTypeMarketplace       TaskType = "AI_MARKETPLACE_REASONING"
-	TaskTypeProtocol          TaskType = "AI_PROTOCOL_REASONING"
-	TaskTypeControlTower      TaskType = "AI_CONTROL_TOWER_ASSISTANT"
+	TaskTypePlanning     TaskType = "AI_TASK_PLANNING"
+	TaskTypeNegotiation  TaskType = "AI_SERVICE_NEGOTIATION"
+	TaskTypeEvaluation   TaskType = "AI_RESULT_EVALUATION"
+	TaskTypeReplanning   TaskType = "AI_REPLANNING"
+	TaskTypeSwarm        TaskType = "AI_SWARM_SYNTHESIS"
+	TaskTypeMarketplace  TaskType = "AI_MARKETPLACE_REASONING"
+	TaskTypeProtocol     TaskType = "AI_PROTOCOL_REASONING"
+	TaskTypeControlTower TaskType = "AI_CONTROL_TOWER_ASSISTANT"
 )
 
 // ModelProfile defines the primary model and fallback cascade for a given task type.
@@ -34,10 +34,10 @@ type ModelProfile struct {
 // spending limits, recipient authority, policy checks, risk thresholds,
 // approval requirements, treasury limits, or AgentVault rules.
 type ModelRouter struct {
-	mu             sync.RWMutex
-	defaultModel   string
+	mu              sync.RWMutex
+	defaultModel    string
 	globalFallbacks []string
-	profiles       map[TaskType]ModelProfile
+	profiles        map[TaskType]ModelProfile
 }
 
 // NewModelRouter initializes the router from environment variables.
@@ -72,9 +72,9 @@ func NewModelRouter() *ModelRouter {
 	}
 
 	router := &ModelRouter{
-		defaultModel:   defaultModel,
+		defaultModel:    defaultModel,
 		globalFallbacks: fallbacks,
-		profiles:       make(map[TaskType]ModelProfile),
+		profiles:        make(map[TaskType]ModelProfile),
 	}
 
 	// Load task-specific overrides from environment

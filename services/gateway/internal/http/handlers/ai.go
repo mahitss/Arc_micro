@@ -26,12 +26,12 @@ func (h *AIHandler) HandleGetTelemetry(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if h.aiService == nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"active_provider": "openrouter",
-			"active_model":    "nvidia/nemotron-3-ultra-550b-a55b:free",
-			"total_requests":  0,
+			"active_provider":    "openrouter",
+			"active_model":       "nvidia/nemotron-3-ultra-550b-a55b:free",
+			"total_requests":     0,
 			"average_latency_ms": 0.0,
-			"total_tokens":    0,
-			"total_cost_usd":  0.0,
+			"total_tokens":       0,
+			"total_cost_usd":     0.0,
 		})
 		return
 	}
@@ -44,8 +44,8 @@ func (h *AIHandler) HandleGetHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if h.aiService == nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"provider": "openrouter",
-			"status":   "CONNECTED",
+			"provider":         "openrouter",
+			"status":           "CONNECTED",
 			"configured_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
 			"fallback_enabled": true,
 		})
@@ -86,10 +86,10 @@ func (h *AIHandler) HandleCreateProposal(w http.ResponseWriter, r *http.Request)
 	}
 
 	var req struct {
-		AgentID     string `json:"agent_id"`
-		TaskQuery   string `json:"task_query"`
-		ServiceID   string `json:"service_id"`
-		MaxAmount   uint64 `json:"max_amount"`
+		AgentID      string `json:"agent_id"`
+		TaskQuery    string `json:"task_query"`
+		ServiceID    string `json:"service_id"`
+		MaxAmount    uint64 `json:"max_amount"`
 		ProposalType string `json:"proposal_type"`
 	}
 
@@ -109,7 +109,7 @@ func (h *AIHandler) HandleCreateProposal(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"error": err.Error(),
+			"error":  err.Error(),
 			"status": string(types.ProposalStatusRejected),
 		})
 		return
@@ -117,7 +117,7 @@ func (h *AIHandler) HandleCreateProposal(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"proposal": proposal,
+		"proposal":        proposal,
 		"security_notice": "AI IS ADVISORY. FINANCIAL AUTHORITY REMAINS DETERMINISTIC.",
 	})
 }

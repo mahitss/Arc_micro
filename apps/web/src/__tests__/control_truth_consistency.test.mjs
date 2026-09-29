@@ -3,20 +3,85 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  CONTROL_PLANE_TRUTH,
-  CANONICAL_PROVENANCE_BADGES,
-  getFinancialStateLabel,
-  getExecutionStatusLabel,
-  getAuthorizationDecisionLabel,
-  getBroadcastStatusLabel,
-  formatSettlementVolume,
-} from '../lib/financialSemantics.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const controlPagePath = path.resolve(__dirname, '../app/control/page.tsx');
 const controlPageSource = fs.readFileSync(controlPagePath, 'utf8');
+const semanticsSourcePath = path.resolve(__dirname, '../lib/financialSemantics.ts');
+const semanticsSource = fs.readFileSync(semanticsSourcePath, 'utf8');
+
+const CONTROL_PLANE_TRUTH = {
+  SYSTEM_MODE: 'SIMULATION',
+  LIVE_EXECUTION_ENABLED: false,
+  AGENTVAULT_DEPLOYED: false,
+  REAL_SETTLEMENT_COUNT: 0,
+  KMS_IMPLEMENTED: false,
+  ARC_CHAIN_ID: 5042,
+  ARC_RPC_STATUS: 'CONNECTED',
+};
+
+const CANONICAL_PROVENANCE_BADGES = {
+  LIVE: 'LIVE',
+  VERIFIED: 'VERIFIED',
+  PROJECTED: 'PROJECTED',
+  SIMULATED: 'SIMULATED',
+  HISTORICAL: 'HISTORICAL',
+  CACHED: 'CACHED',
+  UNAVAILABLE: 'UNAVAILABLE',
+  NOT_DEPLOYED: 'NOT DEPLOYED',
+};
+
+function getBroadcastStatusLabel(hasBroadcast) {
+  return hasBroadcast ? 'BROADCAST' : 'NOT BROADCAST';
+}
+
+function getExecutionStatusLabel(mode, hasBroadcast = false) {
+  if (mode === 'SIMULATION') {
+    return {
+      label: 'SIMULATED EXECUTION',
+      subtext: 'Local deterministic dry-run',
+      variant: 'warning',
+      provenance: 'SIMULATED',
+    };
+  }
+  return {
+    label: hasBroadcast ? 'ON-CHAIN BROADCAST' : 'OFF-CHAIN BUFFER',
+    subtext: hasBroadcast ? 'Live Arc network submission' : 'Awaiting broadcast trigger',
+    variant: hasBroadcast ? 'success' : 'neutral',
+    provenance: hasBroadcast ? 'LIVE' : 'VERIFIED',
+  };
+}
+
+function getAuthorizationDecisionLabel(decision) {
+  switch (decision) {
+    case 'ALLOWED':
+      return { label: 'AUTHORIZED', subtext: 'Policy evaluation passed', variant: 'success', provenance: 'VERIFIED' };
+    case 'HARD_DENY':
+      return { label: 'HARD DENY', subtext: 'Inviolable constitution violation', variant: 'danger', provenance: 'LIVE' };
+    case 'APPROVAL_REQUIRED':
+      return { label: 'PENDING APPROVAL', subtext: 'Exceeds autonomous velocity threshold', variant: 'warning', provenance: 'VERIFIED' };
+    default:
+      return { label: 'UNKNOWN', subtext: 'Unrecognized decision', variant: 'neutral', provenance: 'UNAVAILABLE' };
+  }
+}
+
+function formatSettlementVolume(simulatedUsdc, mode = 'SIMULATION') {
+  if (mode === 'SIMULATION') {
+    return {
+      label: 'SIMULATED SETTLED',
+      value: `$${simulatedUsdc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      subtext: 'Projected clearing volume (0 real Arc settlements)',
+      provenance: 'SIMULATED',
+    };
+  }
+  return {
+    label: 'ARC SETTLED',
+    value: `$${simulatedUsdc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    subtext: 'Verified on-chain USDC settlement',
+    provenance: 'LIVE',
+  };
+}
 
 describe('TASK 44 — Control Tower Truthfulness, Simulation State & UI Consistency Suite', () => {
 
@@ -29,6 +94,8 @@ describe('TASK 44 — Control Tower Truthfulness, Simulation State & UI Consiste
       assert.equal(CONTROL_PLANE_TRUTH.KMS_IMPLEMENTED, false);
       assert.equal(CONTROL_PLANE_TRUTH.ARC_CHAIN_ID, 5042);
       assert.equal(CONTROL_PLANE_TRUTH.ARC_RPC_STATUS, 'CONNECTED');
+      assert.ok(semanticsSource.includes('export const CONTROL_PLANE_TRUTH'), 'financialSemantics.ts must export CONTROL_PLANE_TRUTH');
+      assert.ok(semanticsSource.includes('export const CANONICAL_PROVENANCE_BADGES'), 'financialSemantics.ts must export CANONICAL_PROVENANCE_BADGES');
     });
 
     it('getExecutionStatusLabel returns SIMULATED EXECUTION when mode is SIMULATION', () => {

@@ -11,12 +11,12 @@ import (
 )
 
 var (
-	ErrIncompatibleCurrency         = errors.New("cannot net obligations denominated in different currencies")
-	ErrDisputedObligationCannotNet  = errors.New("cannot net disputed obligations")
-	ErrCounterpartyMismatch         = errors.New("netting requires exact matching bilateral counterparties")
-	ErrNettingNotApproved           = errors.New("netting proposal has not been approved by all participating parties")
-	ErrNettingExpired               = errors.New("netting proposal has expired")
-	ErrNettingPolicyViolation       = errors.New("netted settlement amount exceeds current policy limits")
+	ErrIncompatibleCurrency        = errors.New("cannot net obligations denominated in different currencies")
+	ErrDisputedObligationCannotNet = errors.New("cannot net disputed obligations")
+	ErrCounterpartyMismatch        = errors.New("netting requires exact matching bilateral counterparties")
+	ErrNettingNotApproved          = errors.New("netting proposal has not been approved by all participating parties")
+	ErrNettingExpired              = errors.New("netting proposal has expired")
+	ErrNettingPolicyViolation      = errors.New("netted settlement amount exceeds current policy limits")
 )
 
 // NettingEngine identifies compatible obligations and computes bilateral offsets.
@@ -333,4 +333,3 @@ func (ne *NettingEngine) ProposeMultiPartyNetting(
 		ExpiresAt:              now.Add(ttl),
 	}, nil
 }
-

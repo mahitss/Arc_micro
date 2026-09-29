@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	ErrSelfHiringProhibited       = errors.New("requester and provider agents must be distinct")
-	ErrDelegationDepthOverflow    = errors.New("delegation depth exceeds maximum allowed of 3")
-	ErrContractExpiredOrInvalid   = errors.New("contract has expired or is invalid")
-	ErrContractWrongState         = errors.New("contract is not in required state for this operation")
-	ErrParentBudgetExceeded       = errors.New("delegated sub-contract price exceeds parent contract budget envelope")
+	ErrSelfHiringProhibited     = errors.New("requester and provider agents must be distinct")
+	ErrDelegationDepthOverflow  = errors.New("delegation depth exceeds maximum allowed of 3")
+	ErrContractExpiredOrInvalid = errors.New("contract has expired or is invalid")
+	ErrContractWrongState       = errors.New("contract is not in required state for this operation")
+	ErrParentBudgetExceeded     = errors.New("delegated sub-contract price exceeds parent contract budget envelope")
 )
 
 // ContractStorageRepository extends StorageRepository with contract-specific methods.
