@@ -1,11 +1,22 @@
 # AgentPay — 60-Second Elevator Pitch
 
-Autonomous AI agents are hiring peers and executing multi-step tasks, but granting them raw crypto wallets creates catastrophic risks of prompt injection, infinite retry loops, and treasury drain.
+### PROBLEM
+Autonomous AI agents can reason, plan, and hire external services, but giving them raw crypto wallets creates unacceptable financial risk. A single prompt injection, infinite retry loop, or malicious provider can drain an entire corporate treasury in seconds.
 
-AgentPay is the financial control plane for autonomous AI agents. Our principle is simple: **autonomy can expand, but financial authority cannot.**
+### SOLUTION
+AgentPay is the programmable financial control plane for autonomous AI agents.
 
-Architecturally, agents never touch private keys. They generate structured intents; an independent Rust policy engine validates spending caps, allowlists, and risk bounds in microseconds. The Go gateway orchestrates atomic double-entry reservations, while the Arc blockchain provides deterministic micro-settlement.
+Agents can freely discover services, negotiate contracts, delegate tasks, and replan upon failure, while AgentPay deterministically controls:
+- Constitutional policies & spending limits (sub-10µs Rust engine)
+- Risk scoring & counterparty exposure
+- Dual-custody approvals & escalation
+- Double-entry treasury liquidity reservations
+- Arc Mainnet settlement in native USDC
 
-Arc’s native USDC gas model is revolutionary here: agents transact and pay gas entirely in USDC, eliminating slippage and dual-token complexity.
+### SECURITY MESSAGE
+$$\text{AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.}$$
+$$\text{AI can change the plan. AI cannot change the financial authority.}$$
+- **Zero Agent Private Keys:** Agents never hold signing keys or sign transactions.
+- **Inviolable HARD_DENY:** Blocked recipients cannot be bypassed by AI or human override.
+- **Durable Containment:** Autonomy can expand; financial authority cannot.
 
-With lease fencing, idempotent replay protection, and zero raw calldata authority, AgentPay makes agentic commerce safe. Without financial controls, enterprise multi-agent systems cannot exist. AgentPay unlocks the agentic economy: **AI requests, AgentPay controls, and Arc settles.**
