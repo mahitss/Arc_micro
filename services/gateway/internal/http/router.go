@@ -373,6 +373,14 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/agent-network/graph", netHandler.HandleGetGraph)
 		mux.HandleFunc("GET /v1/agent-network/trust/{id}", netHandler.HandleGetTrust)
 
+		// /api/ route aliases for agent-network
+		mux.HandleFunc("GET /api/agent-network/agents", netHandler.HandleListAgents)
+		mux.HandleFunc("GET /api/agent-network/agents/{id}", netHandler.HandleGetAgent)
+		mux.HandleFunc("GET /api/agent-network/contracts", netHandler.HandleListContracts)
+		mux.HandleFunc("GET /api/agent-network/disputes", netHandler.HandleListDisputes)
+		mux.HandleFunc("GET /api/agent-network/graph", netHandler.HandleGetGraph)
+		mux.HandleFunc("GET /api/agent-network/trust/{id}", netHandler.HandleGetTrust)
+
 		// 14. Economic Constitution Subsystem
 		constitutionStore := constitution.NewMemoryStore()
 		constHandler := handlers.NewConstitutionHandler(constitutionStore)
