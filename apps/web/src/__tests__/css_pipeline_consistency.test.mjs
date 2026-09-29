@@ -89,8 +89,8 @@ describe('TASK 48 — Emergency Global CSS & Layout Pipeline Suite', () => {
   });
 
   describe('4. Dev Server Route & Stylesheet Verification', () => {
-    it('verifies /marketplace, /control, /missions, and /activity return 200 with layout.css', async () => {
-      const routes = ['/marketplace', '/control', '/missions', '/activity'];
+    it('verifies /security, /marketplace, /control, /missions, /network, and /activity return 200 with layout.css', async () => {
+      const routes = ['/security', '/marketplace', '/control', '/missions', '/network', '/activity'];
       for (const route of routes) {
         try {
           const res = await fetch(`http://localhost:3001${route}`);
