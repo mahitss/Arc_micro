@@ -84,7 +84,10 @@ export async function apiRequest<T>(
       throw new ApiError(408, 'REQUEST_TIMEOUT', `Request timed out after ${timeoutMs}ms`);
     }
 
-    const message = err instanceof Error ? err.message : 'Network request failed';
+    const rawMessage = err instanceof Error ? err.message : 'Network request failed';
+    const message = rawMessage === 'Failed to fetch'
+      ? `Unable to connect to AgentPay Gateway at ${baseUrl}. Ensure backend service is reachable.`
+      : rawMessage;
     throw new ApiError(503, 'NETWORK_UNAVAILABLE', message);
   } finally {
     clearTimeout(timeoutId);

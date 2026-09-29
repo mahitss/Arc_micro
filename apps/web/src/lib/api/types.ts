@@ -479,27 +479,44 @@ export interface MarketplaceService {
 export interface SimulatedMissionStep {
   step_id: string;
   required_capability: string;
+  category?: string;
+  allocated_budget?: string;
+  candidates_found?: number;
   selected_service_id: string;
-  selected_quote_id: string;
-  quoted_price: string;
-  quality_score: number;
-  reputation_score: number;
-  risk_score: number;
+  selected_quote_id?: string;
+  selected_quote_price?: string;
+  quoted_price?: string;
+  utility_score?: number;
+  quality_score?: number;
+  reputation_score?: number;
+  risk_score?: number;
   policy_decision: string;
-  requires_approval: boolean;
-  recipient: string;
+  policy_reason?: string;
+  requires_approval?: boolean;
+  projected_spend?: string;
+  recipient?: string;
+  explanation?: string;
 }
 
 export interface MissionSimulationResponse {
   simulation_only: boolean;
-  all_steps_approved: boolean;
-  requires_human_approval: boolean;
-  total_projected_spend: string;
+  mission_id?: string;
+  objective?: string;
+  authorized_budget?: string;
   currency: string;
-  candidate_count: number;
+  planned_steps_count?: number;
+  projected_spend?: string;
+  total_projected_spend?: string;
+  max_financial_risk?: string;
+  all_steps_approved: boolean;
+  approval_required?: boolean;
+  requires_human_approval?: boolean;
+  candidate_count?: number;
+  candidates_found?: number;
   simulated_steps: SimulatedMissionStep[];
-  policy_violations: string[];
-  evaluated_at: string;
+  policy_violations?: string[];
+  evaluated_at?: string;
+  generated_at?: string;
 }
 
 export interface OverviewMetrics {

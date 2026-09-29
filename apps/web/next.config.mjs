@@ -17,6 +17,7 @@ const nextConfig = {
       { source: '/swarm/:path*', destination: '/swarms/:path*' },
       { source: '/replay', destination: '/control/operations/timeline' },
       { source: '/replay/:path*', destination: '/control/operations/replay/:path*' },
+      { source: '/v1/:path*', destination: 'http://localhost:8080/v1/:path*' },
     ];
   },
 };

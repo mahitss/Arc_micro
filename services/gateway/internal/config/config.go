@@ -82,7 +82,12 @@ func Load() *Config {
 			}
 		}
 	} else {
-		corsOrigins = []string{"http://localhost:3000"}
+		corsOrigins = []string{
+			"http://localhost:3000",
+			"http://localhost:3001",
+			"http://127.0.0.1:3000",
+			"http://127.0.0.1:3001",
+		}
 	}
 
 	maxBodyBytes := int64(1048576) // 1MB default

@@ -10,17 +10,20 @@ import {
   simulateMission,
 } from '../../lib/api/missions';
 import { Mission, MissionSimulationResponse } from '../../lib/api/types';
+import { AgentPayBadge } from '../../components/ui/AgentPayBadge';
 
 export default function MissionsPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [createdSuccessMission, setCreatedSuccessMission] = useState<Mission | null>(null);
 
   // Form State
   const [objective, setObjective] = useState('');
   const [budgetUsdc, setBudgetUsdc] = useState('2.00');
   const [agentId, setAgentId] = useState('research-agent');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isSimulating, setIsSimulating] = useState(false);
   const [simulationResult, setSimulationResult] = useState<MissionSimulationResponse | null>(null);
 
   const loadMissions = async () => {
@@ -45,7 +48,7 @@ export default function MissionsPage() {
     e.preventDefault();
     if (!objective.trim()) return;
 
-    setIsSubmitting(true);
+    setIsSimulating(true);
     setError(null);
     setSimulationResult(null);
 
@@ -62,7 +65,7 @@ export default function MissionsPage() {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Simulation failed');
     } finally {
-      setIsSubmitting(false);
+      setIsSimulating(false);
     }
   };
 
@@ -70,7 +73,7 @@ export default function MissionsPage() {
     e.preventDefault();
     if (!objective.trim()) return;
 
-    setIsSubmitting(true);
+    setIsCreating(true);
     setError(null);
 
     const budgetBase = Math.round(parseFloat(budgetUsdc || '1') * 1000000).toString();
@@ -82,13 +85,14 @@ export default function MissionsPage() {
         agent_id: agentId,
         currency: 'USDC',
       });
+      setCreatedSuccessMission(mission);
       setMissions((prev) => [mission, ...prev]);
       setObjective('');
       setSimulationResult(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create mission');
     } finally {
-      setIsSubmitting(false);
+      setIsCreating(false);
     }
   };
 
@@ -173,18 +177,23 @@ export default function MissionsPage() {
     }
   };
 
+  const isActionPending = isCreating || isSimulating;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 text-[#F2F0EA]">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#222222]">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F2F0EA]">
               Autonomous Missions
             </h1>
             <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#141414] text-[#B0ADA5] border border-[#222222]">
               DETERMINISTIC SPEND ENGINE
             </span>
+            <AgentPayBadge variant="warning">
+              SIMULATION — NO FUNDS MOVED
+            </AgentPayBadge>
           </div>
           <p className="text-xs sm:text-sm text-[#B0ADA5] mt-1.5 max-w-2xl leading-relaxed">
             Autonomous economic objectives executed under deterministic AgentPay financial controls.
@@ -205,26 +214,34 @@ export default function MissionsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#101010] border border-[#1c1c1c]">
           <div>
             <span className="text-[11px] text-[#716F69] uppercase block font-medium">TOTAL MISSIONS</span>
-            <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">{missions.length}</span>
-            <span className="text-[11px] text-[#716F69] block">Autonomous operations</span>
+            <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">
+              {error ? '—' : loading ? '...' : missions.length}
+            </span>
+            <span className="text-[11px] text-[#716F69] block">
+              {error ? 'DATA UNAVAILABLE' : 'Autonomous operations'}
+            </span>
           </div>
           <div>
             <span className="text-[11px] text-[#716F69] uppercase block font-medium">ACTIVE MISSIONS</span>
             <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">
-              {missions.filter((m) => ['PLANNING', 'DISCOVERING', 'EXECUTING'].includes(m.status)).length}
+              {error ? '—' : loading ? '...' : missions.filter((m) => ['PLANNING', 'DISCOVERING', 'EXECUTING'].includes(m.status)).length}
             </span>
-            <span className="text-[11px] text-[#716F69] block">In flight workflows</span>
+            <span className="text-[11px] text-[#716F69] block">
+              {error ? 'DATA UNAVAILABLE' : 'In flight workflows'}
+            </span>
           </div>
           <div>
             <span className="text-[11px] text-[#716F69] uppercase block font-medium">TOTAL SPENT</span>
             <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">
-              {formatUsdc(
+              {error ? '—' : loading ? '...' : formatUsdc(
                 missions
                   .reduce((acc, m) => acc + parseInt(m.spent || '0', 10), 0)
                   .toString()
               )}
             </span>
-            <span className="text-[11px] text-[#716F69] block font-mono">Arc USDC Base Units</span>
+            <span className="text-[11px] text-[#716F69] block font-mono">
+              {error ? 'DATA UNAVAILABLE' : 'Arc USDC Base Units'}
+            </span>
           </div>
           <div>
             <span className="text-[11px] text-[#716F69] uppercase block font-medium">SAFETY SHIELD</span>
@@ -237,9 +254,9 @@ export default function MissionsPage() {
         </div>
       </div>
 
-      {/* Mission Creation Panel */}
-      <div className="p-5 rounded-xl bg-[#101010] border border-[#222222]">
-        <div className="flex items-center justify-between mb-4 border-b border-[#222222] pb-3">
+      {/* Mission Creation & Simulation Panel */}
+      <div className="p-5 rounded-xl bg-[#101010] border border-[#222222] space-y-4">
+        <div className="flex items-center justify-between border-b border-[#222222] pb-3">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
             <h2 className="text-sm font-semibold tracking-wide uppercase font-mono text-[#F2F0EA]">
@@ -248,6 +265,34 @@ export default function MissionsPage() {
           </div>
           <span className="text-[11px] font-mono text-[#716F69]">Zero private keys required</span>
         </div>
+
+        {/* Creation Success Banner */}
+        {createdSuccessMission && (
+          <div className="p-4 rounded-lg bg-[#141414] border border-[#2FB36F]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
+              <span className="text-[#F2F0EA] font-medium font-sans">
+                Mission successfully launched:{' '}
+                <span className="font-mono text-[#2FB36F]">{createdSuccessMission.id}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/missions/${createdSuccessMission.id}`}
+                className="px-3 py-1.5 rounded bg-[#2FB36F] text-black font-semibold font-mono hover:bg-[#34c77b] transition-colors"
+              >
+                View Mission Console →
+              </Link>
+              <button
+                type="button"
+                onClick={() => setCreatedSuccessMission(null)}
+                className="px-2 py-1 text-[#716F69] hover:text-[#B0ADA5] transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
 
         <form className="space-y-4">
           <div>
@@ -297,29 +342,25 @@ export default function MissionsPage() {
             </div>
           </div>
 
-          {error && (
-            <div className="p-3 rounded-lg bg-[#141414] border border-[#D85C5C]/40 text-xs text-[#D85C5C] font-mono flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
-              <span>Error: {error}</span>
-            </div>
-          )}
-
           {/* Simulation Preview Result */}
           {simulationResult && (
             <div className="p-4 rounded-lg bg-[#0F0F0F] border border-[#2a2a2a] space-y-3 font-mono text-xs">
               <div className="flex items-center justify-between border-b border-[#222222] pb-2">
-                <span className="text-[#F2F0EA] font-bold tracking-wide">
-                  SIMULATION RESULT (ZERO-BROADCAST)
-                </span>
-                <span className="px-2 py-0.5 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222] text-[10px]">
-                  SIMULATION ONLY
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
+                  <span className="text-[#F2F0EA] font-bold tracking-wide">
+                    SIMULATION RESULT (ZERO-BROADCAST)
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-[#141414] text-[#D6A83A] border border-[#222222] text-[10px]">
+                  SIMULATION — NO FUNDS MOVED
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#B0ADA5]">
                 <div>
                   <span className="text-[#716F69]">Projected Spend:</span>{' '}
                   <span className="text-[#F2F0EA] font-bold">
-                    {formatUsdc(simulationResult.total_projected_spend)}
+                    {formatUsdc(simulationResult.projected_spend || simulationResult.total_projected_spend || '0')}
                   </span>
                 </div>
                 <div>
@@ -330,12 +371,14 @@ export default function MissionsPage() {
                 </div>
                 <div>
                   <span className="text-[#716F69]">Candidates Evaluated:</span>{' '}
-                  <span className="text-[#F2F0EA]">{simulationResult.candidate_count}</span>
+                  <span className="text-[#F2F0EA]">
+                    {simulationResult.candidates_found ?? simulationResult.candidate_count ?? simulationResult.simulated_steps.reduce((acc, s) => acc + (s.candidates_found || 1), 0)}
+                  </span>
                 </div>
                 <div>
                   <span className="text-[#716F69]">Human Approval:</span>{' '}
                   <span className="text-[#F2F0EA]">
-                    {simulationResult.requires_human_approval ? 'REQUIRED' : 'AUTO'}
+                    {(simulationResult.approval_required ?? simulationResult.requires_human_approval) ? 'REQUIRED' : 'AUTO'}
                   </span>
                 </div>
               </div>
@@ -347,8 +390,14 @@ export default function MissionsPage() {
                   </div>
                   <div className="text-right flex items-center gap-2">
                     <span className="text-[#716F69]">Price: </span>
-                    <span className="text-[#F2F0EA] font-bold">{formatUsdc(st.quoted_price)}</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#141414] text-[#2FB36F] border border-[#222222]">
+                    <span className="text-[#F2F0EA] font-bold">
+                      {formatUsdc(st.selected_quote_price || st.quoted_price || st.projected_spend || '0')}
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded bg-[#141414] border border-[#222222] ${
+                        st.policy_decision === 'ALLOW' ? 'text-[#2FB36F]' : 'text-[#D85C5C]'
+                      }`}
+                    >
                       {st.policy_decision}
                     </span>
                   </div>
@@ -360,25 +409,25 @@ export default function MissionsPage() {
           <div className="flex items-center gap-3 pt-2">
             <button
               type="button"
-              disabled={isSubmitting || !objective.trim()}
+              disabled={isActionPending || !objective.trim()}
               onClick={handleCreate}
               className="h-9 px-4 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold text-xs tracking-wide transition-colors disabled:opacity-40"
             >
-              {isSubmitting ? 'CREATING...' : 'CREATE MISSION'}
+              {isCreating ? 'CREATING...' : 'CREATE MISSION'}
             </button>
             <button
               type="button"
-              disabled={isSubmitting || !objective.trim()}
+              disabled={isActionPending || !objective.trim()}
               onClick={handleSimulate}
               className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] text-xs font-medium border border-[#222222] tracking-wide transition-colors disabled:opacity-40"
             >
-              SIMULATE DRY-RUN
+              {isSimulating ? 'SIMULATING...' : 'SIMULATE DRY-RUN'}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Missions List */}
+      {/* Missions Roster Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between pb-1 border-b border-[#222222]">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-[#F2F0EA]">
@@ -386,17 +435,59 @@ export default function MissionsPage() {
           </h2>
           <button
             onClick={loadMissions}
-            className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
+            disabled={loading}
+            className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors disabled:opacity-50"
           >
-            Refresh Roster
+            {loading ? 'Refreshing...' : 'Refresh Roster'}
           </button>
         </div>
+
+        {/* Backend Unavailable Error Panel */}
+        {error && (
+          <div className="p-5 rounded-xl bg-[#141414] border border-[#D85C5C]/40 space-y-3 font-mono text-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
+              <div className="flex items-center gap-2 text-[#D85C5C] font-semibold">
+                <span className="w-2 h-2 rounded-full bg-[#D85C5C]" />
+                MISSION SERVICE UNAVAILABLE
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-[#1a1a1a] text-[#B0ADA5] border border-[#2B2B2B]">
+                SIMULATION — NO FUNDS MOVED
+              </span>
+            </div>
+            <p className="text-[#B0ADA5] font-sans text-xs">
+              Unable to reach the AgentPay Gateway. The backend service may be offline or starting up.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-[#716F69]">
+              <div>
+                <span className="block text-[#716F69]">ENDPOINT:</span>
+                <span className="text-[#F2F0EA]">GET /v1/missions</span>
+              </div>
+              <div>
+                <span className="block text-[#716F69]">STATUS:</span>
+                <span className="text-[#D85C5C]">{error}</span>
+              </div>
+              <div>
+                <span className="block text-[#716F69]">CONNECTION:</span>
+                <span className="text-[#D6A83A]">RETRYABLE</span>
+              </div>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={loadMissions}
+                className="px-3.5 py-1.5 rounded-lg bg-[#222222] hover:bg-[#2A2A2A] text-[#F2F0EA] text-xs font-sans font-medium transition-colors"
+              >
+                Retry Connection
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="p-8 text-center text-[#716F69] font-mono text-xs">
             Loading autonomous missions...
           </div>
-        ) : missions.length === 0 ? (
+        ) : missions.length === 0 && !error ? (
           <div className="p-10 text-center rounded-xl bg-[#101010] border border-[#222222]">
             <p className="text-[#B0ADA5] text-xs">No missions found. Launch an objective above.</p>
           </div>
