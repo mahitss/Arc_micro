@@ -87,30 +87,30 @@ export function GlobalTopBar() {
             )}
 
             {/* Arc Status */}
-            <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-md bg-[#101010] border border-[#222222] text-[10px] font-mono">
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">ARC</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
               <span className="text-[#F2F0EA] font-semibold">CONNECTED</span>
             </div>
 
             {/* AI Status */}
-            <div className="hidden xl:flex items-center gap-1 px-2 py-1 rounded-md bg-[#101010] border border-[#222222] text-[10px] font-mono">
+            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">AI</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
               <span className="text-[#F2F0EA] font-semibold">CONNECTED</span>
             </div>
 
             {/* Policy Status */}
-            <div className="hidden 2xl:flex items-center gap-1 px-2 py-1 rounded-md bg-[#101010] border border-[#222222] text-[10px] font-mono">
+            <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">POLICY</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
               <span className="text-[#F2F0EA] font-semibold">HEALTHY</span>
             </div>
 
             {/* Runtime Status */}
-            <div className="hidden 2xl:flex items-center gap-1 px-2 py-1 rounded-md bg-[#101010] border border-[#222222] text-[10px] font-mono">
+            <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">RUNTIME</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
               <span className="text-[#F2F0EA] font-semibold">HEALTHY</span>
             </div>
 

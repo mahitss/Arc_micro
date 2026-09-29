@@ -22,26 +22,40 @@ export function AgentPayMetric({
   highlight = false,
   className = '',
 }: AgentPayMetricProps) {
+  const isLongValue = typeof value === 'string' && value.length > 7;
+
   return (
     <div
-      className={`p-4 rounded-xl bg-[#101010] border ${
+      className={`p-3.5 sm:p-4 rounded-xl bg-[#101010] border ${
         highlight ? 'border-[#D6A83A]/50 bg-[#141414]' : 'border-[#222222]'
-      } flex flex-col justify-between ${className}`}
+      } flex flex-col justify-between min-w-0 overflow-hidden ${className}`}
     >
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-[11px] font-sans font-medium uppercase tracking-wider text-[#716F69]">
+      <div className="flex items-start justify-between gap-1.5 mb-2 min-w-0">
+        <span
+          className="text-[10px] sm:text-[11px] font-sans font-medium uppercase tracking-wider text-[#716F69] truncate"
+          title={label}
+        >
           {label}
         </span>
-        {provenance && <AgentPayProvenanceBadge type={provenance} />}
+        {provenance && (
+          <span className="shrink-0">
+            <AgentPayProvenanceBadge type={provenance} size="sm" />
+          </span>
+        )}
       </div>
 
-      <div className="flex items-baseline gap-2">
-        <span className="text-xl sm:text-2xl font-bold tracking-tight text-[#F2F0EA]">
+      <div className="flex items-baseline gap-2 min-w-0">
+        <span
+          className={`${
+            isLongValue ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl'
+          } font-bold tracking-tight text-[#F2F0EA] truncate`}
+          title={String(value)}
+        >
           {value}
         </span>
         {change && (
           <span
-            className={`text-xs font-medium ${
+            className={`text-xs font-medium shrink-0 ${
               trend === 'up'
                 ? 'text-[#2FB36F]'
                 : trend === 'down'
@@ -55,7 +69,10 @@ export function AgentPayMetric({
       </div>
 
       {subtext && (
-        <span className="text-xs text-[#B0ADA5] mt-1.5 leading-snug">
+        <span
+          className="text-[11px] text-[#B0ADA5] mt-1.5 leading-snug truncate"
+          title={subtext}
+        >
           {subtext}
         </span>
       )}

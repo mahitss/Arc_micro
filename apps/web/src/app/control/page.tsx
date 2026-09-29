@@ -602,7 +602,7 @@ export default function ControlTowerPage() {
       )}
 
       {/* 2. COMPACT SYSTEM STATUS STRIP (REAL / TRUTHFUL PROVENANCE) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2.5 sm:gap-3">
         <AgentPayMetric label="Missions" value={overview?.active_missions_count ?? 12} subtext="Autonomous DAGs" provenance="SIMULATED" />
         <AgentPayMetric label="Active Agents" value={overview?.active_agents_count ?? 37} subtext="Keyless runtime" provenance="SIMULATED" />
         <AgentPayMetric label="Committed" value="$182.40" subtext="Simulated in-flight" provenance="PROJECTED" />
