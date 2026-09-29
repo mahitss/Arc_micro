@@ -145,6 +145,11 @@ type Service interface {
 	ListReconciliationItems(ctx context.Context, tenantID, orgID string) ([]*ReconciliationItem, error)
 	GetReconciliationItem(ctx context.Context, id string) (*ReconciliationItem, error)
 	RecordReconciliationItem(ctx context.Context, item *ReconciliationItem) (*ReconciliationItem, error)
+
+	// Flagship Deterministic Simulation (Task 49)
+	RunFlagshipSimulation(ctx context.Context, orgID string) (*FlagshipSimulationResult, error)
+	ResetSimulation(ctx context.Context, orgID string) error
+	GetFlagshipSimulation(ctx context.Context, orgID string) (*FlagshipSimulationResult, error)
 }
 
 // DefaultClearinghouseService implements Service with concurrency safety and audit guarantees.
@@ -161,6 +166,7 @@ type DefaultClearinghouseService struct {
 	credits         map[string]*EconomicCredit
 	reconciliations map[string]*ReconciliationRecord
 	ledgerEntries   []*ClearingLedgerEntry
+	lastFlagshipSim map[string]*FlagshipSimulationResult
 
 	// Task 18 additions
 	counterparties map[string]*EconomicCounterparty
@@ -201,6 +207,7 @@ func NewClearinghouseService(
 		credits:         make(map[string]*EconomicCredit),
 		reconciliations: make(map[string]*ReconciliationRecord),
 		ledgerEntries:   make([]*ClearingLedgerEntry, 0),
+		lastFlagshipSim: make(map[string]*FlagshipSimulationResult),
 
 		counterparties: make(map[string]*EconomicCounterparty),
 		mpNettingProps: make(map[string]*MultiPartyNettingProposal),

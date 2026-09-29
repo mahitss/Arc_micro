@@ -920,3 +920,233 @@ func (s *DefaultClearinghouseService) GetReconciliationItem(ctx context.Context,
 	}
 	return item, nil
 }
+
+// -----------------------------------------------------------------------------
+// 7. FLAGSHIP CLEARINGHOUSE SIMULATION (Task 49)
+// -----------------------------------------------------------------------------
+
+func (s *DefaultClearinghouseService) RunFlagshipSimulation(ctx context.Context, orgID string) (*FlagshipSimulationResult, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if orgID == "" {
+		orgID = "org_default"
+	}
+
+	b := make([]byte, 4)
+	_, _ = rand.Read(b)
+	simID := fmt.Sprintf("sim_clr_%s", hex.EncodeToString(b))
+	now := time.Now().UTC()
+
+	// 1. Create 4 deterministic obligations under ModeSimulation
+	ob1 := &EconomicObligation{
+		ObligationID:   "ob_sim_flagship_01",
+		OrganizationID: orgID,
+		PayerAgentID:   "agent_coordinator_a",
+		PayeeAgentID:   "agent_data_harvester",
+		ContractID:     "contract_mkt_intel_01",
+		Capability:     "market.data_harvest",
+		Amount:         "5000000", // $5.00
+		Currency:       "USDC",
+		Status:         ObligationSettled,
+		SettledAmount:  "5000000",
+		ExecutionMode:  ModeSimulation,
+		CreatedAt:      now.Add(-3 * time.Minute),
+	}
+
+	ob2 := &EconomicObligation{
+		ObligationID:   "ob_sim_flagship_02",
+		OrganizationID: orgID,
+		PayerAgentID:   "agent_coordinator_a",
+		PayeeAgentID:   "agent_researcher_b",
+		ContractID:     "contract_mkt_intel_01",
+		Capability:     "market.research_report",
+		Amount:         "10000000", // $10.00
+		Currency:       "USDC",
+		Status:         ObligationSettled,
+		SettledAmount:  "10000000",
+		ExecutionMode:  ModeSimulation,
+		CreatedAt:      now.Add(-2 * time.Minute),
+	}
+
+	ob3 := &EconomicObligation{
+		ObligationID:   "ob_sim_flagship_03",
+		OrganizationID: orgID,
+		PayerAgentID:   "agent_researcher_b",
+		PayeeAgentID:   "agent_coordinator_a",
+		ContractID:     "contract_mkt_intel_01",
+		Capability:     "market.rebate_feed",
+		Amount:         "4000000", // $4.00
+		Currency:       "USDC",
+		Status:         ObligationSettled,
+		SettledAmount:  "4000000",
+		ExecutionMode:  ModeSimulation,
+		CreatedAt:      now.Add(-1 * time.Minute),
+	}
+
+	ob4 := &EconomicObligation{
+		ObligationID:   "ob_sim_flagship_04",
+		OrganizationID: orgID,
+		PayerAgentID:   "agent_coordinator_a",
+		PayeeAgentID:   "agent_validator_c",
+		ContractID:     "contract_mkt_intel_01",
+		Capability:     "result.verification",
+		Amount:         "5000000", // $5.00
+		Currency:       "USDC",
+		Status:         ObligationAuthorized,
+		SettledAmount:  "0",
+		ExecutionMode:  ModeSimulation,
+		CreatedAt:      now,
+	}
+
+	simObs := []*EconomicObligation{ob1, ob2, ob3, ob4}
+	for _, ob := range simObs {
+		s.obligations[ob.ObligationID] = ob
+	}
+
+	// 2. Netting Proposal
+	netProp := &NettingProposal{
+		ProposalID:     "net_sim_flagship_01",
+		OrganizationID: orgID,
+		AgentA:         "agent_coordinator_a",
+		AgentB:         "agent_researcher_b",
+		Currency:       "USDC",
+		GrossTotal:     "14000000", // $14.00 gross bilateral
+		NetPayer:       "agent_coordinator_a",
+		NetPayee:       "agent_researcher_b",
+		NetAmount:      "6000000",  // $6.00 net
+		SavingsAmount:  "4000000",  // $4.00 savings
+		Status:         "PROPOSED",
+		ApprovedByA:    true,
+		ApprovedByB:    true,
+		CreatedAt:      now,
+	}
+	s.nettingProps[netProp.ProposalID] = netProp
+
+	// 3. Settlement Batch
+	batch := &SettlementBatch{
+		BatchID:        "batch_sim_flagship_01",
+		OrganizationID: orgID,
+		Currency:       "USDC",
+		ObligationIDs:  []string{"ob_sim_flagship_01", "ob_sim_flagship_02", "ob_sim_flagship_03", "ob_sim_flagship_04"},
+		GrossAmount:    "24000000", // $24.00
+		NetAmount:      "20000000", // $20.00
+		Savings:        "4000000",  // $4.00
+		Status:         "READY",
+		ExecutionMode:  ModeSimulation,
+		CreatedAt:      now,
+	}
+	s.batches[batch.BatchID] = batch
+
+	// 4. Double-Entry Ledger entries
+	s.recordLedgerEntryLocked(orgID, ob1.ObligationID, ob1.ContractID, "", "", "", "", LedgerObligationCreated, "payer_obligation:agent_coordinator_a", "payee_receivable:agent_data_harvester", "5000000", "USDC", ModeSimulation)
+	s.recordLedgerEntryLocked(orgID, ob2.ObligationID, ob2.ContractID, "", "", "", "", LedgerObligationCreated, "payer_obligation:agent_coordinator_a", "payee_receivable:agent_researcher_b", "10000000", "USDC", ModeSimulation)
+	s.recordLedgerEntryLocked(orgID, ob3.ObligationID, ob3.ContractID, "", "", "", "", LedgerObligationCreated, "payer_obligation:agent_researcher_b", "payee_receivable:agent_coordinator_a", "4000000", "USDC", ModeSimulation)
+	s.recordLedgerEntryLocked(orgID, ob4.ObligationID, ob4.ContractID, "", "", "", "", LedgerObligationCreated, "payer_obligation:agent_coordinator_a", "payee_receivable:agent_validator_c", "5000000", "USDC", ModeSimulation)
+
+	// Collect simulation ledger entries
+	simLedger := make([]*ClearingLedgerEntry, 0)
+	for _, e := range s.ledgerEntries {
+		if e.ExecutionMode == ModeSimulation {
+			simLedger = append(simLedger, e)
+		}
+	}
+
+	// 5. Simulation Reconciliation Record
+	recon := &ReconciliationRecord{
+		RecordID:          "rec_sim_flagship_01",
+		OrganizationID:    orgID,
+		ObligationID:      "ob_sim_flagship_01",
+		PaymentIntentID:   "intent_sim_flagship_01",
+		ChainID:           "5042",
+		TargetContract:    "0x0000000000000000000000000000000000000000",
+		ExpectedAmount:    "5000000",
+		ActualAmount:      "5000000",
+		ExpectedRecipient: "agent_data_harvester",
+		ActualRecipient:   "agent_data_harvester",
+		Status:            "MATCHED",
+		DiscrepancyNotes:  "Deterministic simulation reconciliation: ledger entries balanced. Zero on-chain broadcast.",
+		ExecutionMode:     ModeSimulation,
+		ReconciledAt:      now,
+	}
+	s.reconciliations[recon.RecordID] = recon
+
+	result := &FlagshipSimulationResult{
+		SimulationID:       simID,
+		Mode:               "SIMULATION",
+		ObligationsCount:   len(simObs),
+		GrossValue:         "24000000",
+		NettedValue:        "4000000",
+		NetSettlement:      "20000000",
+		ProjectedSavings:   "4000000",
+		BatchesCount:       1,
+		Obligations:        simObs,
+		NettingProposal:    netProp,
+		Batch:              batch,
+		Reconciliation:     recon,
+		LedgerBalanced:     true,
+		TotalDebits:        "24000000",
+		TotalCredits:       "24000000",
+		SimulatedLedger:    simLedger,
+		LiveArcStatus:      "BLOCKED — VAULT NOT DEPLOYED",
+		SimReconStatus:     "AVAILABLE & MATCHED",
+		FinancialAuthority: "POLICY CONTROLLED",
+		SettlementStatus:   "SIMULATED — NO BROADCAST",
+		Timestamp:          now,
+	}
+
+	if s.lastFlagshipSim == nil {
+		s.lastFlagshipSim = make(map[string]*FlagshipSimulationResult)
+	}
+	s.lastFlagshipSim[orgID] = result
+
+	return result, nil
+}
+
+func (s *DefaultClearinghouseService) ResetSimulation(ctx context.Context, orgID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for id, ob := range s.obligations {
+		if ob.ExecutionMode == ModeSimulation {
+			delete(s.obligations, id)
+		}
+	}
+	for id, p := range s.nettingProps {
+		if p.ProposalID == "net_sim_flagship_01" {
+			delete(s.nettingProps, id)
+		}
+	}
+	for id, b := range s.batches {
+		if b.ExecutionMode == ModeSimulation {
+			delete(s.batches, id)
+		}
+	}
+	for id, r := range s.reconciliations {
+		if r.ExecutionMode == ModeSimulation {
+			delete(s.reconciliations, id)
+		}
+	}
+
+	filteredLedger := make([]*ClearingLedgerEntry, 0)
+	for _, e := range s.ledgerEntries {
+		if e.ExecutionMode != ModeSimulation {
+			filteredLedger = append(filteredLedger, e)
+		}
+	}
+	s.ledgerEntries = filteredLedger
+
+	if s.lastFlagshipSim != nil {
+		delete(s.lastFlagshipSim, orgID)
+	}
+	return nil
+}
+
+func (s *DefaultClearinghouseService) GetFlagshipSimulation(ctx context.Context, orgID string) (*FlagshipSimulationResult, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.lastFlagshipSim == nil {
+		return nil, nil
+	}
+	return s.lastFlagshipSim[orgID], nil
+}

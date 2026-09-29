@@ -498,6 +498,14 @@ func NewRouter(
 		mux.HandleFunc("GET /api/economy/network", clearingHandler.HandleGetObligationGraph)
 		mux.HandleFunc("GET /api/economy/clearing/health", clearingHandler.HandleGetClearingNetworkHealth)
 
+		// Task 49: Flagship Clearinghouse Simulation APIs
+		mux.HandleFunc("POST /v1/economy/clearing/simulate", clearingHandler.HandleRunFlagshipSimulation)
+		mux.HandleFunc("POST /api/economy/clearing/simulate", clearingHandler.HandleRunFlagshipSimulation)
+		mux.HandleFunc("POST /v1/economy/clearing/reset", clearingHandler.HandleResetSimulation)
+		mux.HandleFunc("POST /api/economy/clearing/reset", clearingHandler.HandleResetSimulation)
+		mux.HandleFunc("GET /v1/economy/clearing/simulate", clearingHandler.HandleGetFlagshipSimulation)
+		mux.HandleFunc("GET /api/economy/clearing/simulate", clearingHandler.HandleGetFlagshipSimulation)
+
 		// 16. Task 12: Autonomous Economic Control Tower APIs
 		controlService := control.NewService(repo, ts, policyClient, bc, reg, cfg)
 		controlService.SetClearinghouse(clearingSvc)

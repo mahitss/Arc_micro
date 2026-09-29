@@ -860,3 +860,61 @@ func (h *ClearinghouseHandler) HandleGetClearingNetworkHealth(w http.ResponseWri
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(health)
 }
+
+func (h *ClearinghouseHandler) HandleRunFlagshipSimulation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	res, err := h.service.RunFlagshipSimulation(r.Context(), orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(res)
+}
+
+func (h *ClearinghouseHandler) HandleResetSimulation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	if err := h.service.ResetSimulation(r.Context(), orgID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"status": "RESET", "org_id": orgID})
+}
+
+func (h *ClearinghouseHandler) HandleGetFlagshipSimulation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		orgID = "org_default"
+	}
+	res, err := h.service.GetFlagshipSimulation(r.Context(), orgID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if res == nil {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"status": "NOT_RUN", "obligations_count": 0})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(res)
+}

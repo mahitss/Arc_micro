@@ -322,6 +322,31 @@ type ClearingSimulationResult struct {
 	Timestamp         time.Time `json:"timestamp"`
 }
 
+// FlagshipSimulationResult captures the complete deterministic scenario state for the flagship clearinghouse simulation (Task 49).
+type FlagshipSimulationResult struct {
+	SimulationID       string                 `json:"simulation_id"`
+	Mode               string                 `json:"mode"` // "SIMULATION"
+	ObligationsCount   int                    `json:"obligations_count"`
+	GrossValue         string                 `json:"gross_value"`
+	NettedValue        string                 `json:"netted_value"`
+	NetSettlement      string                 `json:"net_settlement"`
+	ProjectedSavings   string                 `json:"projected_savings"`
+	BatchesCount       int                    `json:"batches_count"`
+	Obligations        []*EconomicObligation  `json:"obligations"`
+	NettingProposal    *NettingProposal       `json:"netting_proposal,omitempty"`
+	Batch              *SettlementBatch       `json:"batch,omitempty"`
+	Reconciliation     *ReconciliationRecord  `json:"reconciliation,omitempty"`
+	LedgerBalanced     bool                   `json:"ledger_balanced"`
+	TotalDebits        string                 `json:"total_debits"`
+	TotalCredits       string                 `json:"total_credits"`
+	SimulatedLedger    []*ClearingLedgerEntry `json:"simulated_ledger"`
+	LiveArcStatus      string                 `json:"live_arc_status"`
+	SimReconStatus     string                 `json:"sim_recon_status"`
+	FinancialAuthority string                 `json:"financial_authority"`
+	SettlementStatus   string                 `json:"settlement_status"`
+	Timestamp          time.Time              `json:"timestamp"`
+}
+
 // ClearingCounterfactual provides side-by-side current vs projected comparison.
 type ClearingCounterfactual struct {
 	CurrentGrossValue    string                     `json:"current_gross_value"`

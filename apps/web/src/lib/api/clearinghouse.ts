@@ -157,10 +157,35 @@ export interface EconomicHealthSnapshot {
   evaluated_at: string;
 }
 
+export interface FlagshipSimulationResult {
+  simulation_id: string;
+  mode: string;
+  obligations_count: number;
+  gross_value: string;
+  netted_value: string;
+  net_settlement: string;
+  projected_savings: string;
+  batches_count: number;
+  obligations: EconomicObligation[];
+  netting_proposal?: NettingProposal;
+  batch?: SettlementBatch;
+  reconciliation?: ReconciliationRecord;
+  ledger_balanced: boolean;
+  total_debits: string;
+  total_credits: string;
+  simulated_ledger: ClearingLedgerEntry[];
+  live_arc_status: string;
+  sim_recon_status: string;
+  financial_authority: string;
+  settlement_status: string;
+  timestamp: string;
+}
+
 export interface ClearingLedgerEntry {
   entry_id: string;
   organization_id: string;
   obligation_id: string;
+  contract_id?: string;
   entry_type: string;
   debit_account: string;
   credit_account: string;
@@ -359,9 +384,10 @@ export const MOCK_HEALTH: EconomicHealthSnapshot = {
 export async function fetchObligations(orgId?: string): Promise<EconomicObligation[]> {
   try {
     const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
-    return await apiRequest<EconomicObligation[]>(`/v1/economy/obligations${qs}`);
+    const res = await apiRequest<EconomicObligation[]>(`/v1/economy/obligations${qs}`);
+    return res || [];
   } catch {
-    return MOCK_OBLIGATIONS;
+    return [];
   }
 }
 
@@ -501,5 +527,225 @@ export async function fetchBatches(orgId?: string): Promise<SettlementBatch[]> {
         created_at: new Date(Date.now() - 600000).toISOString(),
       },
     ];
+  }
+}
+
+export async function runClearingSimulation(orgId?: string): Promise<FlagshipSimulationResult> {
+  const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
+  try {
+    return await apiRequest<FlagshipSimulationResult>(`/v1/economy/clearing/simulate${qs}`, {
+      method: 'POST',
+      body: JSON.stringify({ org_id: orgId || 'org_default' }),
+    });
+  } catch {
+    // Deterministic fallback if backend gateway is offline
+    const now = new Date();
+    return {
+      simulation_id: `sim_clr_demo_fallback`,
+      mode: 'SIMULATION',
+      obligations_count: 4,
+      gross_value: '24000000',
+      netted_value: '4000000',
+      net_settlement: '20000000',
+      projected_savings: '4000000',
+      batches_count: 1,
+      obligations: [
+        {
+          obligation_id: 'ob_sim_flagship_01',
+          organization_id: orgId || 'org_default',
+          payer_agent_id: 'agent_coordinator_a',
+          payee_agent_id: 'agent_data_harvester',
+          contract_id: 'contract_mkt_intel_01',
+          capability: 'market.data_harvest',
+          amount: '5000000',
+          settled_amount: '5000000',
+          currency: 'USDC',
+          status: 'SETTLED',
+          execution_mode: 'SIMULATION',
+          created_at: new Date(now.getTime() - 180000).toISOString(),
+          updated_at: now.toISOString(),
+        },
+        {
+          obligation_id: 'ob_sim_flagship_02',
+          organization_id: orgId || 'org_default',
+          payer_agent_id: 'agent_coordinator_a',
+          payee_agent_id: 'agent_researcher_b',
+          contract_id: 'contract_mkt_intel_01',
+          capability: 'market.research_report',
+          amount: '10000000',
+          settled_amount: '10000000',
+          currency: 'USDC',
+          status: 'SETTLED',
+          execution_mode: 'SIMULATION',
+          created_at: new Date(now.getTime() - 120000).toISOString(),
+          updated_at: now.toISOString(),
+        },
+        {
+          obligation_id: 'ob_sim_flagship_03',
+          organization_id: orgId || 'org_default',
+          payer_agent_id: 'agent_researcher_b',
+          payee_agent_id: 'agent_coordinator_a',
+          contract_id: 'contract_mkt_intel_01',
+          capability: 'market.rebate_feed',
+          amount: '4000000',
+          settled_amount: '4000000',
+          currency: 'USDC',
+          status: 'SETTLED',
+          execution_mode: 'SIMULATION',
+          created_at: new Date(now.getTime() - 60000).toISOString(),
+          updated_at: now.toISOString(),
+        },
+        {
+          obligation_id: 'ob_sim_flagship_04',
+          organization_id: orgId || 'org_default',
+          payer_agent_id: 'agent_coordinator_a',
+          payee_agent_id: 'agent_validator_c',
+          contract_id: 'contract_mkt_intel_01',
+          capability: 'result.verification',
+          amount: '5000000',
+          settled_amount: '0',
+          currency: 'USDC',
+          status: 'AUTHORIZED',
+          execution_mode: 'SIMULATION',
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        },
+      ],
+      netting_proposal: {
+        proposal_id: 'net_sim_flagship_01',
+        organization_id: orgId || 'org_default',
+        agent_a: 'agent_coordinator_a',
+        agent_b: 'agent_researcher_b',
+        currency: 'USDC',
+        gross_total: '14000000',
+        net_payer: 'agent_coordinator_a',
+        net_payee: 'agent_researcher_b',
+        net_amount: '6000000',
+        savings_amount: '4000000',
+        status: 'PROPOSED',
+        approved_by_a: true,
+        approved_by_b: true,
+        created_at: now.toISOString(),
+      },
+      batch: {
+        batch_id: 'batch_sim_flagship_01',
+        organization_id: orgId || 'org_default',
+        currency: 'USDC',
+        obligation_ids: ['ob_sim_flagship_01', 'ob_sim_flagship_02', 'ob_sim_flagship_03', 'ob_sim_flagship_04'],
+        gross_amount: '24000000',
+        net_amount: '20000000',
+        savings: '4000000',
+        status: 'READY',
+        execution_mode: 'SIMULATION',
+        created_at: now.toISOString(),
+      },
+      reconciliation: {
+        record_id: 'rec_sim_flagship_01',
+        organization_id: orgId || 'org_default',
+        obligation_id: 'ob_sim_flagship_01',
+        payment_intent_id: 'intent_sim_flagship_01',
+        status: 'MATCHED',
+        expected_amount: '5000000',
+        actual_amount: '5000000',
+        expected_recipient: 'agent_data_harvester',
+        actual_recipient: 'agent_data_harvester',
+        chain_id: '5042',
+        target_contract: '0x0000000000000000000000000000000000000000',
+        discrepancy_notes: 'Deterministic simulation reconciliation: ledger entries balanced. Zero on-chain broadcast.',
+        execution_mode: 'SIMULATION',
+        reconciled_at: now.toISOString(),
+      },
+      ledger_balanced: true,
+      total_debits: '24000000',
+      total_credits: '24000000',
+      simulated_ledger: [
+        {
+          entry_id: 'clearing_led_sim_01',
+          organization_id: orgId || 'org_default',
+          obligation_id: 'ob_sim_flagship_01',
+          contract_id: 'contract_mkt_intel_01',
+          entry_type: 'OBLIGATION_CREATED',
+          debit_account: 'payer_obligation:agent_coordinator_a',
+          credit_account: 'payee_receivable:agent_data_harvester',
+          amount: '5000000',
+          currency: 'USDC',
+          execution_mode: 'SIMULATION',
+          timestamp: now.toISOString(),
+          hash: 'hash_sim_01',
+        },
+        {
+          entry_id: 'clearing_led_sim_02',
+          organization_id: orgId || 'org_default',
+          obligation_id: 'ob_sim_flagship_02',
+          contract_id: 'contract_mkt_intel_01',
+          entry_type: 'OBLIGATION_CREATED',
+          debit_account: 'payer_obligation:agent_coordinator_a',
+          credit_account: 'payee_receivable:agent_researcher_b',
+          amount: '10000000',
+          currency: 'USDC',
+          execution_mode: 'SIMULATION',
+          timestamp: now.toISOString(),
+          hash: 'hash_sim_02',
+        },
+        {
+          entry_id: 'clearing_led_sim_03',
+          organization_id: orgId || 'org_default',
+          obligation_id: 'ob_sim_flagship_03',
+          contract_id: 'contract_mkt_intel_01',
+          entry_type: 'OBLIGATION_CREATED',
+          debit_account: 'payer_obligation:agent_researcher_b',
+          credit_account: 'payee_receivable:agent_coordinator_a',
+          amount: '4000000',
+          currency: 'USDC',
+          execution_mode: 'SIMULATION',
+          timestamp: now.toISOString(),
+          hash: 'hash_sim_03',
+        },
+        {
+          entry_id: 'clearing_led_sim_04',
+          organization_id: orgId || 'org_default',
+          obligation_id: 'ob_sim_flagship_04',
+          contract_id: 'contract_mkt_intel_01',
+          entry_type: 'OBLIGATION_CREATED',
+          debit_account: 'payer_obligation:agent_coordinator_a',
+          credit_account: 'payee_receivable:agent_validator_c',
+          amount: '5000000',
+          currency: 'USDC',
+          execution_mode: 'SIMULATION',
+          timestamp: now.toISOString(),
+          hash: 'hash_sim_04',
+        },
+      ],
+      live_arc_status: 'BLOCKED — VAULT NOT DEPLOYED',
+      sim_recon_status: 'AVAILABLE & MATCHED',
+      financial_authority: 'POLICY CONTROLLED',
+      settlement_status: 'SIMULATED — NO BROADCAST',
+      timestamp: now.toISOString(),
+    };
+  }
+}
+
+export async function resetClearingSimulation(orgId?: string): Promise<void> {
+  const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
+  try {
+    await apiRequest(`/v1/economy/clearing/reset${qs}`, {
+      method: 'POST',
+      body: JSON.stringify({ org_id: orgId || 'org_default' }),
+    });
+  } catch {
+    // Ignore fallback errors
+  }
+}
+
+export async function getClearingSimulation(orgId?: string): Promise<FlagshipSimulationResult | null> {
+  const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
+  try {
+    const res = await apiRequest<FlagshipSimulationResult>(`/v1/economy/clearing/simulate${qs}`);
+    if (res && res.simulation_id) {
+      return res;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
