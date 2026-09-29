@@ -96,7 +96,7 @@ export default function DevelopersPage() {
                 <span className="font-semibold text-[#2FB36F]">LIVE ARC MAINNET</span>
               </div>
               <p className="text-[#716F69]">
-                Full production mode. Settles USDC directly on Arc Mainnet Chain ID 5042 from the enterprise-controlled AgentVault.
+                Target production mode. When ENABLE_LIVE_EXECUTION=true and AgentVault is deployed, settles native USDC on Arc Mainnet Chain ID 5042. Currently in operator-gated simulation mode.
               </p>
             </div>
           </div>

@@ -13,7 +13,7 @@ AgentPay is a production-grade infrastructure platform that acts as the financia
 - **Autonomous Economic Fabric**: Translates high-level natural language objectives into executable blueprints, runs Monte Carlo cost simulations, and coordinates multi-agent missions and swarms.
 - **Economic Control Plane**: Enforces multi-layered constitutional governance, microsecond deterministic policy evaluation, composite risk scoring, and multi-sig escalation.
 - **Autonomous Clearinghouse**: Maintains a double-entry ledger, executes multilateral debt netting cycles across agent trade networks, and reconciles transactions against blockchain receipts.
-- **Programmable Vault (`AgentVault.sol`)**: An on-chain smart contract deployed on Arc Mainnet that enforces spending limits, daily calendar windows, and recipient allowlists in native USDC.
+- **Programmable Vault (`AgentVault.sol`)**: The reference on-chain smart contract designed for Arc Mainnet (currently undeployed on mainnet; running in deterministic simulation) that enforces spending limits, daily calendar windows, and recipient allowlists in native USDC.
 
 ---
 
@@ -146,12 +146,15 @@ Objective → Blueprint → Simulate → Discover → Quote → Select
 
 ---
 
-## 6. Arc Integration
+## 6. Arc Integration & Live Truth Status
 
 AgentPay settles value exclusively on **Arc Mainnet**:
-- **Chain ID**: `5042`
-- **Native USDC Contract**: `0x3600000000000000000000000000000000000000` (6 decimals)
-- **RPC Endpoint**: `https://rpc.mainnet.arc.io`
+- **Chain ID**: `5042` (Verified via RPC `0x13b2`)
+- **RPC Endpoint**: `https://rpc.mainnet.arc.io` (Connected, Block 23,209,762+)
+- **Native USDC Contract**: `0x3600000000000000000000000000000000000000` (Verified on-chain)
+- **AgentVault Status**: **NOT DEPLOYED ON MAINNET** (`0x` bytecode at unverified address)
+- **Real Settlements**: **0 VERIFIED** (All mission runs operate in strict deterministic `SIMULATION` mode)
+- **Live Broadcasts**: **0** (`ENABLE_LIVE_EXECUTION=false`)
 - **Block Explorer**: `https://explorer.arc.io`
 - **On-Chain Enforcement**: `AgentVault.sol` validates per-transaction limits, daily calendar spending windows, and recipient allowlists directly in the EVM before moving USDC.
 
