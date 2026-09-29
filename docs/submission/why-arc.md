@@ -1,16 +1,14 @@
 # Why Arc? Factual Architecture & Economic Rationale
 
-> **Document Version**: 1.0.0  
 > **Target Network**: Arc Mainnet (Chain ID `5042`)  
 > **Reference RPC**: `https://rpc.mainnet.arc.io`  
-> **Verified USDC Contract**: `0x3600000000000000000000000000000000000000`
+> **Native USDC Contract**: `0x3600000000000000000000000000000000000000`
 
 ---
 
-## 1. The Problem: Autonomous Agents Require Economic Boundaries
+## 1. The Autonomous Agent Economic Challenge
 
 Autonomous AI agents can formulate plans, invoke external APIs, and make computational decisions. However, granting an AI agent direct, unconstrained access to a cryptocurrency wallet introduces catastrophic operational risk:
-
 - **Prompt Injections & Tool Hijacking**: An adversarial prompt or compromised upstream data feed can trick an LLM into sending arbitrary transactions.
 - **Runaway Loops & Cost Spirals**: Buggy agent logic or recursive sub-agent invocations can deplete account balances in seconds.
 - **Lack of Governance**: Traditional wallets lack programmatic, deterministic spending limits, daily budget enforcement, or server-side service allowlists.
@@ -19,27 +17,7 @@ For AI agents to participate safely in machine-to-machine commerce, economic aut
 
 ---
 
-## 2. Why Stablecoin Payments?
-
-Autonomous agents need predictable accounting:
-
-- **Eliminating Volatility Risk**: Operating expenses for APIs, data feeds, and compute clusters are denominated in fiat equivalents (USD). Denominating agent spending in volatile native gas tokens (like ETH, SOL, or AVAX) introduces exchange-rate slippage, unpredictable budgeting, and complex tax accounting.
-- **Deterministic Unit Economics**: With USDC, an agent operator can allocate exactly `$5.00` or `$50.00` per day with complete certainty over purchasing power.
-- **Standardized Machine Pricing**: External services can charge fixed micro-prices (e.g., `0.18 USDC` for a search query or `0.05 USDC` for an inference call) without needing continuous dynamic pricing or oracle recalculations.
-
----
-
-## 3. Why Programmable Settlement?
-
-Simple off-chain credit systems (like centralized API keys or corporate credit cards) fail to meet the requirements of open, autonomous agent networks:
-
-- **Counterparty Risk & Custody**: An agent operating in an untrusted environment cannot be trusted with custodial credit card credentials.
-- **On-Chain Enforcement**: Smart contracts provide an immutable, non-bypassable execution boundary. In AgentPay, `AgentVault.sol` enforces that even if the off-chain gateway were fully compromised, withdrawals and payments cannot exceed the hard on-chain daily limit or transfer to unapproved recipients.
-- **Verifiable Audit Trail**: Every economic action creates an on-chain receipt with a distinct transaction hash, block number, and emitted event (`PaymentExecuted`), enabling automated reconciliation and auditing.
-
----
-
-## 4. Why Arc?
+## 2. Why Arc as the Settlement Layer?
 
 AgentPay specifically chose Arc as its settlement layer due to fundamental architectural alignments with payment-oriented systems:
 
@@ -56,26 +34,19 @@ Arc is architected specifically as a payment-oriented settlement layer. Rather t
 
 ---
 
-## 5. What AgentPay Specifically Uses Arc For
+## 3. What AgentPay Uses Arc For
 
-AgentPay uses Arc strictly for deterministic on-chain operations:
-
-1. **Vault Custody (`AgentVault.sol`)**:
-   Holds USDC reserves assigned to specific autonomous agents.
-2. **On-Chain Policy Guardrails**:
-   Enforces daily spending limits, per-transaction maximums, and operator pause switches directly in the EVM state.
-3. **Deterministic Settlement (`executePayment`)**:
-   Transfers verified USDC base units to registered service recipients upon receipt of cryptographic authorization from the Go Gateway and Rust Policy Engine.
-4. **Transparent Verification**:
-   Emits `PaymentExecuted(bytes32 indexed intentId, address indexed recipient, uint256 amount, uint256 fee)` events on Arc for immutable indexing and verification by external auditors.
+1. **Vault Custody (`AgentVault.sol`)**: Holds USDC reserves assigned to specific autonomous agents.
+2. **On-Chain Policy Guardrails**: Enforces daily spending limits, per-transaction maximums, and operator pause switches directly in the EVM state.
+3. **Deterministic Settlement (`executePayment`)**: Transfers verified USDC base units to registered service recipients upon receipt of cryptographic authorization from the Go Gateway and Rust Policy Engine.
+4. **Transparent Verification**: Emits `PaymentExecuted` events on Arc for immutable indexing and verification by external auditors.
 
 ---
 
-## 6. Current Verified Arc Status (Truth Disclosure)
+## 4. Current Verified Arc Status (Truth Disclosure)
 
 - **Architecture Positioning:** AgentPay is architected specifically for Arc Mainnet settlement.
 - **RPC Availability:** Connected to `https://rpc.mainnet.arc.io` (Chain ID `5042`, Block #23,401,027+).
 - **Native USDC:** Verified on-chain at `0x3600000000000000000000000000000000000000`.
 - **AgentVault Status:** The reference smart contract `AgentVault.sol` is compiled and verified in Foundry simulation; it is **NOT DEPLOYED ON MAINNET** (`0x` bytecode confirmed via `eth_getCode`).
 - **Live Broadcasts:** 0. All mission runs operate in strict deterministic `SIMULATION` mode (`ENABLE_LIVE_EXECUTION=false`).
-

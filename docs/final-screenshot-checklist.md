@@ -1,99 +1,65 @@
-# AgentPay — Final Screenshot Checklist
+# AgentPay — Final Screenshot Submission Checklist
 
-This checklist defines the 10 canonical submission screenshots. Each screenshot must communicate exactly **one clear idea**, be captured in a clean browser window (1920x1080 resolution, dark mode, no developer overlays, no console errors), and reflect 100% truthful system state.
+This checklist defines the 12 canonical submission screenshots required for the hackathon evaluation package. Each screenshot must be captured in a clean browser window (1920x1080 resolution, dark matte black theme, no console errors, no developer overlays) reflecting 100% verified system state.
 
 ---
 
 ### Screenshot 1: Control Tower Hero
 - **Target URL:** `http://localhost:3000/control` (above the fold)
-- **Visual Focus:** The prominent Hero banner displaying `AGENTPAY`, `Financial Control Plane for Autonomous AI Agents`, the core thesis (`AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.`), and the `SYSTEM STATUS` card:
-  - `MODE: SIMULATION`
-  - `ARC: CONNECTED`
-  - `AGENTVAULT: NOT DEPLOYED`
-  - `LIVE EXECUTION: DISABLED`
-  - `TREASURY: SIMULATED ($100.00 USDC)`
-- **Core Idea Communicated:** *AgentPay establishes a transparent, operator-gated financial control plane with zero hidden state.*
+- **Visual Focus:** System status banner showing `SIMULATION — NO FUNDS MOVED`, `ARC: CONNECTED (Block #23.4M+)`, `AGENTVAULT: NOT DEPLOYED`, `REAL SETTLEMENTS: 0 VERIFIED`.
+- **Core Concept:** Transparent, truthful operator status with zero fake deployment claims.
 
----
+### Screenshot 2: Mission Command Center
+- **Target URL:** `http://localhost:3000/missions/demo/replay`
+- **Visual Focus:** 22-step progress scrubber, active transport playback bar (`PLAY`, `PAUSE`, `STEP`, `RESET`), and real-time state machine badge (`PLANNING`, `EXECUTING`, `COMPLETED`).
+- **Core Concept:** Deterministic autonomous mission lifecycle execution.
 
-### Screenshot 2: Active Mission Timeline
-- **Target URL:** `http://localhost:3000/control` (middle view)
-- **Visual Focus:** The `HERO TRACE: DETERMINISTIC MISSION TIMELINE` displaying the sequential execution steps of the Autonomous Market Intelligence mission ($25.00 USDC budget), showing active events from planning through settlement.
-- **Core Idea Communicated:** *Autonomous AI workflows execute along a deterministic, auditable economic trajectory.*
+### Screenshot 3: AI vs. Authority Boundary
+- **Target URL:** `http://localhost:3000/missions/demo/replay` (Synchronized Inspector &rarr; "Why / Why Not?" Tab)
+- **Visual Focus:** The visual boundary separating AI recommendation (Advisory) from AgentPay authorization (Deterministic Policy).
+- **Core Concept:** Cognitive advice is untrusted; financial authority is strictly deterministic.
 
----
+### Screenshot 4: Malicious Provider Blocked (HARD_DENY)
+- **Target URL:** `http://localhost:3000/missions/demo/replay` (Step 13 highlighted in Red)
+- **Visual Focus:** The `PAYMENT_BLOCKED` inspector card showing `HARD_DENY (INV-146 / INV-186)`, attempted recipient substitution, and `FUNDS MOVED: $0.00 USDC`.
+- **Core Concept:** Adversarial recipient swap is completely blocked by architectural invariants.
 
-### Screenshot 3: Marketplace Discovery & Selection
+### Screenshot 5: Service Marketplace
 - **Target URL:** `http://localhost:3000/marketplace`
-- **Visual Focus:** Discovery panel showing 3 candidate agents:
-  - `agent_fast_infer` ($12.50 USDC, selected)
-  - `agent_budget_ai` ($14.00 USDC, eligible)
-  - `agent_ultra_deep` ($28.00 USDC, rejected due to budget envelope violation)
-- **Core Idea Communicated:** *Agent discovery automatically filters candidates violating task financial envelopes.*
+- **Visual Focus:** Candidate listings showing specialist agents, verified capability tags, SLA latencies, and base unit pricing.
+- **Core Concept:** Open discovery and competitive quoting for autonomous machine-to-machine commerce.
 
----
+### Screenshot 6: Agent Network Graph
+- **Target URL:** `http://localhost:3000/network`
+- **Visual Focus:** Directed topological graph showing multi-agent swarm relationships and communication channels.
+- **Core Concept:** Multi-agent coordination with bounded acyclic dependencies.
 
-### Screenshot 4: Sub-Microsecond Policy Decision
-- **Target URL:** `http://localhost:3000/control` (event drawer opened on Step 8)
-- **Visual Focus:** Inspected event drawer for `POLICY ALLOW`:
-  - Decision: `ALLOW (Evaluated in 6.36 µs)`
-  - Structured Why Panel: `Verified recipient on allowlist, velocity under limit, amount within constitution v8`
-  - Structured Why Not Panel: `Human approval not required below $20.00 threshold`
-- **Core Idea Communicated:** *Constitutional policy evaluation is deterministic, explainable, and lightning-fast (sub-10µs).*
-
----
-
-### Screenshot 5: Heartbeat Failure & Lease Fencing
-- **Target URL:** `http://localhost:3000/missions/msn_market_intel_01/replay` (Step 5 & 6)
-- **Visual Focus:** Step 5 highlighted in Red (`FAILED`), Step 6 highlighted in Amber (`REPLANNING`):
-  - Invariant indicator: `Lease Fenced (INV-101) & Blind Retry Prohibited (INV-103)`
-  - Financial impact: `Budget remains 100% intact; worker isolated immediately`
-- **Core Idea Communicated:** *Provider failures are fenced immediately, preventing double-spends and runaway retry costs.*
-
----
-
-### Screenshot 6: Security Proving Ground (8 Attacks Defended)
-- **Target URL:** `http://localhost:3000/control` (bottom section)
-- **Visual Focus:** The `SECURITY PROVING GROUND (8 ATTACKS)` with all 8 attack buttons and active inspection of an attack:
-  - 4-step pipeline: `1. ATTACK` &rarr; `2. DETECTION` &rarr; `3. DECISION (DENIED)` &rarr; `4. RESULT (BLOCKED)`
-  - Badge: `8 / 8 DEFENDED`
-- **Core Idea Communicated:** *All major agentic economic exploit vectors are blocked at the boundary by architectural invariants.*
-
----
-
-### Screenshot 7: Bilateral Clearing & Milestone Settlement
-- **Target URL:** `http://localhost:3000/economy/clearing`
-- **Visual Focus:** The bilateral obligations ledger showing verified milestone completion, deliverable SHA-256 validation, unreserved budget release ($11.00 USDC returned to treasury), and zero fund leakage.
-- **Core Idea Communicated:** *Settlement only occurs upon cryptographic deliverable proof, with automatic release of unused budget.*
-
----
-
-### Screenshot 8: Autonomous Double-Entry Treasury
+### Screenshot 7: Treasury Orchestrator & Liquidity Reserves
 - **Target URL:** `http://localhost:3000/treasury`
-- **Visual Focus:** Double-entry ledger breakdown:
-  - Available Liquidity: `$81.50 USDC`
-  - Reserved Liquidity: `$18.50 USDC`
-  - Committed / Settled: `$18.50 USDC`
-  - Mathematical balance verification: `Available + Reserved == Total Assets`
-- **Core Idea Communicated:** *Every sub-agent payment requires an atomic double-entry reservation, preventing treasury insolvency.*
+- **Visual Focus:** Double-entry ledger balances, active encumbered reservations, and capital adequacy ratio.
+- **Core Concept:** Atomic treasury encumbrance preventing cross-agent liquidity race conditions.
 
----
+### Screenshot 8: Autonomous Clearinghouse & Debt Netting
+- **Target URL:** `http://localhost:3000/economy/clearing`
+- **Visual Focus:** Multilateral debt netting cycles showing gross bilateral obligations compressed into single net settlement proposals.
+- **Core Concept:** 40–70% liquidity savings through graph netting cycles before on-chain settlement.
 
-### Screenshot 9: Truthful Arc Mainnet Status
+### Screenshot 9: Economic Simulator & Digital Twin
+- **Target URL:** `http://localhost:3000/simulator`
+- **Visual Focus:** Monte Carlo cost distribution curve, worst-case exposure bounds, and pre-execution feasibility check.
+- **Core Concept:** Digital twin modeling protecting capital before execution begins.
+
+### Screenshot 10: Security & Constitutional Governance
+- **Target URL:** `http://localhost:3000/constitution` (or `/security`)
+- **Visual Focus:** 7-tier constitutional policy hierarchy tree showing monotonic authority tightening (`GLOBAL \to PAYMENT`).
+- **Core Concept:** Invariant rules that cannot be weakened by downstream tasks or human overrides.
+
+### Screenshot 11: Arc Settlement & Consensus Panel
 - **Target URL:** `http://localhost:3000/arc`
-- **Visual Focus:** The Section 6 Truthful Arc Mainnet Status panel:
-  - `Chain: 5042`
-  - `RPC: CONNECTED (Block #22,572,770)`
-  - `Native USDC: VERIFIED`
-  - `AgentVault: NOT DEPLOYED (0x)`
-  - `Live Execution: DISABLED`
-  - `Real Settlements: 0 VERIFIED`
-  - `Broadcasts: 0`
-- **Core Idea Communicated:** *AgentPay maintains absolute truthfulness about blockchain connectivity with zero fabricated state.*
+- **Visual Focus:** Settlement infrastructure status cards: Chain ID 5042, Native USDC contract, 0x bytecode on AgentVault, 0 real settlements.
+- **Core Concept:** Authoritative Layer-1 consensus and truthful simulation status.
 
----
-
-### Screenshot 10: Deterministic Failure Replay Controller
-- **Target URL:** `http://localhost:3000/missions/msn_market_intel_01/replay`
-- **Visual Focus:** The step-by-step scrubber showing full mission playback, provider failover transition from `FastInfer` to `BudgetAI`, and identical cryptographic trace hashes on every run.
-- **Core Idea Communicated:** *Mission trajectories and recovery flows are 100% deterministic and reproducible on demand.*
+### Screenshot 12: Universal AI Provider Layer
+- **Target URL:** `http://localhost:3000/settings/ai`
+- **Visual Focus:** OpenRouter provider configuration, 8 task routing profiles, fallback cascade array, and read-only tool contracts.
+- **Core Concept:** Model-agnostic AI intelligence isolated behind read-only tool boundaries.

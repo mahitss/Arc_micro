@@ -1,21 +1,30 @@
-# AgentPay: The 60-Second Pitch
+# AgentPay — 60-Second Elevator Pitch
 
-AI agents are becoming capable of acting autonomously, but autonomous action creates an economic control problem. 
+AI agents are becoming capable of acting autonomously,
+but autonomous action creates a financial problem.
 
-If agents hold private keys or corporate payment methods, software errors, prompt injections, and hallucinated loops risk draining enterprise treasury reserves.
+An agent can reason about what it wants to buy,
+who it wants to hire, and how it wants to adapt.
 
-AgentPay is a financial control plane for autonomous agents.
+But should that agent have unrestricted access to money?
 
-Agents can discover marketplace services, negotiate quotes, execute multi-step missions, coordinate specialized swarms, and recover automatically from provider failure.
+AgentPay says no.
 
-However, agents never receive unrestricted financial authority. They hold zero private keys. They cannot alter payment destinations. They cannot self-escalate budgets.
+AgentPay is the programmable financial control plane
+for autonomous AI agents.
 
-Every economic action passes through deterministic policy evaluation, quantitative risk assessment, double-entry treasury reservation, and cryptographic execution gates.
+AI can discover services, negotiate, delegate and replan.
 
-Once verified, Arc settles the authorized value using native USDC micro-payments.
+But every financial action passes through deterministic
+policy, risk, approval, treasury and execution controls.
 
-AgentPay cleanly separates operational autonomy from financial authority.
+The AI can change the plan.
 
-Autonomy changes the plan.  
-AgentPay controls the money.  
-Arc settles the authorized value.
+It cannot change what it is allowed to spend.
+
+And when authorized value needs to settle,
+Arc provides the settlement layer.
+
+$$\text{AI REQUESTS.}$$
+$$\text{AGENTPAY CONTROLS.}$$
+$$\text{ARC SETTLES.}$$

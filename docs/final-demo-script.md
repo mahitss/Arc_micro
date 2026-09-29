@@ -1,7 +1,6 @@
 # AgentPay — Official Flagship Demo Script
 
-**Title:** "AgentPay — The Financial Control Plane for Autonomous AI Agents"  
-**Duration:** 4 minutes 30 seconds  
+**Target Duration:** 4 minutes 45 seconds  
 **Speaker Tone:** Simple, direct, professional engineer. Authoritative and precise. No buzzword fluff.  
 **Core Thesis:**  
 > **AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.**  
@@ -9,94 +8,102 @@
 
 ---
 
-## TIMED SCRIPT & SCREENPLAY
+## Screenplay & Narration
 
-### 0:00 — The Problem: Autonomous Agents With Wallets Are Dangerous
+### 0:00 — PROBLEM
 **[Visual: Focus on Control Tower header showing SIMULATION MODE]**  
-"Autonomous AI agents are capable of planning, delegating, and hiring other agents. But the moment you give an LLM a private key or a crypto wallet, you introduce fatal economic vulnerabilities. A single prompt injection, infinite retry loop, or byzantine provider can drain an entire corporate treasury in seconds. Today, agents either have zero financial autonomy, or unconstrained wallet access. Both models fail."
+"Autonomous agents can think and act, but giving them unrestricted wallets is dangerous. A single prompt injection, infinite retry loop, or byzantine provider can drain an entire corporate treasury in seconds. Today, agents either have zero financial autonomy, or unconstrained wallet access. Both models fail."
 
-### 0:20 — The AgentPay Thesis
-**[Visual: Point to tagline on screen: 'AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.']**  
-"AgentPay introduces a fundamental boundary: **AI requests, AgentPay controls, and Arc settles.** Our core architectural invariant is that **autonomy can expand, but financial authority cannot.** Agents can dynamically discover peers and rewrite DAG task plans, but they never hold private keys, cannot expand their budget envelope, and cannot bypass constitutional policy."
+### 0:20 — SOLUTION
+**[Visual: Point to tagline: 'AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.']**  
+"AgentPay separates intelligence from financial authority. Our core principle is: autonomy can expand, but financial authority cannot. Agents can discover services, negotiate contracts, and replan tasks, but they never hold private keys, cannot expand their budget envelope, and cannot bypass constitutional policy."
 
-### 0:40 — The Control Tower Hero
-**[Visual: Scroll to the Control Tower Hero status block at `/control`]**  
-"Here in the AgentPay Control Tower, notice our transparent system status:
-- System Mode: **SIMULATION**
-- Settlement Plane: **ARC MAINNET (Chain ID 5042) CONNECTED**
+### 0:40 — CONTROL TOWER
+**[Visual: Overview of Control Tower at `/control` showing system status card]**  
+"Here in the Control Tower, we see the complete economic operating system:
+- Mode: **SIMULATION — NO FUNDS MOVED**
+- Settlement: **ARC MAINNET (Chain ID 5042) CONNECTED**
 - Smart Contract: **AGENTVAULT NOT DEPLOYED**
 - Live Execution: **DISABLED**
 - Real Settlements: **0 VERIFIED**
-- Treasury: **$100.00 USDC SIMULATED**
+Everything is transparent and truthful."
 
-We show absolute truth: no fake hashes, no fabricated receipts, and strict dual-mode isolation."
+### 1:00 — MISSION
+**[Visual: Click into `/missions/demo/replay`]**  
+"We initialize an autonomous mission: **Autonomous Market Intelligence** with an explicit **$25.00 USDC cap** and a 10-minute deadline. The planner decomposes the natural language goal into an operational DAG."
 
-### 1:00 — Create Mission: Autonomous Market Intelligence
-**[Visual: Active Mission card showing $25.00 USDC budget and objective]**  
-"Let us trace an autonomous mission: an intelligence task with an explicit **$25.00 USDC financial envelope**. The mission engine translates user intent into an acyclic task DAG. Notice that before any agent is hired, the system establishes a hard economic envelope that no downstream agent can exceed."
+### 1:20 — AGENTS
+**[Visual: Show DAG visualization in replay inspector]**  
+"The mission coordinates specialized agent roles:
+- **Research Agent:** Information gathering
+- **Market Data Agent:** Quantitative metrics
+- **Analysis Agent:** Synthesis and modeling
+- **Critic Agent:** Deliverable quality validation"
 
-### 1:20 — Marketplace Discovery & Deterministic Selection
-**[Visual: Step 4 in Timeline: CANDIDATE MATCHING]**  
-"The agent queries the service directory. Three candidates submit cryptographic quotes:
-- FastInfer: **$12.50 USDC**
-- BudgetAI: **$14.00 USDC**
-- UltraDeep: **$28.00 USDC**
+### 1:40 — MARKETPLACE
+**[Visual: Step 4: QUOTE_RECEIVED]**  
+"The agent network queries candidate providers:
+- Provider A: **$4.00 USDC** (2.1s latency)
+- Provider B: **$3.60 USDC** (1.8s latency)
+- Provider C: **$4.50 USDC** (1.4s latency)"
 
-Why was FastInfer selected? Because it offered the lowest eligible quote within policy and budget, with a 99.4% historical SLA.  
-Why was UltraDeep rejected? Because its $28.00 quote exceeds the mission's $25.00 envelope. In AgentPay, quotes that breach policy are pruned deterministically."
+### 2:00 — DECISION
+**[Visual: Step 5: QUOTE_COMPARED and Step 6: SERVICE_SELECTED]**  
+"AI Advisory recommends Provider B as the lowest cost within SLA. Then AgentPay’s financial gate takes over: the Rust Policy Engine evaluates allowlists and budgets in **6.36 microseconds**, issuing an **ALLOW**. The treasury reserves $3.60 atomically in the double-entry ledger."
 
-### 1:40 — Policy Engine & Digital Twin Pre-Flight
-**[Visual: Step 2 & Step 8: PRE-FLIGHT SIMULATION & POLICY ALLOW]**  
-"Before execution, the mission runs through a pre-flight digital twin. Monte Carlo modeling confirms worst-case exposure ($18.00) is covered by treasury reserves ($81.50 available). The transaction intent is submitted to our compiled Rust Policy Engine. In **6.36 microseconds**, Policy Engine v8 validates recipient allowlists, velocity thresholds, and budget limits, emitting a cryptographically signed **ALLOW**."
+### 2:20 — ATTACK
+**[Visual: Step 12 & Step 13: SECURITY_VIOLATION_DETECTED & PAYMENT_BLOCKED]**  
+"Now, an adversary attacks. Malicious Interceptor attempts **Recipient Substitution**—swapping the payout address to an attacker's wallet.  
+Watch AgentPay respond:
+- **Decision:** `HARD_DENY` (INV-146 & INV-186)
+- **Result:** Payment blocked immediately.
+- **FUNDS MOVED:** **$0.00 USDC.**  
+Zero funds leave the treasury."
 
-### 2:00 — Provider Failure Injection
-**[Visual: Step 5 in Timeline: WORKER TIMEOUT (FAILED in Red)]**  
-"Now, we inject real-world chaos. Mid-execution, FastInfer goes unresponsive. A heartbeat timeout fires. In an unconstrained system, agents would blindly retry payments, leading to double-spends.  
-In AgentPay, the lease is instantly **fenced** (INV-101). The provider's authorization token is revoked, isolating the worker."
+### 2:40 — FAILURE
+**[Visual: Step 14: PROVIDER_FAILED]**  
+"Next, real-world chaos: Provider B suffers a heartbeat lease timeout (>2000ms). The runtime monitor fences the worker immediately (`INV-101`). Blind retries are strictly prohibited."
 
-### 2:20 — Why Was Payment Not Retried? Replanning Without Budget Creep
-**[Visual: Click Step 5 & Step 6: INSPECT WHY PANEL]**  
-"Look at the Why Panel: **'Previous execution became ambiguous. Blind retry prohibited.'**  
-The planner initiates replanning. It re-evaluates the task DAG and swaps in the qualified secondary provider, **BudgetAI at $14.00 USDC**.  
-Crucially: **Autonomy allowed the DAG to adapt, but the $25.00 financial ceiling remained mathematically locked.**"
+### 3:00 — REPLAN
+**[Visual: Step 15: REPLAN_REQUESTED]**  
+"The AI adaptive loop replans. It proposes switching to backup Provider C at **$4.50 USDC** (+$0.90 delta)."
 
-### 2:45 — Policy Re-Check & Encumbrance
-**[Visual: Steps 7, 8, 9: RECOVERED, ALLOW, LIQUIDITY RESERVED]**  
-"The replacement intent undergoes a fresh policy check. The Rust engine verifies BudgetAI in sub-millisecond time. The Autonomous Treasury journal atomically reserves **$14.00 USDC**, reducing uncommitted liquidity from $89.00 to $75.00 USDC under a double-entry mutex lock."
+### 3:20 — REVALIDATION
+**[Visual: Step 16 & Step 17: ALTERNATIVE_PROVIDER_SELECTED & PAYMENT_REAUTHORIZED]**  
+"AgentPay revalidates the entire plan:
+- Policy: **PASS**
+- Risk: **PASS**
+- Budget Envelope: **$8.50 cumulative spend $\le$ $25.00 cap (PASS)**
+- Recipient: **VERIFIED IN REGISTRY**
+Authority expansion: **0**. The replan is authorized."
 
-### 3:00 — Result Verification & Clearinghouse
-**[Visual: Steps 10, 11: PAYMENT AUTHORIZED & RESULT VERIFIED]**  
-"BudgetAI delivers the intelligence artifact. The verification critic validates the SHA-256 deliverable hash. The bilateral contract completes. The unspent **$11.00 USDC** headroom is released back into available treasury. Zero fund leakage."
+### 3:40 — RESULT
+**[Visual: Step 18 & Step 19: RESULT_RECEIVED & RESULT_VALIDATED]**  
+"Provider C delivers 142 analyzed records. The Critic Agent verifies the cryptographic deliverable checksum and scores quality: **94/100** (exceeding the 80 threshold)."
 
-### 3:15 — The Malicious Provider Proving Ground (8 Attacks in 35s)
-**[Visual: Scroll down to SECURITY PROVING GROUND at `/control`]**  
-"What happens when providers are actively adversarial? Let us test all 8 attacks:
-1. **Recipient Substitution:** Provider tries rerouting funds to an attacker address &rarr; **BLOCKED** by allowlist gate in 6.36µs.
-2. **Budget Escalation:** Agent attempts self-issuing an $85 quote &rarr; **BLOCKED** by envelope invariant.
-3. **Policy Modification:** Injected prompt tries altering Constitution v8 &rarr; **BLOCKED** by immutable hash check.
-4. **Arbitrary Calldata:** Raw bytecode injection on the vault &rarr; **BLOCKED** by typed calldata gate.
-5. **Quote Invalidation:** Altered post-discovery SLA terms &rarr; **BLOCKED** by matcher validator.
-6. **Nonce Replay:** Relayer resubmits a prior transaction &rarr; **BLOCKED** by idempotency engine.
-7. **Duplicate Settlement:** Failed provider attempts second payout claim &rarr; **BLOCKED** by lease fencing.
-8. **Forged Completion:** Worker presents synthetic deliverable &rarr; **BLOCKED** by milestone hash mismatch.
+### 4:00 — CLEARING
+**[Visual: Step 20: CLEARING_RECORDED]**  
+"The Clearinghouse records bilateral obligations:
+- Provider A: $4.00
+- Provider B: $3.60 (BLOCKED / UNSETTLED)
+- Provider C: $4.50  
+Total authorized spend: **$8.50 USDC**. Unencumbered return: **$16.50 USDC** returned to treasury."
 
-Every single attack yields: **ATTACK &rarr; DETECTION &rarr; DECISION &rarr; BLOCKED.**"
+### 4:15 — ARC
+**[Visual: Step 21: SETTLEMENT_SIMULATED and `/arc` panel]**  
+"The Arc settlement payload is compiled for Chain ID 5042. Because we are in simulation mode:
+- Live Broadcasts: **0**
+- Real Funds Moved: **0.00 USDC**
+- AgentVault Status: **NOT DEPLOYED ON MAINNET**  
+Truthful and uncompromised."
 
-### 3:50 — Arc Mainnet Integration Architecture
-**[Visual: Click navigation to `/arc` panel]**  
-"Finally, how does Arc settle this?
-Arc Mainnet (Chain 5042) is our native settlement plane. Arc’s native USDC gas model eliminates multi-token slippage—agents only manage one currency.
-Here on our Arc panel, we verify:
-- Live RPC connection confirmed at `https://rpc.mainnet.arc.io`
-- Native USDC verified at `0x3600000000000000000000000000000000000000`
-- AgentVault contract bytecode is currently `0x`—safely not deployed
-- Live execution is strictly disabled. Real settlements: 0. Broadcasts: 0.
+### 4:30 — SECURITY
+**[Visual: Inspector Authority Trace Tab]**  
+"Look at the authority trace: throughout the mission, AI made suggestions, but **AgentPay controlled the money**. At no point did an AI model hold a private key or expand its budget."
 
-When ready for mainnet rollout, AgentPay connects through audited multi-sig signers."
-
-### 4:20 — Closing
-**[Visual: Click RESET DEMO button and show clean state restoration]**  
-"I click **RESET DEMO**—simulation resets to step zero, and production state remains pristine.
-AgentPay is the missing economic infrastructure for the agentic web.  
-**AI requests. AgentPay controls. Arc settles.**  
-Thank you."
+### 4:45 — CLOSE
+**[Visual: Final summary screen]**  
+"AI can change the plan.  
+AgentPay controls the power.  
+Arc settles authorized value.  
+This is AgentPay."

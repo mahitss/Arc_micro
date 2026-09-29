@@ -1,4 +1,4 @@
-# AgentPay — Technical Judge & Reviewer FAQ (Task 42 Final)
+# AgentPay — Technical Judge & Reviewer FAQ (Submission Reference)
 
 $$\text{POSTURE: 100\% FACTUAL, EVIDENCE-BACKED DEFENSE}$$
 
