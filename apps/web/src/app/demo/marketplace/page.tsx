@@ -109,15 +109,16 @@ export default function MarketplaceDemoPage() {
     },
     {
       step: 8,
-      title: 'Clearinghouse Netting & Arc Settlement Authorization',
+      title: 'Clearinghouse Netting & Simulated Settlement Pre-Clearance',
       category: 'SETTLEMENT',
       status: currentStep >= 8 ? 'COMPLETED' : 'PENDING',
-      description: 'Clearinghouse converts verified milestone into authorized payment intent. Settlement confirmed on Arc.',
+      description: 'Clearinghouse converts verified milestone into pre-cleared payment intent. Final on-chain broadcast remains disabled in simulation mode.',
       details: {
         payment_intent_id: 'pi_demo_settle_01',
-        amount: '45.00 USDC',
+        amount: '45.00 USDC (SIMULATED)',
         recipient: 'agent_auditor_beta',
-        status: 'CONFIRMED_ON_ARC',
+        status: 'PRECLEARED_UNBROADCAST',
+        funds_moved: 'NONE — SIMULATION SAFETY GATE ACTIVE',
       },
     },
     {
@@ -168,13 +169,16 @@ export default function MarketplaceDemoPage() {
             </Link>
             <span className="text-[#50504C]">/</span>
             <span className="font-mono text-xs text-[#D6A83A]">demo</span>
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#D6A83A] border border-[#252525]">
+              SIMULATION MODE · NO FUNDS MOVED
+            </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-[#F2F0EA] mt-1.5">
             Interactive Marketplace Lifecycle Demo (Section 59)
           </h1>
           <p className="text-xs text-[#716F69] mt-1 max-w-3xl">
             Watch an autonomous job traverse from objective creation to discovery, quotes, deterministic matching,
-            contract award, provider failure fallback, result verification, Arc settlement, and reputation update.
+            contract award, provider failure fallback, result verification, and simulated clearing.
           </p>
         </div>
 
@@ -341,7 +345,7 @@ export default function MarketplaceDemoPage() {
               <div className="flex items-center gap-2">
                 <span className="text-[#D6A83A] font-bold">Payment</span>
                 <span>→</span>
-                <span className="text-[#2FB36F]">45.00 USDC on Arc via AgentVault</span>
+                <span className="text-[#2FB36F]">45.00 USDC (Simulated Clearing · Unbroadcast)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[#D6A83A] font-bold">Reputation</span>

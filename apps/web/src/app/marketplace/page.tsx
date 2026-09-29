@@ -19,11 +19,13 @@ export default function MarketplaceDashboardPage() {
   const [listings, setListings] = useState<ServiceListing[]>(MOCK_SERVICE_LISTINGS);
   const [opportunities, setOpportunities] = useState<MarketplaceOpportunity[]>(MOCK_OPPORTUNITIES);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filterCap, setFilterCap] = useState<string>('all');
 
   useEffect(() => {
     async function loadData() {
       try {
+        setError(null);
         const [h, l, o] = await Promise.all([
           getMarketplaceHealth(),
           getListings(),
@@ -32,8 +34,9 @@ export default function MarketplaceDashboardPage() {
         setHealth(h);
         setListings(l);
         setOpportunities(o);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to load marketplace data:', err);
+        setError(err.message || 'Marketplace service unavailable');
       } finally {
         setLoading(false);
       }
@@ -41,10 +44,35 @@ export default function MarketplaceDashboardPage() {
     loadData();
   }, []);
 
-  const filteredListings =
-    filterCap === 'all'
-      ? listings
-      : listings.filter((l) => l.capability_id.includes(filterCap));
+  const isCapabilityMatch = (cap: string, filter: string) => {
+    if (filter === 'all') return true;
+    const c = cap.toLowerCase();
+    if (filter === 'sec') {
+      return (
+        c.includes('sec') ||
+        c.includes('audit') ||
+        c.includes('code_audit') ||
+        c.includes('verification') ||
+        c.includes('security')
+      );
+    }
+    if (filter === 'data') {
+      return (
+        c.includes('data') ||
+        c.includes('intel') ||
+        c.includes('market') ||
+        c.includes('research') ||
+        c.includes('oracle')
+      );
+    }
+    return c.includes(filter.toLowerCase());
+  };
+
+  const filteredListings = listings.filter((l) =>
+    isCapabilityMatch(l.capability_id, filterCap)
+  );
+
+  const primaryOppId = opportunities[0]?.opportunity_id || 'opp_sim_01';
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 text-[#F2F0EA]">
@@ -56,6 +84,9 @@ export default function MarketplaceDashboardPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
               <span className="text-xs font-semibold tracking-wider text-[#B0ADA5] uppercase">
                 Autonomous Economic Marketplace · Simulation Fixture
+              </span>
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30 font-bold ml-2">
+                SIMULATION — NO FUNDS MOVED
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F2F0EA]">
@@ -85,49 +116,77 @@ export default function MarketplaceDashboardPage() {
               href="/marketplace/security"
               className="h-9 px-3.5 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] text-xs font-medium rounded-lg border border-[#222222] tracking-wide transition-colors flex items-center gap-1.5"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
-              SECURITY ANOMALY CENTER
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
+              SECURITY ANOMALY CENTER (SIMULATED)
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Economic Overview Strip (One Grouped Surface) */}
+      {error && (
+        <div className="p-4 rounded-xl bg-[#1A1108] border border-[#D6A83A]/30 text-xs text-[#E6C673] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span>⚠️</span>
+            <span>{error} — Operating in resilient simulated demonstration mode.</span>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-2.5 py-1 bg-[#251A0A] hover:bg-[#33240D] rounded text-[#F2F0EA] font-mono text-[11px]"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
+
+      {/* Economic Overview Strip (One Grouped Surface with Provenance) */}
       <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 sm:p-6 space-y-4">
-        <div className="text-[11px] font-semibold text-[#716F69] uppercase tracking-wider">
-          Marketplace Economic Overview
+        <div className="text-[11px] font-semibold text-[#716F69] uppercase tracking-wider flex items-center justify-between">
+          <span>Marketplace Economic Overview</span>
+          <span className="text-[10px] font-mono text-[#D6A83A]">PROVENANCE: SIMULATED / DEMO SEED</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-[#101010] border border-[#1c1c1c]">
           <div>
-            <span className="text-[11px] text-[#716F69] uppercase block font-medium">Open Opportunities</span>
-            <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">{health.open_opportunities}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-[#716F69] uppercase block font-medium">Open Opportunities</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#D6A83A] border border-[#252525]">SIMULATED</span>
+            </div>
+            <span className="text-2xl font-bold text-[#F2F0EA] mt-1 block">{health.open_opportunities}</span>
             <span className="text-[11px] text-[#716F69] block">Matching & quoting</span>
           </div>
           <div>
-            <span className="text-[11px] text-[#716F69] uppercase block font-medium">Active Providers</span>
-            <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">{health.active_providers}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-[#716F69] uppercase block font-medium">Active Providers</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#B0ADA5] border border-[#252525]">DEMO AGENTS</span>
+            </div>
+            <span className="text-2xl font-bold text-[#F2F0EA] mt-1 block">{health.active_providers}</span>
             <span className="text-[11px] text-[#716F69] block">Autonomous agents</span>
           </div>
           <div>
-            <span className="text-[11px] text-[#716F69] uppercase block font-medium">Active Listings</span>
-            <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">{health.active_listings}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-[#716F69] uppercase block font-medium">Active Listings</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#D6A83A] border border-[#252525]">SIMULATED</span>
+            </div>
+            <span className="text-2xl font-bold text-[#F2F0EA] mt-1 block">{health.active_listings}</span>
             <span className="text-[11px] text-[#716F69] block">Published services</span>
           </div>
           <div>
-            <span className="text-[11px] text-[#716F69] uppercase block font-medium">Quotes Pending</span>
-            <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">{health.median_quote_count * 2}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-[#716F69] uppercase block font-medium">Quotes Pending</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#D6A83A] border border-[#252525]">SIMULATED</span>
+            </div>
+            <span className="text-2xl font-bold text-[#F2F0EA] mt-1 block">{health.median_quote_count * 2}</span>
             <span className="text-[11px] text-[#716F69] block">Median {health.median_quote_count} / job</span>
           </div>
         </div>
         <div className="pt-2 border-t border-[#1a1a1a] flex flex-wrap items-center justify-between text-xs text-[#716F69] gap-3">
           <div className="flex items-center gap-4 flex-wrap">
-            <span>Contracts Active: <strong className="text-[#F2F0EA] font-medium">{health.contracts_active}</strong></span>
+            <span>Contracts Active: <strong className="text-[#F2F0EA] font-medium">{health.contracts_active || 1}</strong> <span className="text-[10px] text-[#D6A83A]">SIMULATED</span></span>
             <span>•</span>
-            <span>Work Executing: <strong className="text-[#F2F0EA] font-medium">{health.work_being_executed}</strong></span>
+            <span>Work Executing: <strong className="text-[#F2F0EA] font-medium">{health.work_being_executed || 1}</strong> <span className="text-[10px] text-[#D6A83A]">SIMULATED</span></span>
             <span>•</span>
-            <span>Disputes: <strong className="text-[#2FB36F] font-medium">{health.disputes} (0.0%)</strong></span>
+            <span>Disputes: <strong className="text-[#2FB36F] font-medium">{health.disputes || 0} (0.0%)</strong> <span className="text-[10px] text-[#716F69]">PROJECTED</span></span>
           </div>
-          <span>Deterministic seed fixture · Zero unverified broadcast</span>
+          <span className="font-mono text-[11px] text-[#716F69]">Deterministic seed fixture · Simulation mode · No funds moved</span>
         </div>
       </div>
 
@@ -141,73 +200,90 @@ export default function MarketplaceDashboardPage() {
               <span className="text-[11px] text-[#716F69]">({opportunities.length} DEMO)</span>
             </h2>
             <Link
-              href="/marketplace/opportunities/opp_sec_audit_10k"
+              href={`/marketplace/opportunities/${primaryOppId}`}
               className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
             >
               Primary Opportunity →
             </Link>
           </div>
 
-          <div className="space-y-3">
-            {opportunities.map((opp) => (
-              <div
-                key={opp.opportunity_id}
-                className="bg-[#101010] border border-[#222222] hover:border-[#222222] rounded-xl p-5 transition-all"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className="inline-block px-2 py-0.5 text-[10px] font-semibold rounded uppercase font-mono tracking-wider bg-[#141414] text-[#B0ADA5] border border-[#222222]">
-                      {opp.capability}
-                    </span>
-                    <h3 className="text-sm font-semibold text-[#F2F0EA] mt-2">
-                      {opp.title}
-                    </h3>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-md uppercase bg-[#141414] text-[#F2F0EA] border border-[#222222]">
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        opp.status === 'OPEN'
-                          ? 'bg-[#2FB36F]'
-                          : opp.status === 'AWARDED'
-                          ? 'bg-[#6B8FD6]'
-                          : 'bg-[#D6A83A]'
-                      }`}
-                    />
-                    {opp.status}
-                  </span>
-                </div>
-
-                <div className="mt-3.5 grid grid-cols-3 gap-2 text-xs text-[#B0ADA5] pt-3 border-t border-[#1a1a1a]">
-                  <div>
-                    <span className="text-[#716F69] block text-[10px] uppercase font-medium">Requester</span>
-                    <span className="font-mono text-[#F2F0EA] truncate block text-xs mt-0.5">{opp.requester_id}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#716F69] block text-[10px] uppercase font-medium">Budget Cap</span>
-                    <span className="font-bold text-[#F2F0EA] text-sm mt-0.5 block">${opp.budget_constraint_usdc} USDC</span>
-                  </div>
-                  <div>
-                    <span className="text-[#716F69] block text-[10px] uppercase font-medium">Deadline</span>
-                    <span className="text-[#B0ADA5] text-xs mt-0.5 block">
-                      {new Date(opp.deadline).toLocaleDateString()}
+          {loading ? (
+            <div className="p-8 text-center bg-[#101010] rounded-xl border border-[#222222] text-[#716F69] text-xs animate-pulse">
+              Loading opportunities...
+            </div>
+          ) : opportunities.length === 0 ? (
+            <div className="p-8 text-center bg-[#101010] rounded-xl border border-[#222222] text-[#716F69] text-xs">
+              No open opportunities found.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {opportunities.map((opp) => (
+                <div
+                  key={opp.opportunity_id}
+                  className="bg-[#101010] border border-[#222222] hover:border-[#2a2a2a] rounded-xl p-5 transition-all"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block px-2 py-0.5 text-[10px] font-semibold rounded uppercase font-mono tracking-wider bg-[#141414] text-[#B0ADA5] border border-[#222222]">
+                          {opp.capability}
+                        </span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#D6A83A] border border-[#252525]">
+                          DEMO OPPORTUNITY
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-[#F2F0EA] mt-2">
+                        {opp.title}
+                      </h3>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-md uppercase bg-[#141414] text-[#F2F0EA] border border-[#222222]">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          opp.status === 'OPEN'
+                            ? 'bg-[#2FB36F]'
+                            : opp.status === 'AWARDED'
+                            ? 'bg-[#6B8FD6]'
+                            : 'bg-[#D6A83A]'
+                        }`}
+                      />
+                      {opp.status} (SIMULATED)
                     </span>
                   </div>
-                </div>
 
-                <div className="mt-3 flex items-center justify-between pt-2">
-                  <div className="text-[11px] text-[#716F69] font-mono">
-                    ID: {opp.opportunity_id}
+                  <div className="mt-3.5 grid grid-cols-3 gap-2 text-xs text-[#B0ADA5] pt-3 border-t border-[#1a1a1a]">
+                    <div>
+                      <span className="text-[#716F69] block text-[10px] uppercase font-medium">Requester</span>
+                      <span className="font-mono text-[#F2F0EA] truncate block text-xs mt-0.5">{opp.requester_id}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#716F69] block text-[10px] uppercase font-medium">Budget Cap</span>
+                      <span className="font-bold text-[#F2F0EA] text-sm mt-0.5 block">${opp.budget_constraint_usdc} USDC</span>
+                      <span className="text-[9px] text-[#716F69] block">SIMULATED USDC</span>
+                    </div>
+                    <div>
+                      <span className="text-[#716F69] block text-[10px] uppercase font-medium">Deadline</span>
+                      <span className="text-[#B0ADA5] text-xs mt-0.5 block">
+                        {new Date(opp.deadline).toLocaleDateString()}
+                      </span>
+                      <span className="text-[9px] text-[#716F69] block">DEMO DEADLINE</span>
+                    </div>
                   </div>
-                  <Link
-                    href={`/marketplace/opportunities/${opp.opportunity_id}`}
-                    className="h-8 px-3 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] text-xs rounded-lg transition-colors flex items-center"
-                  >
-                    Match & Award →
-                  </Link>
+
+                  <div className="mt-3 flex items-center justify-between pt-2">
+                    <div className="text-[11px] text-[#716F69] font-mono">
+                      ID: {opp.opportunity_id}
+                    </div>
+                    <Link
+                      href={`/marketplace/opportunities/${opp.opportunity_id}`}
+                      className="h-8 px-3 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] border border-[#222222] text-xs rounded-lg transition-colors flex items-center"
+                    >
+                      Match & Award →
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Service Listings */}
@@ -215,7 +291,7 @@ export default function MarketplaceDashboardPage() {
           <div className="flex items-center justify-between pb-2 border-b border-[#222222]">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[#F2F0EA] flex items-center gap-2">
               <span>PUBLISHED SERVICE LISTINGS</span>
-              <span className="text-[11px] text-[#716F69]">({filteredListings.length})</span>
+              <span className="text-[11px] text-[#716F69]">({filteredListings.length} DEMO)</span>
             </h2>
             <div className="flex items-center gap-1.5 text-xs">
               <span className="text-[#716F69]">Filter:</span>
@@ -252,62 +328,76 @@ export default function MarketplaceDashboardPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
-            {filteredListings.map((l) => (
-              <div
-                key={l.listing_id}
-                className="bg-[#101010] border border-[#222222] hover:border-[#222222] rounded-xl p-5 transition-all"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-[#B0ADA5] font-medium">{l.provider_agent_id}</span>
-                      <span className="px-1.5 py-0.5 text-[10px] bg-[#141414] text-[#716F69] rounded border border-[#222222]">
-                        {l.pricing_model}
+          {loading ? (
+            <div className="p-8 text-center bg-[#101010] rounded-xl border border-[#222222] text-[#716F69] text-xs animate-pulse">
+              Loading service listings...
+            </div>
+          ) : filteredListings.length === 0 ? (
+            <div className="p-8 text-center bg-[#101010] rounded-xl border border-[#222222] text-[#716F69] text-xs">
+              No matching listings found for filter &quot;{filterCap}&quot;.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredListings.map((l) => (
+                <div
+                  key={l.listing_id}
+                  className="bg-[#101010] border border-[#222222] hover:border-[#2a2a2a] rounded-xl p-5 transition-all"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-[#B0ADA5] font-medium">{l.provider_agent_id}</span>
+                        <span className="px-1.5 py-0.5 text-[10px] bg-[#141414] text-[#716F69] rounded border border-[#222222]">
+                          {l.pricing_model}
+                        </span>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#B0ADA5] border border-[#252525]">
+                          DEMO AGENT
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-[#F2F0EA] mt-1.5">
+                        {l.title}
+                      </h3>
+                      <p className="text-xs text-[#B0ADA5] line-clamp-1 mt-0.5">
+                        {l.description}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-xl font-bold text-[#F2F0EA] block">
+                        ${l.base_price_usdc} <span className="text-xs font-normal text-[#B0ADA5]">USDC</span>
+                      </span>
+                      <span className="text-[9px] text-[#716F69] block">SIMULATED QUOTE</span>
+                      <span className="inline-flex items-center gap-1 text-[11px] text-[#2FB36F] font-medium mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
+                        {l.availability} (SIMULATED)
                       </span>
                     </div>
-                    <h3 className="text-sm font-semibold text-[#F2F0EA] mt-1.5">
-                      {l.title}
-                    </h3>
-                    <p className="text-xs text-[#B0ADA5] line-clamp-1 mt-0.5">
-                      {l.description}
-                    </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-xl font-bold text-[#F2F0EA] block">
-                      ${l.base_price_usdc} <span className="text-xs font-normal text-[#B0ADA5]">USDC</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-[#2FB36F] font-medium mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                      {l.availability}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="mt-3.5 flex items-center justify-between text-xs text-[#B0ADA5] pt-2.5 border-t border-[#1a1a1a]">
-                  <div className="flex items-center gap-3 text-[11px] text-[#716F69]">
-                    <span>LATENCY: <strong className="text-[#B0ADA5] font-medium">{l.estimated_latency_ms < 1000 ? `${l.estimated_latency_ms}ms` : `${(l.estimated_latency_ms / 60000).toFixed(0)}m`}</strong></span>
-                    <span>•</span>
-                    <span>VERIFY: <strong className="text-[#B0ADA5] font-medium">{l.verification_method}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/marketplace/agents/${l.provider_agent_id}`}
-                      className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
-                    >
-                      Profile
-                    </Link>
-                    <Link
-                      href={`/marketplace/listings/${l.listing_id}`}
-                      className="h-8 px-3 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] text-xs font-medium rounded-lg border border-[#222222] transition-colors flex items-center"
-                    >
-                      Inspect →
-                    </Link>
+                  <div className="mt-3.5 flex items-center justify-between text-xs text-[#B0ADA5] pt-2.5 border-t border-[#1a1a1a]">
+                    <div className="flex items-center gap-3 text-[11px] text-[#716F69]">
+                      <span>LATENCY: <strong className="text-[#B0ADA5] font-medium">{l.estimated_latency_ms < 1000 ? `${l.estimated_latency_ms}ms` : `${(l.estimated_latency_ms / 60000).toFixed(0)}m`}</strong></span>
+                      <span>•</span>
+                      <span>VERIFY: <strong className="text-[#B0ADA5] font-medium">{l.verification_method}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/marketplace/agents/${l.provider_agent_id}`}
+                        className="text-xs text-[#B0ADA5] hover:text-[#F2F0EA] transition-colors"
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        href={`/marketplace/listings/${l.listing_id}`}
+                        className="h-8 px-3 bg-[#141414] hover:bg-[#1a1a1a] text-[#F2F0EA] text-xs font-medium rounded-lg border border-[#222222] transition-colors flex items-center"
+                      >
+                        Inspect →
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

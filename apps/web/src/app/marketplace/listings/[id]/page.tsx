@@ -70,6 +70,9 @@ export default function ListingDetailPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30 font-bold">
+            SIMULATED LISTING
+          </span>
           <span
             className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${
               listing.status === 'ACTIVE'
@@ -152,7 +155,7 @@ export default function ListingDetailPage() {
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-[#716F69]">
-              Contextual Performance Track Record
+              Performance Track Record (Simulated Benchmark)
             </h3>
             {primaryMetric ? (
               <div className="space-y-3 text-xs">

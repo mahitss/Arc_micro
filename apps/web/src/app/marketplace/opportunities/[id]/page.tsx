@@ -13,7 +13,7 @@ import {
 
 export default function OpportunityDetailPage() {
   const params = useParams();
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id || 'opp_sec_audit_10k';
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id || 'opp_sim_01';
 
   const [opp, setOpp] = useState<MarketplaceOpportunity | null>(null);
   const [candidateSet, setCandidateSet] = useState<CandidateSet | null>(null);
@@ -77,7 +77,6 @@ export default function OpportunityDetailPage() {
     );
   }
 
-  const topMatch = candidateSet?.candidates?.[0];
   const explanation = candidateSet?.explanation;
 
   return (
@@ -91,6 +90,9 @@ export default function OpportunityDetailPage() {
             </Link>
             <span className="text-[#50504C]">/</span>
             <span className="font-mono text-xs text-[#D6A83A]">{opp.opportunity_id}</span>
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#161616] text-[#D6A83A] border border-[#252525]">
+              DEMO OPPORTUNITY
+            </span>
           </div>
           <h1 className="text-2xl font-bold text-[#F2F0EA] mt-1.5">{opp.title}</h1>
           <div className="flex items-center gap-3 mt-2 text-xs text-[#716F69]">
@@ -98,7 +100,7 @@ export default function OpportunityDetailPage() {
             <span>•</span>
             <span>Capability: <strong className="text-[#F2F0EA]">{opp.capability}</strong></span>
             <span>•</span>
-            <span>Budget Cap: <strong className="text-[#2FB36F]">{opp.budget_constraint_usdc} USDC</strong></span>
+            <span>Budget Cap: <strong className="text-[#2FB36F]">{opp.budget_constraint_usdc} USDC</strong> <span className="text-[10px] text-[#716F69]">(SIMULATED)</span></span>
           </div>
         </div>
 
@@ -110,13 +112,33 @@ export default function OpportunityDetailPage() {
                 : 'bg-[#141414] text-[#2FB36F] border border-[#222222]'
             }`}
           >
-            {opp.status}
+            {opp.status} (SIMULATED)
           </span>
           {awardedContract && (
-            <div className="text-xs font-mono text-[#B0ADA5] bg-[#141414] px-3 py-1 rounded border border-[#222222]">
-              Contract: {awardedContract}
+            <div className="text-xs font-mono text-[#D6A83A] bg-[#141414] px-3 py-1 rounded border border-[#222222]">
+              Simulated Contract: {awardedContract}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Safety Invariant Notice */}
+      <div className="p-3.5 rounded-lg bg-[#101010] border border-[#222222] text-xs flex flex-col gap-2.5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
+            <span className="text-[#B0ADA5]">
+              <strong className="text-[#F2F0EA]">MARKETPLACE MATCHING BOUNDARY (INV-181):</strong> Marketplace selects matching providers; AgentPay Financial Control Plane governs all financial execution.
+            </span>
+          </div>
+          <span className="font-mono text-[10px] text-[#D6A83A] shrink-0 bg-[#161616] px-2 py-0.5 rounded border border-[#252525]">
+            SIMULATED AWARD · NO FUNDS MOVED
+          </span>
+        </div>
+        <div className="text-[11px] text-[#716F69] grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-[#1C1C1C]">
+          <span>✓ No blockchain transaction is broadcast</span>
+          <span>✓ No cryptographic transaction is signed</span>
+          <span>✓ No AgentVault balance is modified</span>
         </div>
       </div>
 
@@ -132,22 +154,25 @@ export default function OpportunityDetailPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
               <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
                 <span className="text-[#716F69] block text-[10px]">Deadline</span>
-                <span className="font-medium text-[#F2F0EA]">{new Date(opp.deadline).toLocaleString()}</span>
+                <span className="font-medium text-[#F2F0EA] block">{new Date(opp.deadline).toLocaleString()}</span>
+                <span className="text-[9px] text-[#716F69] block mt-0.5">DEMO DEADLINE</span>
               </div>
               <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
                 <span className="text-[#716F69] block text-[10px]">Max Risk Requirement</span>
-                <span className="font-medium text-[#F2F0EA]">LOW (Score &lt; 25)</span>
+                <span className="font-medium text-[#F2F0EA] block">LOW (Score &lt; 25)</span>
+                <span className="text-[9px] text-[#2FB36F] block mt-0.5">INV-183 ENFORCED</span>
               </div>
               <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
                 <span className="text-[#716F69] block text-[10px]">Quality Standard</span>
-                <span className="font-medium text-[#D6A83A]">Confidence &gt; 95%</span>
+                <span className="font-medium text-[#D6A83A] block">Confidence &gt; 95%</span>
+                <span className="text-[9px] text-[#716F69] block mt-0.5">EMPIRICAL PRIOR</span>
               </div>
             </div>
 
             <div className="bg-[#0B0B0B] p-3.5 rounded-lg border border-[#222222]">
               <span className="text-[10px] text-[#716F69] uppercase block font-semibold mb-1">Specification Payload</span>
               <pre className="text-xs font-mono text-[#F2F0EA] whitespace-pre-wrap">
-                {JSON.stringify(opp.requirements || { task: '10,000 security logs deep scan' }, null, 2)}
+                {JSON.stringify(opp.requirements || { depth: 'comprehensive', fuzz_rounds: 1000 }, null, 2)}
               </pre>
             </div>
           </div>
@@ -185,8 +210,8 @@ export default function OpportunityDetailPage() {
                   <div className="text-[11px] text-[#716F69]">Hash attestation submission</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-[#F2F0EA]">15.00 USDC</div>
-                  <div className="text-[10px] text-[#716F69]">Payable post-verification</div>
+                  <div className="font-bold text-[#F2F0EA]">25.00 USDC</div>
+                  <div className="text-[10px] text-[#716F69]">Simulated verification</div>
                 </div>
               </div>
               <div className="p-3 bg-[#0B0B0B] rounded-lg border border-[#222222] flex items-center justify-between">
@@ -195,8 +220,8 @@ export default function OpportunityDetailPage() {
                   <div className="text-[11px] text-[#716F69]">Cryptographic audit proof verification</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-[#F2F0EA]">25.00 USDC</div>
-                  <div className="text-[10px] text-[#716F69]">Settles on Arc via AgentVault</div>
+                  <div className="font-bold text-[#F2F0EA]">50.00 USDC</div>
+                  <div className="text-[10px] text-[#D6A83A]">Simulated Clearing · Unbroadcast (Simulation Mode)</div>
                 </div>
               </div>
             </div>
@@ -205,7 +230,7 @@ export default function OpportunityDetailPage() {
 
         {/* Right: Candidate Matches & WHY THIS PROVIDER? Explainer */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Explainer Panel (Section 47) */}
+          {/* Explainer Panel */}
           {explanation && (
             <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
@@ -246,12 +271,26 @@ export default function OpportunityDetailPage() {
                 </div>
                 <div className="flex items-center justify-between py-1 border-b border-[#222222]">
                   <span className="text-[#716F69]">Price Quote:</span>
-                  <span className="text-[#2FB36F] font-bold">{explanation.quote_amount_usdc} USDC</span>
+                  <span className="text-[#2FB36F] font-bold">{explanation.quote_amount_usdc} USDC (SIMULATED)</span>
                 </div>
                 <div className="pt-2 text-[#B0ADA5]">
                   <span className="text-[#716F69] block text-[10px]">Deterministic Tie-Break Reason</span>
                   <span className="italic">{explanation.tie_break_reason}</span>
                 </div>
+
+                {explanation.alternatives_rejected && Object.keys(explanation.alternatives_rejected).length > 0 && (
+                  <div className="pt-3 border-t border-[#222222] space-y-1.5">
+                    <span className="text-[#716F69] block text-[10px] uppercase font-semibold">
+                      Why Other Providers Were Not Selected:
+                    </span>
+                    {Object.entries(explanation.alternatives_rejected).map(([prov, reason]) => (
+                      <div key={prov} className="text-[11px] text-[#8C887E] bg-[#0A0A0A] p-2 rounded border border-[#1A1A1A]">
+                        <strong className="text-[#B0ADA5] font-mono block">{prov}:</strong>
+                        <span>{reason}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -281,6 +320,9 @@ export default function OpportunityDetailPage() {
                         <span className="font-mono text-xs font-semibold text-[#F2F0EA]">
                           {cand.provider_id}
                         </span>
+                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-[#161616] text-[#716F69]">
+                          DEMO
+                        </span>
                       </div>
                       <div className="text-[11px] text-[#716F69] mt-1">
                         Historical: {((cand.historical_success_rate || 0.95) * 100).toFixed(1)}% (N={cand.sample_size})
@@ -296,6 +338,12 @@ export default function OpportunityDetailPage() {
                     </div>
                   </div>
 
+                  {cand.disqualification && (
+                    <div className="mt-2 p-1.5 rounded bg-[#1A0D0D] border border-[#D85C5C]/30 text-[10px] text-[#E08A8A]">
+                      Disqualified: {cand.disqualification}
+                    </div>
+                  )}
+
                   <div className="mt-3 flex items-center justify-between pt-2 border-t border-[#222222]">
                     <span className="text-[10px] text-[#716F69]">
                       Policy: {cand.policy_compatible ? '✅ COMPATIBLE' : '❌ DENIED'}
@@ -303,14 +351,14 @@ export default function OpportunityDetailPage() {
                     {opp.status !== 'AWARDED' ? (
                       <button
                         onClick={() => handleAward(cand.provider_id, cand.estimated_cost_usdc)}
-                        disabled={awarding}
+                        disabled={awarding || !!cand.disqualification}
                         className="px-3 py-1 bg-[#F2F0EA] hover:bg-white text-[#080808] text-xs font-bold rounded transition-colors disabled:opacity-50"
                       >
-                        {awarding ? 'Awarding...' : 'Award Contract'}
+                        {awarding ? 'Simulating Award...' : 'Simulate Award'}
                       </button>
                     ) : (
                       <span className="text-xs text-[#D6A83A] font-semibold">
-                        {opp.awarded_provider_id === cand.provider_id ? '★ Awarded Winner' : 'Alternative'}
+                        {opp.awarded_provider_id === cand.provider_id ? '★ Simulated Winner (Awarded)' : 'Alternative Candidate'}
                       </span>
                     )}
                   </div>

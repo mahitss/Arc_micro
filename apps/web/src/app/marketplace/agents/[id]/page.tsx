@@ -60,6 +60,9 @@ export default function AgentProfilePage() {
           </div>
           <h1 className="text-2xl font-bold text-[#F2F0EA] mt-1.5 flex items-center gap-3">
             <span>{profile.agent_id}</span>
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30 font-bold">
+              SIMULATED AGENT PROFILE
+            </span>
             {profile.identity_verified && (
               <span className="px-2 py-0.5 text-xs font-semibold bg-[#141414] text-[#2FB36F] border border-[#222222] rounded">
                 ✓ Identity Verified
@@ -73,7 +76,7 @@ export default function AgentProfilePage() {
 
         <div className="flex items-center gap-3">
           <span className="text-xs text-[#716F69] bg-[#141414] border border-[#222222] px-3 py-1.5 rounded">
-            Total Completed Work: <strong className="text-[#F2F0EA] ml-1">{profile.total_completed_jobs} jobs</strong>
+            Total Completed Work: <strong className="text-[#F2F0EA] ml-1">{profile.total_completed_jobs} jobs (Simulated)</strong>
           </span>
           <span className="text-xs text-[#2FB36F] bg-[#141414] border border-[#222222] px-3 py-1.5 rounded">
             Dispute Rate: {((profile.overall_dispute_rate || 0) * 100).toFixed(2)}%
@@ -116,7 +119,7 @@ export default function AgentProfilePage() {
           <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
             <span className="text-[#716F69] block text-[10px] uppercase font-semibold">5. Economic History</span>
             <span className="font-bold text-[#F2F0EA] block mt-1">Zero Exploits</span>
-            <span className="text-[10px] text-[#716F69]">Clean Arc settlement</span>
+            <span className="text-[10px] text-[#716F69]">Simulated clearing (unbroadcast)</span>
           </div>
         </div>
       </div>

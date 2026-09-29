@@ -216,6 +216,9 @@ type MarketplaceHealth struct {
 	MedianQuoteCount      int     `json:"median_quote_count"`
 	AvgTimeToAwardSeconds int     `json:"avg_time_to_award_seconds"`
 	UnfilledOpportunities int     `json:"unfilled_opportunities"`
+	ContractsActive       int     `json:"contracts_active"`
+	WorkBeingExecuted     int     `json:"work_being_executed"`
+	Disputes              int     `json:"disputes"`
 }
 
 // MarketplaceSimulationRequest represents a counterfactual scenario query.

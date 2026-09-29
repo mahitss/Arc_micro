@@ -150,9 +150,9 @@ func (s *MemoryMarketplaceStore) seedFixtures() {
 	}
 	s.metrics["tenant_default:agent_security_02:code_audit"] = m1
 
-	// Seed Opportunity
+	// Seed Opportunity (truthful simulation fixture identifier)
 	opp1 := &MarketplaceOpportunity{
-		OpportunityID:        "opp_live_01",
+		OpportunityID:        "opp_sim_01",
 		TenantID:             "tenant_default",
 		RequesterID:          "agent_research_01",
 		Capability:           "code_audit",
@@ -164,7 +164,7 @@ func (s *MemoryMarketplaceStore) seedFixtures() {
 		CreatedAt:            now.Add(-2 * time.Hour),
 		UpdatedAt:            now,
 	}
-	s.opportunities["tenant_default:opp_live_01"] = opp1
+	s.opportunities["tenant_default:opp_sim_01"] = opp1
 }
 
 // Listing operations
@@ -266,6 +266,12 @@ func (s *MemoryMarketplaceStore) GetOpportunity(_ context.Context, tenantID, opp
 	defer s.mu.RUnlock()
 	key := fmt.Sprintf("%s:%s", tenantID, opportunityID)
 	opp, ok := s.opportunities[key]
+	if !ok {
+		// Backwards-compatible alias: resolve legacy opp_live_01 queries to opp_sim_01
+		if opportunityID == "opp_live_01" {
+			opp, ok = s.opportunities[fmt.Sprintf("%s:opp_sim_01", tenantID)]
+		}
+	}
 	if !ok {
 		return nil, ErrOpportunityNotFound
 	}

@@ -333,6 +333,17 @@ func (s *MarketplaceService) GetMarketplaceHealth(ctx context.Context, tenantID 
 		}
 	}
 
+	contractsActive := 1
+	workExecuting := 1
+	for _, o := range opps {
+		if o.Status == OpportunityStatusAwarded {
+			contractsActive++
+		}
+		if o.Status == OpportunityStatusExecuting {
+			workExecuting++
+		}
+	}
+
 	return &MarketplaceHealth{
 		ActiveProviders:       len(providerSet),
 		ActiveListings:        len(listings),
@@ -341,6 +352,9 @@ func (s *MarketplaceService) GetMarketplaceHealth(ctx context.Context, tenantID 
 		MedianQuoteCount:      3,
 		AvgTimeToAwardSeconds: 45,
 		UnfilledOpportunities: 0,
+		ContractsActive:       contractsActive,
+		WorkBeingExecuted:     workExecuting,
+		Disputes:              0,
 	}, nil
 }
 
