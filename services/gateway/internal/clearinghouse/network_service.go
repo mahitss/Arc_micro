@@ -1014,8 +1014,8 @@ func (s *DefaultClearinghouseService) RunFlagshipSimulation(ctx context.Context,
 		GrossTotal:     "14000000", // $14.00 gross bilateral
 		NetPayer:       "agent_coordinator_a",
 		NetPayee:       "agent_researcher_b",
-		NetAmount:      "6000000",  // $6.00 net
-		SavingsAmount:  "4000000",  // $4.00 savings
+		NetAmount:      "6000000", // $6.00 net
+		SavingsAmount:  "4000000", // $4.00 savings
 		Status:         "PROPOSED",
 		ApprovedByA:    true,
 		ApprovedByB:    true,

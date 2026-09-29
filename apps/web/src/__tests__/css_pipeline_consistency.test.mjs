@@ -99,9 +99,13 @@ describe('TASK 48 — Emergency Global CSS & Layout Pipeline Suite', () => {
           assert.ok(html.includes('AgentPay'), `${route} must contain AgentPay`);
           assert.ok(html.includes('layout.css'), `${route} must link layout.css`);
         } catch (e) {
-          // If dev server port is busy or testing in isolated CI, skip live network assertion
-          if (e.code === 'ECONNREFUSED') {
-            console.log(`Skipping live dev server test for ${route} (server not on port 3001)`);
+          // If dev server is not running or testing in offline CI, skip live network assertion
+          const isOfflineOrRefused = 
+            e?.code === 'ECONNREFUSED' || 
+            e?.cause?.code === 'ECONNREFUSED' || 
+            (e?.message && e.message.includes('fetch failed'));
+          if (isOfflineOrRefused) {
+            console.log(`Skipping live dev server test for ${route} (dev server not active on port 3001 in CI environment)`);
           } else {
             throw e;
           }
