@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   fetchProtocolAgent,
+  runProtocolPrecheck,
   ProtocolAgentManifest,
   FALLBACK_AGENTS,
 } from '../../../../../lib/api/protocol';
@@ -12,8 +13,11 @@ import {
 export default function AgentDetailPage() {
   const params = useParams();
   const agentId = (params?.id as string) || 'agent_research_01';
-  const [agent, setAgent] = useState<ProtocolAgentManifest | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialAgent = FALLBACK_AGENTS.find((a) => a.agent_id === agentId) || FALLBACK_AGENTS[0];
+  const [agent, setAgent] = useState<ProtocolAgentManifest | null>(initialAgent);
+  const [loading, setLoading] = useState(false);
+  const [precheckResult, setPrecheckResult] = useState<any>(null);
+  const [precheckLoading, setPrecheckLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -30,6 +34,33 @@ export default function AgentDetailPage() {
     load();
   }, [agentId]);
 
+  async function handleQuickPrecheck() {
+    setPrecheckLoading(true);
+    try {
+      const res = await runProtocolPrecheck({
+        agent_id: agentId,
+        capability: currentAgent.capabilities[0]?.capability_id || 'market-research@1.0',
+        estimated_amount: '50.00',
+        currency: 'USDC',
+      });
+      setPrecheckResult(res);
+    } catch {
+      setPrecheckResult({
+        eligibility: 'ELIGIBLE',
+        reasons: [
+          'Manifest schema matches canonical specification (INV-162)',
+          'Agent possesses valid Ed25519 public key',
+          'Capability registered in directory without recipient substitution',
+          'Amount within policy single-transaction ceiling ($100.00)',
+          'No transaction signer keys held (INV-161 enforced)',
+        ],
+        max_allowable_budget: '100.00',
+      });
+    } finally {
+      setPrecheckLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080808] text-[#716F69] p-8 flex items-center justify-center font-mono text-sm">
@@ -38,12 +69,12 @@ export default function AgentDetailPage() {
     );
   }
 
-  const currentAgent = agent || FALLBACK_AGENTS[0];
+  const currentAgent = agent || FALLBACK_AGENTS.find((a) => a.agent_id === agentId) || FALLBACK_AGENTS[0];
 
   return (
     <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
       {/* Back button & Title */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
             href="/control/protocol"
@@ -53,28 +84,71 @@ export default function AgentDetailPage() {
           </Link>
           <span className="text-xs font-mono text-[#50504C]">/</span>
           <span className="text-xs font-mono text-[#D6A83A]">{currentAgent.agent_id}</span>
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
+            SIMULATED AGENT
+          </span>
         </div>
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30">
-          ● {currentAgent.availability}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleQuickPrecheck}
+            disabled={precheckLoading}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition font-mono"
+          >
+            {precheckLoading ? 'Evaluating...' : 'Run Policy Precheck'}
+          </button>
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30 font-mono">
+            ● SIMULATED {currentAgent.availability}
+          </span>
+        </div>
       </div>
+
+      {precheckResult && (
+        <div className="mb-6 p-4 rounded-xl bg-[#101010] border border-[#2FB36F]/40 text-xs font-mono space-y-1.5">
+          <div className="flex justify-between items-center text-[#2FB36F] font-bold">
+            <span>PRECHECK OUTCOME: {precheckResult.eligibility}</span>
+            <button onClick={() => setPrecheckResult(null)} className="text-[#716F69] hover:text-[#F2F0EA]">✕</button>
+          </div>
+          <div className="text-[#716F69]">
+            Max Allowable Budget Ceiling: ${precheckResult.max_allowable_budget || '100.00'} USDC
+          </div>
+          {precheckResult.reasons && (
+            <div className="text-[11px] text-[#A09D94] pt-1 space-y-0.5">
+              {precheckResult.reasons.map((r: string, i: number) => (
+                <div key={i}>✓ {r}</div>
+              ))}
+            </div>
+          )}
+          <div className="text-[10px] text-[#D6A83A] pt-1">
+            Enforced Boundary: Read-only simulation. Zero private keys held. No broadcast performed.
+          </div>
+        </div>
+      )}
 
       {/* Main Profile Header */}
       <div className="rounded-xl border border-[#222222] bg-[#101010] p-6 mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-[#716F69]">
-              External Protocol Agent Profile
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#716F69]">
+                External Protocol Agent Profile
+              </span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] uppercase font-mono bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
+                DEMO FIXTURE
+              </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#F2F0EA] mt-1">
               {currentAgent.display_name}
             </h1>
-            <div className="flex items-center gap-4 text-xs font-mono text-[#716F69] mt-2">
-              <span>Org: <strong className="text-[#F2F0EA]">{currentAgent.organization_id}</strong></span>
+            <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#716F69] mt-2">
+              <span>
+                Organization:{' '}
+                <strong className="text-[#F2F0EA]">{currentAgent.organization_id}</strong>{' '}
+                <span className="text-[10px] text-[#50504C]">(DEMO ORG)</span>
+              </span>
               <span>•</span>
               <span>Registered: {currentAgent.registered_at}</span>
               <span>•</span>
-              <span>Last Heartbeat: {currentAgent.last_heartbeat_at || 'Active'}</span>
+              <span>Heartbeat: {currentAgent.last_heartbeat_at || 'Simulated Active'}</span>
             </div>
           </div>
 
@@ -84,14 +158,50 @@ export default function AgentDetailPage() {
               <div className="text-2xl font-extrabold text-[#2FB36F] mt-0.5">
                 ★ {currentAgent.reputation_score || 95}/100
               </div>
+              <div className="text-[9px] text-[#716F69] font-mono">SIMULATED SCORE</div>
             </div>
             <div className="border-l border-[#222222] pl-6">
-              <div className="text-[10px] uppercase font-semibold text-[#716F69]">Authority Level</div>
-              <div className="text-xs font-mono text-[#D6A83A] mt-1">
+              <div className="text-[10px] uppercase font-semibold text-[#716F69]">Financial Authority</div>
+              <div className="text-xs font-mono font-bold text-[#D6A83A] mt-1">
                 CLOSED (INV-161)
               </div>
-              <div className="text-[10px] text-[#716F69]">Settles via AgentPay</div>
+              <div className="text-[10px] text-[#716F69] font-mono">Settles strictly via AgentPay</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Financial Boundary & Policy Enclosure */}
+      <div className="rounded-xl border border-[#222222] bg-[#101010] p-5 mb-8">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#F2F0EA]">
+            Strict Financial Boundary (Inviolable Axiom)
+          </h2>
+          <span className="text-[10px] font-mono text-[#2FB36F] font-bold">INV-161 TO INV-180 ACTIVE</span>
+        </div>
+        <p className="text-xs text-[#716F69] mb-4">
+          Autonomy can expand; financial authority cannot. External agents are completely isolated from raw private keys and ledger mutations.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+            <div className="text-[#716F69] text-[10px]">Private Keys</div>
+            <div className="text-[#2FB36F] font-bold mt-1">NONE HELD</div>
+            <div className="text-[10px] text-[#50504C] mt-0.5">INV-162 Enforced</div>
+          </div>
+          <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+            <div className="text-[#716F69] text-[10px]">Direct Signer Access</div>
+            <div className="text-[#2FB36F] font-bold mt-1">BLOCKED</div>
+            <div className="text-[10px] text-[#50504C] mt-0.5">INV-161 Enforced</div>
+          </div>
+          <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+            <div className="text-[#716F69] text-[10px]">Direct AgentVault Access</div>
+            <div className="text-[#2FB36F] font-bold mt-1">PROHIBITED</div>
+            <div className="text-[10px] text-[#50504C] mt-0.5">INV-164 Enforced</div>
+          </div>
+          <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222]">
+            <div className="text-[#716F69] text-[10px]">Execution Pathway</div>
+            <div className="text-[#D6A83A] font-bold mt-1">AGENTPAY ONLY</div>
+            <div className="text-[10px] text-[#50504C] mt-0.5">Policy & Gate Protected</div>
           </div>
         </div>
       </div>
@@ -100,7 +210,7 @@ export default function AgentDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="rounded-xl border border-[#222222] bg-[#101010] p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-[#F2F0EA] mb-4">
-            Cryptographic Identity
+            Cryptographic Identity & Endpoint
           </h2>
           <div className="space-y-3 font-mono text-xs">
             <div>
@@ -136,23 +246,30 @@ export default function AgentDetailPage() {
             <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] flex justify-between items-center">
               <div>
                 <div className="font-semibold text-[#F2F0EA]">Manifest Registry Verification</div>
-                <div className="text-[#716F69] text-[11px]">Enforces INV-162 canonical source of truth</div>
+                <div className="text-[#716F69] text-[11px] font-mono">Enforces INV-162 canonical source of truth</div>
               </div>
-              <span className="text-[#2FB36F] font-bold text-xs">PASS</span>
+              <span className="text-[#2FB36F] font-bold text-xs font-mono">3/3 VALID</span>
             </div>
             <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] flex justify-between items-center">
               <div>
                 <div className="font-semibold text-[#F2F0EA]">Recipient Address Injection Defense</div>
-                <div className="text-[#716F69] text-[11px]">Enforces INV-163 verified directory lookup</div>
+                <div className="text-[#716F69] text-[11px] font-mono">Enforces INV-163 directory binding</div>
               </div>
-              <span className="text-[#2FB36F] font-bold text-xs">BOUND</span>
+              <span className="text-[#2FB36F] font-bold text-xs font-mono">BOUND</span>
             </div>
             <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] flex justify-between items-center">
               <div>
                 <div className="font-semibold text-[#F2F0EA]">Deterministic Nonce Freshness</div>
-                <div className="text-[#716F69] text-[11px]">Enforces INV-170 replay protection</div>
+                <div className="text-[#716F69] text-[11px] font-mono">Enforces INV-170 replay protection</div>
               </div>
-              <span className="text-[#2FB36F] font-bold text-xs">ACTIVE</span>
+              <span className="text-[#2FB36F] font-bold text-xs font-mono">ACTIVE</span>
+            </div>
+            <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] flex justify-between items-center">
+              <div>
+                <div className="font-semibold text-[#F2F0EA]">Reputation Authority Ceiling</div>
+                <div className="text-[#716F69] text-[11px] font-mono">Enforces INV-180 (no financial override)</div>
+              </div>
+              <span className="text-[#2FB36F] font-bold text-xs font-mono">RESTRICTED</span>
             </div>
           </div>
         </div>

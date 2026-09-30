@@ -9,10 +9,10 @@ import {
 } from '../../../../lib/api/protocol';
 
 export default function ProtocolTrafficPage() {
-  const [traffic, setTraffic] = useState<ProtocolTrafficEntry[]>([]);
+  const [traffic, setTraffic] = useState<ProtocolTrafficEntry[]>(FALLBACK_TRAFFIC);
   const [filterType, setFilterType] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     load();
@@ -59,20 +59,23 @@ export default function ProtocolTrafficPage() {
             </Link>
             <span className="text-xs font-mono text-[#50504C]">/</span>
             <span className="text-xs font-mono text-[#D6A83A]">traffic</span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
+              SIMULATED TELEMETRY
+            </span>
           </div>
           <h1 className="text-2xl font-bold text-[#F2F0EA] mt-2">Protocol Telemetry Stream</h1>
           <p className="text-xs text-[#716F69]">
-            Real-time auditable message flow through the 6-stage ProtocolGateway pipeline.
+            Auditable message flow through the 6-stage ProtocolGateway pipeline. Simulation mode — zero on-chain broadcast.
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-[#101010] border border-[#222222] rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-4 bg-[#101010] border border-[#222222] rounded-xl px-4 py-2.5 font-mono">
           <div>
             <div className="text-[10px] uppercase font-semibold text-[#716F69]">Average Latency</div>
             <div className="text-xl font-bold text-[#D6A83A]">{avgLatency} ms</div>
           </div>
           <div className="border-l border-[#222222] pl-4">
-            <div className="text-[10px] uppercase font-semibold text-[#716F69]">Total Entries</div>
+            <div className="text-[10px] uppercase font-semibold text-[#716F69]">Simulated Entries</div>
             <div className="text-xl font-bold text-[#F2F0EA]">{traffic.length}</div>
           </div>
         </div>
@@ -93,7 +96,7 @@ export default function ProtocolTrafficPage() {
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium font-mono transition ${
                 filterType === t
                   ? 'bg-[#D6A83A] text-[#080808] font-bold shadow-sm'
                   : 'bg-[#0B0B0B] text-[#716F69] hover:text-[#F2F0EA] border border-[#222222]'
@@ -142,7 +145,7 @@ export default function ProtocolTrafficPage() {
                         : 'bg-[#141414] text-[#2FB36F] border-[#2FB36F]/30'
                     }`}
                   >
-                    {e.status}
+                    {e.status} (SIMULATED)
                   </span>
                 </td>
               </tr>
