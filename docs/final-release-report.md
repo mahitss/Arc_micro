@@ -45,13 +45,14 @@ Version `v1.0.0-rc` represents the fully verified, hardened, and truth-audited r
 
 ## 5. Test Status
 
-Total verified test functions: **386 passed, 0 failures, 0 regressions**:
+Total verified test functions: **419 passed, 0 failures, 0 regressions**:
 - **Go Gateway:** 35 packages passed (`go test ./...`)
 - **Rust Policy Engine:** 57 tests passed (`cargo test`)
-- **Web Application:** 256 tests passed across 89 suites (`npm test`)
+- **Web Application:** 289 tests passed across 97 suites (`npm test`)
 - **TypeScript SDK:** 33 tests passed (`npm test`)
 - **Python SDK:** 26 tests passed (`pytest tests/`)
 - **Operator CLI:** 14 test suites passed (`npm test`)
+- **Tasks 44 & 45 Verified:** Control Tower simulation truthfulness and Missions page CORS/proxy reliability confirmed.
 
 ---
 
