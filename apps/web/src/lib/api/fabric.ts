@@ -85,10 +85,16 @@ export interface EconomicObjective {
   required_capabilities: string[];
   status: ObjectiveStatus;
   current_blueprint_id?: string;
+  execution_blueprint_id?: string;
   blueprint_version?: number;
   active_mission_id?: string;
   active_workflow_id?: string;
   replan_count: number;
+  provenance?: string;
+  financial_state?: string;
+  mode?: string;
+  projected_spend?: string;
+  simulation_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -297,52 +303,165 @@ export const FALLBACK_WHY_NOT: WhyNotExplanation = {
   ],
 };
 
+export function normalizeObjective(raw: any): EconomicObjective {
+  const budgetUsdc = raw.economic_budget_usdc !== undefined
+    ? Number(raw.economic_budget_usdc).toFixed(2)
+    : (raw.economic_budget || (raw.constraints?.max_budget_usdc ? Number(raw.constraints.max_budget_usdc).toFixed(2) : '25.00'));
+
+  const computeUnits = raw.operational_budget_units !== undefined
+    ? String(raw.operational_budget_units)
+    : (raw.operational_budget || '50.00');
+
+  const bpId = raw.active_blueprint_id || raw.current_blueprint_id || raw.execution_blueprint_id || undefined;
+  const isDemo = raw.objective_id === 'obj_market_intel_01' || raw.provenance === 'DEMO FIXTURE' || raw.constraints?.execution_mode === 'SIMULATION';
+
+  return {
+    objective_id: raw.objective_id || 'obj_unknown',
+    tenant_id: raw.tenant_id || 'tenant_default',
+    description: raw.description || '',
+    owner: raw.owner || 'operator',
+    constraints: raw.constraints || {},
+    deadline: raw.deadline || raw.constraints?.deadline || undefined,
+    economic_budget: budgetUsdc,
+    operational_budget: computeUnits,
+    risk_tolerance: raw.risk_tolerance || 'LOW',
+    required_capabilities: raw.required_capabilities || [],
+    status: raw.status || 'DRAFT',
+    current_blueprint_id: bpId,
+    execution_blueprint_id: bpId,
+    blueprint_version: raw.blueprint_version || (bpId ? 1 : undefined),
+    active_mission_id: raw.active_mission_id || (isDemo ? 'msn_market_intel_001' : undefined),
+    active_workflow_id: raw.active_workflow_id || (isDemo ? 'wf_market_intel_01' : undefined),
+    replan_count: raw.replan_count || 0,
+    created_at: raw.created_at || new Date().toISOString(),
+    updated_at: raw.updated_at || new Date().toISOString(),
+    provenance: raw.provenance || (isDemo ? 'DEMO FIXTURE' : 'OPERATOR_CUSTOM'),
+    financial_state: raw.financial_state || 'NO FUNDS MOVED',
+    mode: raw.mode || raw.constraints?.execution_mode || 'SIMULATION',
+    projected_spend: raw.projected_spend || (raw.status === 'SIMULATED' ? (Number(budgetUsdc) * 0.75).toFixed(2) : undefined),
+    simulation_id: raw.simulation_id,
+  };
+}
+
 export async function fetchObjectives(params?: { status?: string; tenant_id?: string }): Promise<EconomicObjective[]> {
   try {
     const qs = new URLSearchParams();
     if (params?.status) qs.append('status', params.status);
     if (params?.tenant_id) qs.append('tenant_id', params.tenant_id);
     const query = qs.toString() ? `?${qs.toString()}` : '';
-    const res = await apiRequest<{ objectives: EconomicObjective[] }>(`/v1/fabric/objectives${query}`);
-    return res.objectives || FALLBACK_OBJECTIVES;
-  } catch {
-    return FALLBACK_OBJECTIVES;
+    const res = await apiRequest<{ objectives: any[] }>(`/v1/fabric/objectives${query}`);
+    if (res && Array.isArray(res.objectives)) {
+      return res.objectives.map(normalizeObjective);
+    }
+    return [];
+  } catch (err) {
+    console.warn('Backend unavailable, using fallback fixtures:', err);
+    return FALLBACK_OBJECTIVES.map(normalizeObjective);
   }
 }
 
 export async function fetchObjective(id: string): Promise<EconomicObjective> {
   try {
-    const res = await apiRequest<{ objective: EconomicObjective }>(`/v1/fabric/objectives/${id}`);
-    return res.objective || FALLBACK_OBJECTIVES.find((o) => o.objective_id === id) || FALLBACK_OBJECTIVES[0];
+    const res = await apiRequest<{ objective: any }>(`/v1/fabric/objectives/${id}`);
+    if (res && res.objective) {
+      return normalizeObjective(res.objective);
+    }
+    const found = FALLBACK_OBJECTIVES.find((o) => o.objective_id === id);
+    return normalizeObjective(found || FALLBACK_OBJECTIVES[0]);
   } catch {
-    return FALLBACK_OBJECTIVES.find((o) => o.objective_id === id) || FALLBACK_OBJECTIVES[0];
+    const found = FALLBACK_OBJECTIVES.find((o) => o.objective_id === id);
+    return normalizeObjective(found || FALLBACK_OBJECTIVES[0]);
   }
 }
 
-export async function createObjective(payload: Partial<EconomicObjective>): Promise<EconomicObjective> {
+export async function createObjective(payload: Partial<EconomicObjective> & { economic_budget_usdc?: number }): Promise<EconomicObjective> {
+  const budgetNum = payload.economic_budget_usdc !== undefined
+    ? payload.economic_budget_usdc
+    : (payload.economic_budget ? parseFloat(payload.economic_budget) : 50.0);
+
+  const payloadToSend = {
+    ...payload,
+    economic_budget_usdc: isNaN(budgetNum) ? 50.0 : budgetNum,
+    economic_budget: payload.economic_budget || (isNaN(budgetNum) ? '50.00' : budgetNum.toFixed(2)),
+  };
+
   try {
-    const res = await apiRequest<EconomicObjective>('/v1/fabric/objectives', {
+    const res = await apiRequest<any>('/v1/fabric/objectives', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payloadToSend),
     });
-    return res;
-  } catch {
-    const mock: EconomicObjective = {
-      objective_id: `obj_mock_${Date.now().toString().slice(-4)}`,
+    return normalizeObjective(res);
+  } catch (err) {
+    console.warn('createObjective failed on server, using local fallback:', err);
+    const mock: EconomicObjective = normalizeObjective({
+      objective_id: payload.objective_id || `obj_${Date.now().toString(36).slice(-6)}`,
       tenant_id: payload.tenant_id || 'tenant_default',
       description: payload.description || 'Custom objective',
       owner: payload.owner || 'operator',
       constraints: payload.constraints || {},
-      economic_budget: payload.economic_budget || '100.00',
-      operational_budget: payload.operational_budget || '100.00',
+      economic_budget: payload.economic_budget || '50.00',
+      economic_budget_usdc: isNaN(budgetNum) ? 50.0 : budgetNum,
+      operational_budget: payload.operational_budget || '50.00',
       risk_tolerance: payload.risk_tolerance || 'MEDIUM',
       required_capabilities: payload.required_capabilities || [],
       status: 'DRAFT',
       replan_count: 0,
+      provenance: 'OPERATOR_CUSTOM',
+      financial_state: 'NO FUNDS MOVED',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    };
+    });
     return mock;
+  }
+}
+
+export async function runDemoObjective(): Promise<{
+  objective: EconomicObjective;
+  blueprint?: ExecutionBlueprint;
+  simulation?: any;
+}> {
+  try {
+    const res = await apiRequest<any>('/v1/fabric/demo/run', { method: 'POST' });
+    return {
+      objective: normalizeObjective(res.objective || res),
+      blueprint: res.blueprint,
+      simulation: res.simulation,
+    };
+  } catch (err) {
+    console.warn('POST /v1/fabric/demo/run failed, attempting sequential client demo:', err);
+    const created = await createObjective({
+      objective_id: 'obj_market_intel_01',
+      description: 'Produce a market intelligence report by discovering eligible data providers, comparing quotes, obtaining required research inputs, validating results, and staying within the authorized economic budget.',
+      economic_budget: '25.00',
+      operational_budget: '50.00',
+      risk_tolerance: 'LOW',
+      required_capabilities: ['market-intel', 'benchmarking', 'synthesis'],
+      owner: 'operator',
+      tenant_id: 'tenant_default',
+      constraints: {
+        max_budget: '25.00',
+        max_parallel_tasks: 3,
+        required_capability: 'market-intel',
+        minimum_confidence: 0.95,
+        required_policy: 'pol_hash_v15_standard',
+      },
+    });
+    await planObjective('obj_market_intel_01');
+    const sim = await simulateObjective('obj_market_intel_01');
+    return { objective: created, simulation: sim };
+  }
+}
+
+export async function resetDemoObjective(): Promise<void> {
+  try {
+    await apiRequest('/v1/fabric/demo/reset', { method: 'POST' });
+  } catch (err) {
+    console.warn('POST /v1/fabric/demo/reset failed, attempting delete:', err);
+    try {
+      await apiRequest('/v1/fabric/objectives/obj_market_intel_01', { method: 'DELETE' });
+    } catch {
+      // ignore
+    }
   }
 }
 

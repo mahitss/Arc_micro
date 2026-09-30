@@ -3,6 +3,8 @@ package fabric
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,13 +12,18 @@ import (
 
 // CreateObjectiveRequest specifies the goal and constraints for a new economic objective
 type CreateObjectiveRequest struct {
+	ObjectiveID          string               `json:"objective_id,omitempty"`
 	TenantID             string               `json:"tenant_id"`
 	Description          string               `json:"description"`
 	Owner                string               `json:"owner"`
 	Constraints          ObjectiveConstraints `json:"constraints"`
 	EconomicBudgetUSDC   float64              `json:"economic_budget_usdc"`
+	EconomicBudget       interface{}          `json:"economic_budget,omitempty"`
+	OperationalBudget    interface{}          `json:"operational_budget,omitempty"`
 	RiskTolerance        string               `json:"risk_tolerance"`
 	RequiredCapabilities []string             `json:"required_capabilities"`
+	Provenance           string               `json:"provenance,omitempty"`
+	ExecutionMode        string               `json:"execution_mode,omitempty"`
 	DryRun               bool                 `json:"dry_run,omitempty"`
 }
 
@@ -57,11 +64,55 @@ func (s *EconomicFabricService) CreateObjective(ctx context.Context, req CreateO
 	if req.Owner == "" {
 		req.Owner = "operator"
 	}
+
+	// Support economic_budget passed as string or float
+	if req.EconomicBudgetUSDC <= 0 && req.EconomicBudget != nil {
+		switch v := req.EconomicBudget.(type) {
+		case float64:
+			req.EconomicBudgetUSDC = v
+		case string:
+			if parsed, err := strconv.ParseFloat(strings.TrimSpace(v), 64); err == nil {
+				req.EconomicBudgetUSDC = parsed
+			}
+		}
+	}
+	if req.EconomicBudgetUSDC <= 0 && req.Constraints.MaxBudgetUSDC > 0 {
+		req.EconomicBudgetUSDC = req.Constraints.MaxBudgetUSDC
+	}
 	if req.EconomicBudgetUSDC <= 0 {
 		return nil, nil, fmt.Errorf("economic budget must be greater than zero")
 	}
 
-	objID := fmt.Sprintf("obj_%s", uuid.New().String()[:8])
+	objID := req.ObjectiveID
+	if objID == "" {
+		objID = fmt.Sprintf("obj_%s", uuid.New().String()[:8])
+	} else {
+		// Idempotency: return existing objective if already created
+		if existing, err := s.store.GetObjective(ctx, objID); err == nil && existing != nil {
+			return existing, nil, nil
+		}
+	}
+
+	if req.Constraints.ExecutionMode == "" {
+		if req.ExecutionMode != "" {
+			req.Constraints.ExecutionMode = req.ExecutionMode
+		} else {
+			req.Constraints.ExecutionMode = "SIMULATION"
+		}
+	}
+	if req.Constraints.MaxBudgetUSDC <= 0 {
+		req.Constraints.MaxBudgetUSDC = req.EconomicBudgetUSDC
+	}
+
+	provenance := req.Provenance
+	if provenance == "" {
+		if objID == "obj_market_intel_01" || strings.HasPrefix(objID, "obj_flagship") {
+			provenance = "DEMO FIXTURE"
+		} else {
+			provenance = "OPERATOR_CUSTOM"
+		}
+	}
+
 	obj := &EconomicObjective{
 		ObjectiveID:          objID,
 		TenantID:             req.TenantID,
@@ -72,6 +123,8 @@ func (s *EconomicFabricService) CreateObjective(ctx context.Context, req CreateO
 		EconomicBudgetUSDC:   req.EconomicBudgetUSDC,
 		RiskTolerance:        req.RiskTolerance,
 		RequiredCapabilities: req.RequiredCapabilities,
+		Provenance:           provenance,
+		FinancialState:       "NO FUNDS MOVED",
 		CreatedAt:            time.Now().UTC(),
 		UpdatedAt:            time.Now().UTC(),
 	}
@@ -428,4 +481,75 @@ func (s *EconomicFabricService) ExplainWhyNot(ctx context.Context, objectiveID s
 // GetAutonomyMetrics returns real measurable autonomy dimensions
 func (s *EconomicFabricService) GetAutonomyMetrics(ctx context.Context, tenantID string) (*AutonomyMetrics, error) {
 	return s.store.GetAutonomyMetrics(ctx, tenantID)
+}
+
+// DeleteObjective removes an objective and associated blueprints/traces
+func (s *EconomicFabricService) DeleteObjective(ctx context.Context, objectiveID string) error {
+	return s.store.DeleteObjective(ctx, objectiveID)
+}
+
+// RunDemoObjective deterministically compiles and simulates the canonical flagship objective (INV-142, INV-156)
+func (s *EconomicFabricService) RunDemoObjective(ctx context.Context) (*EconomicObjective, *ExecutionBlueprint, *SimulationCompareResult, error) {
+	objID := "obj_market_intel_01"
+	missionID := "msn_market_intel_001"
+	workflowID := "wf_market_intel_01"
+
+	// 1. Create or retrieve objective (idempotent)
+	obj, err := s.store.GetObjective(ctx, objID)
+	if err != nil || obj == nil {
+		req := CreateObjectiveRequest{
+			ObjectiveID: objID,
+			TenantID:    "tenant_default",
+			Description: "Produce a market intelligence report by discovering eligible data providers, comparing quotes, obtaining required research inputs, validating results, and staying within the authorized economic budget.",
+			Owner:       "operator",
+			Constraints: ObjectiveConstraints{
+				Deadline:             time.Now().Add(24 * time.Hour),
+				MaxBudgetUSDC:        25.0,
+				MaxSinglePaymentUSDC: 17.5,
+				MaxParallelTasks:     3,
+				RequiredCapability:   "market-intel",
+				MinimumConfidence:    0.95,
+				RequiredPolicyHash:   "pol_hash_v15_standard",
+				ExecutionMode:        "SIMULATION",
+			},
+			EconomicBudgetUSDC:   25.0,
+			RiskTolerance:        "LOW",
+			RequiredCapabilities: []string{"market-intel", "benchmarking", "synthesis"},
+			Provenance:           "DEMO FIXTURE",
+			ExecutionMode:        "SIMULATION",
+		}
+		obj, _, err = s.CreateObjective(ctx, req)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to create demo objective: %w", err)
+		}
+	}
+
+	// 2. Plan (Compile Blueprint)
+	bp, _, err := s.PlanObjective(ctx, objID, false)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to plan demo objective: %w", err)
+	}
+
+	// 3. Simulate (Digital Twin Simulation - No Broadcast, No Funds Moved)
+	simRes, err := s.SimulateObjective(ctx, objID)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to simulate demo objective: %w", err)
+	}
+
+	// 4. Link canonical mission and workflow and preserve provenance
+	obj, _ = s.store.GetObjective(ctx, objID)
+	if obj != nil {
+		obj.ActiveMissionID = missionID
+		obj.ActiveWorkflowID = workflowID
+		obj.Provenance = "DEMO FIXTURE"
+		obj.FinancialState = "NO FUNDS MOVED"
+		_ = s.store.SaveObjective(ctx, obj)
+	}
+
+	return obj, bp, simRes, nil
+}
+
+// ResetDemoObjective clears the deterministic demo objective to restore empty state
+func (s *EconomicFabricService) ResetDemoObjective(ctx context.Context) error {
+	return s.store.DeleteObjective(ctx, "obj_market_intel_01")
 }

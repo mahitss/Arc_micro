@@ -57,8 +57,11 @@ type EconomicObjective struct {
 	RiskTolerance        string               `json:"risk_tolerance"` // "LOW", "MEDIUM", "HIGH"
 	RequiredCapabilities []string             `json:"required_capabilities"`
 	ActiveBlueprintID    string               `json:"active_blueprint_id,omitempty"`
+	ExecutionBlueprintID string               `json:"execution_blueprint_id,omitempty"`
 	ActiveMissionID      string               `json:"active_mission_id,omitempty"`
 	ActiveWorkflowID     string               `json:"active_workflow_id,omitempty"`
+	Provenance           string               `json:"provenance,omitempty"`
+	FinancialState       string               `json:"financial_state,omitempty"`
 	CreatedAt            time.Time            `json:"created_at"`
 	UpdatedAt            time.Time            `json:"updated_at"`
 }

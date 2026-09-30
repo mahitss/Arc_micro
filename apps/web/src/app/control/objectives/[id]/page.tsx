@@ -151,6 +151,11 @@ export default function ObjectiveDetailPage() {
                 >
                   {objective?.status}
                 </span>
+                {(objective?.provenance === 'DEMO FIXTURE' || objective?.objective_id === 'obj_market_intel_01') && (
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-[#181818] border border-[#D6A83A]/30 text-[#D6A83A] font-bold uppercase tracking-wider">
+                    DEMO FIXTURE · SIMULATION (NO FUNDS MOVED)
+                  </span>
+                )}
                 <span className="text-xs font-mono text-[#716F69]">Tenant: {objective?.tenant_id}</span>
               </div>
               <h1 className="text-2xl font-black text-[#F2F0EA] tracking-tight">{objective?.objective_id}</h1>
@@ -266,14 +271,18 @@ export default function ObjectiveDetailPage() {
 
             <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
               <span className="text-[#716F69] block text-[10px]">Authoritative Financial State</span>
-              <strong className="text-[#2FB36F] text-sm mt-0.5 block">{syncState?.financial_status || 'RESERVED'}</strong>
-              <span className="text-[10px] text-[#2FB36F]/80 mt-1 block">Source: Treasury & Clearinghouse</span>
+              <strong className="text-[#2FB36F] text-sm mt-0.5 block">{objective?.financial_state || 'NO FUNDS MOVED'}</strong>
+              <span className="text-[10px] text-[#2FB36F]/80 mt-1 block">Source: Treasury Envelope Gate</span>
             </div>
 
             <div className="bg-[#0B0B0B] p-3 rounded-lg border border-[#222222]">
-              <span className="text-[#716F69] block text-[10px]">Arc On-Chain Verification</span>
-              <strong className="text-[#6B8FD6] text-sm mt-0.5 block">{syncState?.arc_settlement_status || 'CONFIRMED'}</strong>
-              <span className="text-[10px] text-[#6B8FD6]/80 mt-1 block">Source: Arc Blockchain (5042)</span>
+              <span className="text-[#716F69] block text-[10px]">Arc Settlement Verification</span>
+              <strong className="text-[#6B8FD6] text-sm mt-0.5 block">
+                {objective?.mode === 'LIVE' ? (syncState?.arc_settlement_status || 'PENDING') : 'NOT BROADCAST (SIMULATION)'}
+              </strong>
+              <span className="text-[10px] text-[#6B8FD6]/80 mt-1 block">
+                {objective?.mode === 'LIVE' ? 'Source: Arc Blockchain (5042)' : 'Source: Digital Twin Simulator'}
+              </span>
             </div>
           </div>
         </div>

@@ -278,6 +278,80 @@ func (h *FabricHandler) HandleGetAutonomyMetrics(w http.ResponseWriter, r *http.
 	_ = json.NewEncoder(w).Encode(metrics)
 }
 
+// HandleRunDemoObjective handles POST /v1/fabric/demo/run and POST /api/fabric/demo/run
+func (h *FabricHandler) HandleRunDemoObjective(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	obj, bp, simRes, err := h.service.RunDemoObjective(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"objective":  obj,
+		"blueprint":  bp,
+		"simulation": simRes,
+		"mode":       "SIMULATION",
+		"provenance": "DEMO FIXTURE",
+		"notice":     "SIMULATION — NO FUNDS MOVED",
+	})
+}
+
+// HandleResetDemoObjective handles POST /v1/fabric/demo/reset and POST /api/fabric/demo/reset
+func (h *FabricHandler) HandleResetDemoObjective(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := h.service.ResetDemoObjective(r.Context()); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "RESET_SUCCESS",
+		"message": "Demo objectives reset. Empty state active.",
+	})
+}
+
+// HandleDeleteObjective handles DELETE /v1/fabric/objectives/{id}
+func (h *FabricHandler) HandleDeleteObjective(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := extractID(r.URL.Path, "/v1/fabric/objectives/")
+	if id == "" {
+		id = extractID(r.URL.Path, "/api/fabric/objectives/")
+	}
+	if id == "" {
+		http.Error(w, "Objective ID required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.DeleteObjective(r.Context(), id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":       "DELETED",
+		"objective_id": id,
+	})
+}
+
 func extractActionTargetID(path, action string) string {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	for i, p := range parts {

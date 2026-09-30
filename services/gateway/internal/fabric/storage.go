@@ -13,6 +13,7 @@ type FabricStore interface {
 	GetObjective(ctx context.Context, objectiveID string) (*EconomicObjective, error)
 	ListObjectives(ctx context.Context, tenantID string) ([]*EconomicObjective, error)
 	UpdateObjectiveStatus(ctx context.Context, objectiveID string, status ObjectiveStatus) error
+	DeleteObjective(ctx context.Context, objectiveID string) error
 
 	SaveBlueprint(ctx context.Context, bp *ExecutionBlueprint) error
 	GetBlueprint(ctx context.Context, blueprintID string) (*ExecutionBlueprint, error)
@@ -92,6 +93,21 @@ func (s *MemoryFabricStore) UpdateObjectiveStatus(ctx context.Context, objective
 	}
 	obj.Status = status
 	obj.UpdatedAt = time.Now().UTC()
+	return nil
+}
+
+func (s *MemoryFabricStore) DeleteObjective(ctx context.Context, objectiveID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.objectives, objectiveID)
+	for bpID, bp := range s.blueprints {
+		if bp.ObjectiveID == objectiveID {
+			delete(s.blueprints, bpID)
+			delete(s.versions, bpID)
+		}
+	}
+	delete(s.decisions, objectiveID)
+	delete(s.causalLinks, objectiveID)
 	return nil
 }
 

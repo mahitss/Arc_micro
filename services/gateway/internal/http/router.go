@@ -648,6 +648,12 @@ func NewRouter(
 		mux.HandleFunc("GET /api/fabric/objectives/{id}/why-not", fabricHandler.HandleExplainWhyNot)
 		mux.HandleFunc("GET /v1/fabric/metrics", fabricHandler.HandleGetAutonomyMetrics)
 		mux.HandleFunc("GET /api/fabric/metrics", fabricHandler.HandleGetAutonomyMetrics)
+		mux.HandleFunc("POST /v1/fabric/demo/run", fabricHandler.HandleRunDemoObjective)
+		mux.HandleFunc("POST /api/fabric/demo/run", fabricHandler.HandleRunDemoObjective)
+		mux.HandleFunc("POST /v1/fabric/demo/reset", fabricHandler.HandleResetDemoObjective)
+		mux.HandleFunc("POST /api/fabric/demo/reset", fabricHandler.HandleResetDemoObjective)
+		mux.HandleFunc("DELETE /v1/fabric/objectives/{id}", fabricHandler.HandleDeleteObjective)
+		mux.HandleFunc("DELETE /api/fabric/objectives/{id}", fabricHandler.HandleDeleteObjective)
 
 		// Section 20: Task 16 Autonomous Economic Protocol v1
 		protoStore := protocol.NewMemoryProtocolStore()

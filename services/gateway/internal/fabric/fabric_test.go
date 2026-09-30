@@ -275,3 +275,87 @@ func TestAutonomousEconomicObjective_EndToEnd(t *testing.T) {
 		t.Errorf("Expected complete 9+ node trace, got %d", len(finalTrace.Nodes))
 	}
 }
+
+func TestEconomicFabric_DeterministicDemoAndIdempotency(t *testing.T) {
+	ctx := context.Background()
+	store := NewMemoryFabricStore()
+	svc := NewEconomicFabricService(store)
+
+	// 1. Initial store should be empty
+	objs, err := store.ListObjectives(ctx, "")
+	if err != nil {
+		t.Fatalf("ListObjectives failed: %v", err)
+	}
+	if len(objs) != 0 {
+		t.Fatalf("Expected 0 initial objectives, got %d", len(objs))
+	}
+
+	// 2. Run Demo Objective
+	obj, bp, simRes, err := svc.RunDemoObjective(ctx)
+	if err != nil {
+		t.Fatalf("RunDemoObjective failed: %v", err)
+	}
+	if obj.ObjectiveID != "obj_market_intel_01" {
+		t.Errorf("Expected obj_market_intel_01, got %s", obj.ObjectiveID)
+	}
+	if obj.Status != ObjectiveSimulated {
+		t.Errorf("Expected SIMULATED status, got %s", obj.Status)
+	}
+	if obj.EconomicBudgetUSDC != 25.0 {
+		t.Errorf("Expected 25.0 USDC budget, got %.2f", obj.EconomicBudgetUSDC)
+	}
+	if obj.Provenance != "DEMO FIXTURE" {
+		t.Errorf("Expected DEMO FIXTURE provenance, got %s", obj.Provenance)
+	}
+	if obj.FinancialState != "NO FUNDS MOVED" {
+		t.Errorf("Expected NO FUNDS MOVED financial state, got %s", obj.FinancialState)
+	}
+	if obj.ActiveMissionID != "msn_market_intel_001" {
+		t.Errorf("Expected msn_market_intel_001, got %s", obj.ActiveMissionID)
+	}
+	if bp == nil || bp.Status != "SIMULATED" {
+		t.Errorf("Expected simulated blueprint")
+	}
+	if simRes == nil || simRes.PolicyDecision != "ALLOW" {
+		t.Errorf("Expected policy decision ALLOW in simulation")
+	}
+
+	// 3. Repeated calls are idempotent (do not create duplicates)
+	obj2, _, _, err := svc.RunDemoObjective(ctx)
+	if err != nil {
+		t.Fatalf("Second RunDemoObjective failed: %v", err)
+	}
+	if obj2.ObjectiveID != obj.ObjectiveID {
+		t.Errorf("Idempotency failed: generated new ID %s", obj2.ObjectiveID)
+	}
+	objsAfter, _ := store.ListObjectives(ctx, "")
+	if len(objsAfter) != 1 {
+		t.Errorf("Expected exactly 1 objective after repeated run, got %d", len(objsAfter))
+	}
+
+	// 4. Create objective with string economic_budget
+	reqCustom := CreateObjectiveRequest{
+		Description:    "Custom operator objective",
+		EconomicBudget: "75.50",
+		RiskTolerance:  "MEDIUM",
+	}
+	customObj, _, err := svc.CreateObjective(ctx, reqCustom)
+	if err != nil {
+		t.Fatalf("CreateObjective with string budget failed: %v", err)
+	}
+	if customObj.EconomicBudgetUSDC != 75.50 {
+		t.Errorf("Expected 75.50 budget, got %.2f", customObj.EconomicBudgetUSDC)
+	}
+
+	// 5. Reset Demo removes only demo fixture
+	if err := svc.ResetDemoObjective(ctx); err != nil {
+		t.Fatalf("ResetDemoObjective failed: %v", err)
+	}
+	objsRemaining, _ := store.ListObjectives(ctx, "")
+	if len(objsRemaining) != 1 {
+		t.Errorf("Expected 1 remaining custom objective after demo reset, got %d", len(objsRemaining))
+	}
+	if objsRemaining[0].ObjectiveID != customObj.ObjectiveID {
+		t.Errorf("Expected remaining objective to be custom objective, got %s", objsRemaining[0].ObjectiveID)
+	}
+}
