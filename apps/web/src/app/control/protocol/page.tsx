@@ -3,27 +3,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
-  fetchProtocolAgents,
-  fetchProtocolContracts,
-  fetchProtocolTraffic,
-  fetchProtocolSecurity,
+  fetchProtocolSnapshot,
   runProtocolPrecheck,
   runProtocolSimulation,
+  ProtocolControlTowerSnapshot,
   ProtocolAgentManifest,
   ProtocolContract,
   ProtocolTrafficEntry,
-  FALLBACK_AGENTS,
-  FALLBACK_CONTRACTS,
-  FALLBACK_TRAFFIC,
-  FALLBACK_SECURITY,
+  SecurityIncidentReport,
 } from '../../../lib/api/protocol';
 
 export default function ProtocolControlOverviewPage() {
-  const [agents, setAgents] = useState<ProtocolAgentManifest[]>(FALLBACK_AGENTS);
-  const [contracts, setContracts] = useState<ProtocolContract[]>(FALLBACK_CONTRACTS);
-  const [traffic, setTraffic] = useState<ProtocolTrafficEntry[]>(FALLBACK_TRAFFIC);
-  const [security, setSecurity] = useState<SecurityIncidentReport | null>(FALLBACK_SECURITY);
+  const [snapshot, setSnapshot] = useState<ProtocolControlTowerSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'agents' | 'contracts' | 'traffic' | 'security'>('agents');
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -52,22 +45,21 @@ export default function ProtocolControlOverviewPage() {
 
   async function loadData() {
     try {
-      const [ag, con, trf, sec] = await Promise.all([
-        fetchProtocolAgents(),
-        fetchProtocolContracts(),
-        fetchProtocolTraffic(),
-        fetchProtocolSecurity(),
-      ]);
-      setAgents(ag);
-      setContracts(con);
-      setTraffic(trf);
-      setSecurity(sec);
+      const snap = await fetchProtocolSnapshot();
+      setSnapshot(snap);
+      setError(null);
     } catch (err: any) {
       console.error('Failed to load protocol data:', err);
+      setError(err?.message || 'Protocol state unavailable');
     } finally {
       setLoading(false);
     }
   }
+
+  const agents: ProtocolAgentManifest[] = snapshot?.agents?.items || [];
+  const contracts: ProtocolContract[] = snapshot?.contracts?.items || [];
+  const traffic: ProtocolTrafficEntry[] = snapshot?.telemetry || [];
+  const security = snapshot?.security || null;
 
   // Filtered agents
   const filteredAgents = useMemo(() => {
@@ -101,21 +93,12 @@ export default function ProtocolControlOverviewPage() {
       setPrecheckResult(res);
       setFeedback(`Precheck verified for ${precheckAgentId}: ${res.eligibility} (Zero financial mutation)`);
     } catch (err: any) {
-      // Deterministic fallback response if gateway simulation endpoint errors
-      const fallbackPrecheck = {
-        eligibility: 'ELIGIBLE',
-        reasons: [
-          'Manifest schema matches canonical specification (INV-162)',
-          'Agent possesses valid Ed25519 public key',
-          'Capability registered in directory without recipient substitution',
-          'Amount within policy single-transaction ceiling ($100.00)',
-          'No transaction signer keys held (INV-161 enforced)',
-        ],
-        max_allowable_budget: '100.00',
-        provenance: 'SIMULATION PRECHECK — READ-ONLY',
-      };
-      setPrecheckResult(fallbackPrecheck);
-      setFeedback(`Precheck verified in simulation for ${precheckAgentId}: ELIGIBLE`);
+      setPrecheckResult({
+        eligibility: 'INELIGIBLE',
+        reasons: [`Precheck evaluation failed: ${err.message || 'Gateway error'}`],
+        max_allowable_budget: '0.00',
+      });
+      setFeedback(`Precheck evaluation returned an error for ${precheckAgentId}: ${err.message}`);
     }
   }
 
@@ -136,20 +119,54 @@ export default function ProtocolControlOverviewPage() {
       setSimResult(res);
       setFeedback(`Twin Simulation finished: ${res.policy_decision} (Safe: ${res.safe_to_execute ? 'YES' : 'NO'})`);
     } catch (err: any) {
-      const fallbackSim = {
-        policy_decision: 'ALLOW',
-        risk_score: 12,
+      setSimResult({
+        policy_decision: 'DENY',
+        risk_score: 99,
         estimated_cost_usdc: simPrice,
-        required_approvals: [],
-        treasury_status: 'ADEQUATE_BALANCE_PROJECTED',
-        execution_path: 'DRY_RUN_NO_MONEY_MOVED',
-        safe_to_execute: true,
-        warnings: ['AgentVault NOT DEPLOYED — Live broadcast blocked by design.'],
-      };
-      setSimResult(fallbackSim);
-      setFeedback(`Twin Simulation finished in dry-run mode: ALLOW (Safe: YES, No Funds Moved)`);
+        safe_to_execute: false,
+        warnings: [`Simulation failed: ${err.message || 'Gateway error'}`],
+      });
+      setFeedback(`Twin Simulation failed: ${err.message}`);
     }
   }
+
+  // Loading state (no stale or fake business data shown)
+  if (loading && !snapshot) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8 flex flex-col items-center justify-center font-mono">
+        <div className="flex items-center gap-3 text-sm text-[#D6A83A]">
+          <span className="h-3 w-3 rounded-full bg-[#D6A83A] animate-ping" />
+          Loading protocol state...
+        </div>
+        <p className="text-xs text-[#716F69] mt-2">Connecting to protocol gateway snapshot...</p>
+      </div>
+    );
+  }
+
+  // Error state with honest retry
+  if (error && !snapshot) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8 flex flex-col items-center justify-center font-mono">
+        <div className="p-6 rounded-xl border border-[#D85C5C]/40 bg-[#141414] max-w-md w-full text-center">
+          <div className="text-sm font-bold text-[#D85C5C] mb-2">Protocol State Unavailable</div>
+          <p className="text-xs text-[#716F69] mb-4">{error}</p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              loadData();
+            }}
+            className="px-4 py-2 rounded-lg text-xs font-bold bg-[#D6A83A] hover:bg-[#c49731] text-[#080808] transition"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isLive = snapshot?.mode?.toLowerCase() === 'live';
+  const modeLabel = isLive ? 'LIVE — VERIFIED SYSTEM STATE' : 'PROTOCOL SIMULATION';
+  const fundsLabel = snapshot?.funds_moved ? 'FUNDS MOVED' : 'NO FUNDS MOVED';
 
   return (
     <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
@@ -158,15 +175,15 @@ export default function ProtocolControlOverviewPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-[#D6A83A] animate-pulse" />
+              <span className={`flex h-2.5 w-2.5 rounded-full ${isLive ? 'bg-[#2FB36F]' : 'bg-[#D6A83A]'} animate-pulse`} />
               <span className="text-xs font-semibold uppercase tracking-wider text-[#D6A83A]">
                 Autonomous Economic Protocol v1.0
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
-                PROTOCOL SIMULATION
+                {modeLabel}
               </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono text-[#716F69] border border-[#222222]">
-                NO FUNDS MOVED
+                {fundsLabel}
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#F2F0EA] mt-1.5">
@@ -208,27 +225,33 @@ export default function ProtocolControlOverviewPage() {
         <div className="mt-4 pt-3.5 border-t border-[#1C1C1C] flex flex-wrap items-center gap-y-2 gap-x-4 text-[11px] font-mono text-[#716F69]">
           <div className="flex items-center gap-1.5">
             <span className="text-[#50504C]">ARC:</span>
-            <span className="text-[#2FB36F] font-semibold">CONNECTED</span>
+            <span className={snapshot?.arc?.connected ? "text-[#2FB36F] font-semibold" : "text-[#D85C5C] font-semibold"}>
+              {snapshot?.arc?.connected ? 'CONNECTED' : 'DISCONNECTED'}
+            </span>
           </div>
           <span className="text-[#333333]">•</span>
           <div className="flex items-center gap-1.5">
             <span className="text-[#50504C]">CHAIN:</span>
-            <span className="text-[#F2F0EA]">5042</span>
+            <span className="text-[#F2F0EA]">{snapshot?.arc?.chain_id ?? 5042}</span>
           </div>
           <span className="text-[#333333]">•</span>
           <div className="flex items-center gap-1.5">
             <span className="text-[#50504C]">LIVE EXECUTION:</span>
-            <span className="text-[#D85C5C] font-semibold">DISABLED</span>
+            <span className={snapshot?.arc?.live_execution ? "text-[#2FB36F] font-semibold" : "text-[#D85C5C] font-semibold"}>
+              {snapshot?.arc?.live_execution ? 'ENABLED' : 'DISABLED'}
+            </span>
           </div>
           <span className="text-[#333333]">•</span>
           <div className="flex items-center gap-1.5">
             <span className="text-[#50504C]">AGENTVAULT:</span>
-            <span className="text-[#D6A83A] font-semibold">NOT DEPLOYED</span>
+            <span className={snapshot?.arc?.agent_vault_deployed ? "text-[#2FB36F] font-semibold" : "text-[#D6A83A] font-semibold"}>
+              {snapshot?.arc?.agent_vault_deployed ? 'DEPLOYED' : 'NOT DEPLOYED'}
+            </span>
           </div>
           <span className="text-[#333333]">•</span>
           <div className="flex items-center gap-1.5">
             <span className="text-[#50504C]">REAL ARC SETTLEMENTS:</span>
-            <span className="text-[#F2F0EA] font-semibold">0</span>
+            <span className="text-[#F2F0EA] font-semibold">{snapshot?.arc?.real_settlements ?? 0}</span>
           </div>
         </div>
       </div>
@@ -246,22 +269,30 @@ export default function ProtocolControlOverviewPage() {
           <div className="flex justify-between items-start">
             <div className="text-xs font-medium text-[#716F69] uppercase tracking-wider">Discovered Agents</div>
             <span className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
-              SIMULATION
+              {isLive ? 'LIVE' : 'SIMULATION'}
             </span>
           </div>
-          <div className="text-3xl font-extrabold text-[#F2F0EA] mt-2">{agents.length}</div>
-          <div className="text-xs text-[#2FB36F] mt-1 font-mono">● 3/3 Simulated Manifests Valid (INV-162)</div>
+          <div className="text-3xl font-extrabold text-[#F2F0EA] mt-2">{snapshot?.agents?.discovered ?? 0}</div>
+          <div className="text-xs text-[#2FB36F] mt-1 font-mono">
+            {snapshot?.agents && snapshot.agents.discovered > 0
+              ? `● ${snapshot.agents.manifest_valid}/${snapshot.agents.discovered} Simulated Manifests Valid (INV-162)`
+              : '0 manifests registered'}
+          </div>
         </div>
 
         <div className="rounded-xl border border-[#222222] bg-[#101010] p-5">
           <div className="flex justify-between items-start">
             <div className="text-xs font-medium text-[#716F69] uppercase tracking-wider">Active Protocol Contracts</div>
             <span className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
-              SIMULATION
+              {isLive ? 'LIVE' : 'SIMULATION'}
             </span>
           </div>
-          <div className="text-3xl font-extrabold text-[#F2F0EA] mt-2">{contracts.length}</div>
-          <div className="text-xs text-[#716F69] mt-1">Multi-Milestone Deliverables Bound</div>
+          <div className="text-3xl font-extrabold text-[#F2F0EA] mt-2">{snapshot?.contracts?.active ?? 0}</div>
+          <div className="text-xs text-[#716F69] mt-1">
+            {snapshot?.contracts && snapshot.contracts.active > 0
+              ? 'Multi-Milestone Deliverables Bound'
+              : 'No active contracts'}
+          </div>
         </div>
 
         <div className="rounded-xl border border-[#222222] bg-[#101010] p-5">
@@ -272,9 +303,13 @@ export default function ProtocolControlOverviewPage() {
             </span>
           </div>
           <div className="text-3xl font-extrabold text-[#2FB36F] mt-2">
-            ${contracts.reduce((acc, c) => acc + parseFloat(c.total_amount || '0'), 0).toFixed(2)} USDC
+            ${parseFloat(snapshot?.contracts?.projected_value_usdc || '0').toFixed(2)} USDC
           </div>
-          <div className="text-xs text-[#D6A83A] mt-1 font-mono">Simulated Escrow · NO FUNDS MOVED</div>
+          <div className="text-xs text-[#D6A83A] mt-1 font-mono">
+            {snapshot?.contracts && snapshot.contracts.active > 0
+              ? 'Simulated Escrow · NO FUNDS MOVED'
+              : 'No contract reservations'}
+          </div>
         </div>
 
         <div className="rounded-xl border border-[#222222] bg-[#101010] p-5">
@@ -285,9 +320,13 @@ export default function ProtocolControlOverviewPage() {
             </span>
           </div>
           <div className="text-3xl font-extrabold text-[#D85C5C] mt-2">
-            {security?.adversarial_summary ? Object.values(security.adversarial_summary).reduce((a, b) => a + b, 0) : 324}
+            {snapshot?.security?.attacks_blocked ?? 0}
           </div>
-          <div className="text-xs text-[#D85C5C]/80 mt-1 font-mono">324 Attacks Blocked · 0 Authority Leaks</div>
+          <div className="text-xs text-[#D85C5C]/80 mt-1 font-mono">
+            {snapshot?.security
+              ? `${snapshot.security.attacks_blocked} Attacks Blocked · ${snapshot.security.authority_leaks} Authority Leaks`
+              : 'No security events observed'}
+          </div>
         </div>
       </div>
 
@@ -396,14 +435,16 @@ export default function ProtocolControlOverviewPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-[#F2F0EA]">{a.display_name}</span>
                           <span className="px-1.5 py-0.5 rounded text-[9px] uppercase font-bold bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
-                            DEMO AGENT
+                            {isLive ? 'LIVE AGENT' : 'DEMO AGENT'}
                           </span>
                         </div>
                         <div className="text-xs text-[#716F69] mt-0.5">{a.agent_id}</div>
                       </td>
                       <td className="py-3.5 px-4 font-mono text-xs">
                         <div className="text-[#B0ADA5]">{a.organization_id}</div>
-                        <span className="text-[10px] text-[#50504C] uppercase">DEMO ORGANIZATION</span>
+                        <span className="text-[10px] text-[#50504C] uppercase">
+                          {isLive ? 'VERIFIED ORGANIZATION' : 'DEMO ORGANIZATION'}
+                        </span>
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="flex flex-wrap gap-1">
@@ -420,8 +461,10 @@ export default function ProtocolControlOverviewPage() {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-1.5 font-semibold text-[#2FB36F]">
                           <span>★</span>
-                          <span>{a.reputation_score || 95}/100</span>
-                          <span className="text-[10px] text-[#716F69] font-normal font-mono">(SIMULATED)</span>
+                          <span>{a.reputation_score !== undefined ? `${a.reputation_score}/100` : 'N/A'}</span>
+                          <span className="text-[10px] text-[#716F69] font-normal font-mono">
+                            ({isLive ? 'VERIFIED' : 'SIMULATED'})
+                          </span>
                         </div>
                         <div className="text-[10px] text-[#716F69] font-mono mt-0.5">
                           Zero Financial Authority (INV-180)
@@ -429,7 +472,7 @@ export default function ProtocolControlOverviewPage() {
                       </td>
                       <td className="py-3.5 px-4 font-mono">
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30">
-                          ● SIMULATED {a.availability}
+                          ● {isLive ? '' : 'SIMULATED '} {a.availability}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -445,7 +488,9 @@ export default function ProtocolControlOverviewPage() {
                   {filteredAgents.length === 0 && (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-xs font-mono text-[#716F69]">
-                        No protocol agents found matching query.
+                        {agents.length === 0
+                          ? '0 discovered agents. No protocol participants found.'
+                          : 'No protocol agents found matching query.'}
                       </td>
                     </tr>
                   )}
@@ -479,7 +524,7 @@ export default function ProtocolControlOverviewPage() {
                       <div className="flex items-center gap-1.5">
                         <span>{c.contract_id}</span>
                         <span className="px-1.5 py-0.5 rounded text-[9px] uppercase font-bold bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
-                          SIMULATED
+                          {isLive ? 'LIVE' : 'SIMULATED'}
                         </span>
                       </div>
                     </td>
@@ -491,14 +536,16 @@ export default function ProtocolControlOverviewPage() {
                     <td className="py-3.5 px-4 text-[#B0ADA5] font-mono text-xs">{c.capability}</td>
                     <td className="py-3.5 px-4 font-semibold text-[#2FB36F]">
                       <div>{c.total_amount} {c.currency}</div>
-                      <div className="text-[10px] text-[#716F69] font-normal font-mono">Simulated Escrow · No Funds Moved</div>
+                      <div className="text-[10px] text-[#716F69] font-normal font-mono">
+                        {isLive ? 'Clearinghouse Escrow' : 'Simulated Escrow · No Funds Moved'}
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 text-xs text-[#716F69]">
                       {c.milestones?.length || 0} milestone(s)
                     </td>
                     <td className="py-3.5 px-4 font-mono">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
-                        {c.state} (SIMULATED)
+                        {c.state} ({isLive ? 'LIVE' : 'SIMULATED'})
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
@@ -511,6 +558,13 @@ export default function ProtocolControlOverviewPage() {
                     </td>
                   </tr>
                 ))}
+                {contracts.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-xs font-mono text-[#716F69]">
+                      No active protocol contracts.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -523,7 +577,7 @@ export default function ProtocolControlOverviewPage() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-[#F2F0EA]">
-                Simulated Protocol Telemetry Stream
+                {isLive ? 'Live Protocol Telemetry Stream' : 'Simulated Protocol Telemetry Stream'}
               </h3>
               <p className="text-xs text-[#716F69] mt-0.5">
                 Deterministic event trace across the 6-stage ProtocolGateway pipeline. Simulation mode — no on-chain broadcast.
@@ -553,6 +607,11 @@ export default function ProtocolControlOverviewPage() {
                 </div>
               </div>
             ))}
+            {traffic.length === 0 && (
+              <div className="py-8 text-center text-xs font-mono text-[#716F69]">
+                No protocol telemetry recorded yet.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -565,7 +624,9 @@ export default function ProtocolControlOverviewPage() {
               <h3 className="text-sm font-semibold text-[#F2F0EA] uppercase tracking-wider">
                 Machine-Checked Protocol Invariants
               </h3>
-              <span className="text-[10px] font-mono text-[#2FB36F]">INV-161 TO INV-180</span>
+              <span className="text-[10px] font-mono text-[#2FB36F]">
+                {security?.invariants_enforced || 'INV-161 TO INV-180'}
+              </span>
             </div>
             <div className="space-y-2 text-xs text-[#F2F0EA] font-mono">
               <div className="p-2.5 rounded bg-[#0B0B0B] border border-[#222222] flex justify-between items-center">
@@ -636,51 +697,71 @@ export default function ProtocolControlOverviewPage() {
               Adversarial Threat Interception Summary
             </h3>
             <p className="text-xs text-[#716F69] mb-4 font-mono">
-              324 attack variants neutralized across adversarial simulation test suite
+              {security?.attacks_blocked ?? 0} attack variants neutralized across adversarial simulation test suite
             </p>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-xs mb-1 font-mono">
                   <span className="text-[#716F69]">Replay Attacks Prevented (INV-170):</span>
-                  <span className="text-[#F2F0EA] font-bold">{security?.adversarial_summary?.replays_prevented || 142}</span>
+                  <span className="text-[#F2F0EA] font-bold">
+                    {security?.adversarial_summary?.replays_prevented ?? 0}
+                  </span>
                 </div>
                 <div className="h-1.5 w-full bg-[#141414] rounded-full overflow-hidden border border-[#222222]">
-                  <div className="h-full bg-[#D6A83A] rounded-full" style={{ width: '85%' }}></div>
+                  <div
+                    className="h-full bg-[#D6A83A] rounded-full"
+                    style={{ width: `${Math.min(100, ((security?.adversarial_summary?.replays_prevented ?? 0) / 160) * 100)}%` }}
+                  ></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1 font-mono">
                   <span className="text-[#716F69]">Unauthorized Balances Blocked (INV-168):</span>
-                  <span className="text-[#D85C5C] font-bold">{security?.adversarial_summary?.unauthorized_queries_blocked || 89}</span>
+                  <span className="text-[#D85C5C] font-bold">
+                    {security?.adversarial_summary?.unauthorized_queries_blocked ?? 0}
+                  </span>
                 </div>
                 <div className="h-1.5 w-full bg-[#141414] rounded-full overflow-hidden border border-[#222222]">
-                  <div className="h-full bg-[#D85C5C] rounded-full" style={{ width: '65%' }}></div>
+                  <div
+                    className="h-full bg-[#D85C5C] rounded-full"
+                    style={{ width: `${Math.min(100, ((security?.adversarial_summary?.unauthorized_queries_blocked ?? 0) / 120) * 100)}%` }}
+                  ></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1 font-mono">
                   <span className="text-[#716F69]">Raw Address Injections Halted (INV-163):</span>
-                  <span className="text-[#2FB36F] font-bold">{security?.adversarial_summary?.raw_transfers_halted || 37}</span>
+                  <span className="text-[#2FB36F] font-bold">
+                    {security?.adversarial_summary?.raw_transfers_halted ?? 0}
+                  </span>
                 </div>
                 <div className="h-1.5 w-full bg-[#141414] rounded-full overflow-hidden border border-[#222222]">
-                  <div className="h-full bg-[#2FB36F] rounded-full" style={{ width: '40%' }}></div>
+                  <div
+                    className="h-full bg-[#2FB36F] rounded-full"
+                    style={{ width: `${Math.min(100, ((security?.adversarial_summary?.raw_transfers_halted ?? 0) / 50) * 100)}%` }}
+                  ></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1 font-mono">
                   <span className="text-[#716F69]">Expired / Invalid Signatures (INV-171):</span>
-                  <span className="text-[#D6A83A] font-bold">{security?.adversarial_summary?.signature_failures || 56}</span>
+                  <span className="text-[#D6A83A] font-bold">
+                    {security?.adversarial_summary?.signature_failures ?? 0}
+                  </span>
                 </div>
                 <div className="h-1.5 w-full bg-[#141414] rounded-full overflow-hidden border border-[#222222]">
-                  <div className="h-full bg-[#D6A83A] rounded-full" style={{ width: '55%' }}></div>
+                  <div
+                    className="h-full bg-[#D6A83A] rounded-full"
+                    style={{ width: `${Math.min(100, ((security?.adversarial_summary?.signature_failures ?? 0) / 75) * 100)}%` }}
+                  ></div>
                 </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-[#222222] text-[11px] text-[#716F69] font-mono">
-                Provenance: 324 attacks blocked in simulation. 0 authority leaks across real agents. Verified in Go test suite (adversarial_test.go & chaos_test.go).
+                Provenance: {security?.attacks_blocked ?? 0} attacks blocked in simulation. {security?.authority_leaks ?? 0} authority leaks across real agents. Verified in Go test suite (adversarial_test.go & chaos_test.go).
               </div>
             </div>
           </div>
@@ -734,12 +815,14 @@ export default function ProtocolControlOverviewPage() {
 
               {precheckResult && (
                 <div className="p-3 rounded bg-[#0B0B0B] border border-[#222222] text-xs font-mono space-y-1.5">
-                  <div className="font-semibold text-[#2FB36F] flex items-center justify-between">
+                  <div className={`font-semibold flex items-center justify-between ${precheckResult.eligibility === 'ELIGIBLE' ? 'text-[#2FB36F]' : 'text-[#D85C5C]'}`}>
                     <span>Status: {precheckResult.eligibility}</span>
-                    <span className="text-[10px] text-[#716F69]">PASS</span>
+                    <span className="text-[10px] text-[#716F69]">
+                      {precheckResult.eligibility === 'ELIGIBLE' ? 'PASS' : 'CHECK'}
+                    </span>
                   </div>
                   <div className="text-[#716F69]">
-                    Max Allowed Budget: ${precheckResult.max_allowable_budget || '100.00'} USDC
+                    Max Allowed Budget: ${precheckResult.max_allowable_budget || '0.00'} USDC
                   </div>
                   {precheckResult.reasons && (
                     <div className="text-[11px] text-[#A09D94] border-t border-[#222222] pt-1.5 space-y-0.5">
@@ -821,7 +904,7 @@ export default function ProtocolControlOverviewPage() {
 
               {simResult && (
                 <div className="p-3 rounded bg-[#0B0B0B] border border-[#222222] text-xs font-mono space-y-1">
-                  <div className="font-semibold text-[#2FB36F]">
+                  <div className={`font-semibold ${simResult.policy_decision === 'ALLOW' ? 'text-[#2FB36F]' : 'text-[#D85C5C]'}`}>
                     Policy Decision: {simResult.policy_decision}
                   </div>
                   <div className="text-[#716F69]">

@@ -5,13 +5,13 @@ import Link from 'next/link';
 import {
   fetchProtocolSecurity,
   SecurityIncidentReport,
-  FALLBACK_SECURITY,
 } from '../../../../lib/api/protocol';
 
 export default function ProtocolSecurityPage() {
   const [security, setSecurity] = useState<SecurityIncidentReport | null>(null);
   const [selectedVector, setSelectedVector] = useState<string | null>(null);
   const [simulationOutput, setSimulationOutput] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -20,12 +20,16 @@ export default function ProtocolSecurityPage() {
         setSecurity(data);
       } catch (err) {
         console.error('Failed to load security report:', err);
+      } finally {
+        setLoading(false);
       }
     }
     load();
   }, []);
 
-  const secData = security || FALLBACK_SECURITY;
+  const totalAttacks = security?.adversarial_summary
+    ? Object.values(security.adversarial_summary).reduce((a, b) => a + b, 0)
+    : (security?.security_incident_count ?? 0);
 
   const attackVectors = [
     {
@@ -145,7 +149,7 @@ export default function ProtocolSecurityPage() {
         </div>
 
         <div className="px-4 py-2 rounded-xl bg-[#141414] border border-[#2FB36F]/40 text-[#2FB36F] text-xs font-mono font-semibold">
-          ● 0 Financial Breaches / 324 Attacks Neutralized in Simulation
+          ● 0 Financial Breaches / {loading ? '...' : totalAttacks} Attacks Neutralized in Simulation
         </div>
       </div>
 

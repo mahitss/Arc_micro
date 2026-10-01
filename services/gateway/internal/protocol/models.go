@@ -151,6 +151,7 @@ type AgentManifest struct {
 	Authentication       map[string]string      `json:"authentication"` // type: "api_key" or "signature"
 	ResultFormats        []string               `json:"result_formats"` // ["application/json", "sha256_sealed"]
 	ReputationReference  *ReputationMetrics     `json:"reputation_reference,omitempty"`
+	ReputationScore      int                    `json:"reputation_score"`
 	SecurityRequirements []string               `json:"security_requirements,omitempty"`
 }
 
@@ -377,6 +378,57 @@ type ProtocolTrafficEntry struct {
 	LatencyMs     int64     `json:"latency_ms"`
 	Error         string    `json:"error,omitempty"`
 	TenantID      string    `json:"tenant_id"`
+}
+
+// ProtocolControlTowerSnapshot is the canonical thin read model for the Protocol Control Tower.
+type ProtocolControlTowerSnapshot struct {
+	Mode       string                  `json:"mode"`        // "simulation" or "live"
+	FundsMoved bool                    `json:"funds_moved"` // false
+	Arc        ArcProtocolStatus       `json:"arc"`
+	Agents     ProtocolAgentSummary    `json:"agents"`
+	Contracts  ProtocolContractSummary `json:"contracts"`
+	Security   ProtocolSecuritySummary `json:"security"`
+	Telemetry  []*ProtocolTrafficEntry `json:"telemetry"`
+}
+
+// ArcProtocolStatus provides machine-checked Arc blockchain connectivity state.
+type ArcProtocolStatus struct {
+	Connected          bool  `json:"connected"`
+	ChainID            int64 `json:"chain_id"`
+	LiveExecution      bool  `json:"live_execution"`
+	AgentVaultDeployed bool  `json:"agent_vault_deployed"`
+	RealSettlements    int64 `json:"real_settlements"`
+}
+
+// ProtocolAgentSummary aggregates directory agent metrics.
+type ProtocolAgentSummary struct {
+	Discovered    int              `json:"discovered"`
+	ManifestValid int              `json:"manifest_valid"`
+	Items         []*AgentManifest `json:"items"`
+}
+
+// ProtocolContractSummary aggregates contract and clearinghouse metrics.
+type ProtocolContractSummary struct {
+	Active             int                 `json:"active"`
+	ProjectedValueUSDC string              `json:"projected_value_usdc"`
+	Items              []*ProtocolContract `json:"items"`
+}
+
+// ProtocolSecuritySummary aggregates authoritative security invariant and attack mitigation statistics.
+type ProtocolSecuritySummary struct {
+	Tests              int                   `json:"tests"`
+	AttacksBlocked     int                   `json:"attacks_blocked"`
+	AuthorityLeaks     int                   `json:"authority_leaks"`
+	InvariantsEnforced string                `json:"invariants_enforced"`
+	AdversarialSummary *AdversarialBreakdown `json:"adversarial_summary,omitempty"`
+}
+
+// AdversarialBreakdown represents machine-checked attack vectors defended.
+type AdversarialBreakdown struct {
+	ReplaysPrevented           int `json:"replays_prevented"`
+	UnauthorizedQueriesBlocked int `json:"unauthorized_queries_blocked"`
+	RawTransfersHalted         int `json:"raw_transfers_halted"`
+	SignatureFailures          int `json:"signature_failures"`
 }
 
 // ProtocolError standardized error structure (Section 42).

@@ -356,62 +356,98 @@ export const FALLBACK_SECURITY: SecurityIncidentReport = {
 };
 
 // ---------------------------------------------------------------------------
-// Protocol API Functions
+// Canonical Read Model: Protocol Control Tower Snapshot
 // ---------------------------------------------------------------------------
 
+export interface ArcProtocolStatus {
+  connected: boolean;
+  chain_id: number;
+  live_execution: boolean;
+  agent_vault_deployed: boolean;
+  real_settlements: number;
+}
+
+export interface ProtocolAgentSummary {
+  discovered: number;
+  manifest_valid: number;
+  items: ProtocolAgentManifest[];
+}
+
+export interface ProtocolContractSummary {
+  active: number;
+  projected_value_usdc: string;
+  items: ProtocolContract[];
+}
+
+export interface ProtocolSecuritySummary {
+  tests: number;
+  attacks_blocked: number;
+  authority_leaks: number;
+  invariants_enforced: string;
+  adversarial_summary?: {
+    replays_prevented: number;
+    unauthorized_queries_blocked: number;
+    raw_transfers_halted: number;
+    signature_failures: number;
+  };
+}
+
+export interface ProtocolControlTowerSnapshot {
+  mode: string;
+  funds_moved: boolean;
+  arc: ArcProtocolStatus;
+  agents: ProtocolAgentSummary;
+  contracts: ProtocolContractSummary;
+  security: ProtocolSecuritySummary;
+  telemetry: ProtocolTrafficEntry[];
+}
+
+// ---------------------------------------------------------------------------
+// Protocol API Functions (Pure Domain & Simulation Flow — No Hardcoded React Fallbacks)
+// ---------------------------------------------------------------------------
+
+export async function fetchProtocolSnapshot(): Promise<ProtocolControlTowerSnapshot> {
+  return apiRequest<ProtocolControlTowerSnapshot>('/protocol/v1/snapshot');
+}
+
 export async function fetchProtocolAgents(capability?: string): Promise<ProtocolAgentManifest[]> {
-  try {
-    const query = capability ? `?capability=${encodeURIComponent(capability)}` : '';
-    const res = await apiRequest<ProtocolAgentManifest[]>(`/protocol/v1/agents${query}`);
-    return Array.isArray(res) && res.length > 0 ? res : FALLBACK_AGENTS;
-  } catch {
-    return FALLBACK_AGENTS;
-  }
+  const query = capability ? `?capability=${encodeURIComponent(capability)}` : '';
+  const res = await apiRequest<ProtocolAgentManifest[]>(`/protocol/v1/agents${query}`);
+  return Array.isArray(res) ? res : [];
 }
 
 export async function fetchProtocolAgent(id: string): Promise<ProtocolAgentManifest | null> {
   try {
+    const res = await apiRequest<ProtocolAgentManifest>(`/protocol/v1/agents/${encodeURIComponent(id)}`);
+    return res || null;
+  } catch {
     const agents = await fetchProtocolAgents();
     return agents.find((a) => a.agent_id === id) || null;
-  } catch {
-    return FALLBACK_AGENTS.find((a) => a.agent_id === id) || null;
   }
 }
 
 export async function fetchProtocolContracts(): Promise<ProtocolContract[]> {
-  try {
-    const res = await apiRequest<ProtocolContract[]>('/protocol/v1/contracts');
-    return Array.isArray(res) && res.length > 0 ? res : FALLBACK_CONTRACTS;
-  } catch {
-    return FALLBACK_CONTRACTS;
-  }
+  const res = await apiRequest<ProtocolContract[]>('/protocol/v1/contracts');
+  return Array.isArray(res) ? res : [];
 }
 
 export async function fetchProtocolContract(id: string): Promise<ProtocolContract | null> {
   try {
     const res = await apiRequest<ProtocolContract>(`/protocol/v1/contracts/${encodeURIComponent(id)}`);
-    return res || FALLBACK_CONTRACTS[0];
+    return res || null;
   } catch {
-    return FALLBACK_CONTRACTS.find((c) => c.contract_id === id) || FALLBACK_CONTRACTS[0];
+    const contracts = await fetchProtocolContracts();
+    return contracts.find((c) => c.contract_id === id) || null;
   }
 }
 
 export async function fetchProtocolTraffic(): Promise<ProtocolTrafficEntry[]> {
-  try {
-    const res = await apiRequest<ProtocolTrafficEntry[]>('/protocol/v1/traffic');
-    return Array.isArray(res) && res.length > 0 ? res : FALLBACK_TRAFFIC;
-  } catch {
-    return FALLBACK_TRAFFIC;
-  }
+  const res = await apiRequest<ProtocolTrafficEntry[]>('/protocol/v1/traffic');
+  return Array.isArray(res) ? res : [];
 }
 
 export async function fetchProtocolSecurity(): Promise<SecurityIncidentReport> {
-  try {
-    const res = await apiRequest<SecurityIncidentReport>('/protocol/v1/security');
-    return res || FALLBACK_SECURITY;
-  } catch {
-    return FALLBACK_SECURITY;
-  }
+  return apiRequest<SecurityIncidentReport>('/protocol/v1/security');
 }
 
 export async function requestProtocolService(payload: {

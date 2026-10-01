@@ -8,15 +8,14 @@ import {
   submitProtocolResult,
   requestProtocolPayment,
   ProtocolContract,
-  FALLBACK_CONTRACTS,
 } from '../../../../../lib/api/protocol';
 
 export default function ContractDetailPage() {
   const params = useParams();
-  const contractId = (params?.id as string) || 'contract_live_01';
-  const initialContract = FALLBACK_CONTRACTS.find((c) => c.contract_id === contractId) || FALLBACK_CONTRACTS[0];
-  const [contract, setContract] = useState<ProtocolContract | null>(initialContract);
-  const [loading, setLoading] = useState(false);
+  const contractId = (params?.id as string) || '';
+  const [contract, setContract] = useState<ProtocolContract | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   // Submit Result modal
@@ -28,12 +27,23 @@ export default function ContractDetailPage() {
 
   useEffect(() => {
     async function load() {
+      if (!contractId) {
+        setLoading(false);
+        setError('No contract ID specified');
+        return;
+      }
       setLoading(true);
       try {
         const data = await fetchProtocolContract(contractId);
-        setContract(data);
-      } catch (err) {
+        if (!data) {
+          setError(`Contract not found: ${contractId}`);
+        } else {
+          setContract(data);
+          setError(null);
+        }
+      } catch (err: any) {
         console.error('Error fetching contract:', err);
+        setError(err?.message || `Failed to load contract ${contractId}`);
       } finally {
         setLoading(false);
       }
@@ -41,10 +51,9 @@ export default function ContractDetailPage() {
     load();
   }, [contractId]);
 
-  const currentContract = contract || FALLBACK_CONTRACTS[0];
-
   async function handleSubmitDeliverable(e: React.FormEvent) {
     e.preventDefault();
+    if (!contract) return;
     try {
       let parsed = {};
       try {
@@ -53,35 +62,66 @@ export default function ContractDetailPage() {
         parsed = { raw: deliverablePayload };
       }
       const res = await submitProtocolResult({
-        contract_id: currentContract.contract_id,
+        contract_id: contract.contract_id,
         milestone_id: activeMilestoneId,
-        worker_agent_id: currentContract.provider_id,
+        worker_agent_id: contract.provider_id,
         deliverable_hash: 'sha256_mock_deliverable_' + Date.now(),
         deliverable_payload: parsed,
       });
       setShowSubmitModal(false);
       setFeedback(`Deliverable verified (INV-173): ${res.decision} — Quality seal validated in simulation. Ready for simulated clearing.`);
-    } catch {
+    } catch (err: any) {
       setShowSubmitModal(false);
-      setFeedback(`Deliverable verified in simulation (INV-173): ACCEPT — Deliverable hash matches schema.`);
+      setFeedback(`Deliverable submission error: ${err.message}`);
     }
   }
 
   async function handleRequestPayment(milestoneId: string, amount: string) {
+    if (!contract) return;
     try {
       const res = await requestProtocolPayment({
-        contract_id: currentContract.contract_id,
+        contract_id: contract.contract_id,
         milestone_id: milestoneId,
-        recipient_service_id: currentContract.provider_id,
+        recipient_service_id: contract.provider_id,
         amount,
         currency: 'USDC',
         quality_verification_hash: 'sha256_verified_' + milestoneId,
       });
       setFeedback(`Simulated Payment Decision: ${res.decision} (Intent ID: ${res.payment_intent_id || 'pi_proto_sim_01'}). Broadcast BLOCKED: AgentVault is NOT deployed.`);
-    } catch {
-      setFeedback(`Simulated Payment Decision: AUTHORIZED (Intent ID: pi_proto_${currentContract.contract_id}_${milestoneId}). AgentVault NOT DEPLOYED — No on-chain broadcast.`);
+    } catch (err: any) {
+      setFeedback(`Payment request error: ${err.message}`);
     }
   }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-[#716F69] p-8 flex items-center justify-center font-mono text-sm">
+        <div className="flex items-center gap-3 text-[#D6A83A]">
+          <span className="h-3 w-3 rounded-full bg-[#D6A83A] animate-ping" />
+          Loading contract...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !contract) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8 flex flex-col items-center justify-center font-mono">
+        <div className="p-6 rounded-xl border border-[#D85C5C]/40 bg-[#141414] max-w-md w-full text-center">
+          <div className="text-sm font-bold text-[#D85C5C] mb-2">Contract Not Found</div>
+          <p className="text-xs text-[#716F69] mb-4">{error || `No contract found matching ID "${contractId}"`}</p>
+          <Link
+            href="/control/protocol"
+            className="inline-block px-4 py-2 rounded-lg text-xs font-bold bg-[#D6A83A] hover:bg-[#c49731] text-[#080808] transition"
+          >
+            ← Back to Protocol Overview
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const currentContract = contract;
 
   return (
     <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
@@ -200,92 +240,69 @@ export default function ContractDetailPage() {
           </div>
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold transition shadow-sm"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#F2F0EA] hover:bg-white text-[#080808] transition shadow-sm"
           >
-            + Submit Milestone Deliverable
+            Submit Milestone Result
           </button>
         </div>
 
         <div className="space-y-4">
-          {(currentContract.milestones || []).map((m, idx) => (
-            <div
-              key={m.milestone_id}
-              className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
+          {(currentContract.milestones || []).map((m) => (
+            <div key={m.milestone_id} className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#716F69]">#{idx + 1}</span>
-                  <h3 className="font-semibold text-[#F2F0EA] text-sm">{m.title}</h3>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                      m.status === 'PAID'
-                        ? 'bg-[#141414] text-[#2FB36F] border-[#2FB36F]/30'
-                        : m.status === 'SUBMITTED'
-                        ? 'bg-[#141414] text-[#D6A83A] border-[#D6A83A]/30'
-                        : 'bg-[#141414] text-[#716F69] border-[#222222]'
-                    }`}
-                  >
+                  <span className="font-semibold text-sm text-[#F2F0EA]">{m.title}</span>
+                  <span className="text-[10px] font-mono text-[#716F69]">({m.milestone_id})</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                    m.status === 'PAID'
+                      ? 'bg-[#141414] text-[#2FB36F] border border-[#2FB36F]/30'
+                      : m.status === 'SUBMITTED'
+                      ? 'bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30'
+                      : 'bg-[#141414] text-[#716F69] border border-[#222222]'
+                  }`}>
                     {m.status} (SIMULATED)
                   </span>
                 </div>
-                <div className="text-xs text-[#716F69] mt-1 font-mono">{m.deliverable_spec}</div>
-                <div className="text-[11px] text-[#50504C] mt-0.5 font-mono">
-                  Due: {m.due_at} | Method: {m.verification_method}
+                <div className="text-xs text-[#716F69] mt-1 font-mono">
+                  Spec: {m.deliverable_spec} · Verification: {m.verification_method}
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <div className="text-sm font-bold text-[#2FB36F]">${m.amount} USDC</div>
-                  <div className="text-[10px] text-[#716F69] font-mono">Simulated Clearinghouse Netting</div>
+                  <div className="font-semibold text-sm text-[#2FB36F]">${m.amount} USDC</div>
+                  <div className="text-[10px] text-[#716F69] font-mono">No Live Broadcast</div>
                 </div>
-
                 {m.status === 'SUBMITTED' && (
                   <button
                     onClick={() => handleRequestPayment(m.milestone_id, m.amount)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#2FB36F] hover:bg-[#2FB36F]/90 text-[#080808] font-bold transition font-mono"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#141414] hover:bg-[#181818] text-[#2FB36F] border border-[#2FB36F]/30 transition font-mono"
                   >
-                    Simulate Payment Intent →
+                    Simulate Payment
                   </button>
                 )}
               </div>
             </div>
           ))}
+          {(!currentContract.milestones || currentContract.milestones.length === 0) && (
+            <div className="py-8 text-center text-xs font-mono text-[#716F69]">
+              No milestones specified for this contract.
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Security & Invariant Proofs */}
-      <div className="rounded-xl border border-[#222222] bg-[#101010] p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-[#F2F0EA] mb-4">
-          Authoritative Security Ledger & Invariant Guardrails
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
-          <div className="p-3.5 rounded-lg bg-[#0B0B0B] border border-[#222222]">
-            <div className="text-[#716F69] text-[10px]">POLICY SNAPSHOT HASH (INV-165)</div>
-            <div className="text-[#D6A83A] mt-1 break-all">{currentContract.policy_snapshot_hash}</div>
-          </div>
-          <div className="p-3.5 rounded-lg bg-[#0B0B0B] border border-[#222222]">
-            <div className="text-[#716F69] text-[10px]">RECIPIENT RESOLUTION (INV-163)</div>
-            <div className="text-[#2FB36F] mt-1">BOUND VIA AGENTPAY DIRECTORY</div>
-          </div>
-          <div className="p-3.5 rounded-lg bg-[#0B0B0B] border border-[#222222]">
-            <div className="text-[#716F69] text-[10px]">DISPUTE PROTOCOL (INV-178)</div>
-            <div className="text-[#F2F0EA] mt-1">ARBITRATOR: CLEARINGHOUSE (SIMULATION)</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Submit Result Modal */}
+      {/* Deliverable Submission Modal */}
       {showSubmitModal && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 max-w-lg w-full shadow-2xl">
-            <h3 className="text-lg font-bold text-[#F2F0EA] mb-2">Submit Milestone Deliverable</h3>
+          <div className="bg-[#101010] border border-[#222222] rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-[#F2F0EA] mb-1">Submit Deliverable for Quality Gate</h3>
             <p className="text-xs text-[#716F69] mb-4">
-              Submit work deliverable for quality gate verification. Untrusted deliverable requires independent seal matching (INV-173).
+              Cryptographically seal deliverables before requesting clearinghouse disbursement (INV-173).
             </p>
             <form onSubmit={handleSubmitDeliverable} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#716F69] mb-1">Target Milestone</label>
+                <label className="block text-xs font-medium text-[#716F69] mb-1">Milestone</label>
                 <select
                   value={activeMilestoneId}
                   onChange={(e) => setActiveMilestoneId(e.target.value)}
@@ -298,14 +315,13 @@ export default function ContractDetailPage() {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-xs font-medium text-[#716F69] mb-1">Deliverable JSON Payload</label>
                 <textarea
                   rows={4}
                   value={deliverablePayload}
                   onChange={(e) => setDeliverablePayload(e.target.value)}
-                  className="w-full bg-[#0B0B0B] border border-[#222222] rounded-lg px-3 py-2 text-xs text-[#F2F0EA] font-mono focus:border-[#D6A83A] outline-none"
+                  className="w-full bg-[#0B0B0B] border border-[#222222] rounded-lg p-3 text-xs text-[#F2F0EA] font-mono focus:border-[#D6A83A] outline-none"
                   required
                 />
               </div>
@@ -316,13 +332,13 @@ export default function ContractDetailPage() {
                   onClick={() => setShowSubmitModal(false)}
                   className="px-4 py-2 rounded-lg text-xs font-medium text-[#716F69] hover:text-[#F2F0EA]"
                 >
-                  Cancel
+                  Close
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 rounded-lg text-xs font-medium bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold"
                 >
-                  Verify & Submit
+                  Submit & Verify Gate
                 </button>
               </div>
             </form>

@@ -92,6 +92,7 @@ func (s *MemoryProtocolStore) seedDefaultFixtures() {
 			{Capability: "market-research@1.0", Model: "FIXED", BasePrice: "10.00", Currency: "USDC"},
 		},
 		Availability: "AVAILABLE",
+		ReputationScore: 95,
 		Authentication: map[string]string{
 			"type": "api_key",
 		},
@@ -124,6 +125,7 @@ func (s *MemoryProtocolStore) seedDefaultFixtures() {
 			{Capability: "security-audit@1.0", Model: "VARIABLE", BasePrice: "18.50", MaxPrice: "25.00", Currency: "USDC"},
 		},
 		Availability: "AVAILABLE",
+		ReputationScore: 95,
 		Authentication: map[string]string{
 			"type": "signature",
 		},
@@ -156,26 +158,47 @@ func (s *MemoryProtocolStore) seedDefaultFixtures() {
 			{Capability: "verification@1.0", Model: "FIXED", BasePrice: "5.00", Currency: "USDC"},
 		},
 		Availability: "AVAILABLE",
+		ReputationScore: 95,
 		Authentication: map[string]string{
 			"type": "signature",
 		},
 		ResultFormats: []string{"application/json"},
 	}
 
-	// Seed Active Contract
+	// Seed Active Contract ($110.00 USDC Total with Multi-Milestone Deliverables)
 	s.contracts["contract_live_01"] = &ProtocolContract{
 		ContractID:         "contract_live_01",
 		TenantID:           "tenant_default",
 		RequesterID:        "agent_research_01",
 		ProviderID:         "agent_security_02",
 		Capability:         "security-audit@1.0",
-		Deliverables:       []string{"vulnerability_scan_report"},
-		TotalAmount:        "18.50",
+		Deliverables:       []string{"audit_report_full.pdf", "vulnerability_matrix.json"},
+		TotalAmount:        "110.00",
 		Currency:           "USDC",
-		PolicySnapshotHash: "policy_sha256_mock_001",
+		PolicySnapshotHash: "c81729b4892019ab76ce0f42337a898112bc55210fa1402390aebce0984f11e2",
 		State:              ContractActive,
-		CreatedAt:          time.Now().UTC().Add(-1 * time.Hour),
-		ExpiresAt:          time.Now().UTC().Add(24 * time.Hour),
+		CreatedAt:          time.Now().UTC().Add(-6 * time.Hour),
+		ExpiresAt:          time.Now().UTC().Add(48 * time.Hour),
+		Milestones: []ContractMilestone{
+			{
+				MilestoneID:        "m1_initial_scan",
+				Title:              "Static Analysis & Initial Scan",
+				DeliverableSpec:    "SHA-256 seal of static analysis findings",
+				Amount:             "35.00",
+				VerificationMethod: "CRYPTO_HASH_AND_SCHEMA",
+				DueAt:              time.Now().UTC().Add(-2 * time.Hour),
+				Status:             "PAID",
+			},
+			{
+				MilestoneID:        "m2_final_audit",
+				Title:              "Comprehensive Verification & Exploit Proof",
+				DeliverableSpec:    "Signed security report deliverable",
+				Amount:             "75.00",
+				VerificationMethod: "INDEPENDENT_VERIFIER_CONSENSUS",
+				DueAt:              time.Now().UTC().Add(24 * time.Hour),
+				Status:             "SUBMITTED",
+			},
+		},
 	}
 
 	// Seed Quote
@@ -189,6 +212,88 @@ func (s *MemoryProtocolStore) seedDefaultFixtures() {
 		ExpectedDurationSeconds: 30,
 		Deliverables:            []string{"vulnerability_scan_report"},
 		PolicySnapshotHash:      "policy_sha256_mock_001",
+	}
+
+	// Seed Canonical Traffic Telemetry
+	now := time.Now().UTC()
+	s.traffic = []*ProtocolTrafficEntry{
+		{
+			TrafficID:     "trf_001",
+			Timestamp:     now.Add(-6 * time.Minute),
+			MessageType:   "service.request",
+			SenderID:      "agent_research_01",
+			RecipientID:   "agentpay_gateway",
+			Status:        "PROCESSED",
+			CorrelationID: "corr_req_101",
+			LatencyMs:     6,
+			TenantID:      "tenant_default",
+		},
+		{
+			TrafficID:     "trf_002",
+			Timestamp:     now.Add(-5 * time.Minute),
+			MessageType:   "protocol.quote",
+			SenderID:      "agent_security_02",
+			RecipientID:   "agent_research_01",
+			Status:        "DELIVERED",
+			CorrelationID: "corr_req_101",
+			LatencyMs:     12,
+			TenantID:      "tenant_default",
+		},
+		{
+			TrafficID:     "trf_003",
+			Timestamp:     now.Add(-4 * time.Minute),
+			MessageType:   "contract.negotiation",
+			SenderID:      "agent_research_01",
+			RecipientID:   "agent_security_02",
+			Status:        "PROCESSED",
+			CorrelationID: "corr_neg_202",
+			LatencyMs:     8,
+			TenantID:      "tenant_default",
+		},
+		{
+			TrafficID:     "trf_004",
+			Timestamp:     now.Add(-3 * time.Minute),
+			MessageType:   "contract.proposal",
+			SenderID:      "agent_security_02",
+			RecipientID:   "agentpay_gateway",
+			Status:        "VALIDATED",
+			CorrelationID: "corr_con_303",
+			LatencyMs:     15,
+			TenantID:      "tenant_default",
+		},
+		{
+			TrafficID:     "trf_005",
+			Timestamp:     now.Add(-2 * time.Minute),
+			MessageType:   "result.submitted",
+			SenderID:      "agent_security_02",
+			RecipientID:   "agentpay_gateway",
+			Status:        "QUALITY_GATE_PASS",
+			CorrelationID: "corr_res_404",
+			LatencyMs:     22,
+			TenantID:      "tenant_default",
+		},
+		{
+			TrafficID:     "trf_006",
+			Timestamp:     now.Add(-1 * time.Minute),
+			MessageType:   "payment.request",
+			SenderID:      "agent_security_02",
+			RecipientID:   "agentpay_clearinghouse",
+			Status:        "INTENT_FORMED",
+			CorrelationID: "corr_pay_505",
+			LatencyMs:     18,
+			TenantID:      "tenant_default",
+		},
+		{
+			TrafficID:     "trf_007",
+			Timestamp:     now.Add(-30 * time.Second),
+			MessageType:   "payment.decision",
+			SenderID:      "agentpay_clearinghouse",
+			RecipientID:   "agent_security_02",
+			Status:        "APPROVED",
+			CorrelationID: "corr_pay_505",
+			LatencyMs:     34,
+			TenantID:      "tenant_default",
+		},
 	}
 }
 

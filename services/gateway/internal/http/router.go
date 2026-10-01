@@ -676,6 +676,7 @@ func NewRouter(
 		mux.HandleFunc("POST /protocol/v1/quotes", protoHandler.HandleQuotes)
 		mux.HandleFunc("GET /protocol/v1/quotes/{id}", protoHandler.HandleQuotes)
 		mux.HandleFunc("POST /protocol/v1/negotiate", protoHandler.HandleNegotiate)
+		mux.HandleFunc("GET /protocol/v1/contracts", protoHandler.HandleContracts)
 		mux.HandleFunc("POST /protocol/v1/contracts", protoHandler.HandleContracts)
 		mux.HandleFunc("POST /protocol/v1/contracts/{id}/accept", protoHandler.HandleContracts)
 		mux.HandleFunc("GET /protocol/v1/contracts/{id}", protoHandler.HandleContracts)
@@ -687,6 +688,8 @@ func NewRouter(
 		mux.HandleFunc("POST /protocol/v1/precheck", protoHandler.HandlePrecheck)
 		mux.HandleFunc("GET /protocol/v1/traffic", protoHandler.HandleTraffic)
 		mux.HandleFunc("GET /protocol/v1/security", protoHandler.HandleSecurity)
+		mux.HandleFunc("GET /protocol/v1/snapshot", protoHandler.HandleSnapshot)
+		mux.HandleFunc("GET /api/protocol/snapshot", protoHandler.HandleSnapshot)
 
 		// Section 21: Task 17 Autonomous Economic Marketplace
 		mktStore := marketplace.NewMemoryMarketplaceStore()

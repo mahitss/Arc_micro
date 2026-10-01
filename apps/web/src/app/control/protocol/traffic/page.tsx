@@ -5,14 +5,14 @@ import Link from 'next/link';
 import {
   fetchProtocolTraffic,
   ProtocolTrafficEntry,
-  FALLBACK_TRAFFIC,
 } from '../../../../lib/api/protocol';
 
 export default function ProtocolTrafficPage() {
-  const [traffic, setTraffic] = useState<ProtocolTrafficEntry[]>(FALLBACK_TRAFFIC);
+  const [traffic, setTraffic] = useState<ProtocolTrafficEntry[]>([]);
   const [filterType, setFilterType] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     load();
@@ -24,8 +24,10 @@ export default function ProtocolTrafficPage() {
     try {
       const data = await fetchProtocolTraffic();
       setTraffic(data);
-    } catch (err) {
+      setError(null);
+    } catch (err: any) {
       console.error('Failed to load traffic:', err);
+      setError(err?.message || 'Failed to load telemetry stream');
     } finally {
       setLoading(false);
     }
@@ -44,6 +46,17 @@ export default function ProtocolTrafficPage() {
   const avgLatency = traffic.length > 0
     ? (traffic.reduce((acc, t) => acc + (t.latency_ms || 0), 0) / traffic.length).toFixed(1)
     : '0';
+
+  if (loading && traffic.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-[#716F69] p-8 flex items-center justify-center font-mono text-sm">
+        <div className="flex items-center gap-3 text-[#D6A83A]">
+          <span className="h-3 w-3 rounded-full bg-[#D6A83A] animate-ping" />
+          Loading telemetry stream...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
@@ -75,11 +88,18 @@ export default function ProtocolTrafficPage() {
             <div className="text-xl font-bold text-[#D6A83A]">{avgLatency} ms</div>
           </div>
           <div className="border-l border-[#222222] pl-4">
-            <div className="text-[10px] uppercase font-semibold text-[#716F69]">Simulated Entries</div>
+            <div className="text-[10px] uppercase font-semibold text-[#716F69]">Telemetry Entries</div>
             <div className="text-xl font-bold text-[#F2F0EA]">{traffic.length}</div>
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 rounded-xl bg-[#141414] border border-[#D85C5C]/40 text-xs font-mono text-[#D85C5C] flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={() => load()} className="text-xs font-bold text-[#D6A83A] underline">Retry</button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6 bg-[#101010] border border-[#222222] p-4 rounded-xl">
@@ -150,6 +170,13 @@ export default function ProtocolTrafficPage() {
                 </td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-xs font-mono text-[#716F69]">
+                  {traffic.length === 0 ? 'No protocol telemetry recorded yet.' : 'No telemetry events match query.'}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -230,6 +230,24 @@ func (h *ProtocolHandler) HandleContracts(w http.ResponseWriter, r *http.Request
 	}
 
 	id := extractPathID(path, "/protocol/v1/contracts")
+	if id == "" || id == "contracts" {
+		tenantID := r.URL.Query().Get("tenant_id")
+		if tenantID == "" {
+			tenantID = "tenant_default"
+		}
+		contracts, err := h.service.ListContracts(r.Context(), tenantID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if contracts == nil {
+			contracts = []*protocol.ProtocolContract{}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(contracts)
+		return
+	}
+
 	c, err := h.service.GetContract(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Contract not found", http.StatusNotFound)
@@ -291,11 +309,13 @@ func (h *ProtocolHandler) HandlePayments(w http.ResponseWriter, r *http.Request)
 	id := extractPathID(r.URL.Path, "/protocol/v1/payments")
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"payment_id":  id,
-		"status":      "CONFIRMED",
-		"asset":       "USDC",
-		"chain":       "arc-testnet",
-		"block_proof": "arc_tx_0x9b8c7f",
+		"payment_id":           id,
+		"status":               "SIMULATION_AUTHORIZED",
+		"asset":                "USDC",
+		"chain_id":             5042,
+		"live_execution":       false,
+		"agent_vault_deployed": false,
+		"funds_moved":          false,
 	})
 }
 
@@ -359,6 +379,16 @@ func (h *ProtocolHandler) HandleTraffic(w http.ResponseWriter, r *http.Request) 
 
 // HandleSecurity handles GET /protocol/v1/security
 func (h *ProtocolHandler) HandleSecurity(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.URL.Query().Get("tenant_id")
+	if tenantID == "" {
+		tenantID = "tenant_default"
+	}
+	report, err := h.service.GetSecurityReport(r.Context(), tenantID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	entries, _ := h.store.GetTraffic(r.Context(), "", 200)
 	securityEvents := make([]*protocol.ProtocolTrafficEntry, 0)
 	for _, e := range entries {
@@ -370,6 +400,24 @@ func (h *ProtocolHandler) HandleSecurity(w http.ResponseWriter, r *http.Request)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"security_incident_count": len(securityEvents),
 		"events":                  securityEvents,
-		"invariants_enforced":     "INV-161 through INV-180",
+		"invariants_enforced":     report.InvariantsEnforced,
+		"adversarial_summary":     report.AdversarialSummary,
 	})
+}
+
+// HandleSnapshot handles GET /protocol/v1/snapshot and GET /api/protocol/snapshot
+func (h *ProtocolHandler) HandleSnapshot(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.URL.Query().Get("tenant_id")
+	if tenantID == "" {
+		tenantID = "tenant_default"
+	}
+
+	snap, err := h.service.GetControlTowerSnapshot(r.Context(), tenantID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(snap)
 }

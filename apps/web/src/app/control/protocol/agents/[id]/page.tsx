@@ -7,26 +7,36 @@ import {
   fetchProtocolAgent,
   runProtocolPrecheck,
   ProtocolAgentManifest,
-  FALLBACK_AGENTS,
 } from '../../../../../lib/api/protocol';
 
 export default function AgentDetailPage() {
   const params = useParams();
-  const agentId = (params?.id as string) || 'agent_research_01';
-  const initialAgent = FALLBACK_AGENTS.find((a) => a.agent_id === agentId) || FALLBACK_AGENTS[0];
-  const [agent, setAgent] = useState<ProtocolAgentManifest | null>(initialAgent);
-  const [loading, setLoading] = useState(false);
+  const agentId = (params?.id as string) || '';
+  const [agent, setAgent] = useState<ProtocolAgentManifest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [precheckResult, setPrecheckResult] = useState<any>(null);
   const [precheckLoading, setPrecheckLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
+      if (!agentId) {
+        setLoading(false);
+        setError('No agent ID provided');
+        return;
+      }
       setLoading(true);
       try {
         const data = await fetchProtocolAgent(agentId);
-        setAgent(data);
-      } catch (err) {
+        if (!data) {
+          setError(`Agent not found: ${agentId}`);
+        } else {
+          setAgent(data);
+          setError(null);
+        }
+      } catch (err: any) {
         console.error('Error fetching agent:', err);
+        setError(err?.message || `Failed to load agent ${agentId}`);
       } finally {
         setLoading(false);
       }
@@ -35,26 +45,21 @@ export default function AgentDetailPage() {
   }, [agentId]);
 
   async function handleQuickPrecheck() {
+    if (!agent) return;
     setPrecheckLoading(true);
     try {
       const res = await runProtocolPrecheck({
-        agent_id: agentId,
-        capability: currentAgent.capabilities[0]?.capability_id || 'market-research@1.0',
+        agent_id: agent.agent_id,
+        capability: agent.capabilities[0]?.capability_id || 'market-research@1.0',
         estimated_amount: '50.00',
         currency: 'USDC',
       });
       setPrecheckResult(res);
-    } catch {
+    } catch (err: any) {
       setPrecheckResult({
-        eligibility: 'ELIGIBLE',
-        reasons: [
-          'Manifest schema matches canonical specification (INV-162)',
-          'Agent possesses valid Ed25519 public key',
-          'Capability registered in directory without recipient substitution',
-          'Amount within policy single-transaction ceiling ($100.00)',
-          'No transaction signer keys held (INV-161 enforced)',
-        ],
-        max_allowable_budget: '100.00',
+        eligibility: 'INELIGIBLE',
+        reasons: [`Precheck evaluation error: ${err.message || 'Gateway error'}`],
+        max_allowable_budget: '0.00',
       });
     } finally {
       setPrecheckLoading(false);
@@ -64,12 +69,32 @@ export default function AgentDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080808] text-[#716F69] p-8 flex items-center justify-center font-mono text-sm">
-        Loading agent profile...
+        <div className="flex items-center gap-3 text-[#D6A83A]">
+          <span className="h-3 w-3 rounded-full bg-[#D6A83A] animate-ping" />
+          Loading agent profile...
+        </div>
       </div>
     );
   }
 
-  const currentAgent = agent || FALLBACK_AGENTS.find((a) => a.agent_id === agentId) || FALLBACK_AGENTS[0];
+  if (error || !agent) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8 flex flex-col items-center justify-center font-mono">
+        <div className="p-6 rounded-xl border border-[#D85C5C]/40 bg-[#141414] max-w-md w-full text-center">
+          <div className="text-sm font-bold text-[#D85C5C] mb-2">Agent Not Found</div>
+          <p className="text-xs text-[#716F69] mb-4">{error || `No agent found matching ID "${agentId}"`}</p>
+          <Link
+            href="/control/protocol"
+            className="inline-block px-4 py-2 rounded-lg text-xs font-bold bg-[#D6A83A] hover:bg-[#c49731] text-[#080808] transition"
+          >
+            ← Back to Protocol Overview
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const currentAgent = agent;
 
   return (
     <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
@@ -109,7 +134,7 @@ export default function AgentDetailPage() {
             <button onClick={() => setPrecheckResult(null)} className="text-[#716F69] hover:text-[#F2F0EA]">✕</button>
           </div>
           <div className="text-[#716F69]">
-            Max Allowable Budget Ceiling: ${precheckResult.max_allowable_budget || '100.00'} USDC
+            Max Allowable Budget Ceiling: ${precheckResult.max_allowable_budget || '0.00'} USDC
           </div>
           {precheckResult.reasons && (
             <div className="text-[11px] text-[#A09D94] pt-1 space-y-0.5">
@@ -146,7 +171,7 @@ export default function AgentDetailPage() {
                 <span className="text-[10px] text-[#50504C]">(DEMO ORG)</span>
               </span>
               <span>•</span>
-              <span>Registered: {currentAgent.registered_at}</span>
+              <span>Registered: {currentAgent.registered_at || 'Simulated Manifest'}</span>
               <span>•</span>
               <span>Heartbeat: {currentAgent.last_heartbeat_at || 'Simulated Active'}</span>
             </div>
@@ -156,7 +181,7 @@ export default function AgentDetailPage() {
             <div>
               <div className="text-[10px] uppercase font-semibold text-[#716F69]">Reputation</div>
               <div className="text-2xl font-extrabold text-[#2FB36F] mt-0.5">
-                ★ {currentAgent.reputation_score || 95}/100
+                ★ {currentAgent.reputation_score !== undefined ? `${currentAgent.reputation_score}/100` : 'N/A'}
               </div>
               <div className="text-[9px] text-[#716F69] font-mono">SIMULATED SCORE</div>
             </div>
@@ -216,19 +241,19 @@ export default function AgentDetailPage() {
             <div>
               <div className="text-[#716F69] text-[11px] mb-1">Public Key (Ed25519)</div>
               <div className="p-2.5 rounded bg-[#0B0B0B] border border-[#222222] text-[#D6A83A] break-all">
-                {currentAgent.public_key}
+                {currentAgent.public_key || 'ed25519:unspecified'}
               </div>
             </div>
             <div>
               <div className="text-[#716F69] text-[11px] mb-1">Callback Endpoint URL</div>
               <div className="p-2.5 rounded bg-[#0B0B0B] border border-[#222222] text-[#F2F0EA] break-all">
-                {currentAgent.endpoint_url}
+                {currentAgent.endpoint_url || 'https://agents.agentpay.arc/task'}
               </div>
             </div>
             <div>
               <div className="text-[#716F69] text-[11px] mb-1">Supported Protocols</div>
               <div className="flex gap-2">
-                {currentAgent.supported_protocols.map((p) => (
+                {(currentAgent.supported_protocols || ['agentpay.protocol.v1']).map((p) => (
                   <span key={p} className="px-2.5 py-1 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222] text-xs">
                     {p}
                   </span>
@@ -248,7 +273,9 @@ export default function AgentDetailPage() {
                 <div className="font-semibold text-[#F2F0EA]">Manifest Registry Verification</div>
                 <div className="text-[#716F69] text-[11px] font-mono">Enforces INV-162 canonical source of truth</div>
               </div>
-              <span className="text-[#2FB36F] font-bold text-xs font-mono">3/3 VALID</span>
+              <span className="text-[#2FB36F] font-bold text-xs font-mono">
+                {currentAgent.capabilities?.length > 0 ? 'VALID' : 'INVALID'}
+              </span>
             </div>
             <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222] flex justify-between items-center">
               <div>
@@ -278,10 +305,10 @@ export default function AgentDetailPage() {
       {/* Capabilities Catalog */}
       <div className="rounded-xl border border-[#222222] bg-[#101010] p-6">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-[#F2F0EA] mb-4">
-          Published Service Capabilities ({currentAgent.capabilities.length})
+          Published Service Capabilities ({currentAgent.capabilities?.length || 0})
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {currentAgent.capabilities.map((c) => (
+          {(currentAgent.capabilities || []).map((c) => (
             <div key={c.capability_id} className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222]">
               <div className="flex justify-between items-start">
                 <div>
