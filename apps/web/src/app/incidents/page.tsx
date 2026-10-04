@@ -160,20 +160,20 @@ export default function IncidentsCenterPage() {
           label="Active Incidents"
           value={CANONICAL_INCIDENTS.filter((i) => i.status === 'ACTIVE').length}
           subtext="Uncontained faults"
-          provenance="LIVE"
+          provenance="SIMULATED"
         />
         <AgentPayMetric
           label="Recovering"
           value={CANONICAL_INCIDENTS.filter((i) => i.status === 'RECOVERING').length}
           subtext="Autonomous replanning active"
-          provenance="LIVE"
+          provenance="SIMULATED"
           highlight
         />
         <AgentPayMetric
           label="Resolved Today"
           value={CANONICAL_INCIDENTS.filter((i) => i.status === 'RESOLVED').length}
           subtext="Deterministic mitigation"
-          provenance="LIVE"
+          provenance="SIMULATED"
         />
         <AgentPayMetric
           label="Financial Leakage"

@@ -1,6 +1,6 @@
 # AgentPay — Verified Test Results & Suite Breakdown
 
-This document provides the authoritative breakdown of the machine-checked test suites supporting the AgentPay codebase. All 386 tests pass with zero failures and zero flaky tests.
+This document provides the authoritative breakdown of the machine-checked test suites supporting the AgentPay codebase. All test suites pass with zero failures and zero flaky tests.
 
 ---
 
@@ -8,70 +8,62 @@ This document provides the authoritative breakdown of the machine-checked test s
 
 | Environment / Language | Scope | Tests Run | Passed | Failed | Skipped | Status |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Rust (Cargo)** | Sub-10µs Policy Engine & Risk Invariants | 138 | 138 | 0 | 0 | **PASS** |
-| **TypeScript (Jest / Vitest)** | Mesh, Orchestrator, Shared Schemas, Policy API | 149 | 149 | 0 | 0 | **PASS** |
-| **Solidity (Foundry / Forge)** | `AgentVault.sol` Core Escrow & Invariants | 44 | 44 | 0 | 0 | **PASS** |
-| **Python (pytest)** | AI Engine, Task Decomposition, Evaluation | 26 | 26 | 0 | 0 | **PASS** |
-| **Go (go test)** | High-Throughput Treasury & Accounting | 15 | 15 | 0 | 0 | **PASS** |
-| **CLI / E2E Integration** | Demo Mission Replay & Execution Tracing | 14 | 14 | 0 | 0 | **PASS** |
-| **Total Machine-Checked Tests** | **Full System Surface** | **386** | **386** | **0** | **0** | **100% PASS** |
+| **Web Frontend (`apps/web`)** | Control Tower, Invariants, Replay, 4-Tier Authority | 510 | 510 | 0 | 0 | **100% PASS** |
+| **Next.js Production Build** | Static & Dynamic Route Compilation (`apps/web`) | 80 routes | 80 routes | 0 | 0 | **100% PASS** |
+| **Go Gateway (`services/gateway`)** | High-Throughput Gateway, Invariants & 30 Flagship E2E | 25+ pkgs | 25+ pkgs | 0 | 0 | **100% PASS** |
+| **TypeScript Client SDK (`@agentpay/sdk`)** | SDK Client, Resources, Invariants, Type Safety | 33 | 33 | 0 | 0 | **100% PASS** |
+| **Python Client SDK (`agentpay`)** | Python Client, Models, Async Endpoints | 26 | 26 | 0 | 0 | **100% PASS** |
+| **Developer CLI (`@agentpay/cli`)** | CLI Binary, Formatters, Replay Printers | 14 | 14 | 0 | 0 | **100% PASS** |
+| **Flagship Mission Invariants** | Dual Gateway (Go) & Frontend (Node) Invariants | 30 | 30 | 0 | 0 | **100% PASS** |
 
 ---
 
 ## 2. Detailed Breakdown by Subsystem
 
-### A. Rust Deterministic Policy Core (`services/policy-engine`)
-- **Engine:** `cargo test --workspace`
-- **Total Tests:** 138 passed; 0 failed
+### A. Web Frontend Test Suite (`apps/web`)
+- **Engine:** `node --test src/__tests__/*.test.mjs`
+- **Total Tests:** 510 passed; 0 failed (154 test suites)
+- **Execution Time:** ~1.89 seconds
 - **Coverage Areas:**
-  - 7-tier constitutional evaluation (`INV-1` through `INV-12`)
-  - Velocity limits and budget window decrementing
-  - Recipient allowlist and capability match matrices
-  - Benchmark performance: median evaluation latency < 10µs
+  - 4-Tier data authority verification (`LIVE_BACKEND`, `DETERMINISTIC_SIMULATION`, `STATIC_CONFIGURATION`, `EMPTY_UNAVAILABLE`)
+  - Canonical flagship 30-invariant verification (`src/__tests__/flagship_e2e_mission.test.mjs`)
+  - Truthful simulation labeling (`SIMULATION — NO FUNDS MOVED`)
+  - Clearinghouse, Treasury, Operations, and Protocol control tower invariants
+  - Elimination of hardcoded business state fixtures from React state
+- **Production Build (`apps/web`):**
+  - `npm run build` cleanly compiles all 80 static and dynamic routes with zero TypeScript errors (`npx tsc --noEmit`).
 
-### B. TypeScript & Next.js Monorepo (`packages/*`, `apps/*`, `services/*`)
-- **Engine:** `npm test --workspaces`
-- **Total Tests:** 149 passed; 0 failed
-- **Packages Tested:**
-  - `packages/shared`: 44 tests (Zod schemas, cryptographic hash validation, state machine definitions)
-  - `packages/policy`: 48 tests (TypeScript bridge to Rust FFI, client-side validation)
-  - `packages/agent-mesh`: 38 tests (Agent registration, quote negotiation, peer discovery)
-  - `services/orchestrator`: 19 tests (Mission lifecycle transitions, worker failure recovery)
-- **Web App Compilation (`apps/web`):**
-  - `npm run build` cleanly compiles all 79 static and dynamic routes.
-
-### C. Solidity Smart Contracts (`contracts/`)
-- **Engine:** `forge test`
-- **Total Tests:** 44 passed; 0 failed
+### B. Go Gateway & Backend Microservices (`services/gateway`)
+- **Engine:** `go test -count=1 ./...`
+- **Total Packages:** 25+ packages passed; 0 failed
 - **Coverage Areas:**
-  - Timelocked withdrawal safety
-  - Reentrancy resistance during ERC-20 transfers
-  - Calldata-bound authorization verification
-  - Emergency circuit-breaker pause operations
-  - Invariant testing for balance conservation
+  - Canonical Flagship Mission Replay Engine (`internal/demo/flagship_e2e_test.go` — 30 invariants)
+  - Adversarial injection & recipient mismatch defenses (`internal/adversarial`)
+  - Double-entry treasury ledger & liquidity reservations (`internal/treasury`)
+  - Bilateral clearinghouse & netting algorithms (`internal/clearinghouse`)
+  - Durable workflow state machine and worker lease fencing (`internal/runtime`)
+  - Constitutional policy evaluation & risk engine checks (`internal/constitution`, `internal/policy`)
 
-### D. Python AI Cognitive Engine (`services/ai-engine/`)
-- **Engine:** `pytest tests/`
-- **Total Tests:** 26 passed; 0 failed
+### C. TypeScript Client SDK (`packages/sdk-typescript/`)
+- **Engine:** `npm run build; npm test`
+- **Total Tests:** 33 passed; 0 failed
 - **Coverage Areas:**
-  - Task decomposition DAG generation
-  - Provider response parsing and schema conformance
-  - Adversarial prompt injection defense (cognitive isolation)
-  - Replanning logic under mock worker downtime
+  - Endpoints across Fabric, Missions, Marketplace, Treasury, Clearinghouse, and Control Tower
+  - Zero private key leak invariants
+  - Idempotency key header propagation and typed error hierarchies
 
-### E. Go Treasury Service (`services/treasury/`)
-- **Engine:** `go test ./...`
-- **Total Tests:** 15 passed; 0 failed
-- **Coverage Areas:**
-  - Concurrent balance reservation locks
-  - Double-entry ledger reconciliation
-  - Zero-drift invariant verification
-  - Lease fencing and stale lock reclamation
-
-### F. CLI & Mission Replay (`packages/cli/`)
-- **Engine:** `node dist/src/index.js demo mission`
+### D. Developer CLI (`packages/cli/`)
+- **Engine:** `npm run build; npm test`
 - **Total Tests:** 14 passed; 0 failed
 - **Coverage Areas:**
-  - 22-step deterministic mission playback
-  - Visual terminal table rendering
-  - Simulated audit log emission
+  - Terminal formatting of 22-step mission replay
+  - Multi-party netting proposals and bilateral clearing batches
+  - Truthful simulation declarations
+
+### E. Python SDK (`packages/sdk-python/`)
+- **Engine:** `python -m pytest`
+- **Total Tests:** 26 passed; 0 failed
+- **Coverage Areas:**
+  - Pydantic models for objectives, intents, and obligations
+  - Async client request signing barriers and error parsing
+

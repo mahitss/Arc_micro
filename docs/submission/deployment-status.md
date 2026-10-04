@@ -30,7 +30,7 @@ This document presents the authoritative, machine-checked operational status of 
 - **Arc RPC Connectivity:** Independent verification of Arc Mainnet RPC responsiveness, chain metadata, and native USDC contract presence.
 
 ### B. What is SIMULATED
-- **Mission Settlement Execution:** Mission `msn_market_intel_01` and its 22-step execution pipeline operate in deterministic simulation mode. Simulated transaction hashes are generated for audit trace tracking without mutating on-chain state.
+- **Mission Settlement Execution:** Mission `msn_market_intel_001` and its 22-step execution pipeline operate in deterministic simulation mode. Broadcast is strictly NONE, zero fake transaction hashes are generated, and zero real funds are moved.
 - **Adversarial Attack Denial:** Malicious provider recipient substitution is rejected deterministically in simulation without submitting failing transactions to the blockchain.
 
 ### C. What is UNVERIFIED

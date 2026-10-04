@@ -418,69 +418,131 @@ export default function MissionReplayPage() {
             </div>
 
             {/* Signature Moment Special Renderers */}
-            {/* Phase 5 Malicious Interceptor Attack */}
+            {/* Signature Moment Special Renderers */}
+            {/* STEP 12 & 13: MALICIOUS RECIPIENT SUBSTITUTION */}
             {(currentEvent.event_id === 'evt_12_sec_violation' || currentEvent.event_id === 'evt_13_pay_blocked') && (
-              <div className="bg-[#D85C5C]/10 border border-[#D85C5C]/40 rounded p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">⚠</span>
-                    <span className="font-bold text-sm text-[#D85C5C]">
-                      SECURITY BARRIER TRIGGERED: ATTACK #1 RECIPIENT SUBSTITUTION
+              <div className="bg-[#D85C5C]/10 border-2 border-[#D85C5C]/50 rounded-lg p-4 space-y-3.5 shadow-lg shadow-red-950/20">
+                <div className="flex items-center justify-between pb-2 border-b border-[#D85C5C]/30">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#D85C5C] animate-pulse" />
+                    <span className="font-mono font-bold text-xs uppercase tracking-wider text-[#D85C5C]">
+                      SECURITY BARRIER INTERCEPT — ATTACK VECTOR #1
                     </span>
                   </div>
                   <AgentPayBadge variant="danger">HARD DENY</AgentPayBadge>
                 </div>
-                <div className="text-xs space-y-1.5 font-mono">
-                  <div className="flex justify-between border-b border-[#D85C5C]/20 pb-1">
-                    <span className="text-[#B0ADA5]">Original Recipient:</span>
-                    <span className="text-[#2FB36F]">service_registry:provider-b</span>
+
+                <div className="text-xs space-y-2 font-mono">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 rounded bg-[#101010] border border-[#2B2B2B]">
+                    <span className="text-[#716F69]">REQUESTED RECIPIENT:</span>
+                    <span className="text-[#D85C5C] font-semibold break-all">0xdead00000000000000000000000000000000beef (Attacker Wallet)</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#D85C5C]/20 pb-1">
-                    <span className="text-[#B0ADA5]">Attempted Recipient:</span>
-                    <span className="text-[#D85C5C]">0xdead00000000000000000000000000000000beef (attacker-wallet)</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 rounded bg-[#101010] border border-[#2B2B2B]">
+                    <span className="text-[#716F69]">AUTHORIZED RECIPIENT:</span>
+                    <span className="text-[#2FB36F] font-semibold">service_registry:provider-b</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#D85C5C]/20 pb-1">
-                    <span className="text-[#B0ADA5]">Enforced Invariant:</span>
-                    <span className="text-[#F2F0EA]">INV-186 & INV-146 (Recipient Mismatch)</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 rounded bg-[#181111] border border-[#D85C5C]/40">
+                    <span className="text-[#D85C5C] font-bold">MISMATCH STATUS:</span>
+                    <span className="text-[#D85C5C] font-bold">RECIPIENT_MISMATCH (Unauthorized Destination Mutation)</span>
                   </div>
-                  <div className="flex justify-between pt-1">
-                    <span className="text-[#B0ADA5]">FUNDS MOVED:</span>
-                    <span className="text-[#2FB36F] font-bold">0.00 USDC (PROTECTED)</span>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="p-2 rounded bg-[#101010] border border-[#222222]">
+                      <span className="text-[#716F69] text-[10px] block">ENFORCED INVARIANT</span>
+                      <span className="text-[#F2F0EA] font-semibold">INV-186 &amp; INV-146</span>
+                    </div>
+                    <div className="p-2 rounded bg-[#101010] border border-[#222222]">
+                      <span className="text-[#716F69] text-[10px] block">FUNDS MOVED</span>
+                      <span className="text-[#2FB36F] font-bold">0.00 USDC (PROTECTED)</span>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Phase 6-7 Provider Failure & Replanning */}
-            {(currentEvent.event_id === 'evt_14_prov_fail' ||
-              currentEvent.event_id === 'evt_15_replan_req' ||
-              currentEvent.event_id === 'evt_16_alt_select') && (
-              <div className="bg-[#D6A83A]/10 border border-[#D6A83A]/40 rounded p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">↻</span>
-                    <span className="font-bold text-sm text-[#D6A83A]">
-                      AUTONOMOUS FAILURE FENCING & CONTROLLED REPLAN
+            {/* STEP 14: PROVIDER B LEASE HEARTBEAT FAILURE */}
+            {currentEvent.event_id === 'evt_14_prov_fail' && (
+              <div className="bg-[#D6A83A]/10 border-2 border-[#D6A83A]/50 rounded-lg p-4 space-y-3.5 shadow-lg shadow-amber-950/20">
+                <div className="flex items-center justify-between pb-2 border-b border-[#D6A83A]/30">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#D6A83A] animate-pulse" />
+                    <span className="font-mono font-bold text-xs uppercase tracking-wider text-[#D6A83A]">
+                      DURABLE RUNTIME MONITOR — WORKER LEASE EXPIRY
                     </span>
                   </div>
-                  <AgentPayBadge variant="warning">RECOVERED</AgentPayBadge>
+                  <AgentPayBadge variant="warning">TIMEOUT DETECTED</AgentPayBadge>
                 </div>
+
+                <div className="text-xs space-y-2 font-mono">
+                  <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#2B2B2B]">
+                    <span className="text-[#716F69]">HEARTBEAT TIMEOUT:</span>
+                    <span className="text-[#D85C5C] font-semibold">Heartbeat missed &gt; 2000ms SLA lease expired</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#2B2B2B]">
+                    <span className="text-[#716F69]">WORKER FENCED:</span>
+                    <span className="text-[#D6A83A] font-semibold">INV-101 (Stale worker isolated &amp; lease revoked)</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#2B2B2B]">
+                    <span className="text-[#716F69]">RETRY POLICY:</span>
+                    <span className="text-[#B0ADA5]">INV-103 (Blind retry to failing worker prohibited)</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#2FB36F]/30">
+                    <span className="text-[#716F69]">MISSION STATUS:</span>
+                    <span className="text-[#2FB36F] font-bold">MISSION STILL ALIVE (Autonomous Recovery Initiated)</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEPS 15, 16, 17: AUTONOMOUS REPLAN & MULTI-STAGE REVALIDATION */}
+            {(currentEvent.event_id === 'evt_15_replan_req' ||
+              currentEvent.event_id === 'evt_16_alt_select' ||
+              currentEvent.event_id === 'evt_17_pay_reauth') && (
+              <div className="bg-[#6B8FD6]/10 border-2 border-[#6B8FD6]/50 rounded-lg p-4 space-y-3.5 shadow-lg shadow-blue-950/20">
+                <div className="flex items-center justify-between pb-2 border-b border-[#6B8FD6]/30">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#6B8FD6] animate-pulse" />
+                    <span className="font-mono font-bold text-xs uppercase tracking-wider text-[#6B8FD6]">
+                      AUTONOMOUS ADAPTIVE REPLAN &amp; FRESH AUTHORITY GATES
+                    </span>
+                  </div>
+                  <AgentPayBadge variant="accent">AUTHORIZED</AgentPayBadge>
+                </div>
+
                 <div className="text-xs space-y-1.5 font-mono">
-                  <div className="flex justify-between border-b border-[#D6A83A]/20 pb-1">
-                    <span className="text-[#B0ADA5]">Failed Worker:</span>
-                    <span className="text-[#D85C5C]">Provider B (Heartbeat missed &gt; 2000ms)</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 rounded bg-[#101010] border border-[#222222]">
+                      <span className="text-[#716F69] text-[10px] block">ORIGINAL PLAN</span>
+                      <span className="text-[#D85C5C]">Provider B ($3.60) — FAILED</span>
+                    </div>
+                    <div className="p-2 rounded bg-[#101010] border border-[#222222]">
+                      <span className="text-[#716F69] text-[10px] block">ALTERNATIVE PROVIDER</span>
+                      <span className="text-[#2FB36F] font-bold">Provider C ($4.50) — SELECTED</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between border-b border-[#D6A83A]/20 pb-1">
-                    <span className="text-[#B0ADA5]">Autonomous Replan:</span>
-                    <span className="text-[#2FB36F]">Swapped to Provider C ($4.50, +$0.90 USDC)</span>
+
+                  <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#2B2B2B]">
+                    <span className="text-[#716F69]">MARGINAL COST:</span>
+                    <span className="text-[#F2F0EA]">+$0.90 USDC (Total spend $8.50 &le; $25.00 Cap)</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#D6A83A]/20 pb-1">
-                    <span className="text-[#B0ADA5]">Cumulative Cost:</span>
-                    <span className="text-[#F2F0EA]">$8.50 USDC &le; $25.00 USDC Cap (PASS)</span>
+
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-[11px]">
+                    <div className="p-2 rounded bg-[#101010] border border-[#222222]">
+                      <span className="text-[#716F69] text-[10px] block">POLICY CHECK</span>
+                      <span className="text-[#2FB36F] font-bold">PASS (Rule #1 &amp; #2)</span>
+                    </div>
+                    <div className="p-2 rounded bg-[#101010] border border-[#222222]">
+                      <span className="text-[#716F69] text-[10px] block">RISK CHECK</span>
+                      <span className="text-[#2FB36F] font-bold">PASS (Score 22 LOW)</span>
+                    </div>
+                    <div className="p-2 rounded bg-[#101010] border border-[#222222]">
+                      <span className="text-[#716F69] text-[10px] block">LIQUIDITY CHECK</span>
+                      <span className="text-[#2FB36F] font-bold">PASS ($8.50 Reserved)</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between pt-1">
-                    <span className="text-[#B0ADA5]">Authority Expansion:</span>
-                    <span className="text-[#2FB36F] font-bold">NONE (INV-141 &amp; INV-148 PRESERVED)</span>
+
+                  <div className="p-2 rounded bg-[#101010] border border-[#2FB36F]/30 flex justify-between items-center">
+                    <span className="text-[#716F69]">AUTHORITY STATUS:</span>
+                    <span className="text-[#2FB36F] font-bold">AUTHORIZED (Autonomy expanded. Authority bound.)</span>
                   </div>
                 </div>
               </div>

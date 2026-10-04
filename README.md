@@ -4,9 +4,9 @@
 > **AI REQUESTS. AGENTPAY CONTROLS. ARC SETTLES.**  
 > *Autonomy may expand. Financial authority must remain bounded.*
 
-[![Build](https://img.shields.io/badge/Build-Passing%20(79%20routes)-emerald)](#)
-[![Tests](https://img.shields.io/badge/Tests-386%20%2F%20386%20Passing-emerald)](#)
-[![Invariants](https://img.shields.io/badge/Invariants-12%20Formally%20Verified-blue)](#)
+[![Build](https://img.shields.io/badge/Build-Passing%20(80%20routes)-emerald)](#)
+[![Tests](https://img.shields.io/badge/Tests-510%20Web%20%2B%20Full%20Suite%20Passing-emerald)](#)
+[![Invariants](https://img.shields.io/badge/Invariants-30%20Flagship%20Verified-blue)](#)
 [![Arc Network](https://img.shields.io/badge/Arc%20Network-Chain%20ID%205042-purple)](#)
 [![Execution Mode](https://img.shields.io/badge/Mode-Deterministic%20Simulation-amber)](#)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](#)
@@ -70,7 +70,7 @@ $$\text{AI CAN CHANGE THE PLAN. AGENTPAY CONTROLS THE MONEY.}$$
 
 ## 3. Flagship Demo: Autonomous Market Intelligence
 
-The flagship demonstration executes a 22-step autonomous Market Intelligence Mission (`msn_market_intel_01`):
+The flagship demonstration executes a 22-step autonomous Market Intelligence Mission (`msn_market_intel_001`):
 1. **Control Tower:** Real-time visibility into treasury liquidity, active policy guardrails, and Arc network consensus.
 2. **Autonomous Swarm:** Research, Market Data, Analysis, and Critic agents coordinate to satisfy a high-level brief.
 3. **Adversarial Block (HARD_DENY):** A malicious provider attempts an unapproved recipient substitution. The engine instantly aborts the payment with zero funds moved (`$0.00 USDC`).
@@ -95,7 +95,7 @@ The flagship demonstration executes a 22-step autonomous Market Intelligence Mis
 
 ```
 ├── apps/               # User-facing applications
-│   └── web/            # Control Tower & Mission Command dashboard (Next.js 14, 79 routes)
+│   └── web/            # Control Tower & Mission Command dashboard (Next.js 14, 80 routes)
 ├── services/           # Backend runtime engines
 │   ├── gateway/        # High-throughput API gateway, event bus, and AI provider layer (Go)
 │   ├── policy-engine/  # Sub-10µs deterministic constitutional policy engine (Rust)
@@ -167,28 +167,25 @@ npm run dev  # Listens on http://localhost:3000
 
 ---
 
-## 7. Machine-Checked Test Suite (386 / 386 PASS)
+## 7. Machine-Checked Test Suite (Full Stack Verified)
 
-Every commit is verified across 6 language environments with zero failures:
+Every commit is verified across multiple language environments with zero failures:
 ```bash
-# Rust Policy Engine (138 tests)
-cd services/policy-engine && cargo test
+# Frontend Web Suite & Data Authority Audit (510 tests across 154 suites + 80 routes)
+cd apps/web && npm test
+npx tsc --noEmit && npm run build
 
-# TypeScript Monorepo & Web Build (149 tests + 79 routes)
-npm test --workspaces
-npm run build --workspace=apps/web
+# Go Gateway & 30 Flagship E2E Invariants (25+ packages)
+cd services/gateway && go test -count=1 ./...
 
-# Foundry Smart Contracts (44 tests)
-cd contracts && forge test
+# TypeScript Client SDK (33 tests)
+cd packages/sdk-typescript && npm run build; npm test
 
-# Python AI Engine (26 tests)
-cd services/ai-engine && pytest tests/
+# Developer CLI (14 tests)
+cd packages/cli && npm run build; npm test
 
-# Go Treasury Engine (15 tests)
-cd services/treasury && go test ./...
-
-# CLI Replay Integration (14 tests)
-node packages/cli/dist/src/index.js demo mission
+# Python AI Engine SDK (26 tests)
+cd packages/sdk-python && python -m pytest
 ```
 
 ---
