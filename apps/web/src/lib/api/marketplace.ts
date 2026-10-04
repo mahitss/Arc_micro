@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import { getActiveDataMode, DataMode } from '../data-authority';
 
 export type PricingModel =
   | 'FIXED'
@@ -325,55 +326,74 @@ export const MOCK_ANOMALIES: MarketplaceAnomaly[] = [
 // API CLIENT CALLS WITH RESILIENT FALLBACKS
 // ----------------------------------------------------------------------------
 
-export async function getMarketplaceHealth(): Promise<MarketplaceHealth> {
+export async function getMarketplaceHealth(mode?: DataMode): Promise<MarketplaceHealth> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return MOCK_MARKETPLACE_HEALTH;
+  }
   try {
     return await apiRequest<MarketplaceHealth>('/api/marketplace/health');
-  } catch {
-    return MOCK_MARKETPLACE_HEALTH;
+  } catch (err) {
+    throw err;
   }
 }
 
-export async function getListings(capability?: string): Promise<ServiceListing[]> {
-  try {
-    const url = capability ? `/api/marketplace/listings?capability=${encodeURIComponent(capability)}` : '/api/marketplace/listings';
-    return await apiRequest<ServiceListing[]>(url);
-  } catch {
+export async function getListings(capability?: string, mode?: DataMode): Promise<ServiceListing[]> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
     if (capability) {
       return MOCK_SERVICE_LISTINGS.filter(l => l.capability_id === capability);
     }
     return MOCK_SERVICE_LISTINGS;
   }
+  try {
+    const url = capability ? `/api/marketplace/listings?capability=${encodeURIComponent(capability)}` : '/api/marketplace/listings';
+    return await apiRequest<ServiceListing[]>(url);
+  } catch (err) {
+    throw err;
+  }
 }
 
-export async function getListing(id: string): Promise<ServiceListing> {
-  try {
-    return await apiRequest<ServiceListing>(`/api/marketplace/listings/${encodeURIComponent(id)}`);
-  } catch {
+export async function getListing(id: string, mode?: DataMode): Promise<ServiceListing> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
     const found = MOCK_SERVICE_LISTINGS.find(l => l.listing_id === id);
     if (!found) throw new Error(`Listing not found: ${id}`);
     return found;
   }
-}
-
-export async function getOpportunities(): Promise<MarketplaceOpportunity[]> {
   try {
-    return await apiRequest<MarketplaceOpportunity[]>('/api/marketplace/opportunities');
-  } catch {
-    return MOCK_OPPORTUNITIES;
+    return await apiRequest<ServiceListing>(`/api/marketplace/listings/${encodeURIComponent(id)}`);
+  } catch (err) {
+    throw err;
   }
 }
 
-export async function getOpportunity(id: string): Promise<MarketplaceOpportunity> {
+export async function getOpportunities(mode?: DataMode): Promise<MarketplaceOpportunity[]> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return MOCK_OPPORTUNITIES;
+  }
   try {
-    return await apiRequest<MarketplaceOpportunity>(`/api/marketplace/opportunities/${encodeURIComponent(id)}`);
-  } catch {
+    return await apiRequest<MarketplaceOpportunity[]>('/api/marketplace/opportunities');
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function getOpportunity(id: string, mode?: DataMode): Promise<MarketplaceOpportunity> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
     const targetId = id === 'opp_live_01' ? 'opp_sim_01' : id;
     const found = MOCK_OPPORTUNITIES.find(o => o.opportunity_id === targetId || o.opportunity_id === id);
     if (!found) {
-      // Fallback return primary demo opportunity
       return MOCK_OPPORTUNITIES[0];
     }
     return found;
+  }
+  try {
+    return await apiRequest<MarketplaceOpportunity>(`/api/marketplace/opportunities/${encodeURIComponent(id)}`);
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -585,8 +605,16 @@ export async function compareProviders(capability: string, providerIds: string[]
   }
 }
 
-export async function getSecurityAnomalies(): Promise<MarketplaceAnomaly[]> {
-  return MOCK_ANOMALIES;
+export async function getSecurityAnomalies(mode?: DataMode): Promise<MarketplaceAnomaly[]> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return MOCK_ANOMALIES;
+  }
+  try {
+    return await apiRequest<MarketplaceAnomaly[]>('/api/marketplace/anomalies');
+  } catch {
+    return [];
+  }
 }
 
 export async function simulateMarketplace(req: MarketplaceSimulationRequest): Promise<MarketplaceSimulationResult> {

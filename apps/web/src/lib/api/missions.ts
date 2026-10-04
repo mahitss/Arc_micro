@@ -312,7 +312,7 @@ export async function fetchMissionTrace(id: string, options?: { useDemo?: boolea
             type: 'payment.executed',
             actor: 'agentvault:signer',
             timestamp: new Date(Date.now() - 3460000).toISOString(),
-            payload: { amount: '500000', tx_hash: '0x3f4a...e8b1', network: 'Arc' },
+            payload: { amount: '500000', tx_hash: null, network: 'Arc (Simulated)', execution_mode: 'SIMULATION' },
           },
           {
             id: 'evt_msn_completed_06',

@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import { getActiveDataMode, DataMode } from '../data-authority';
 
 export type CounterpartyIdentityStatus = 'UNVERIFIED' | 'IDENTIFIED' | 'VERIFIED' | 'SUSPENDED';
 
@@ -380,18 +381,18 @@ const FALLBACK_RECONCILIATION: ReconciliationItem[] = [
   {
     item_id: 'rec_audit_01',
     tenant_id: 'tenant_default',
-    obligation_id: 'ob_live_101',
-    payment_intent_id: 'pi_net_601',
+    obligation_id: 'ob_sim_101',
+    payment_intent_id: 'pi_sim_601',
     discrepancy_type: 'MATCHED',
     expected_amount: '6000000',
     observed_amount: '6000000',
     difference: '0',
     safe_next_action: 'NO_ACTION_REQUIRED',
     status: 'CONFIRMED',
-    tx_hash: '0x3a89f9e11244ac57201bce559ef17721dbcae3381a54109b8214ec0b87192841',
-    chain_id: 'arc-mainnet-1',
+    tx_hash: 'sim_tx_projected_settlement',
+    chain_id: '5042',
     evidence_verified: true,
-    notes: 'Exact match against Arc block #184291',
+    notes: 'Deterministic digital twin reconciliation (AgentVault undeployed on Arc Mainnet; 0 real settlements)',
     created_at: new Date(Date.now() - 4800000).toISOString(),
     reconciled_at: new Date(Date.now() - 4500000).toISOString(),
   },
@@ -435,16 +436,17 @@ const FALLBACK_DISPUTES: ClearingDispute[] = [
 // API METHODS
 // ---------------------------------------------------------------------------
 
-export async function fetchCounterparties(orgId?: string, tenantId?: string): Promise<EconomicCounterparty[]> {
+export async function fetchCounterparties(orgId?: string, tenantId?: string, mode?: DataMode): Promise<EconomicCounterparty[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
     const params = new URLSearchParams();
     if (orgId) params.append('organization_id', orgId);
     if (tenantId) params.append('tenant_id', tenantId);
     const qs = params.toString() ? `?${params.toString()}` : '';
     const res = await apiRequest<any>(`/api/economy/counterparties${qs}`);
-    return res.counterparties || (Array.isArray(res) ? res : FALLBACK_COUNTERPARTIES);
+    return res.counterparties || (Array.isArray(res) ? res : currentMode === 'SIMULATION' ? FALLBACK_COUNTERPARTIES : []);
   } catch {
-    return FALLBACK_COUNTERPARTIES;
+    return currentMode === 'SIMULATION' ? FALLBACK_COUNTERPARTIES : [];
   }
 }
 
@@ -472,16 +474,17 @@ export async function fetchCounterparty(id: string): Promise<EconomicCounterpart
   }
 }
 
-export async function fetchObligations(orgId?: string, tenantId?: string): Promise<EconomicObligationRecord[]> {
+export async function fetchObligations(orgId?: string, tenantId?: string, mode?: DataMode): Promise<EconomicObligationRecord[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
     const params = new URLSearchParams();
     if (orgId) params.append('organization_id', orgId);
     if (tenantId) params.append('tenant_id', tenantId);
     const qs = params.toString() ? `?${params.toString()}` : '';
     const res = await apiRequest<any>(`/api/economy/obligations${qs}`);
-    return res.obligations || (Array.isArray(res) ? res : FALLBACK_OBLIGATIONS);
+    return res.obligations || (Array.isArray(res) ? res : currentMode === 'SIMULATION' ? FALLBACK_OBLIGATIONS : []);
   } catch {
-    return FALLBACK_OBLIGATIONS;
+    return currentMode === 'SIMULATION' ? FALLBACK_OBLIGATIONS : [];
   }
 }
 
@@ -510,11 +513,14 @@ export async function fetchObligation(id: string): Promise<EconomicObligationRec
   }
 }
 
-export async function fetchNettingProposals(orgId?: string): Promise<MultiPartyNettingProposal[]> {
+export async function fetchNettingProposals(orgId?: string, mode?: DataMode): Promise<MultiPartyNettingProposal[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
-    return FALLBACK_NETTING_PROPOSALS;
+    const qs = orgId ? `?organization_id=${encodeURIComponent(orgId)}` : '';
+    const res = await apiRequest<any>(`/api/economy/netting${qs}`);
+    return res.proposals || (Array.isArray(res) ? res : currentMode === 'SIMULATION' ? FALLBACK_NETTING_PROPOSALS : []);
   } catch {
-    return FALLBACK_NETTING_PROPOSALS;
+    return currentMode === 'SIMULATION' ? FALLBACK_NETTING_PROPOSALS : [];
   }
 }
 
@@ -539,33 +545,38 @@ export async function proposeNetting(data: {
   }
 }
 
-export async function fetchSettlementBatches(orgId?: string): Promise<SettlementBatch[]> {
+export async function fetchSettlementBatches(orgId?: string, mode?: DataMode): Promise<SettlementBatch[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
     const qs = orgId ? `?organization_id=${encodeURIComponent(orgId)}` : '';
     const res = await apiRequest<any>(`/api/economy/settlements${qs}`);
-    return res.batches || (Array.isArray(res) ? res : FALLBACK_BATCHES);
+    return res.batches || (Array.isArray(res) ? res : currentMode === 'SIMULATION' ? FALLBACK_BATCHES : []);
   } catch {
-    return FALLBACK_BATCHES;
+    return currentMode === 'SIMULATION' ? FALLBACK_BATCHES : [];
   }
 }
 
-export async function fetchSettlementBatch(id: string): Promise<SettlementBatch> {
+export async function fetchSettlementBatch(id: string, mode?: DataMode): Promise<SettlementBatch | null> {
+  const currentMode = mode || getActiveDataMode();
   try {
     return await apiRequest<SettlementBatch>(`/api/economy/settlements/${encodeURIComponent(id)}`);
   } catch {
-    const found = FALLBACK_BATCHES.find(b => b.batch_id === id);
-    if (found) return found;
-    return FALLBACK_BATCHES[0];
+    if (currentMode === 'SIMULATION') {
+      const found = FALLBACK_BATCHES.find(b => b.batch_id === id);
+      return found || FALLBACK_BATCHES[0];
+    }
+    return null;
   }
 }
 
-export async function fetchReconciliationItems(orgId?: string): Promise<ReconciliationItem[]> {
+export async function fetchReconciliationItems(orgId?: string, mode?: DataMode): Promise<ReconciliationItem[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
     const qs = orgId ? `?organization_id=${encodeURIComponent(orgId)}` : '';
     const res = await apiRequest<any>(`/api/economy/reconciliation${qs}`);
-    return res.items || (Array.isArray(res) ? res : FALLBACK_RECONCILIATION);
+    return res.items || (Array.isArray(res) ? res : currentMode === 'SIMULATION' ? FALLBACK_RECONCILIATION : []);
   } catch {
-    return FALLBACK_RECONCILIATION;
+    return currentMode === 'SIMULATION' ? FALLBACK_RECONCILIATION : [];
   }
 }
 

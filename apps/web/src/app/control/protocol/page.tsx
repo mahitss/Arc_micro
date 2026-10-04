@@ -12,8 +12,11 @@ import {
   ProtocolTrafficEntry,
   SecurityIncidentReport,
 } from '../../../lib/api/protocol';
+import { getActiveDataMode, setActiveDataMode, DataMode } from '@/lib/data-authority';
+import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
 
 export default function ProtocolControlOverviewPage() {
+  const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [snapshot, setSnapshot] = useState<ProtocolControlTowerSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,15 +40,10 @@ export default function ProtocolControlOverviewPage() {
   const [simPrice, setSimPrice] = useState('75.00');
   const [simResult, setSimResult] = useState<any>(null);
 
-  useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function loadData() {
+  async function loadData(modeToUse?: DataMode) {
+    const activeMode = modeToUse || dataMode;
     try {
-      const snap = await fetchProtocolSnapshot();
+      const snap = await fetchProtocolSnapshot(activeMode);
       setSnapshot(snap);
       setError(null);
     } catch (err: any) {
@@ -55,6 +53,21 @@ export default function ProtocolControlOverviewPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const initialMode = getActiveDataMode();
+    setDataMode(initialMode);
+    loadData(initialMode);
+    const interval = setInterval(() => loadData(getActiveDataMode()), 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleToggleSimulation = (enableSim: boolean) => {
+    const newMode: DataMode = enableSim ? 'SIMULATION' : 'LIVE';
+    setDataMode(newMode);
+    setActiveDataMode(newMode);
+    loadData(newMode);
+  };
 
   const agents: ProtocolAgentManifest[] = snapshot?.agents?.items || [];
   const contracts: ProtocolContract[] = snapshot?.contracts?.items || [];
@@ -143,30 +156,36 @@ export default function ProtocolControlOverviewPage() {
     );
   }
 
-  // Error state with honest retry
+  // Error state with honest retry or simulation option
   if (error && !snapshot) {
     return (
       <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8 flex flex-col items-center justify-center font-mono">
-        <div className="p-6 rounded-xl border border-[#D85C5C]/40 bg-[#141414] max-w-md w-full text-center">
-          <div className="text-sm font-bold text-[#D85C5C] mb-2">Protocol State Unavailable</div>
-          <p className="text-xs text-[#716F69] mb-4">{error}</p>
-          <button
-            onClick={() => {
-              setLoading(true);
-              loadData();
-            }}
-            className="px-4 py-2 rounded-lg text-xs font-bold bg-[#D6A83A] hover:bg-[#c49731] text-[#080808] transition"
-          >
-            Retry Connection
-          </button>
+        <div className="p-6 rounded-xl border border-[#D85C5C]/40 bg-[#141414] max-w-md w-full text-center space-y-4">
+          <div className="text-sm font-bold text-[#D85C5C]">Protocol State Unavailable</div>
+          <p className="text-xs text-[#716F69]">{error}</p>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => {
+                setLoading(true);
+                loadData(dataMode);
+              }}
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-[#D85C5C]/20 border border-[#D85C5C]/40 text-[#F2F0EA] hover:bg-[#D85C5C]/30 transition"
+            >
+              Retry Connection
+            </button>
+            <button
+              onClick={() => handleToggleSimulation(true)}
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-[#D6A83A] hover:bg-[#c49731] text-[#080808] transition"
+            >
+              Load Simulation Snapshot
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   const isLive = snapshot?.mode?.toLowerCase() === 'live';
-  const modeLabel = isLive ? 'LIVE — VERIFIED SYSTEM STATE' : 'PROTOCOL SIMULATION';
-  const fundsLabel = snapshot?.funds_moved ? 'FUNDS MOVED' : 'NO FUNDS MOVED';
 
   return (
     <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-6 md:p-8">
@@ -179,11 +198,12 @@ export default function ProtocolControlOverviewPage() {
               <span className="text-xs font-semibold uppercase tracking-wider text-[#D6A83A]">
                 Autonomous Economic Protocol v1.0
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141414] text-[#D6A83A] border border-[#D6A83A]/30">
-                {modeLabel}
-              </span>
+              <DataAuthorityBadge provenance={isLive ? 'LIVE' : 'SIMULATION — NO FUNDS MOVED'} />
               <span className="px-2 py-0.5 rounded text-[10px] font-mono text-[#716F69] border border-[#222222]">
-                {fundsLabel}
+                {snapshot?.funds_moved ? 'FUNDS MOVED' : 'NO FUNDS MOVED'}
+              </span>
+              <span className="text-[10px] font-mono text-[#716F69]">
+                {isLive ? 'LIVE — VERIFIED SYSTEM STATE' : (snapshot?.mode ? `${snapshot.mode} · PROTOCOL SIMULATION` : 'PROTOCOL SIMULATION')}
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#F2F0EA] mt-1.5">
@@ -194,6 +214,16 @@ export default function ProtocolControlOverviewPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleToggleSimulation(dataMode !== 'SIMULATION')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition ${
+                dataMode === 'SIMULATION'
+                  ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30'
+                  : 'bg-[#141414] text-[#B0ADA5] border-[#222222] hover:text-[#F2F0EA]'
+              }`}
+            >
+              {dataMode === 'SIMULATION' ? 'SIMULATION ACTIVE' : 'ENABLE SIMULATION'}
+            </button>
             <button
               onClick={() => {
                 setShowPrecheckModal(true);

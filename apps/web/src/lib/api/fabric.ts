@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import { getActiveDataMode, DataMode } from '../data-authority';
 
 export type ObjectiveStatus =
   | 'DRAFT'
@@ -267,8 +268,8 @@ export const FALLBACK_TRACE: UnifiedEconomicTrace = {
     { stage: 'RESERVATION', id: 'res_liq_01', timestamp: new Date(Date.now() - 800000).toISOString(), status: 'COMMITTED', source_of_truth: 'TREASURY_LEDGER' },
     { stage: 'PAYMENT', id: 'pi_fabric_01', timestamp: new Date(Date.now() - 700000).toISOString(), status: 'AUTHORIZED', source_of_truth: 'PAYMENT_PIPELINE' },
     { stage: 'EXECUTION', id: 'exec_worker_01', timestamp: new Date(Date.now() - 600000).toISOString(), status: 'DISPATCHED', source_of_truth: 'WORKER_LEASES' },
-    { stage: 'AGENTVAULT', id: 'vault_0x5042', timestamp: new Date(Date.now() - 500000).toISOString(), status: 'HOLD_CONFIRMED', source_of_truth: 'SOLIDITY_VAULT' },
-    { stage: 'ARC', id: 'arc_tx_0x99281a', timestamp: new Date(Date.now() - 400000).toISOString(), status: 'CONFIRMED_BLOCK_184920', source_of_truth: 'ARC_SETTLEMENT' },
+    { stage: 'AGENTVAULT', id: 'AgentVault (Simulated)', timestamp: new Date(Date.now() - 500000).toISOString(), status: 'HOLD_SIMULATED', source_of_truth: 'SOLIDITY_VAULT_SIM' },
+    { stage: 'ARC', id: 'Arc (Simulated)', timestamp: new Date(Date.now() - 400000).toISOString(), status: 'SIMULATION_NOT_BROADCAST', source_of_truth: 'ARC_SETTLEMENT_SIM' },
     { stage: 'RECEIPT', id: 'rcpt_7718', timestamp: new Date(Date.now() - 300000).toISOString(), status: 'VERIFIED', source_of_truth: 'CLEARINGHOUSE' },
     { stage: 'RECONCILIATION', id: 'recon_batch_12', timestamp: new Date(Date.now() - 200000).toISOString(), status: 'BALANCED', source_of_truth: 'RECON_ENGINE' },
     { stage: 'OBSERVATION', id: 'obs_task_01', timestamp: new Date(Date.now() - 100000).toISOString(), status: 'RECORDED', source_of_truth: 'INTELLIGENCE' },
@@ -343,7 +344,14 @@ export function normalizeObjective(raw: any): EconomicObjective {
   };
 }
 
-export async function fetchObjectives(params?: { status?: string; tenant_id?: string }): Promise<EconomicObjective[]> {
+export async function fetchObjectives(
+  params?: { status?: string; tenant_id?: string },
+  modeOverride?: DataMode
+): Promise<EconomicObjective[]> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    return FALLBACK_OBJECTIVES.map(normalizeObjective);
+  }
   try {
     const qs = new URLSearchParams();
     if (params?.status) qs.append('status', params.status);
@@ -355,22 +363,26 @@ export async function fetchObjectives(params?: { status?: string; tenant_id?: st
     }
     return [];
   } catch (err) {
-    console.warn('Backend unavailable, using fallback fixtures:', err);
-    return FALLBACK_OBJECTIVES.map(normalizeObjective);
+    console.warn('[DataAuthority:LIVE] /v1/fabric/objectives unavailable, returning empty list:', err);
+    return [];
   }
 }
 
-export async function fetchObjective(id: string): Promise<EconomicObjective> {
+export async function fetchObjective(id: string, modeOverride?: DataMode): Promise<EconomicObjective> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    const found = FALLBACK_OBJECTIVES.find((o) => o.objective_id === id);
+    if (found) return normalizeObjective(found);
+    return normalizeObjective(FALLBACK_OBJECTIVES[0]);
+  }
   try {
     const res = await apiRequest<{ objective: any }>(`/v1/fabric/objectives/${id}`);
     if (res && res.objective) {
       return normalizeObjective(res.objective);
     }
-    const found = FALLBACK_OBJECTIVES.find((o) => o.objective_id === id);
-    return normalizeObjective(found || FALLBACK_OBJECTIVES[0]);
-  } catch {
-    const found = FALLBACK_OBJECTIVES.find((o) => o.objective_id === id);
-    return normalizeObjective(found || FALLBACK_OBJECTIVES[0]);
+    throw new Error(`Objective ${id} not found`);
+  } catch (err) {
+    throw new Error(`Live objective ${id} unavailable: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -572,12 +584,28 @@ export async function cancelObjective(id: string, reason?: string, dryRun: boole
   }
 }
 
-export async function fetchObjectiveTrace(id: string): Promise<UnifiedEconomicTrace> {
+export async function fetchObjectiveTrace(id: string, modeOverride?: DataMode): Promise<UnifiedEconomicTrace> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    return { ...FALLBACK_TRACE, objective_id: id };
+  }
   try {
     const res = await apiRequest<{ trace: UnifiedEconomicTrace }>(`/v1/fabric/objectives/${id}/trace`);
-    return res.trace || FALLBACK_TRACE;
+    return res.trace || {
+      trace_id: `trc_${id}`,
+      objective_id: id,
+      tenant_id: 'tenant_default',
+      started_at: new Date().toISOString(),
+      nodes: [],
+    };
   } catch {
-    return { ...FALLBACK_TRACE, objective_id: id };
+    return {
+      trace_id: `trc_${id}`,
+      objective_id: id,
+      tenant_id: 'tenant_default',
+      started_at: new Date().toISOString(),
+      nodes: [],
+    };
   }
 }
 
@@ -620,35 +648,63 @@ export async function fetchObjectiveState(id: string): Promise<any> {
   }
 }
 
-export async function fetchAutonomyMetrics(): Promise<AutonomyMetrics> {
+export async function fetchAutonomyMetrics(modeOverride?: DataMode): Promise<AutonomyMetrics> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    return FALLBACK_METRICS;
+  }
   try {
     const res = await apiRequest<any>('/v1/fabric/metrics');
-    if (!res) return FALLBACK_METRICS;
+    if (!res) {
+      return {
+        automation_rate: 0,
+        recovery_rate: 0,
+        automation_percentage: 0,
+        recovery_percentage: 0,
+        human_escalations: 0,
+        policy_blocks: 0,
+        financial_actions: 0,
+        simulated_actions: 0,
+        total_objectives: 0,
+        active_objectives: 0,
+      };
+    }
     const autoPct =
       typeof res.automation_percentage === 'number'
         ? res.automation_percentage
         : typeof res.automation_rate === 'number'
         ? (res.automation_rate <= 1 ? res.automation_rate * 100 : res.automation_rate)
-        : FALLBACK_METRICS.automation_rate * 100;
+        : 0;
     const recPct =
       typeof res.recovery_percentage === 'number'
         ? res.recovery_percentage
         : typeof res.recovery_rate === 'number'
         ? (res.recovery_rate <= 1 ? res.recovery_rate * 100 : res.recovery_rate)
-        : FALLBACK_METRICS.recovery_rate * 100;
+        : 0;
     return {
       automation_rate: autoPct / 100,
       recovery_rate: recPct / 100,
       automation_percentage: autoPct,
       recovery_percentage: recPct,
-      human_escalations: res.human_escalation_count ?? res.human_escalations ?? FALLBACK_METRICS.human_escalations,
-      policy_blocks: res.policy_block_count ?? res.policy_blocks ?? FALLBACK_METRICS.policy_blocks,
-      financial_actions: res.financial_action_count ?? res.financial_actions ?? FALLBACK_METRICS.financial_actions,
-      simulated_actions: res.simulated_action_count ?? res.simulated_actions ?? FALLBACK_METRICS.simulated_actions,
-      total_objectives: res.total_objectives,
-      active_objectives: res.active_objectives,
+      human_escalations: res.human_escalation_count ?? res.human_escalations ?? 0,
+      policy_blocks: res.policy_block_count ?? res.policy_blocks ?? 0,
+      financial_actions: res.financial_action_count ?? res.financial_actions ?? 0,
+      simulated_actions: res.simulated_action_count ?? res.simulated_actions ?? 0,
+      total_objectives: res.total_objectives ?? 0,
+      active_objectives: res.active_objectives ?? 0,
     };
   } catch {
-    return FALLBACK_METRICS;
+    return {
+      automation_rate: 0,
+      recovery_rate: 0,
+      automation_percentage: 0,
+      recovery_percentage: 0,
+      human_escalations: 0,
+      policy_blocks: 0,
+      financial_actions: 0,
+      simulated_actions: 0,
+      total_objectives: 0,
+      active_objectives: 0,
+    };
   }
 }

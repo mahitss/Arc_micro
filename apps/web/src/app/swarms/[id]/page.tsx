@@ -21,6 +21,8 @@ import type {
   TaskNode,
 } from '../../../lib/api/types';
 import { LiveSwarmDAGVisualizer } from '../../../components/LiveSwarmDAGVisualizer';
+import { DataAuthorityBadge } from '../../../components/DataAuthorityBadge';
+import { getActiveDataMode, setActiveDataMode, DataMode } from '../../../lib/data-authority';
 
 function formatUsdc(amountBaseUnits?: string): string {
   if (!amountBaseUnits) return '0.00 USDC';
@@ -33,6 +35,7 @@ export default function SwarmDetailPage() {
   const params = useParams();
   const swarmId = params.id as string;
 
+  const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [swarm, setSwarm] = useState<Swarm | null>(null);
   const [tasks, setTasks] = useState<TaskNode[]>([]);
   const [graph, setGraph] = useState<SwarmGraph | undefined>(undefined);
@@ -41,14 +44,16 @@ export default function SwarmDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadSwarmData = async () => {
+  const loadSwarmData = async (modeToUse: DataMode = dataMode) => {
+    setLoading(true);
+    setError(null);
     try {
       const [s, t, g, tr, r] = await Promise.all([
-        getSwarm(swarmId),
-        getSwarmTasks(swarmId),
-        getSwarmGraph(swarmId),
-        getSwarmTrace(swarmId),
-        getSwarmRisk(swarmId),
+        getSwarm(swarmId, modeToUse),
+        getSwarmTasks(swarmId, modeToUse),
+        getSwarmGraph(swarmId, modeToUse),
+        getSwarmTrace(swarmId, modeToUse),
+        getSwarmRisk(swarmId, modeToUse),
       ]);
       setSwarm(s);
       setTasks(t);
@@ -63,8 +68,10 @@ export default function SwarmDetailPage() {
   };
 
   useEffect(() => {
+    const initialMode = getActiveDataMode();
+    setDataMode(initialMode);
     if (swarmId) {
-      loadSwarmData();
+      loadSwarmData(initialMode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [swarmId]);
@@ -110,13 +117,28 @@ export default function SwarmDetailPage() {
 
   if (error || !swarm) {
     return (
-      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8">
-        <Link href="/swarms" className="text-sm font-mono text-[#D6A83A] hover:underline mb-4 inline-block">
+      <div className="min-h-screen bg-[#080808] text-[#F2F0EA] p-8 space-y-4">
+        <Link href="/swarms" className="text-sm font-mono text-[#D6A83A] hover:underline inline-block">
           ← Back to Swarms
         </Link>
-        <div className="rounded-xl bg-[#141414] border border-[#D85C5C]/40 p-6 text-[#D85C5C]">
-          <h2 className="text-lg font-bold mb-2">Error Loading Swarm</h2>
-          <p className="text-sm">{error || 'Swarm not found'}</p>
+        <div className="rounded-xl bg-[#141414] border border-[#D85C5C]/40 p-6 text-[#D85C5C] space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold">Swarm Unavailable in Live Registry</h2>
+            <DataAuthorityBadge provenance="UNAVAILABLE" />
+          </div>
+          <p className="text-sm text-[#B0ADA5]">{error || `Swarm ${swarmId} was not found on the live backend cluster.`}</p>
+          {dataMode === 'LIVE' && (
+            <button
+              onClick={() => {
+                setActiveDataMode('SIMULATION');
+                setDataMode('SIMULATION');
+                loadSwarmData('SIMULATION');
+              }}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30 hover:bg-[#D6A83A]/20 transition-colors"
+            >
+              LOAD IN SIMULATION MODE
+            </button>
+          )}
         </div>
       </div>
     );
@@ -133,7 +155,10 @@ export default function SwarmDetailPage() {
           <span>←</span>
           <span>Back to Swarms Control Plane</span>
         </Link>
-        <span className="text-xs font-mono text-[#50504C]">ID: {swarm.id}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-[#50504C]">ID: {swarm.id}</span>
+          <DataAuthorityBadge provenance={swarm.id.includes('demo') ? 'DEMO FIXTURE' : (dataMode === 'SIMULATION' ? 'SIMULATION — NO FUNDS MOVED' : 'LIVE')} />
+        </div>
       </div>
 
       {/* Live Swarm DAG Visualizer */}

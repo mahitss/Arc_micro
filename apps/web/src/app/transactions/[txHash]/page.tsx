@@ -9,6 +9,8 @@ import { CopyButton } from '../../../components/CopyButton';
 import { fetchTransactions } from '../../../lib/api/transactions';
 import { TransactionRecord } from '../../../lib/api/types';
 import { DEMO_TRANSACTIONS } from '../../../lib/api/demo_fixtures';
+import { getActiveDataMode } from '@/lib/data-authority';
+import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -27,15 +29,23 @@ export default function TransactionDetailPage() {
         );
         if (found) {
           setTx(found);
-        } else {
-          // Fallback to demo fixture
+        } else if (getActiveDataMode() === 'SIMULATION') {
           const demoFound = DEMO_TRANSACTIONS.find(
             (t) => t.transaction_hash === txHash || t.intent_id === txHash
           );
-          setTx(demoFound || DEMO_TRANSACTIONS[0]);
+          setTx(demoFound || null);
+        } else {
+          setTx(null);
         }
       } catch {
-        setTx(DEMO_TRANSACTIONS[0]);
+        if (getActiveDataMode() === 'SIMULATION') {
+          const demoFound = DEMO_TRANSACTIONS.find(
+            (t) => t.transaction_hash === txHash || t.intent_id === txHash
+          );
+          setTx(demoFound || null);
+        } else {
+          setTx(null);
+        }
       } finally {
         setLoading(false);
       }
@@ -47,7 +57,32 @@ export default function TransactionDetailPage() {
     return <div className="h-64 rounded-2xl bg-[#101010] border border-[#222222] animate-pulse" />;
   }
 
-  if (!tx) return null;
+  if (!tx) {
+    return (
+      <div className="p-16 text-center rounded-2xl bg-[#101010] border border-[#222222] space-y-4 max-w-2xl mx-auto my-12 font-mono">
+        <div className="flex justify-center">
+          <DataAuthorityBadge provenance="UNAVAILABLE" />
+        </div>
+        <div className="text-lg font-bold text-[#F2F0EA] tracking-wide uppercase">
+          Transaction Not Found
+        </div>
+        <p className="text-xs text-[#716F69] max-w-md mx-auto leading-relaxed break-all">
+          No authoritative transaction record exists for identifier: <span className="text-[#D6A83A]">{txHash}</span>.
+        </p>
+        <p className="text-[11px] text-[#50504C]">
+          Real Arc settlements remain 0 while AgentVault is undeployed.
+        </p>
+        <div className="pt-2">
+          <Link
+            href="/transactions"
+            className="px-4 py-2 rounded-lg bg-[#141414] border border-[#222222] text-xs text-[#D6A83A] hover:border-[#D6A83A] transition"
+          >
+            ← Return to Transactions
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const amountNum = tx.amount ? Number(tx.amount) / 1_000_000 : null;
   const amountStr = amountNum !== null ? `$${amountNum.toFixed(2)} USDC` : '0.18 USDC';

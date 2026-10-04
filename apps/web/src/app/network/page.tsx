@@ -15,10 +15,13 @@ import {
   type NetworkGraph,
 } from '@/lib/api/network';
 import { NetworkTopologyGraph } from '@/components/NetworkTopologyGraph';
+import { getActiveDataMode, setActiveDataMode, DataMode } from '@/lib/data-authority';
+import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
 
 type ActiveTab = 'directory' | 'contracts' | 'graph' | 'disputes';
 
 export default function OpenAgentNetworkPage() {
+  const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [activeTab, setActiveTab] = useState<ActiveTab>('directory');
   const [agents, setAgents] = useState<DiscoveredAgent[]>([]);
   const [contracts, setContracts] = useState<AgentServiceContract[]>([]);
@@ -32,25 +35,38 @@ export default function OpenAgentNetworkPage() {
   const [selectedAgent, setSelectedAgent] = useState<DiscoveredAgent | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [agList, cList, dList, g] = await Promise.all([
-          fetchNetworkAgents(),
-          fetchContracts(),
-          fetchDisputes(),
-          fetchNetworkGraph(),
-        ]);
-        setAgents(agList);
-        setContracts(cList);
-        setDisputes(dList);
-        setGraph(g);
-      } catch (err) {
-        console.error('Failed to load network data:', err);
-      }
+  async function loadData(modeToUse: DataMode) {
+    setLoading(true);
+    try {
+      const [agList, cList, dList, g] = await Promise.all([
+        fetchNetworkAgents(undefined, modeToUse),
+        fetchContracts(modeToUse),
+        fetchDisputes(modeToUse),
+        fetchNetworkGraph(modeToUse),
+      ]);
+      setAgents(agList);
+      setContracts(cList);
+      setDisputes(dList);
+      setGraph(g);
+    } catch (err) {
+      console.error('Failed to load network data:', err);
+    } finally {
+      setLoading(false);
     }
-    loadData();
+  }
+
+  useEffect(() => {
+    const initialMode = getActiveDataMode();
+    setDataMode(initialMode);
+    loadData(initialMode);
   }, []);
+
+  const handleToggleSimulation = (enableSim: boolean) => {
+    const newMode: DataMode = enableSim ? 'SIMULATION' : 'LIVE';
+    setDataMode(newMode);
+    setActiveDataMode(newMode);
+    loadData(newMode);
+  };
 
   // Filtered Agents
   const filteredAgents = useMemo(() => {
@@ -67,35 +83,36 @@ export default function OpenAgentNetworkPage() {
     });
   }, [agents, searchQuery, minTrustScore]);
 
-  // Handle Fund Contract (Simulation)
+  // Handle Fund Contract
   const handleFund = async (contractId: string) => {
     try {
-      const res = await fundContract(contractId);
+      const res = await fundContract(contractId, dataMode);
       setContracts((prev) =>
         prev.map((c) =>
           c.contract_id === contractId ? { ...c, state: 'FUNDED', payment_intent_id: res.payment_intent_id } : c
         )
       );
-      setActionSuccessMsg(`[SIMULATION] Contract ${contractId} funded. Payment intent created: ${res.payment_intent_id} (Zero real funds moved)`);
+      setActionSuccessMsg(`[${dataMode}] Contract ${contractId} funded. Payment intent created: ${res.payment_intent_id}`);
       setTimeout(() => setActionSuccessMsg(null), 5000);
     } catch (err: any) {
       alert(`Funding failed: ${err.message}`);
     }
   };
 
-  // Handle Verify Deliverable (Simulation)
+  // Handle Verify Deliverable
   const handleVerify = async (contractId: string) => {
     try {
       const rep = await verifyDeliverable(
         contractId,
         { summary: 'Deliverable completed with zero invariant violations', score: 100 },
-        '250000'
+        '250000',
+        dataMode
       );
       if (rep.passed) {
         setContracts((prev) =>
           prev.map((c) => (c.contract_id === contractId ? { ...c, state: 'COMPLETED' } : c))
         );
-        setActionSuccessMsg(`[SIMULATION] Contract ${contractId} deliverable verified (Score: ${rep.score_basis_points / 100}%)!`);
+        setActionSuccessMsg(`[${dataMode}] Contract ${contractId} deliverable verified (Score: ${rep.score_basis_points / 100}%)!`);
         setTimeout(() => setActionSuccessMsg(null), 5000);
       }
     } catch (err: any) {
@@ -114,9 +131,7 @@ export default function OpenAgentNetworkPage() {
                 OPEN AGENT NETWORK
               </span>
               <span className="text-xs font-mono text-[#716F69]">A2A PROTOCOL READY · RFC 002</span>
-              <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-md bg-[#191919] text-[#D6A83A] border border-[#333333]">
-                NETWORK SIMULATION
-              </span>
+              <DataAuthorityBadge provenance={dataMode === 'SIMULATION' ? 'SIMULATION — NO FUNDS MOVED' : 'LIVE'} />
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F2F0EA] tracking-tight">
               Agent Discovery, Trust & Peer Settlement
@@ -126,7 +141,17 @@ export default function OpenAgentNetworkPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleToggleSimulation(dataMode !== 'SIMULATION')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-colors ${
+                dataMode === 'SIMULATION'
+                  ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30'
+                  : 'bg-[#151515] text-[#B0ADA5] border-[#2A2A2A] hover:text-[#F2F0EA]'
+              }`}
+            >
+              {dataMode === 'SIMULATION' ? 'SIMULATION ACTIVE' : 'ENABLE SIMULATION'}
+            </button>
             <Link
               href="/simulator"
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] transition-colors"
@@ -155,7 +180,7 @@ export default function OpenAgentNetworkPage() {
             <span className="text-[#716F69]">PARTICIPANTS:</span>
             <span className="flex items-center gap-1.5 text-[#D6A83A]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
-              SIMULATED (DEMO SEED)
+              {dataMode === 'SIMULATION' ? 'SIMULATED (DEMO SEED)' : `${agents.length} LIVE AGENTS`}
             </span>
           </div>
           <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#141414] border border-[#262626]">
@@ -185,10 +210,10 @@ export default function OpenAgentNetworkPage() {
         {/* Tab Navigation */}
         <div className="flex flex-wrap items-center gap-2 border-b border-[#222222] pb-2">
           {[
-            { id: 'directory', label: 'Peer Directory & Trust', icon: '🔍', count: `${agents.length} Simulated` },
-            { id: 'contracts', label: 'Active Contracts & Bounded Delegation', icon: '📜', count: `${contracts.length} Simulated` },
-            { id: 'graph', label: 'Network Topology Graph', icon: '🕸️', count: `${graph.nodes.length} Simulated Nodes` },
-            { id: 'disputes', label: 'Disputes & Audits', icon: '⚖️', count: `${disputes.length} Simulated` },
+            { id: 'directory', label: 'Peer Directory & Trust', icon: '🔍', count: `${agents.length} ${dataMode === 'SIMULATION' ? 'Simulated' : 'Live'}` },
+            { id: 'contracts', label: 'Active Contracts & Bounded Delegation', icon: '📜', count: `${contracts.length} ${dataMode === 'SIMULATION' ? 'Simulated' : 'Live'}` },
+            { id: 'graph', label: 'Network Topology Graph', icon: '🕸️', count: `${graph.nodes.length} ${dataMode === 'SIMULATION' ? 'Simulated Nodes' : 'Live Nodes'}` },
+            { id: 'disputes', label: 'Disputes & Audits', icon: '⚖️', count: `${disputes.length} ${dataMode === 'SIMULATION' ? 'Simulated' : 'Live'}` },
           ].map((t) => (
             <button
               key={t.id}
@@ -250,18 +275,29 @@ export default function OpenAgentNetworkPage() {
             {filteredAgents.length === 0 ? (
               <div className="p-12 text-center rounded-2xl bg-[#101010] border border-[#222222] space-y-3">
                 <div className="text-sm font-bold text-[#F2F0EA] tracking-wide uppercase">
-                  NO AGENTS MATCH FILTER
+                  {agents.length === 0 ? 'NO LIVE AGENTS REGISTERED' : 'NO AGENTS MATCH FILTER'}
                 </div>
                 <p className="text-xs text-[#B0ADA5] max-w-md mx-auto leading-relaxed">
-                  No simulated network agents meet your search query or minimum trust score threshold ({minTrustScore / 100}%).
+                  {agents.length === 0
+                    ? 'No external autonomous counterparties are currently registered in live mode. You can enable simulation mode to explore deterministic network agents and topology.'
+                    : `No network agents meet your search query or minimum trust score threshold (${minTrustScore / 100}%).`}
                 </p>
-                <div className="pt-2">
-                  <button
-                    onClick={() => { setSearchQuery(''); setMinTrustScore(5000); }}
-                    className="h-8 px-4 bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer"
-                  >
-                    Reset Filters
-                  </button>
+                <div className="pt-2 flex justify-center gap-3">
+                  {agents.length === 0 && dataMode === 'LIVE' ? (
+                    <button
+                      onClick={() => handleToggleSimulation(true)}
+                      className="h-8 px-4 bg-[#D6A83A]/10 hover:bg-[#D6A83A]/20 text-[#D6A83A] border border-[#D6A83A]/30 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer"
+                    >
+                      Enable Simulation Mode
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setSearchQuery(''); setMinTrustScore(5000); }}
+                      className="h-8 px-4 bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer"
+                    >
+                      Reset Filters
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
@@ -294,7 +330,7 @@ export default function OpenAgentNetworkPage() {
 
                           <div className="flex flex-col items-end gap-1">
                             <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#191919] text-[#D6A83A] border border-[#333333]">
-                              DEMO AGENT
+                              {dataMode === 'SIMULATION' ? 'DEMO AGENT' : 'LIVE AGENT'}
                             </span>
                             <span
                               className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
@@ -303,7 +339,7 @@ export default function OpenAgentNetworkPage() {
                                   : 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30'
                               }`}
                             >
-                              {a.identity.availability} (sim)
+                              {a.identity.availability} {dataMode === 'SIMULATION' ? '(sim)' : ''}
                             </span>
                           </div>
                         </div>

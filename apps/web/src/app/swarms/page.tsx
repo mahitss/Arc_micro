@@ -10,6 +10,8 @@ import {
   startSwarm,
 } from '../../lib/api/swarms';
 import type { SimulateSwarmResponse, Swarm } from '../../lib/api/types';
+import { DataAuthorityBadge } from '../../components/DataAuthorityBadge';
+import { getActiveDataMode, setActiveDataMode, DataMode } from '../../lib/data-authority';
 
 function formatUsdc(amountBaseUnits?: string): string {
   if (!amountBaseUnits) return '0.00 USDC';
@@ -19,6 +21,7 @@ function formatUsdc(amountBaseUnits?: string): string {
 }
 
 export default function SwarmsIndexPage() {
+  const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [swarms, setSwarms] = useState<Swarm[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
@@ -36,21 +39,32 @@ export default function SwarmsIndexPage() {
   const [simulating, setSimulating] = useState(false);
   const [simResult, setSimResult] = useState<SimulateSwarmResponse | null>(null);
 
-  const fetchSwarmList = async () => {
+  const fetchSwarmList = async (modeToUse: DataMode = dataMode) => {
     setLoading(true);
     try {
-      const data = await getSwarms();
+      const data = await getSwarms(modeToUse);
       setSwarms(data);
     } catch (err) {
       console.error('Failed to load swarms', err);
+      setSwarms([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSwarmList();
+    const initialMode = getActiveDataMode();
+    setDataMode(initialMode);
+    fetchSwarmList(initialMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleToggleSimulation = (enableSim: boolean) => {
+    const nextMode: DataMode = enableSim ? 'SIMULATION' : 'LIVE';
+    setActiveDataMode(nextMode);
+    setDataMode(nextMode);
+    fetchSwarmList(nextMode);
+  };
 
   const handleCreateSwarm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,12 +149,15 @@ export default function SwarmsIndexPage() {
               🐝
             </span>
             <div>
-              <h1 className="text-2xl font-bold text-[#F2F0EA] tracking-tight flex items-center gap-2">
-                Multi-Agent Swarm Orchestration
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold text-[#F2F0EA] tracking-tight">
+                  Multi-Agent Swarm Orchestration
+                </h1>
                 <span className="text-xs px-2.5 py-0.5 rounded font-mono bg-[#141414] text-[#B0ADA5] border border-[#222222]">
                   PHASE 30
                 </span>
-              </h1>
+                <DataAuthorityBadge provenance={dataMode === 'SIMULATION' ? 'SIMULATION — NO FUNDS MOVED' : 'LIVE'} />
+              </div>
               <p className="text-sm text-[#B0ADA5] mt-0.5">
                 Economic control plane coordinating specialized agent collectives under zero-elevation security
               </p>
@@ -148,7 +165,17 @@ export default function SwarmsIndexPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => handleToggleSimulation(dataMode !== 'SIMULATION')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-mono font-bold border transition-colors ${
+              dataMode === 'SIMULATION'
+                ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30'
+                : 'bg-[#151515] text-[#B0ADA5] border-[#2A2A2A] hover:text-[#F2F0EA]'
+            }`}
+          >
+            {dataMode === 'SIMULATION' ? 'SIMULATION ACTIVE' : 'ENABLE SIMULATION'}
+          </button>
           <button
             onClick={() => {
               setSimResult(null);
@@ -239,8 +266,23 @@ export default function SwarmsIndexPage() {
           Loading Swarm telemetry and active DAG allocations...
         </div>
       ) : filteredSwarms.length === 0 ? (
-        <div className="text-center py-20 bg-[#101010] rounded-xl border border-[#222222]">
-          <p className="text-[#B0ADA5] text-sm">No swarms found matching your filter criteria.</p>
+        <div className="text-center py-20 bg-[#101010] rounded-xl border border-[#222222] p-8 space-y-3">
+          <p className="text-[#F2F0EA] font-semibold text-sm">
+            {dataMode === 'LIVE' ? 'NO LIVE SWARMS DETECTED' : 'No swarms found matching your filter criteria.'}
+          </p>
+          <p className="text-[#716F69] text-xs max-w-md mx-auto">
+            {dataMode === 'LIVE'
+              ? 'The live backend swarm orchestration registry is currently empty. You can enable simulation mode to explore demo multi-agent topologies and task graphs.'
+              : 'Try clearing filters or search terms.'}
+          </p>
+          {dataMode === 'LIVE' && (
+            <button
+              onClick={() => handleToggleSimulation(true)}
+              className="mt-2 px-4 py-2 rounded-lg text-xs font-mono font-bold bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30 hover:bg-[#D6A83A]/20 transition-colors"
+            >
+              LOAD DETERMINISTIC SIMULATION FIXTURES
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -267,19 +309,22 @@ export default function SwarmsIndexPage() {
                 <div>
                   {/* Top line: status & risk */}
                   <div className="flex items-center justify-between gap-3 mb-3">
-                    <span
-                      className={`text-xs px-2.5 py-0.5 rounded font-mono font-bold border ${
-                        sw.status === 'RUNNING'
-                          ? 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30'
-                          : sw.status === 'COMPLETED'
-                          ? 'bg-[#181818] text-[#B0ADA5] border border-[#222222]'
-                          : sw.status === 'CANCELLED'
-                          ? 'bg-[#D85C5C]/15 text-[#D85C5C] border border-[#D85C5C]/30'
-                          : 'bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30'
-                      }`}
-                    >
-                      {sw.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-xs px-2.5 py-0.5 rounded font-mono font-bold border ${
+                          sw.status === 'RUNNING'
+                            ? 'bg-[#2FB36F]/15 text-[#2FB36F] border border-[#2FB36F]/30'
+                            : sw.status === 'COMPLETED'
+                            ? 'bg-[#181818] text-[#B0ADA5] border border-[#222222]'
+                            : sw.status === 'CANCELLED'
+                            ? 'bg-[#D85C5C]/15 text-[#D85C5C] border border-[#D85C5C]/30'
+                            : 'bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30'
+                        }`}
+                      >
+                        {sw.status}
+                      </span>
+                      <DataAuthorityBadge provenance={sw.id.includes('demo') ? 'DEMO FIXTURE' : (dataMode === 'SIMULATION' ? 'SIMULATION — NO FUNDS MOVED' : 'LIVE')} />
+                    </div>
 
                     {sw.risk_score && (
                       <span className="text-xs font-mono text-[#B0ADA5] flex items-center gap-1.5">

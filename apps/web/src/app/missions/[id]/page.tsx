@@ -10,6 +10,7 @@ import { VisualMissionTimeline } from '../../../components/VisualMissionTimeline
 import { AutonomousActivityStream } from '../../../components/AutonomousActivityStream';
 import { ServiceDecisionPanel, DecisionCandidate } from '../../../components/ServiceDecisionPanel';
 import { LiveAdaptationVisualizer } from '../../../components/LiveAdaptationVisualizer';
+import { DataAuthorityBadge } from '../../../components/DataAuthorityBadge';
 
 export default function MissionDetailPage() {
   const params = useParams();
@@ -34,17 +35,17 @@ export default function MissionDetailPage() {
         const intel = await fetchMissionIntelligence(missionId);
         setIntelligence(intel);
       } catch {
-        // High fidelity fallback intelligence view
-        setIntelligence({
-          mission_id: missionId,
-          current_recommendation: {
-            step_number: 1,
-            capability: 'data_analysis',
-            recommended_service_id: 'srv_data_agent_b',
-            estimated_cost: '$0.35',
-            estimated_duration_ms: 380,
-            reason: 'Highest contextual reliability (98.0%) within remaining budget margin',
-          },
+        if (demo) {
+          setIntelligence({
+            mission_id: missionId,
+            current_recommendation: {
+              step_number: 1,
+              capability: 'data_analysis',
+              recommended_service_id: 'srv_data_agent_b',
+              estimated_cost: '$0.35',
+              estimated_duration_ms: 380,
+              reason: 'Highest contextual reliability (98.0%) within remaining budget margin',
+            },
           why_recommended: 'DataAgent Beta exhibits superior 98% contextual reliability with 380ms latency.',
           previous_attempts: 1,
           recovery_history: [
@@ -119,6 +120,9 @@ export default function MissionDetailPage() {
             },
           ],
         });
+      } else {
+        setIntelligence(null);
+      }
       }
       setError(null);
     } catch (err: unknown) {
@@ -327,20 +331,27 @@ export default function MissionDetailPage() {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#D6A83A] animate-pulse" />
             <h2 className="text-sm font-mono font-bold text-[#F2F0EA] uppercase tracking-wider">
-              Autonomous Intelligence & Adaptation Panel (Phase 22)
+              Autonomous Intelligence & Adaptation Panel
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141414] text-[#D6A83A] border border-[#222222]">
-              CONFIDENCE: {intelligence?.confidence || 'HIGH'}
-            </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141414] text-[#2FB36F] border border-[#222222]">
-              NON-INVASIVE AI
-            </span>
+            <DataAuthorityBadge provenance={isDemoMode ? 'SIMULATION — NO FUNDS MOVED' : intelligence ? 'LIVE' : 'UNAVAILABLE'} />
+            {intelligence && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141414] text-[#D6A83A] border border-[#222222]">
+                CONFIDENCE: {intelligence.confidence || 'HIGH'}
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 font-mono text-xs">
+        {!intelligence ? (
+          <div className="p-8 rounded-xl bg-[#0B0B0B] border border-[#222222] text-center font-mono text-xs text-[#716F69] space-y-2">
+            <p>Intelligence telemetry unavailable from Gateway for this mission.</p>
+            <p className="text-[11px] text-[#555]">Zero heuristic or simulated data is fabricated in live operational mode.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 font-mono text-xs">
           {/* Current Recommendation */}
           <div className="p-4 rounded-xl bg-[#0B0B0B] border border-[#222222] space-y-3">
             <div className="flex items-center justify-between">
@@ -451,6 +462,8 @@ export default function MissionDetailPage() {
             </p>
           </div>
         </div>
+        </>
+        )}
       </div>
 
       {/* Mission Economics Panel */}

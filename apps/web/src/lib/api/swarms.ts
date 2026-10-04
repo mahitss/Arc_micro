@@ -4,6 +4,7 @@
  */
 
 import { apiRequest } from './client';
+import { getActiveDataMode, DataMode } from '../data-authority';
 import type {
   CreateSwarmRequest,
   ReplanProposal,
@@ -245,24 +246,33 @@ export const DEMO_SWARM_GRAPH: Record<string, SwarmGraph> = {
   },
 };
 
-export async function getSwarms(): Promise<Swarm[]> {
+export async function getSwarms(modeOverride?: DataMode): Promise<Swarm[]> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    return DEMO_SWARMS;
+  }
   try {
     const res = await apiRequest<{ swarms: Swarm[] }>('/v1/swarms');
     if (res.swarms && res.swarms.length > 0) return res.swarms;
-    return DEMO_SWARMS;
-  } catch {
-    return DEMO_SWARMS;
+    return [];
+  } catch (err) {
+    console.warn('[DataAuthority:LIVE] /v1/swarms unavailable, returning empty list:', err);
+    return [];
   }
 }
 
-export async function getSwarm(id: string): Promise<Swarm> {
+export async function getSwarm(id: string, modeOverride?: DataMode): Promise<Swarm> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    const fallback = DEMO_SWARMS.find((s) => s.id === id);
+    if (fallback) return fallback;
+    throw new Error(`Swarm ${id} not found in simulation fixtures`);
+  }
   try {
     const res = await apiRequest<{ swarm: Swarm }>(`/v1/swarms/${encodeURIComponent(id)}`);
     return res.swarm;
-  } catch {
-    const fallback = DEMO_SWARMS.find((s) => s.id === id);
-    if (fallback) return fallback;
-    throw new Error(`Swarm ${id} not found`);
+  } catch (err) {
+    throw new Error(`Live swarm ${id} unavailable: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -295,31 +305,37 @@ export async function simulateSwarm(params: CreateSwarmRequest): Promise<Simulat
   });
 }
 
-export async function getSwarmTasks(id: string): Promise<TaskNode[]> {
+export async function getSwarmTasks(id: string, modeOverride?: DataMode): Promise<TaskNode[]> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    return DEMO_SWARM_TASKS[id] || [];
+  }
   try {
     const res = await apiRequest<{ tasks: TaskNode[] }>(`/v1/swarms/${encodeURIComponent(id)}/tasks`);
     if (res.tasks && res.tasks.length > 0) return res.tasks;
-    return DEMO_SWARM_TASKS[id] || [];
+    return [];
   } catch {
-    return DEMO_SWARM_TASKS[id] || [];
+    return [];
   }
 }
 
-export async function getSwarmGraph(id: string): Promise<SwarmGraph> {
+export async function getSwarmGraph(id: string, modeOverride?: DataMode): Promise<SwarmGraph> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
+    return DEMO_SWARM_GRAPH[id] || { nodes: [], edges: [], depth: 0, is_dag: true };
+  }
   try {
     const res = await apiRequest<{ graph: SwarmGraph }>(`/v1/swarms/${encodeURIComponent(id)}/graph`);
     if (res.graph && res.graph.nodes) return res.graph;
-    return DEMO_SWARM_GRAPH[id] || { nodes: [], edges: [], depth: 0, is_dag: true };
+    return { nodes: [], edges: [], depth: 0, is_dag: true };
   } catch {
-    return DEMO_SWARM_GRAPH[id] || { nodes: [], edges: [], depth: 0, is_dag: true };
+    return { nodes: [], edges: [], depth: 0, is_dag: true };
   }
 }
 
-export async function getSwarmTrace(id: string): Promise<SwarmTrace> {
-  try {
-    const res = await apiRequest<{ trace: SwarmTrace }>(`/v1/swarms/${encodeURIComponent(id)}/trace`);
-    return res.trace;
-  } catch {
+export async function getSwarmTrace(id: string, modeOverride?: DataMode): Promise<SwarmTrace> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
     return {
       swarm_id: id,
       events: [
@@ -331,13 +347,17 @@ export async function getSwarmTrace(id: string): Promise<SwarmTrace> {
       ],
     };
   }
+  try {
+    const res = await apiRequest<{ trace: SwarmTrace }>(`/v1/swarms/${encodeURIComponent(id)}/trace`);
+    return res.trace;
+  } catch {
+    return { swarm_id: id, events: [] };
+  }
 }
 
-export async function getSwarmRisk(id: string): Promise<SwarmRiskScore> {
-  try {
-    const res = await apiRequest<{ risk_score: SwarmRiskScore }>(`/v1/swarms/${encodeURIComponent(id)}/risk`);
-    return res.risk_score;
-  } catch {
+export async function getSwarmRisk(id: string, modeOverride?: DataMode): Promise<SwarmRiskScore | null> {
+  const mode = modeOverride || getActiveDataMode();
+  if (mode === 'SIMULATION') {
     const sw = DEMO_SWARMS.find((s) => s.id === id);
     if (sw && sw.risk_score) return sw.risk_score;
     return {
@@ -347,9 +367,15 @@ export async function getSwarmRisk(id: string): Promise<SwarmRiskScore> {
       dependency_bottleneck_risk: 15,
       agent_reliability_risk: 10,
       data_tampering_risk: 5,
-      recommendations: ['DAG integrity verified'],
+      recommendations: ['DAG integrity verified (Simulation)'],
       evaluated_at: new Date().toISOString(),
     };
+  }
+  try {
+    const res = await apiRequest<{ risk_score: SwarmRiskScore }>(`/v1/swarms/${encodeURIComponent(id)}/risk`);
+    return res.risk_score;
+  } catch {
+    return null;
   }
 }
 

@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import { getActiveDataMode, DataMode } from '../data-authority';
 
 export interface ProtocolAgentManifest {
   manifest_version: string;
@@ -406,7 +407,40 @@ export interface ProtocolControlTowerSnapshot {
 // Protocol API Functions (Pure Domain & Simulation Flow — No Hardcoded React Fallbacks)
 // ---------------------------------------------------------------------------
 
-export async function fetchProtocolSnapshot(): Promise<ProtocolControlTowerSnapshot> {
+export async function fetchProtocolSnapshot(modeOverride?: DataMode): Promise<ProtocolControlTowerSnapshot> {
+  const currentMode = modeOverride || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return {
+      mode: 'SIMULATION',
+      funds_moved: false,
+      arc: {
+        connected: true,
+        chain_id: 5042,
+        live_execution: false,
+        agent_vault_deployed: false,
+        real_settlements: 0,
+      },
+      agents: {
+        discovered: FALLBACK_AGENTS.length,
+        manifest_valid: FALLBACK_AGENTS.length,
+        items: FALLBACK_AGENTS,
+      },
+      contracts: {
+        active: FALLBACK_CONTRACTS.length,
+        projected_value_usdc: '110.00',
+        items: FALLBACK_CONTRACTS,
+      },
+      security: {
+        tests: 324,
+        attacks_blocked: 324,
+        authority_leaks: 0,
+        invariants_enforced: 'INV-161 through INV-180 ACTIVE',
+        adversarial_summary: FALLBACK_SECURITY.adversarial_summary,
+      },
+      telemetry: FALLBACK_TRAFFIC,
+    };
+  }
+
   return apiRequest<ProtocolControlTowerSnapshot>('/protocol/v1/snapshot');
 }
 

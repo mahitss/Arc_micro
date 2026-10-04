@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import { getActiveDataMode, DataMode } from '../data-authority';
 
 export type ClearingExecutionMode = 'REAL' | 'SIMULATION';
 
@@ -391,21 +392,29 @@ export async function fetchObligations(orgId?: string): Promise<EconomicObligati
   }
 }
 
-export async function fetchEscrows(orgId?: string): Promise<EconomicEscrow[]> {
+export async function fetchEscrows(orgId?: string, mode?: DataMode): Promise<EconomicEscrow[]> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return MOCK_ESCROWS;
+  }
   try {
     const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
     return await apiRequest<EconomicEscrow[]>(`/v1/economy/escrows${qs}`);
   } catch {
-    return MOCK_ESCROWS;
+    return [];
   }
 }
 
-export async function fetchMilestones(contractId?: string): Promise<PaymentMilestone[]> {
+export async function fetchMilestones(contractId?: string, mode?: DataMode): Promise<PaymentMilestone[]> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return MOCK_MILESTONES;
+  }
   try {
     const qs = contractId ? `?contract_id=${encodeURIComponent(contractId)}` : '';
     return await apiRequest<PaymentMilestone[]>(`/v1/economy/milestones${qs}`);
   } catch {
-    return MOCK_MILESTONES;
+    return [];
   }
 }
 
@@ -422,12 +431,16 @@ export async function settleMilestone(id: string, idempotencyKey?: string): Prom
   });
 }
 
-export async function fetchReconciliation(orgId?: string): Promise<ReconciliationRecord[]> {
+export async function fetchReconciliation(orgId?: string, mode?: DataMode): Promise<ReconciliationRecord[]> {
+  const currentMode = mode || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return MOCK_RECONCILIATION;
+  }
   try {
     const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
     return await apiRequest<ReconciliationRecord[]>(`/v1/economy/reconciliation${qs}`);
   } catch {
-    return MOCK_RECONCILIATION;
+    return [];
   }
 }
 
@@ -438,95 +451,142 @@ export async function runReconciliation(obligationId: string): Promise<Reconcili
 }
 
 export async function fetchExposure(orgId?: string, mode: ClearingExecutionMode = 'REAL'): Promise<EconomicExposureSnapshot> {
+  const currentMode = getActiveDataMode();
+  if (currentMode === 'SIMULATION' || mode === 'SIMULATION') {
+    return { ...MOCK_EXPOSURE, execution_mode: 'SIMULATION' };
+  }
   try {
     const params = new URLSearchParams();
     if (orgId) params.set('org_id', orgId);
     params.set('mode', mode);
     return await apiRequest<EconomicExposureSnapshot>(`/v1/economy/exposure?${params.toString()}`);
   } catch {
-    return { ...MOCK_EXPOSURE, execution_mode: mode };
+    return {
+      organization_id: orgId || 'org_default',
+      current_exposure: '0',
+      max_possible_exposure: '0',
+      reserved_in_escrow: '0',
+      outstanding_obligations: '0',
+      pending_settlements: '0',
+      disputed_amount: '0',
+      unsettled_invoices: '0',
+      counterparties: [],
+      execution_mode: mode,
+      calculated_at: new Date().toISOString(),
+    };
   }
 }
 
 export async function fetchHealth(orgId?: string, mode: ClearingExecutionMode = 'REAL'): Promise<EconomicHealthSnapshot> {
+  const currentMode = getActiveDataMode();
+  if (currentMode === 'SIMULATION' || mode === 'SIMULATION') {
+    return { ...MOCK_HEALTH, execution_mode: 'SIMULATION' };
+  }
   try {
     const params = new URLSearchParams();
     if (orgId) params.set('org_id', orgId);
     params.set('mode', mode);
     return await apiRequest<EconomicHealthSnapshot>(`/v1/economy/health?${params.toString()}`);
   } catch {
-    return { ...MOCK_HEALTH, execution_mode: mode };
+    return {
+      organization_id: orgId || 'org_default',
+      on_chain_available: '0',
+      active_escrow_reserved: '0',
+      available_unencumbered: '0',
+      total_exposure: '0',
+      solvency_ratio: 1.0,
+      health_status: 'HEALTHY',
+      deterministic_signals: [
+        'Authoritative clearinghouse service online',
+        'AgentVault is NOT deployed on Arc Mainnet (0 on-chain settlements)',
+        'Live obligations remain 0',
+      ],
+      execution_mode: mode,
+      evaluated_at: new Date().toISOString(),
+    };
   }
 }
 
-export async function fetchLedger(orgId?: string): Promise<ClearingLedgerEntry[]> {
+export async function fetchLedger(orgId?: string, mode?: DataMode): Promise<ClearingLedgerEntry[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
     const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
     return await apiRequest<ClearingLedgerEntry[]>(`/v1/economy/clearing/ledger${qs}`);
   } catch {
-    return [
-      {
-        entry_id: 'ledg_01',
-        organization_id: 'org_default',
-        obligation_id: 'ob_live_01',
-        entry_type: 'FUNDS_RESERVED',
-        debit_account: 'vault_available:0x1111...',
-        credit_account: 'escrow_reserved:esc_01',
-        amount: '30000000',
-        currency: 'USDC',
-        execution_mode: 'REAL',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        hash: 'hash_ledg_01',
-      },
-    ];
+    if (currentMode === 'SIMULATION') {
+      return [
+        {
+          entry_id: 'ledg_sim_01',
+          organization_id: 'org_default',
+          obligation_id: 'ob_sim_01',
+          entry_type: 'FUNDS_RESERVED',
+          debit_account: 'vault_available:simulated',
+          credit_account: 'escrow_reserved:sim_01',
+          amount: '30000000',
+          currency: 'USDC',
+          execution_mode: 'SIMULATION',
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          hash: 'sim_hash_ledg_01',
+        },
+      ];
+    }
+    return [];
   }
 }
 
-export async function fetchNettingProposals(orgId?: string): Promise<NettingProposal[]> {
+export async function fetchNettingProposals(orgId?: string, mode?: DataMode): Promise<NettingProposal[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
     const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
     return await apiRequest<NettingProposal[]>(`/v1/economy/netting/proposals${qs}`);
   } catch {
-    return [
-      {
-        proposal_id: 'net_prop_01',
-        organization_id: 'org_default',
-        agent_a: 'agent_coordinator_a',
-        agent_b: 'agent_researcher_b',
-        currency: 'USDC',
-        gross_total: '20000000',
-        net_payer: 'agent_coordinator_a',
-        net_payee: 'agent_researcher_b',
-        net_amount: '4000000',
-        savings_amount: '16000000',
-        status: 'PROPOSED',
-        approved_by_a: true,
-        approved_by_b: false,
-        created_at: new Date(Date.now() - 1200000).toISOString(),
-      },
-    ];
+    if (currentMode === 'SIMULATION') {
+      return [
+        {
+          proposal_id: 'net_prop_01',
+          organization_id: 'org_default',
+          agent_a: 'agent_coordinator_a',
+          agent_b: 'agent_researcher_b',
+          currency: 'USDC',
+          gross_total: '20000000',
+          net_payer: 'agent_coordinator_a',
+          net_payee: 'agent_researcher_b',
+          net_amount: '4000000',
+          savings_amount: '16000000',
+          status: 'PROPOSED',
+          approved_by_a: true,
+          approved_by_b: false,
+          created_at: new Date(Date.now() - 1200000).toISOString(),
+        },
+      ];
+    }
+    return [];
   }
 }
 
-export async function fetchBatches(orgId?: string): Promise<SettlementBatch[]> {
+export async function fetchBatches(orgId?: string, mode?: DataMode): Promise<SettlementBatch[]> {
+  const currentMode = mode || getActiveDataMode();
   try {
     const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : '';
     return await apiRequest<SettlementBatch[]>(`/v1/economy/batches${qs}`);
   } catch {
-    return [
-      {
-        batch_id: 'batch_sched_01',
-        organization_id: 'org_default',
-        currency: 'USDC',
-        obligation_ids: ['ob_live_01', 'ob_sim_02'],
-        gross_amount: '40000000',
-        net_amount: '40000000',
-        savings: '0',
-        status: 'READY',
-        execution_mode: 'REAL',
-        created_at: new Date(Date.now() - 600000).toISOString(),
-      },
-    ];
+    if (currentMode === 'SIMULATION') {
+      return [
+        {
+          batch_id: 'batch_sched_01',
+          organization_id: 'org_default',
+          currency: 'USDC',
+          obligation_ids: ['ob_sim_01', 'ob_sim_02'],
+          gross_amount: '40000000',
+          net_amount: '40000000',
+          savings: '0',
+          status: 'READY',
+          execution_mode: 'SIMULATION',
+          created_at: new Date(Date.now() - 600000).toISOString(),
+        },
+      ];
+    }
+    return [];
   }
 }
 

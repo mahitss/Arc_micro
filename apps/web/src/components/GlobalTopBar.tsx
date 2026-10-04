@@ -19,10 +19,17 @@ export function GlobalTopBar() {
   }, []);
 
   const isLiveMainnet = health?.is_mainnet_verified || false;
-  const isGatewayOnline = health?.gateway === 'HEALTHY';
-  const isPolicyHealthy = health?.policy_engine === 'HEALTHY' || true;
-  const isRuntimeHealthy = true;
-  const isAIConnected = true;
+  const isGatewayHealthy = health?.gateway === 'HEALTHY';
+  const isArcHealthy = health?.arc_rpc === 'HEALTHY';
+  const isPolicyHealthy = health?.policy_engine === 'HEALTHY';
+  const isRuntimeHealthy = isGatewayHealthy;
+  const isAIConnected = isGatewayHealthy;
+
+  const renderStatusDot = (isOk: boolean, isDegraded = false) => {
+    if (isOk) return <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />;
+    if (isDegraded) return <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A] shrink-0" />;
+    return <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C] shrink-0" />;
+  };
 
   return (
     <>
@@ -89,29 +96,29 @@ export function GlobalTopBar() {
             {/* Arc Status */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">ARC</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
-              <span className="text-[#F2F0EA] font-semibold">CONNECTED</span>
+              {renderStatusDot(isArcHealthy)}
+              <span className="text-[#F2F0EA] font-semibold">{isArcHealthy ? 'CONNECTED' : 'OFFLINE'}</span>
             </div>
 
             {/* AI Status */}
             <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">AI</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
-              <span className="text-[#F2F0EA] font-semibold">CONNECTED</span>
+              {renderStatusDot(isAIConnected)}
+              <span className="text-[#F2F0EA] font-semibold">{isAIConnected ? 'CONNECTED' : 'OFFLINE'}</span>
             </div>
 
             {/* Policy Status */}
             <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">POLICY</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
-              <span className="text-[#F2F0EA] font-semibold">HEALTHY</span>
+              {renderStatusDot(isPolicyHealthy, health?.policy_engine === 'DEGRADED')}
+              <span className="text-[#F2F0EA] font-semibold">{health?.policy_engine || 'OFFLINE'}</span>
             </div>
 
             {/* Runtime Status */}
             <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
               <span className="text-[#716F69]">RUNTIME</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />
-              <span className="text-[#F2F0EA] font-semibold">HEALTHY</span>
+              {renderStatusDot(isRuntimeHealthy)}
+              <span className="text-[#F2F0EA] font-semibold">{isRuntimeHealthy ? 'HEALTHY' : 'OFFLINE'}</span>
             </div>
 
             {/* Operator Account Avatar */}

@@ -4,8 +4,11 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { fetchGlobalActivity } from '../../lib/api/missions';
 import { GlobalActivityEvent } from '../../lib/api/types';
+import { getActiveDataMode, setActiveDataMode, DataMode } from '@/lib/data-authority';
+import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
 
 export default function ActivityStreamPage() {
+  const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [events, setEvents] = useState<GlobalActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -28,8 +31,9 @@ export default function ActivityStreamPage() {
     'ARC',
   ];
 
-  // Load activity events from authoritative Gateway API
-  const loadEvents = useCallback(async (isBackground = false) => {
+  // Load activity events respecting data authority
+  const loadEvents = useCallback(async (isBackground = false, overrideMode?: DataMode) => {
+    const activeMode = overrideMode || dataMode;
     if (!isBackground) {
       if (events.length === 0) setLoading(true);
       else setRefreshing(true);
@@ -37,8 +41,7 @@ export default function ActivityStreamPage() {
     setError(null);
 
     try {
-      // First attempt authentic backend events (useDemo: false)
-      const data = await fetchGlobalActivity({ useDemo: false });
+      const data = await fetchGlobalActivity({ useDemo: activeMode === 'SIMULATION' });
       
       // Deduplicate by canonical ID and sort newest first
       const deduplicatedMap = new Map<string, GlobalActivityEvent>();
@@ -63,34 +66,31 @@ export default function ActivityStreamPage() {
         }
       }
     } catch (err: any) {
-      console.warn('Gateway activity stream unavailable, attempting demo fallback:', err?.message);
-      try {
-        // Fallback to truthful simulated demo fixtures if gateway is unreachable
-        const fallbackData = await fetchGlobalActivity({ useDemo: true });
-        const deduplicatedMap = new Map<string, GlobalActivityEvent>();
-        for (const evt of fallbackData) {
-          if (!deduplicatedMap.has(evt.id)) {
-            deduplicatedMap.set(evt.id, evt);
-          }
-        }
-        const sorted = Array.from(deduplicatedMap.values()).sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
-        setEvents(sorted);
-        setLastSynced(new Date());
-      } catch (fallbackErr: any) {
-        setError(err?.message || 'Activity service currently unreachable. Verify Gateway connectivity.');
-      }
+      console.warn(`Gateway activity stream error (Mode: ${activeMode}):`, err?.message);
+      setEvents([]);
+      setError(
+        activeMode === 'LIVE'
+          ? 'Live Gateway activity stream unavailable. No authentic events returned by backend.'
+          : err?.message || 'Simulation activity feed unavailable.'
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [events.length]);
+  }, [events.length, dataMode]);
 
-  // Initial fetch on mount
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+    const initialMode = getActiveDataMode();
+    setDataMode(initialMode);
+    loadEvents(false, initialMode);
+  }, []);
+
+  const handleToggleMode = (enableSim: boolean) => {
+    const newMode: DataMode = enableSim ? 'SIMULATION' : 'LIVE';
+    setDataMode(newMode);
+    setActiveDataMode(newMode);
+    loadEvents(false, newMode);
+  };
 
   // 10-second background polling
   useEffect(() => {
@@ -230,17 +230,26 @@ export default function ActivityStreamPage() {
             <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-[#141414] text-[#D6A83A] border border-[#222222]">
               Audit Flight Log
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-[#141414] text-[#B0ADA5] border border-[#222222]">
-              SIMULATION — NO FUNDS MOVED
-            </span>
+            <DataAuthorityBadge provenance={dataMode === 'SIMULATION' ? 'SIMULATION — NO FUNDS MOVED' : error ? 'UNAVAILABLE' : 'LIVE'} />
           </div>
           <p className="text-sm text-[#716F69] mt-1.5 max-w-2xl">
             Unified, chronological financial event trail across all autonomous missions, payment intents, policy decisions, and Arc settlements.
           </p>
         </div>
 
-        {/* Audit Stream Polling Controls */}
-        <div className="flex items-center gap-2">
+        {/* Audit Stream Polling & Authority Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => handleToggleMode(dataMode !== 'SIMULATION')}
+            className={`font-mono text-xs px-3 py-2 rounded-lg border transition-all ${
+              dataMode === 'SIMULATION'
+                ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30 font-bold'
+                : 'bg-[#101010] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
+            }`}
+          >
+            {dataMode === 'SIMULATION' ? 'SIMULATION ACTIVE' : 'ENABLE SIMULATION'}
+          </button>
+
           <button
             onClick={() => setIsPolling(!isPolling)}
             className={`flex items-center gap-2 font-mono text-xs px-3 py-2 rounded-lg border transition-all ${
@@ -282,17 +291,27 @@ export default function ActivityStreamPage() {
 
       {/* Error State Banner */}
       {error && (
-        <div className="p-4 rounded-xl bg-[#180808] border border-[#D85C5C]/40 text-[#D85C5C] font-mono text-xs flex items-center justify-between gap-4">
+        <div className="p-4 rounded-xl bg-[#180808] border border-[#D85C5C]/40 text-[#D85C5C] font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="font-bold uppercase tracking-wider">ACTIVITY SERVICE UNAVAILABLE:</span>
             <span>{error}</span>
           </div>
-          <button
-            onClick={() => loadEvents()}
-            className="px-3 py-1 rounded bg-[#D85C5C]/20 border border-[#D85C5C]/40 text-[#F2F0EA] hover:bg-[#D85C5C]/30 transition-all font-bold"
-          >
-            Retry
-          </button>
+          <div className="flex items-center gap-2">
+            {dataMode === 'LIVE' && (
+              <button
+                onClick={() => handleToggleMode(true)}
+                className="px-3 py-1 rounded bg-[#D6A83A]/20 border border-[#D6A83A]/40 text-[#D6A83A] hover:bg-[#D6A83A]/30 transition-all font-bold"
+              >
+                View Simulation Trace
+              </button>
+            )}
+            <button
+              onClick={() => loadEvents()}
+              className="px-3 py-1 rounded bg-[#D85C5C]/20 border border-[#D85C5C]/40 text-[#F2F0EA] hover:bg-[#D85C5C]/30 transition-all font-bold"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       )}
 
@@ -390,8 +409,8 @@ export default function ActivityStreamPage() {
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getCategoryBadge(evt.category)}`}>
                         {evt.category}
                       </span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono text-[#716F69] bg-[#0E0E0E] border border-[#1E1E1E]">
-                        {evt.is_simulated ? 'SIMULATED' : 'VERIFIED ON-CHAIN'}
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono text-[#D6A83A] bg-[#0E0E0E] border border-[#222222]">
+                        {evt.is_simulated || dataMode === 'SIMULATION' ? 'SIMULATED — NO FUNDS MOVED' : 'VERIFIED ON-CHAIN'}
                       </span>
                     </div>
                     <span className="text-[11px] text-[#716F69]">{evt.display_time || new Date(evt.timestamp).toLocaleTimeString()}</span>

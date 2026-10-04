@@ -7,16 +7,18 @@ import {
   MarketplaceAnomaly,
   MOCK_ANOMALIES,
 } from '@/lib/api/marketplace';
+import { getActiveDataMode } from '@/lib/data-authority';
 
 export default function MarketplaceSecurityPage() {
-  const [anomalies, setAnomalies] = useState<MarketplaceAnomaly[]>(MOCK_ANOMALIES);
+  const [anomalies, setAnomalies] = useState<MarketplaceAnomaly[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await getSecurityAnomalies();
-        setAnomalies(res);
+        const mode = getActiveDataMode();
+        const res = await getSecurityAnomalies(mode);
+        setAnomalies(res.length > 0 ? res : mode === 'SIMULATION' ? MOCK_ANOMALIES : []);
       } catch (err) {
         console.error('Failed to load anomalies:', err);
       } finally {

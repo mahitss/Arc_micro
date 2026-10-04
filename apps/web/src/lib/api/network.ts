@@ -1,4 +1,5 @@
 import { getBaseApiUrl } from './client';
+import { getActiveDataMode, DataMode } from '../data-authority';
 
 export interface AgentManifestPricing {
   capability: string;
@@ -441,11 +442,20 @@ export const DEMO_NETWORK_GRAPH: NetworkGraph = {
 // API Query & Mutation Functions
 // -----------------------------------------------------------------------------
 
-export async function fetchNetworkAgents(filter?: {
-  capability?: string;
-  min_trust_score?: number;
-  availability?: string;
-}): Promise<DiscoveredAgent[]> {
+export async function fetchNetworkAgents(
+  filter?: {
+    capability?: string;
+    min_trust_score?: number;
+    availability?: string;
+  },
+  modeOverride?: DataMode,
+  options?: { useDemo?: boolean }
+): Promise<DiscoveredAgent[]> {
+  const currentMode = options?.useDemo ? 'SIMULATION' : (modeOverride || getActiveDataMode());
+  if (currentMode === 'SIMULATION') {
+    return DEMO_NETWORK_AGENTS;
+  }
+
   try {
     const params = new URLSearchParams();
     if (filter?.capability) params.set('capability', filter.capability);
@@ -455,62 +465,98 @@ export async function fetchNetworkAgents(filter?: {
     const res = await fetch(`${getBaseApiUrl()}/v1/agent-network/agents?${params.toString()}`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data.agents) && data.agents.length > 0) {
+      if (Array.isArray(data.agents)) {
         return data.agents;
       }
     }
   } catch (err) {
-    console.warn('Network agents endpoint unavailable, serving realistic demo peer directory:', err);
+    console.warn('Network agents endpoint unreachable in LIVE mode:', err);
   }
-  return DEMO_NETWORK_AGENTS;
+  return [];
 }
 
-export async function fetchContracts(): Promise<AgentServiceContract[]> {
+export async function fetchContracts(
+  modeOverride?: DataMode,
+  options?: { useDemo?: boolean }
+): Promise<AgentServiceContract[]> {
+  const currentMode = options?.useDemo ? 'SIMULATION' : (modeOverride || getActiveDataMode());
+  if (currentMode === 'SIMULATION') {
+    return DEMO_CONTRACTS;
+  }
+
   try {
     const res = await fetch(`${getBaseApiUrl()}/v1/agent-network/contracts`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data.contracts) && data.contracts.length > 0) {
+      if (Array.isArray(data.contracts)) {
         return data.contracts;
       }
     }
   } catch (err) {
-    console.warn('Network contracts endpoint unavailable, serving demo active contracts:', err);
+    console.warn('Network contracts endpoint unreachable in LIVE mode:', err);
   }
-  return DEMO_CONTRACTS;
+  return [];
 }
 
-export async function fetchDisputes(): Promise<DisputeRecord[]> {
+export async function fetchDisputes(
+  modeOverride?: DataMode,
+  options?: { useDemo?: boolean }
+): Promise<DisputeRecord[]> {
+  const currentMode = options?.useDemo ? 'SIMULATION' : (modeOverride || getActiveDataMode());
+  if (currentMode === 'SIMULATION') {
+    return DEMO_DISPUTES;
+  }
+
   try {
     const res = await fetch(`${getBaseApiUrl()}/v1/agent-network/disputes`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data.disputes) && data.disputes.length > 0) {
+      if (Array.isArray(data.disputes)) {
         return data.disputes;
       }
     }
   } catch (err) {
-    console.warn('Network disputes endpoint unavailable, serving demo disputes:', err);
+    console.warn('Network disputes endpoint unreachable in LIVE mode:', err);
   }
-  return DEMO_DISPUTES;
+  return [];
 }
 
-export async function fetchNetworkGraph(): Promise<NetworkGraph> {
+export async function fetchNetworkGraph(
+  modeOverride?: DataMode,
+  options?: { useDemo?: boolean }
+): Promise<NetworkGraph> {
+  const currentMode = options?.useDemo ? 'SIMULATION' : (modeOverride || getActiveDataMode());
+  if (currentMode === 'SIMULATION') {
+    return DEMO_NETWORK_GRAPH;
+  }
+
   try {
     const res = await fetch(`${getBaseApiUrl()}/v1/agent-network/graph`);
     if (res.ok) {
       const data = await res.json();
-      if (data && Array.isArray(data.nodes) && data.nodes.length > 0) {
+      if (data && Array.isArray(data.nodes)) {
         return data;
       }
     }
   } catch (err) {
-    console.warn('Network graph endpoint unavailable, serving demo topology graph:', err);
+    console.warn('Network graph endpoint unreachable in LIVE mode:', err);
   }
-  return DEMO_NETWORK_GRAPH;
+  return { nodes: [], edges: [] };
 }
 
-export async function fundContract(contractId: string): Promise<{ contract_id: string; status: string; payment_intent_id: string }> {
+export async function fundContract(
+  contractId: string,
+  modeOverride?: DataMode
+): Promise<{ contract_id: string; status: string; payment_intent_id: string }> {
+  const currentMode = modeOverride || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return {
+      contract_id: contractId,
+      status: 'FUNDED',
+      payment_intent_id: `pi_sim_fund_${Date.now()}`,
+    };
+  }
+
   try {
     const res = await fetch(`${getBaseApiUrl()}/v1/agent-network/contracts/${encodeURIComponent(contractId)}/fund`, {
       method: 'POST',
@@ -519,17 +565,35 @@ export async function fundContract(contractId: string): Promise<{ contract_id: s
     if (res.ok) {
       return await res.json();
     }
-  } catch (err) {
-    console.warn('Fund contract fallback:', err);
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(errBody.error || `HTTP ${res.status} funding contract`);
+  } catch (err: any) {
+    console.warn('Fund contract live failure:', err);
+    throw new Error(err.message || 'Live contract funding unavailable.');
   }
-  return {
-    contract_id: contractId,
-    status: 'FUNDED',
-    payment_intent_id: `pi_live_fund_${Date.now()}`,
-  };
 }
 
-export async function verifyDeliverable(contractId: string, output: Record<string, unknown>, claimedCost: string) {
+export async function verifyDeliverable(
+  contractId: string,
+  output: Record<string, unknown>,
+  claimedCost: string,
+  modeOverride?: DataMode
+) {
+  const currentMode = modeOverride || getActiveDataMode();
+  if (currentMode === 'SIMULATION') {
+    return {
+      contract_id: contractId,
+      passed: true,
+      score_basis_points: 10000,
+      checksum_valid: true,
+      schema_valid: true,
+      cost_compliant: true,
+      deadline_met: true,
+      reason: 'Cryptographic SHA-256 and schema verified successfully (SIMULATION)',
+      verified_at: new Date().toISOString(),
+    };
+  }
+
   try {
     const res = await fetch(`${getBaseApiUrl()}/v1/agent-network/contracts/${encodeURIComponent(contractId)}/verify`, {
       method: 'POST',
@@ -543,18 +607,10 @@ export async function verifyDeliverable(contractId: string, output: Record<strin
     if (res.ok) {
       return await res.json();
     }
-  } catch (err) {
-    console.warn('Verify deliverable fallback:', err);
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(errBody.error || `HTTP ${res.status} verifying deliverable`);
+  } catch (err: any) {
+    console.warn('Verify deliverable live failure:', err);
+    throw new Error(err.message || 'Live deliverable verification unavailable.');
   }
-  return {
-    contract_id: contractId,
-    passed: true,
-    score_basis_points: 10000,
-    checksum_valid: true,
-    schema_valid: true,
-    cost_compliant: true,
-    deadline_met: true,
-    reason: 'Cryptographic SHA-256 and schema verified successfully',
-    verified_at: new Date().toISOString(),
-  };
 }

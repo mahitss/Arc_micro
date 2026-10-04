@@ -14,6 +14,7 @@ import {
   LiquidityAnomaly,
   TreasuryExecutionMode,
 } from '@/lib/api/treasury';
+import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
 
 function formatUsdc(microUnits: string | number): string {
   const val = typeof microUnits === 'string' ? parseFloat(microUnits) : microUnits;
@@ -91,9 +92,7 @@ export default function TreasuryDashboardPage() {
             <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA] flex items-center gap-2">
               Autonomous Treasury & Liquidity Orchestrator
             </h1>
-            <span className="text-xs px-2 py-0.5 rounded bg-[#141414] text-[#B0ADA5] border border-[#222222] font-mono">
-              LIQUIDITY ORCHESTRATOR
-            </span>
+            <DataAuthorityBadge provenance={mode === 'SIMULATION' ? 'SIMULATION — NO FUNDS MOVED' : (state && state.total_balance !== '0') ? 'LIVE' : 'UNAVAILABLE'} />
           </div>
           <p className="mt-1 text-sm text-[#716F69]">
             Automated liquidity reservation, multi-horizon solvency forecasting, digital twin stress testing, and 4-way balance reconciliation.
@@ -182,7 +181,9 @@ export default function TreasuryDashboardPage() {
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[#716F69] font-mono">
             <span>Asset: USDC</span>
-            <span className="text-[#D6A83A]">Vault Verified</span>
+            <span className={mode === 'SIMULATION' ? 'text-[#D6A83A]' : 'text-[#716F69]'}>
+              {mode === 'SIMULATION' ? 'Simulated Ledger' : 'AgentVault Undeployed'}
+            </span>
           </div>
         </div>
 

@@ -4,19 +4,22 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { fetchApprovals, approveApproval, rejectApproval } from '../../lib/api/missions';
 import { ApprovalItem } from '../../lib/api/types';
+import { getActiveDataMode, setActiveDataMode, DataMode } from '@/lib/data-authority';
+import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
 
 export default function ApprovalsPage() {
+  const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const loadApprovals = async () => {
+  const loadApprovals = async (modeToUse: DataMode = dataMode) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchApprovals({ useDemo: true });
+      const data = await fetchApprovals({ useDemo: modeToUse === 'SIMULATION' });
       setApprovals(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load approvals');
@@ -26,8 +29,17 @@ export default function ApprovalsPage() {
   };
 
   useEffect(() => {
-    loadApprovals();
+    const initialMode = getActiveDataMode();
+    setDataMode(initialMode);
+    loadApprovals(initialMode);
   }, []);
+
+  const handleToggleSimulation = (enableSim: boolean) => {
+    const newMode: DataMode = enableSim ? 'SIMULATION' : 'LIVE';
+    setDataMode(newMode);
+    setActiveDataMode(newMode);
+    loadApprovals(newMode);
+  };
 
   const handleApprove = async (id: string) => {
     setProcessingId(id);
@@ -72,15 +84,28 @@ export default function ApprovalsPage() {
             <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-[#141414] text-[#D6A83A] border border-[#222222]">
               Human-in-the-Loop Gate
             </span>
+            <DataAuthorityBadge provenance={dataMode === 'SIMULATION' ? 'SIMULATION — NO FUNDS MOVED' : 'LIVE'} />
           </div>
           <p className="text-sm text-[#B0ADA5] mt-1.5 max-w-2xl">
             Pending economic payment intents requiring human authorization before settlement.
             Approvals are strictly subordinated to deterministic Rust policy: a hard DENY cannot be approved.
           </p>
         </div>
-        <div className="flex items-center gap-2 font-mono text-xs text-[#716F69] bg-[#101010] px-3 py-2 rounded-lg border border-[#222222]">
-          <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
-          <span>INV-E7: Subordinated to Hard DENY</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => handleToggleSimulation(dataMode !== 'SIMULATION')}
+            className={`font-mono text-xs px-3 py-2 rounded-lg border transition-all ${
+              dataMode === 'SIMULATION'
+                ? 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30 font-bold'
+                : 'bg-[#101010] text-[#716F69] border-[#222222] hover:text-[#F2F0EA]'
+            }`}
+          >
+            {dataMode === 'SIMULATION' ? 'SIMULATION ACTIVE' : 'ENABLE SIMULATION'}
+          </button>
+          <div className="flex items-center gap-2 font-mono text-xs text-[#716F69] bg-[#101010] px-3 py-2 rounded-lg border border-[#222222]">
+            <span className="w-2 h-2 rounded-full bg-[#2FB36F]" />
+            <span>INV-E7: Subordinated to Hard DENY</span>
+          </div>
         </div>
       </div>
 
@@ -103,9 +128,19 @@ export default function ApprovalsPage() {
             Scanning pending approval queue...
           </div>
         ) : approvals.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-[#101010] border border-[#222222] text-[#716F69] font-mono text-xs space-y-2">
-            <span className="text-[#2FB36F] text-base block">✓ Queue Clear</span>
+          <div className="p-12 text-center rounded-2xl bg-[#101010] border border-[#222222] text-[#716F69] font-mono text-xs space-y-3">
+            <span className="text-[#2FB36F] text-base block font-bold">✓ Queue Clear ({dataMode === 'SIMULATION' ? 'Simulation Mode' : 'Live State'})</span>
             <p>No transactions currently require human authorization.</p>
+            {dataMode === 'LIVE' && (
+              <div className="pt-2">
+                <button
+                  onClick={() => handleToggleSimulation(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-[#D6A83A]/10 border border-[#D6A83A]/30 text-[#D6A83A] hover:bg-[#D6A83A]/20 transition"
+                >
+                  View Simulation Approvals
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
