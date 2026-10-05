@@ -772,8 +772,13 @@ export default function MissionReplayPage() {
             {/* TAB 3: AI TRACE */}
             {activeInspectorTab === 'AI_TRACE' && (
               <div className="space-y-2.5 text-xs max-h-96 overflow-y-auto pr-1">
-                <div className="bg-[#141414] p-2 rounded border border-[#222222] text-[11px] text-[#716F69]">
-                  Provider: <strong>OpenRouter Proxy Layer</strong> (Zero financial authority; models generate structured JSON proposals)
+                <div className="bg-[#141414] p-2.5 rounded border border-[#222222] text-[11px] text-[#B0ADA5] flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    Provider: <strong className="text-[#F2F0EA]">OpenRouter Proxy Layer</strong> (Zero financial authority; models generate structured JSON proposals)
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#101010] text-[#D6A83A] border border-[#D6A83A]/30 font-semibold">
+                    NOT REQUIRED FOR REPLAY · ADVISORY ONLY
+                  </span>
                 </div>
                 {summary.ai_trace.map((t, i) => (
                   <div key={i} className="p-2.5 rounded bg-[#141414] border border-[#222222] space-y-1">

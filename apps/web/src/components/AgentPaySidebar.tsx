@@ -166,15 +166,28 @@ export function AgentPaySidebar() {
   const pathname = usePathname() || '';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isGatewayHealthy, setIsGatewayHealthy] = useState<boolean | null>(null);
+  const [isArcConnected, setIsArcConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchSystemHealth()
-      .then((h) => setIsGatewayHealthy(h.gateway === 'HEALTHY'))
-      .catch(() => setIsGatewayHealthy(false));
+      .then((h) => {
+        setIsGatewayHealthy(h.gateway === 'HEALTHY' || h.gateway_status === 'ONLINE');
+        setIsArcConnected(h.arc_rpc === 'HEALTHY' || h.arc_rpc_status === 'CONNECTED');
+      })
+      .catch(() => {
+        setIsGatewayHealthy(false);
+        setIsArcConnected(false);
+      });
     const interval = setInterval(() => {
       fetchSystemHealth()
-        .then((h) => setIsGatewayHealthy(h.gateway === 'HEALTHY'))
-        .catch(() => setIsGatewayHealthy(false));
+        .then((h) => {
+          setIsGatewayHealthy(h.gateway === 'HEALTHY' || h.gateway_status === 'ONLINE');
+          setIsArcConnected(h.arc_rpc === 'HEALTHY' || h.arc_rpc_status === 'CONNECTED');
+        })
+        .catch(() => {
+          setIsGatewayHealthy(false);
+          setIsArcConnected(false);
+        });
     }, 15000);
     return () => clearInterval(interval);
   }, []);
@@ -336,34 +349,34 @@ export function AgentPaySidebar() {
             SYSTEM STATUS
           </div>
 
-          <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title={`GATEWAY: ${isGatewayHealthy ? 'ONLINE' : 'OFFLINE'}`}>
+          <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title={`GATEWAY: ${isGatewayHealthy ? 'ONLINE' : 'UNAVAILABLE'}`}>
             <span className="hidden min-[1200px]:inline text-[#716F69]">GATEWAY</span>
             <span className={`flex items-center gap-1 font-semibold ${isGatewayHealthy ? 'text-[#2FB36F]' : 'text-[#D85C5C]'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${isGatewayHealthy ? 'bg-[#2FB36F]' : 'bg-[#D85C5C]'}`} />
-              <span className="hidden min-[1200px]:inline">{isGatewayHealthy ? 'ONLINE' : 'OFFLINE'}</span>
+              <span className="hidden min-[1200px]:inline">{isGatewayHealthy ? 'ONLINE' : 'UNAVAILABLE'}</span>
             </span>
           </div>
 
-          <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="ARC: SIMULATION">
+          <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="ARC RPC: CONNECTED · SETTLEMENT: SIMULATION ONLY">
             <span className="hidden min-[1200px]:inline text-[#716F69]">ARC</span>
-            <span className="flex items-center gap-1 font-semibold text-[#D6A83A]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
-              <span className="hidden min-[1200px]:inline">SIMULATION · 5042</span>
+            <span className={`flex items-center gap-1 font-semibold ${isArcConnected ? 'text-[#2FB36F]' : 'text-[#D85C5C]'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${isArcConnected ? 'bg-[#2FB36F]' : 'bg-[#D85C5C]'}`} />
+              <span className="hidden min-[1200px]:inline">{isArcConnected ? 'CONNECTED' : 'UNAVAILABLE'}</span>
             </span>
           </div>
 
           <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="LIVE EXECUTION: DISABLED">
             <span className="hidden min-[1200px]:inline text-[#716F69]">EXECUTION</span>
-            <span className="flex items-center gap-1 font-semibold text-[#D85C5C]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
+            <span className="flex items-center gap-1 font-semibold text-[#8A8882]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8A8882]" />
               <span className="hidden min-[1200px]:inline">DISABLED</span>
             </span>
           </div>
 
           <div className="flex items-center justify-center min-[1200px]:justify-between px-1" title="AGENTVAULT: NOT DEPLOYED">
             <span className="hidden min-[1200px]:inline text-[#716F69]">VAULT</span>
-            <span className="flex items-center gap-1 font-semibold text-[#D85C5C]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D85C5C]" />
+            <span className="flex items-center gap-1 font-semibold text-[#8A8882]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8A8882]" />
               <span className="hidden min-[1200px]:inline">NOT DEPLOYED</span>
             </span>
           </div>

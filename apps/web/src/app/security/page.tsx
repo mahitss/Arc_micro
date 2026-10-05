@@ -51,6 +51,7 @@ export default function SecurityCenterPage() {
           </span>
         );
       case 'NOT CONNECTED':
+      case 'UNAVAILABLE':
       case 'OFFLINE':
         return (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#D85C5C] border border-[#222222]">
@@ -202,7 +203,7 @@ export default function SecurityCenterPage() {
             <div className="p-3.5 bg-[#101010] border border-[#222222] rounded-xl space-y-1">
               <span className="text-[#716F69] text-[10px] uppercase">Arc RPC Network</span>
               <div className="text-sm font-bold text-[#2FB36F]">
-                {arcStatus?.rpc_reachable ? 'VERIFIED CONNECTED' : 'OFFLINE'}
+                {arcStatus?.rpc_reachable ? 'VERIFIED CONNECTED' : 'UNAVAILABLE'}
               </div>
               <p className="text-[10px] text-[#716F69]">Chain ID 5042</p>
             </div>

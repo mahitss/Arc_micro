@@ -16,6 +16,9 @@ export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
     case 'CONFIRMED':
     case 'ACTIVE':
     case 'HEALTHY':
+    case 'ONLINE':
+    case 'CONNECTED':
+    case 'READY':
     case 'ENABLED':
     case 'APPROVED':
     case 'VERIFIED':
@@ -43,6 +46,7 @@ export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
     case 'DENIED':
     case 'FAILED':
     case 'OFFLINE':
+    case 'UNAVAILABLE':
     case 'DISABLED':
     case 'REJECTED':
     case 'BLOCKED':

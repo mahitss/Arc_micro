@@ -91,7 +91,7 @@ func (s *MemoryProtocolStore) seedDefaultFixtures() {
 		Pricing: []ManifestPricing{
 			{Capability: "market-research@1.0", Model: "FIXED", BasePrice: "10.00", Currency: "USDC"},
 		},
-		Availability: "AVAILABLE",
+		Availability:    "AVAILABLE",
 		ReputationScore: 95,
 		Authentication: map[string]string{
 			"type": "api_key",
@@ -124,7 +124,7 @@ func (s *MemoryProtocolStore) seedDefaultFixtures() {
 		Pricing: []ManifestPricing{
 			{Capability: "security-audit@1.0", Model: "VARIABLE", BasePrice: "18.50", MaxPrice: "25.00", Currency: "USDC"},
 		},
-		Availability: "AVAILABLE",
+		Availability:    "AVAILABLE",
 		ReputationScore: 95,
 		Authentication: map[string]string{
 			"type": "signature",
@@ -157,7 +157,7 @@ func (s *MemoryProtocolStore) seedDefaultFixtures() {
 		Pricing: []ManifestPricing{
 			{Capability: "verification@1.0", Model: "FIXED", BasePrice: "5.00", Currency: "USDC"},
 		},
-		Availability: "AVAILABLE",
+		Availability:    "AVAILABLE",
 		ReputationScore: 95,
 		Authentication: map[string]string{
 			"type": "signature",

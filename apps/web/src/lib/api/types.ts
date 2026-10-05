@@ -192,6 +192,15 @@ export interface SystemHealth {
   network_name: string;
   is_mainnet_verified: boolean;
   auto_execution_enabled: boolean;
+  // Canonical status model (process health != financial execution)
+  gateway_status?: 'ONLINE' | 'UNAVAILABLE';
+  arc_rpc_status?: 'CONNECTED' | 'UNAVAILABLE';
+  runtime_status?: 'HEALTHY' | 'UNAVAILABLE';
+  policy_engine_status?: 'ONLINE' | 'READY (SIM)' | 'UNAVAILABLE';
+  ai_status?: 'READY' | 'CONNECTED' | 'UNAVAILABLE';
+  settlement_mode?: 'SIMULATION ONLY' | 'LIVE';
+  agent_vault_status?: 'NOT DEPLOYED ON MAINNET (0x)' | 'NOT DEPLOYED';
+  live_execution_status?: 'DISABLED (Simulation Guard)' | 'DISABLED';
 }
 
 export interface Approval {
