@@ -534,8 +534,12 @@ export default function ControlTowerPage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
+              <AgentPayBadge variant="success">
+                APPLICATION: REAL
+              </AgentPayBadge>
+              <span className="text-xs text-[#716F69]">·</span>
               <AgentPayBadge variant="warning">
-                SIMULATION — NO FUNDS MOVED
+                CURRENT ENVIRONMENT: SIMULATION — NO FUNDS MOVED
               </AgentPayBadge>
               <span className="text-xs text-[#716F69]">·</span>
               <span className="text-xs text-[#B0ADA5]">
@@ -547,7 +551,15 @@ export default function ControlTowerPage() {
               </span>
               <span className="text-xs text-[#716F69]">·</span>
               <span className="text-xs text-[#D85C5C]">
-                AgentVault: <span className="font-mono">NOT DEPLOYED (0x)</span>
+                AgentVault: <span className="font-mono">NOT DEPLOYED ON MAINNET (0x)</span>
+              </span>
+              <span className="text-xs text-[#716F69]">·</span>
+              <span className="text-xs text-[#716F69]">
+                Live Execution: <span className="font-mono text-[#B0ADA5]">DISABLED (Simulation Guard)</span>
+              </span>
+              <span className="text-xs text-[#716F69]">·</span>
+              <span className="text-xs text-[#716F69]">
+                Real Settlements: <span className="font-mono text-[#B0ADA5]">0 (Zero fake transaction hashes)</span>
               </span>
             </div>
 
@@ -556,7 +568,7 @@ export default function ControlTowerPage() {
                 AUTONOMOUS ECONOMIC CONTROL TOWER
               </h1>
               <p className="text-[#B0ADA5] text-sm sm:text-base mt-1">
-                Observe, simulate and control autonomous economic activity across agents, clearing, and Arc.
+                Real control-plane software for autonomous economic activity.
               </p>
             </div>
 
@@ -566,7 +578,7 @@ export default function ControlTowerPage() {
               </span>
               <span className="hidden sm:inline text-[#2B2B2B]">|</span>
               <span className="text-[#B0ADA5]">
-                Autonomy can expand. Financial authority cannot.
+                Autonomous workflows are simulated deterministically until live financial execution is explicitly enabled.
               </span>
             </div>
           </div>
@@ -603,13 +615,13 @@ export default function ControlTowerPage() {
 
       {/* 2. COMPACT SYSTEM STATUS STRIP (REAL / TRUTHFUL PROVENANCE) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2.5 sm:gap-3">
-        <AgentPayMetric label="Missions" value={overview?.active_missions_count ?? 12} subtext="Autonomous DAGs" provenance="SIMULATED" />
-        <AgentPayMetric label="Active Agents" value={overview?.active_agents_count ?? 37} subtext="Keyless runtime" provenance="SIMULATED" />
-        <AgentPayMetric label="Committed" value="$182.40" subtext="Simulated in-flight" provenance="PROJECTED" />
-        <AgentPayMetric label="At Risk" value="$24.10" subtext="Simulated margin" provenance="PROJECTED" />
-        <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 3} subtext="Dual-custody >$20" provenance="SIMULATED" highlight />
+        <AgentPayMetric label="Missions" value={overview?.active_missions_count ?? 0} subtext="Autonomous DAGs" provenance="SIMULATED" />
+        <AgentPayMetric label="Active Agents" value={overview?.active_agents_count ?? 1} subtext="Keyless runtime" provenance="SIMULATED" />
+        <AgentPayMetric label="Committed Capital" value="$182.40" subtext="Projected in-flight" provenance="SIMULATED" />
+        <AgentPayMetric label="Projected Margin" value="$24.10" subtext="Simulation estimate" provenance="PROJECTED" />
+        <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 0} subtext="Dual-custody >$20" provenance="SIMULATED" highlight />
         <AgentPayMetric label="Running Workflows" value="8" subtext="Durable state" provenance="SIMULATED" />
-        <AgentPayMetric label="Simulated Settled" value="$1,204.32" subtext="0 Real Arc Settlements" provenance="PROJECTED" />
+        <AgentPayMetric label="Simulated Settled" value="$1,204.32" subtext="0 Real Arc Settlements" provenance="SIMULATED" />
         <AgentPayMetric label="Arc RPC" value="CONNECTED" subtext="Chain 5042 (0 Real Tx)" provenance="VERIFIED" />
       </div>
 

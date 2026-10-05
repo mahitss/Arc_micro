@@ -173,16 +173,18 @@ export default function TreasuryDashboardPage() {
         {/* Total Capital */}
         <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-[#716F69] uppercase tracking-wider">Total On-Chain Capital</span>
-            <span className="h-2 w-2 rounded-full bg-[#D6A83A]" />
+            <span className="text-xs font-mono text-[#716F69] uppercase tracking-wider">
+              {mode === 'SIMULATION' ? 'Simulated Total Capital' : 'Real AgentVault Balance'}
+            </span>
+            <span className={`h-2 w-2 rounded-full ${mode === 'SIMULATION' ? 'bg-[#D6A83A]' : 'bg-[#D85C5C]'}`} />
           </div>
           <div className="mt-3 text-3xl font-extrabold text-[#F2F0EA] font-mono">
-            {state ? formatUsdc(state.total_balance) : '---'}
+            {mode === 'SIMULATION' ? (state ? formatUsdc(state.total_balance) : '---') : 'NOT DEPLOYED'}
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[#716F69] font-mono">
             <span>Asset: USDC</span>
-            <span className={mode === 'SIMULATION' ? 'text-[#D6A83A]' : 'text-[#716F69]'}>
-              {mode === 'SIMULATION' ? 'Simulated Ledger' : 'AgentVault Undeployed'}
+            <span className={mode === 'SIMULATION' ? 'text-[#D6A83A]' : 'text-[#D85C5C]'}>
+              {mode === 'SIMULATION' ? 'Simulated Ledger' : 'AgentVault Undeployed (0x)'}
             </span>
           </div>
         </div>
@@ -190,15 +192,19 @@ export default function TreasuryDashboardPage() {
         {/* Available Unencumbered */}
         <div className="bg-[#101010] border border-[#222222] rounded-xl p-5 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-[#716F69] uppercase tracking-wider">Available Unencumbered</span>
-            <span className="h-2 w-2 rounded-full bg-[#2FB36F]" />
+            <span className="text-xs font-mono text-[#716F69] uppercase tracking-wider">
+              {mode === 'SIMULATION' ? 'Simulated Available Liquidity' : 'Real Available Liquidity'}
+            </span>
+            <span className={`h-2 w-2 rounded-full ${mode === 'SIMULATION' ? 'bg-[#2FB36F]' : 'bg-[#D85C5C]'}`} />
           </div>
           <div className="mt-3 text-3xl font-extrabold text-[#2FB36F] font-mono">
-            {state ? formatUsdc(state.available_balance) : '---'}
+            {mode === 'SIMULATION' ? (state ? formatUsdc(state.available_balance) : '---') : 'UNAVAILABLE'}
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[#716F69] font-mono">
             <span>Safe Capacity:</span>
-            <span className="text-[#F2F0EA] font-bold">{state ? formatUsdc(state.safe_capacity) : '---'}</span>
+            <span className="text-[#F2F0EA] font-bold">
+              {mode === 'SIMULATION' ? (state ? formatUsdc(state.safe_capacity) : '---') : 'DISABLED'}
+            </span>
           </div>
         </div>
 

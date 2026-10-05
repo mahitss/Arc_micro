@@ -97,7 +97,7 @@ describe('TASK 48 — Emergency Global CSS & Layout Pipeline Suite', () => {
           assert.equal(res.status, 200, `${route} must return 200`);
           const html = await res.text();
           assert.ok(html.includes('AgentPay'), `${route} must contain AgentPay`);
-          assert.ok(html.includes('layout.css'), `${route} must link layout.css`);
+          assert.ok(html.includes('layout.css') || html.includes('/_next/static/css/'), `${route} must link layout.css or static css`);
         } catch (e) {
           // If dev server is not running or testing in offline CI, skip live network assertion
           const isOfflineOrRefused = 

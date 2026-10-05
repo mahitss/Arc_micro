@@ -19,6 +19,7 @@ export function DataAuthorityBadge({ provenance, className = '', subtext }: Data
       badgeStyle = 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30';
       dotStyle = 'bg-[#2FB36F]';
       break;
+    case 'SIMULATED':
     case 'SIMULATION — NO FUNDS MOVED':
     case 'DEMO FIXTURE':
       badgeStyle = 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30';
@@ -32,6 +33,7 @@ export function DataAuthorityBadge({ provenance, className = '', subtext }: Data
       badgeStyle = 'bg-[#D85C5C]/10 text-[#D85C5C] border-[#D85C5C]/30';
       dotStyle = 'bg-[#D85C5C]';
       break;
+    case 'STATIC':
     case 'STATIC CONFIG':
       badgeStyle = 'bg-[#141414] text-[#8A8882] border-[#2B2B2B]';
       dotStyle = 'bg-[#8A8882]';

@@ -22,10 +22,12 @@ export type DataSourceClassification =
 
 export type ProvenanceBadgeType =
   | 'LIVE'
+  | 'SIMULATED'
   | 'SIMULATION — NO FUNDS MOVED'
   | 'PROJECTED'
   | 'DEMO FIXTURE'
   | 'UNAVAILABLE'
+  | 'STATIC'
   | 'STATIC CONFIG';
 
 /**
@@ -146,6 +148,9 @@ export async function executeAuthoritativeQuery<T>(params: {
  * These are fixed architectural invariants, not dynamic state.
  */
 export const ARC_PROTOCOL_CONFIG = {
+  APPLICATION_STATUS: 'REAL APPLICATION',
+  ECONOMIC_ENVIRONMENT: 'SIMULATION — NO FUNDS MOVED',
+  FINANCIAL_EXECUTION: 'DISABLED',
   NETWORK_NAME: 'Arc Mainnet',
   CHAIN_ID: 5042,
   CHAIN_ID_HEX: '0x13b2',
@@ -154,6 +159,10 @@ export const ARC_PROTOCOL_CONFIG = {
   AGENT_VAULT_STATUS: 'NOT DEPLOYED ON MAINNET',
   LIVE_EXECUTION_ENABLED: false,
   REAL_SETTLEMENTS_COUNT: 0,
+  REAL_FUNDS_MOVED: '0.00 USDC',
+  BROADCAST_COUNT: 0,
+  POLICY_ENGINE_STATUS: 'READY (SIMULATION)',
+  AI_STATUS: 'CONNECTED (ADVISORY ONLY)',
   AUTHORITY_TIERS: [
     'GLOBAL (Economic Constitution v8)',
     'ORGANIZATION (Tenant Policies)',

@@ -51,12 +51,15 @@ export function NetworkTopologyGraph({ graph, onSelectNode }: NetworkTopologyGra
       {/* Header Bar */}
       <div className="px-6 py-4 border-b border-[#222222] flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2FB36F]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#D6A83A]" />
           <h3 className="text-sm font-semibold text-[#F2F0EA] tracking-wide">
             Autonomous Economic Topology Graph
           </h3>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#D6A83A]/10 text-[#D6A83A] border border-[#D6A83A]/30 font-bold">
+            SIMULATED NETWORK
+          </span>
           <span className="text-[11px] font-mono text-[#716F69] bg-[#141414] px-2 py-0.5 rounded-full border border-[#222222]">
-            {filteredNodes.length} Nodes · {edges.length} Edges
+            {filteredNodes.length} Nodes · {edges.length} Edges (Deterministic Demo Agents)
           </span>
         </div>
 

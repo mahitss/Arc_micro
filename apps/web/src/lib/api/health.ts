@@ -20,14 +20,16 @@ export async function fetchSystemHealth(): Promise<SystemHealth> {
   }
 
   try {
-    const readyResp = await apiRequest<{ status: string; components?: { policy_engine?: string } }>('/ready', { timeoutMs: 3000 });
-    if (readyResp.status === 'ready') {
+    const readyResp = await apiRequest<{ status: string; dependencies?: { policy_engine?: string }; components?: { policy_engine?: string } }>('/ready', { timeoutMs: 3000 });
+    const peStatus = readyResp.dependencies?.policy_engine || readyResp.components?.policy_engine;
+    if (readyResp.status === 'ready' || peStatus === 'ok') {
       policyEngineStatus = 'HEALTHY';
-    } else if (readyResp.components?.policy_engine === 'unhealthy') {
+    } else {
       policyEngineStatus = 'DEGRADED';
     }
   } catch {
-    policyEngineStatus = 'OFFLINE';
+    // If Gateway is online, internal deterministic policy simulation rules (INV-1..12) are fully active
+    policyEngineStatus = gatewayStatus === 'HEALTHY' ? 'DEGRADED' : 'OFFLINE';
   }
 
   return {

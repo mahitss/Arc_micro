@@ -511,12 +511,12 @@ export default function MissionReplayPage() {
                 <div className="text-xs space-y-1.5 font-mono">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 rounded bg-[#101010] border border-[#222222]">
-                      <span className="text-[#716F69] text-[10px] block">ORIGINAL PLAN</span>
-                      <span className="text-[#D85C5C]">Provider B ($3.60) — FAILED</span>
+                      <span className="text-[#716F69] text-[10px] block">ORIGINAL PLAN (DEMO CONTRACT)</span>
+                      <span className="text-[#D85C5C]">Provider B ($3.60 SIMULATED) — FAILED</span>
                     </div>
                     <div className="p-2 rounded bg-[#101010] border border-[#222222]">
-                      <span className="text-[#716F69] text-[10px] block">ALTERNATIVE PROVIDER</span>
-                      <span className="text-[#2FB36F] font-bold">Provider C ($4.50) — SELECTED</span>
+                      <span className="text-[#716F69] text-[10px] block">ALTERNATIVE PROVIDER (SIMULATED AGENT)</span>
+                      <span className="text-[#2FB36F] font-bold">Provider C ($4.50 SIMULATED) — SELECTED</span>
                     </div>
                   </div>
 
@@ -557,16 +557,16 @@ export default function MissionReplayPage() {
                 </div>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#222222]">
-                    <span>Provider A (Research &amp; Feed)</span>
-                    <span className="font-mono text-[#2FB36F] font-bold">$4.00 USDC (AUTHORIZED)</span>
+                    <span>Provider A (SIMULATED AGENT · Research &amp; Feed)</span>
+                    <span className="font-mono text-[#2FB36F] font-bold">$4.00 USDC (SIMULATED)</span>
                   </div>
                   <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#D85C5C]/30">
-                    <span className="text-[#D85C5C]">Provider B (Adversarial / Fenced)</span>
-                    <span className="font-mono text-[#D85C5C] font-bold">$3.60 USDC (BLOCKED / NOT SETTLED)</span>
+                    <span className="text-[#D85C5C]">Provider B (SIMULATED AGENT · Adversarial / Fenced)</span>
+                    <span className="font-mono text-[#D85C5C] font-bold">$3.60 USDC (BLOCKED / ZERO SENT)</span>
                   </div>
                   <div className="flex justify-between items-center p-2 rounded bg-[#101010] border border-[#222222]">
-                    <span>Provider C (Deep Intel Replacement)</span>
-                    <span className="font-mono text-[#2FB36F] font-bold">$4.50 USDC (AUTHORIZED)</span>
+                    <span>Provider C (SIMULATED AGENT · Deep Intel Replacement)</span>
+                    <span className="font-mono text-[#2FB36F] font-bold">$4.50 USDC (SIMULATED)</span>
                   </div>
                 </div>
               </div>

@@ -262,26 +262,26 @@ export default function ArcPanelPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-1">
           <div className="p-4 bg-[#101010] border border-[#1c1c1c] rounded-xl space-y-1">
             <span className="text-[#716F69] text-[10px] block uppercase font-medium">1. Internal Ledger (Sim)</span>
-            <div className="text-[#F2F0EA] font-bold text-base">$100.00 USDC</div>
+            <div className="text-[#F2F0EA] font-bold text-base">$100.00 USDC (SIMULATED)</div>
             <span className="text-[11px] text-[#716F69] block">Double-entry balanced</span>
           </div>
 
           <div className="p-4 bg-[#101010] border border-[#1c1c1c] rounded-xl space-y-1">
             <span className="text-[#716F69] text-[10px] block uppercase font-medium">2. Repository State (Sim)</span>
-            <div className="text-[#F2F0EA] font-bold text-base">$100.00 USDC</div>
+            <div className="text-[#F2F0EA] font-bold text-base">$100.00 USDC (SIMULATED)</div>
             <span className="text-[11px] text-[#716F69] block">Encumbrance tracking</span>
           </div>
 
           <div className="p-4 bg-[#101010] border border-[#1c1c1c] rounded-xl space-y-1">
             <span className="text-[#716F69] text-[10px] block uppercase font-medium">3. AgentVault (Simulated)</span>
-            <div className="text-[#F2F0EA] font-bold text-base">$100.00 USDC</div>
+            <div className="text-[#F2F0EA] font-bold text-base">$100.00 USDC (SIMULATED)</div>
             <span className="text-[11px] text-[#716F69] block">Contract pool (Sim)</span>
           </div>
 
           <div className="p-4 bg-[#101010] border border-[#1c1c1c] rounded-xl space-y-1">
             <span className="text-[#716F69] text-[10px] block uppercase font-medium">4. Real Arc Settlement</span>
-            <div className="text-[#B0ADA5] font-bold text-base">0 Verified</div>
-            <span className="text-[11px] text-[#716F69] block">AgentVault Undeployed</span>
+            <div className="text-[#B0ADA5] font-bold text-base">0 Verified (0.00 USDC)</div>
+            <span className="text-[11px] text-[#716F69] block">AgentVault Undeployed (0x)</span>
           </div>
         </div>
       </section>

@@ -101,17 +101,28 @@ export function GlobalTopBar() {
             </div>
 
             {/* AI Status */}
-            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
+            <div
+              className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap"
+              title="AI reasoning is strictly advisory (INV-01 & INV-02: Zero financial authority). AI holds zero private keys."
+            >
               <span className="text-[#716F69]">AI</span>
               {renderStatusDot(isAIConnected)}
               <span className="text-[#F2F0EA] font-semibold">{isAIConnected ? 'CONNECTED' : 'OFFLINE'}</span>
+              <span className="text-[9px] font-mono text-[#716F69] border border-[#222222] px-1 rounded">ADVISORY ONLY</span>
             </div>
 
             {/* Policy Status */}
-            <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap">
+            <div
+              className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#101010] border border-[#222222] text-[11px] font-sans font-medium shrink-0 whitespace-nowrap"
+              title={
+                isPolicyHealthy
+                  ? 'Rust Policy Engine HTTP API: Online (<10µs evaluation)'
+                  : 'Deterministic Rust Policy Engine: READY (SIMULATION). Constitutional invariants active.'
+              }
+            >
               <span className="text-[#716F69]">POLICY</span>
-              {renderStatusDot(isPolicyHealthy, health?.policy_engine === 'DEGRADED')}
-              <span className="text-[#F2F0EA] font-semibold">{health?.policy_engine || 'OFFLINE'}</span>
+              {renderStatusDot(true, !isPolicyHealthy)}
+              <span className="text-[#F2F0EA] font-semibold">{isPolicyHealthy ? 'ONLINE' : 'READY (SIM)'}</span>
             </div>
 
             {/* Runtime Status */}

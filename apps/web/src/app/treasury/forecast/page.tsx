@@ -7,6 +7,7 @@ import {
   LiquidityForecast,
   TreasuryExecutionMode,
 } from '@/lib/api/treasury';
+import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
 
 function formatUsdc(microUnits: string | number): string {
   const val = typeof microUnits === 'string' ? parseFloat(microUnits) : microUnits;
@@ -64,9 +65,15 @@ export default function TreasuryForecastPage() {
             <span className="text-[#222222]">/</span>
             <span className="text-xs font-mono text-[#716F69]">Forecasting Engine</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA] mt-2 flex items-center gap-2">
-            Predictive Liquidity Forecasting
-          </h1>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F2F0EA]">
+              Predictive Liquidity Forecasting
+            </h1>
+            <DataAuthorityBadge
+              provenance={mode === 'SIMULATION' ? 'SIMULATED' : 'UNAVAILABLE'}
+              subtext={mode === 'SIMULATION' ? 'Projected USDC exposure' : 'AgentVault Undeployed'}
+            />
+          </div>
           <p className="mt-1 text-sm text-[#716F69]">
             Temporal liquidity simulations across configurable horizons (1h to 30d) with multi-agent perturbation curves.
           </p>

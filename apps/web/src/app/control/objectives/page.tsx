@@ -225,7 +225,7 @@ export default function ObjectivesIndexPage() {
           <div className="p-3 bg-[#141414] border border-[#D85C5C]/40 rounded-xl flex items-center justify-between text-xs font-mono text-[#D85C5C]">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#D85C5C] animate-pulse" />
-              <span>OBJECTIVE SERVICE UNAVAILABLE · Operating in DEMO / LOCAL SIMULATION fallback mode</span>
+              <span>OBJECTIVE SERVICE UNAVAILABLE · Live backend unreachable (EMPTY_UNAVAILABLE). Simulation mode must be explicitly activated to view deterministic fixtures.</span>
             </div>
           </div>
         )}
