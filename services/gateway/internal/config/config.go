@@ -1,11 +1,38 @@
 package config
 
 import (
+	"bufio"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func loadEnvFiles() {
+	candidates := []string{".env", "../.env", "../../.env"}
+	for _, path := range candidates {
+		if f, err := os.Open(path); err == nil {
+			scanner := bufio.NewScanner(f)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) == 2 {
+					key := strings.TrimSpace(parts[0])
+					val := strings.TrimSpace(parts[1])
+					val = strings.Trim(val, `"'`)
+					if _, exists := os.LookupEnv(key); !exists {
+						_ = os.Setenv(key, val)
+					}
+				}
+			}
+			_ = f.Close()
+			break
+		}
+	}
+}
 
 // Config holds configuration parameters for the Gateway service.
 type Config struct {
@@ -53,6 +80,8 @@ type Config struct {
 
 // Load reads configuration from environment variables with sensible defaults.
 func Load() *Config {
+	loadEnvFiles()
+
 	port := os.Getenv("GATEWAY_PORT")
 	if port == "" {
 		port = os.Getenv("PORT")

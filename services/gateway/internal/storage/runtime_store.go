@@ -1138,7 +1138,7 @@ func (p *PostgresRuntimeStore) ListDecisions(ctx context.Context, workflowID str
 
 func (p *PostgresRuntimeStore) SaveOutboxEvent(ctx context.Context, e *runtime.OutboxEvent) error {
 	query := `
-		INSERT INTO outbox_events (
+		INSERT INTO runtime_outbox_events (
 			event_id, tenant_id, aggregate_type, aggregate_id, event_type,
 			payload, status, attempt, next_attempt_at, error_message, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
@@ -1154,7 +1154,7 @@ func (p *PostgresRuntimeStore) ListPendingOutboxEvents(ctx context.Context, limi
 	query := `
 		SELECT event_id, tenant_id, aggregate_type, aggregate_id, event_type,
 		       payload, status, attempt, next_attempt_at, error_message, created_at
-		FROM outbox_events
+		FROM runtime_outbox_events
 		WHERE status IN ('PENDING', 'RETRYING') AND next_attempt_at <= NOW()
 		ORDER BY created_at ASC
 		LIMIT $1;
@@ -1183,7 +1183,7 @@ func (p *PostgresRuntimeStore) ListPendingOutboxEvents(ctx context.Context, limi
 
 func (p *PostgresRuntimeStore) MarkOutboxEventDelivered(ctx context.Context, eventID string) error {
 	query := `
-		UPDATE outbox_events
+		UPDATE runtime_outbox_events
 		SET status = 'DELIVERED', delivered_at = NOW()
 		WHERE event_id = $1;
 	`
@@ -1193,7 +1193,7 @@ func (p *PostgresRuntimeStore) MarkOutboxEventDelivered(ctx context.Context, eve
 
 func (p *PostgresRuntimeStore) MarkOutboxEventFailed(ctx context.Context, eventID, errorMsg string, nextAttempt time.Time) error {
 	query := `
-		UPDATE outbox_events
+		UPDATE runtime_outbox_events
 		SET status = 'RETRYING', attempt = attempt + 1, error_message = $1, next_attempt_at = $2
 		WHERE event_id = $3;
 	`

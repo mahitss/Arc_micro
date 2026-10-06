@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS runtime_decisions (
 CREATE INDEX IF NOT EXISTS idx_runtime_decisions_wf ON runtime_decisions (workflow_id);
 CREATE INDEX IF NOT EXISTS idx_runtime_decisions_tenant ON runtime_decisions (tenant_id, created_at DESC);
 
-CREATE TABLE IF NOT EXISTS outbox_events (
+CREATE TABLE IF NOT EXISTS runtime_outbox_events (
     event_id VARCHAR(64) PRIMARY KEY,
     tenant_id VARCHAR(64) NOT NULL,
     aggregate_type VARCHAR(64) NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS outbox_events (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_outbox_events_delivery ON outbox_events (status, next_attempt_at) WHERE status IN ('PENDING', 'RETRYING');
+CREATE INDEX IF NOT EXISTS idx_runtime_outbox_events_delivery ON runtime_outbox_events (status, next_attempt_at) WHERE status IN ('PENDING', 'RETRYING');
 
 CREATE TABLE IF NOT EXISTS inbox_events (
     inbox_id VARCHAR(64) PRIMARY KEY,
