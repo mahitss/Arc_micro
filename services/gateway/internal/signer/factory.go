@@ -14,6 +14,12 @@ import (
 // NewSignerFromConfig constructs the configured TransactionSigner according to explicit configuration.
 // Failure behavior: Strictly fails closed without silent fallback between backends.
 func NewSignerFromConfig(cfg *config.Config, recorder AuditRecorder) (TransactionSigner, error) {
+	return NewSignerFromConfigWithContext(context.Background(), cfg, recorder)
+}
+
+// NewSignerFromConfigWithContext constructs the configured TransactionSigner with a caller-provided context.
+// Failure behavior: Strictly fails closed without silent fallback between backends.
+func NewSignerFromConfigWithContext(ctx context.Context, cfg *config.Config, recorder AuditRecorder) (TransactionSigner, error) {
 	if cfg == nil {
 		return nil, ErrSignerNotConfigured
 	}
@@ -41,7 +47,7 @@ func NewSignerFromConfig(cfg *config.Config, recorder AuditRecorder) (Transactio
 		return s, nil
 	case "kms":
 		// Production KMS/HSM boundary — fails fast if not available, NO SILENT FALLBACK.
-		s, err := NewKMSSigner(cfg.KMSKeyID, cfg.KMSRegion, chainID, recorder)
+		s, err := NewKMSSignerWithContext(ctx, cfg.KMSKeyID, cfg.KMSRegion, chainID, recorder, nil)
 		if err != nil {
 			return nil, err
 		}

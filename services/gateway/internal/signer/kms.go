@@ -51,9 +51,18 @@ func NewKMSSigner(keyID, region string, chainID *big.Int, recorder AuditRecorder
 	return NewKMSSignerWithProvider(keyID, region, chainID, recorder, nil)
 }
 
-// NewKMSSignerWithProvider initializes a KMSSigner with an explicit KMSProvider.
-// If provider is nil, it strictly fails closed with ErrKMSSignerUnavailable.
+// NewKMSSignerWithProvider initializes a KMSSigner with an explicit KMSProvider using a default 10-second timeout context.
+// Maintained for backward compatibility. If provider is nil, it strictly fails closed with ErrKMSSignerUnavailable.
 func NewKMSSignerWithProvider(keyID, region string, chainID *big.Int, recorder AuditRecorder, provider KMSProvider) (*KMSSigner, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return NewKMSSignerWithContext(ctx, keyID, region, chainID, recorder, provider)
+}
+
+// NewKMSSignerWithContext initializes a KMSSigner with caller-controlled context and provider.
+// If provider is nil, it strictly fails closed with ErrKMSSignerUnavailable.
+// If ctx is nil, a default 10-second timeout context is used.
+func NewKMSSignerWithContext(ctx context.Context, keyID, region string, chainID *big.Int, recorder AuditRecorder, provider KMSProvider) (*KMSSigner, error) {
 	if chainID == nil || chainID.Sign() <= 0 {
 		return nil, ErrInvalidChainID
 	}
@@ -73,8 +82,11 @@ func NewKMSSignerWithProvider(keyID, region string, chainID *big.Int, recorder A
 		return nil, ErrInvalidKMSRegion
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	if ctx == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+	}
 
 	pubBytes, err := provider.GetPublicKey(ctx, trimmedKeyID)
 	if err != nil {

@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/signer"
 )
 
@@ -39,6 +40,7 @@ type MockKMSProvider struct {
 	signError      error
 	getPubError    error
 	signDelay      time.Duration
+	getPubDelay    time.Duration
 }
 
 func NewMockKMSProvider(keyID string, hexKey string, pubKeyEncoding string) (*MockKMSProvider, error) {
@@ -76,6 +78,16 @@ type spkiPublicKey struct {
 }
 
 func (m *MockKMSProvider) GetPublicKey(ctx context.Context, keyID string) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if m.getPubDelay > 0 {
+		select {
+		case <-time.After(m.getPubDelay):
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
 	if m.getPubError != nil {
 		return nil, m.getPubError
 	}
@@ -103,6 +115,9 @@ func (m *MockKMSProvider) GetPublicKey(ctx context.Context, keyID string) ([]byt
 }
 
 func (m *MockKMSProvider) SignDigest(ctx context.Context, keyID string, digest []byte) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if m.signDelay > 0 {
 		select {
 		case <-time.After(m.signDelay):
@@ -407,5 +422,260 @@ func TestKMSSigner_ZeroSecretLeakage(t *testing.T) {
 	}
 	if !strings.Contains(strRepr, "KMSSigner") || !strings.Contains(strRepr, "backend: kms") {
 		t.Errorf("unexpected string representation: %s", strRepr)
+	}
+}
+
+// 9. Test Caller-Controlled Context Support & Cancellation in KMSSigner Initialization
+func TestKMSSigner_ConstructionContextCancellation(t *testing.T) {
+	chainID := big.NewInt(testChainID)
+	mockProvider, _ := NewMockKMSProvider("test-key-ctx", testHexKey1, "spki")
+
+	// A. Already cancelled context should immediately abort without hanging
+	canceledCtx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := signer.NewKMSSignerWithContext(canceledCtx, "test-key-ctx", "us-east-1", chainID, nil, mockProvider)
+	if err == nil {
+		t.Fatal("expected error with pre-cancelled context, got nil")
+	}
+	if !errors.Is(err, signer.ErrInvalidKMSPublicKey) {
+		t.Errorf("expected ErrInvalidKMSPublicKey, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), context.Canceled.Error()) {
+		t.Errorf("expected context.Canceled in error message, got: %v", err)
+	}
+
+	// B. Timeout during GetPublicKey
+	slowProvider, _ := NewMockKMSProvider("test-key-slow", testHexKey1, "spki")
+	slowProvider.getPubDelay = 100 * time.Millisecond
+
+	timeoutCtx, cancelTimeout := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancelTimeout()
+
+	_, err = signer.NewKMSSignerWithContext(timeoutCtx, "test-key-slow", "us-east-1", chainID, nil, slowProvider)
+	if err == nil {
+		t.Fatal("expected error with timed out context, got nil")
+	}
+	if !errors.Is(err, signer.ErrInvalidKMSPublicKey) {
+		t.Errorf("expected ErrInvalidKMSPublicKey, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+		t.Errorf("expected context.DeadlineExceeded in error message, got: %v", err)
+	}
+
+	// C. Successful initialization with valid explicit context
+	validCtx, cancelValid := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancelValid()
+
+	kmsSigner, err := signer.NewKMSSignerWithContext(validCtx, "test-key-ctx", "us-east-1", chainID, nil, mockProvider)
+	if err != nil {
+		t.Fatalf("expected successful initialization with valid context, got: %v", err)
+	}
+	if kmsSigner == nil {
+		t.Fatal("expected non-nil KMSSigner")
+	}
+}
+
+// 10. Test Nil Transaction Rejection in KMSSigner.SignTransaction
+func TestKMSSigner_SignTransaction_NilTransactionRejected(t *testing.T) {
+	chainID := big.NewInt(testChainID)
+	rec := &signer.MemoryAuditRecorder{}
+	mockProvider, _ := NewMockKMSProvider("valid-key", testHexKey1, "spki")
+
+	kmsSigner, err := signer.NewKMSSignerWithProvider("valid-key", "us-east-1", chainID, rec, mockProvider)
+	if err != nil {
+		t.Fatalf("failed to init signer: %v", err)
+	}
+
+	binding := &signer.TransactionBinding{
+		RequestID:   "req_nil_tx",
+		ChainID:     chainID,
+		TargetVault: common.HexToAddress(testVaultHex),
+	}
+
+	signedTx, err := kmsSigner.SignTransaction(context.Background(), nil, binding)
+	if !errors.Is(err, signer.ErrNilTransaction) {
+		t.Fatalf("expected ErrNilTransaction, got: %v", err)
+	}
+	if signedTx != nil {
+		t.Errorf("expected nil signed transaction, got: %v", signedTx)
+	}
+
+	// Verify failed audit event was recorded
+	evt := rec.LastEvent()
+	if evt == nil {
+		t.Fatal("expected audit event to be recorded for nil transaction attempt")
+	}
+	if evt.Success {
+		t.Errorf("expected audit event success=false, got true")
+	}
+	if evt.ErrorMessage != signer.ErrNilTransaction.Error() {
+		t.Errorf("expected error message %q, got %q", signer.ErrNilTransaction.Error(), evt.ErrorMessage)
+	}
+}
+
+// 11. Test Invalid / Mismatched Chain ID in KMSSigner.SignTransaction
+func TestKMSSigner_SignTransaction_InvalidChainIDRejected(t *testing.T) {
+	chainID := big.NewInt(testChainID)
+	rec := &signer.MemoryAuditRecorder{}
+	mockProvider, _ := NewMockKMSProvider("valid-key", testHexKey1, "spki")
+
+	kmsSigner, err := signer.NewKMSSignerWithProvider("valid-key", "us-east-1", chainID, rec, mockProvider)
+	if err != nil {
+		t.Fatalf("failed to init signer: %v", err)
+	}
+
+	vault := common.HexToAddress(testVaultHex)
+	// Transaction configured with wrong chain ID (e.g. Ethereum mainnet 1 instead of 5042)
+	wrongChainID := big.NewInt(1)
+	tx := buildSampleTx(wrongChainID, vault, big.NewInt(0), []byte{0x01})
+
+	signedTx, err := kmsSigner.SignTransaction(context.Background(), tx, nil)
+	if !errors.Is(err, signer.ErrInvalidChainID) {
+		t.Fatalf("expected ErrInvalidChainID for mismatched transaction chain ID, got: %v", err)
+	}
+	if signedTx != nil {
+		t.Errorf("expected nil signed transaction, got: %v", signedTx)
+	}
+
+	evt := rec.LastEvent()
+	if evt == nil || evt.Success {
+		t.Errorf("expected failed audit event, got: %+v", evt)
+	}
+}
+
+// 12. Test Transaction Binding Mismatches in KMSSigner.SignTransaction
+func TestKMSSigner_SignTransaction_BindingMismatchesRejected(t *testing.T) {
+	chainID := big.NewInt(testChainID)
+	mockProvider, _ := NewMockKMSProvider("valid-key", testHexKey1, "spki")
+
+	approvedVault := common.HexToAddress(testVaultHex)
+	attackerVault := common.HexToAddress("0x9999999999999999999999999999999999999999")
+	authorizedCalldata := []byte{0x11, 22, 33, 44}
+	mutatedCalldata := []byte{0xde, 0xad, 0xbe, 0xef}
+
+	tests := []struct {
+		name           string
+		tx             *types.Transaction
+		binding        *signer.TransactionBinding
+		expectedErrSub string
+	}{
+		{
+			name: "Mismatched_TargetVault",
+			tx:   buildSampleTx(chainID, attackerVault, big.NewInt(0), authorizedCalldata),
+			binding: &signer.TransactionBinding{
+				RequestID:        "req_vault_tamper",
+				ChainID:          chainID,
+				TargetVault:      approvedVault,
+				ExpectedCalldata: authorizedCalldata,
+			},
+			expectedErrSub: "destination address mismatch",
+		},
+		{
+			name: "NonZero_Native_Value",
+			tx:   buildSampleTx(chainID, approvedVault, big.NewInt(1000000000), authorizedCalldata),
+			binding: &signer.TransactionBinding{
+				RequestID:        "req_value_tamper",
+				ChainID:          chainID,
+				TargetVault:      approvedVault,
+				ExpectedCalldata: authorizedCalldata,
+			},
+			expectedErrSub: "unexpected native token value",
+		},
+		{
+			name: "Mutated_Calldata",
+			tx:   buildSampleTx(chainID, approvedVault, big.NewInt(0), mutatedCalldata),
+			binding: &signer.TransactionBinding{
+				RequestID:        "req_calldata_tamper",
+				ChainID:          chainID,
+				TargetVault:      approvedVault,
+				ExpectedCalldata: authorizedCalldata,
+			},
+			expectedErrSub: "transaction calldata mismatch",
+		},
+		{
+			name: "Mismatched_Binding_ChainID",
+			tx:   buildSampleTx(chainID, approvedVault, big.NewInt(0), authorizedCalldata),
+			binding: &signer.TransactionBinding{
+				RequestID:        "req_chain_tamper",
+				ChainID:          big.NewInt(9999),
+				TargetVault:      approvedVault,
+				ExpectedCalldata: authorizedCalldata,
+			},
+			expectedErrSub: "binding chain ID",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := &signer.MemoryAuditRecorder{}
+			kmsSigner, err := signer.NewKMSSignerWithProvider("valid-key", "us-east-1", chainID, rec, mockProvider)
+			if err != nil {
+				t.Fatalf("failed to init signer: %v", err)
+			}
+
+			signedTx, err := kmsSigner.SignTransaction(context.Background(), tc.tx, tc.binding)
+			if err == nil {
+				t.Fatalf("expected error for %s, got nil", tc.name)
+			}
+			if !errors.Is(err, signer.ErrTransactionBindingMismatch) {
+				t.Errorf("expected ErrTransactionBindingMismatch, got: %v", err)
+			}
+			if !strings.Contains(err.Error(), tc.expectedErrSub) {
+				t.Errorf("expected error to contain %q, got: %v", tc.expectedErrSub, err)
+			}
+			if signedTx != nil {
+				t.Errorf("expected nil signed transaction, got: %v", signedTx)
+			}
+
+			evt := rec.LastEvent()
+			if evt == nil || evt.Success {
+				t.Errorf("expected failed audit event for %s, got: %+v", tc.name, evt)
+			}
+		})
+	}
+}
+
+// 13. Test Context Cancellation in KMSSigner.SignTransaction
+func TestKMSSigner_SignTransaction_ContextCancellation(t *testing.T) {
+	chainID := big.NewInt(testChainID)
+	mockProvider, _ := NewMockKMSProvider("valid-key", testHexKey1, "spki")
+
+	kmsSigner, err := signer.NewKMSSignerWithProvider("valid-key", "us-east-1", chainID, nil, mockProvider)
+	if err != nil {
+		t.Fatalf("failed to init signer: %v", err)
+	}
+
+	tx := buildSampleTx(chainID, common.HexToAddress(testVaultHex), big.NewInt(0), []byte{0x01})
+
+	// Pre-cancelled context
+	canceledCtx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err = kmsSigner.SignTransaction(canceledCtx, tx, nil)
+	if err == nil {
+		t.Fatal("expected error with pre-cancelled context, got nil")
+	}
+	if !errors.Is(err, signer.ErrKMSProviderFailed) {
+		t.Errorf("expected ErrKMSProviderFailed, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), context.Canceled.Error()) {
+		t.Errorf("expected context.Canceled in error message, got: %v", err)
+	}
+}
+
+// 14. Test Factory Context Support with NewSignerFromConfigWithContext
+func TestKMSSigner_FactoryContextSupport(t *testing.T) {
+	cfg := &config.Config{
+		SignerBackend: "kms",
+		KMSKeyID:      "test-key",
+		KMSRegion:     "us-east-1",
+		ArcChainID:    "5042",
+	}
+
+	// Should fail closed with ErrKMSSignerUnavailable
+	_, err := signer.NewSignerFromConfigWithContext(context.Background(), cfg, nil)
+	if !errors.Is(err, signer.ErrKMSSignerUnavailable) {
+		t.Errorf("expected ErrKMSSignerUnavailable from NewSignerFromConfigWithContext, got: %v", err)
 	}
 }
