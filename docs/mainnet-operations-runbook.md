@@ -173,9 +173,11 @@ To inspect, mutate, or revoke tenant-scoped resources (such as tenant API keys o
    ```
 
 3. **Deploy Gateway & Policy Engine Services**:
+   Launch the containerized microservices using the supported `docker-compose.yml` orchestrator, injecting production environment variables:
    ```bash
-   docker-compose -f docker-compose.prod.yml up -d
+   docker-compose --env-file /etc/agentpay/gateway.env up -d
    ```
+   *(Alternatively, export production environment variables directly into the shell before running `docker-compose up -d`.)*
 
 ---
 
@@ -368,3 +370,31 @@ To perform planned maintenance or infrastructure upgrades:
    ```bash
    curl -X POST http://localhost:8080/v1/system/resume -H "Authorization: Bearer $ADMIN_KEY"
    ```
+
+---
+
+## 15. Supported Local Development Workflows (Windows / Docker / WSL)
+
+On Windows developer machines where Microsoft Visual C++ Build Tools (`link.exe`) or Windows SDK synchronization import libraries are absent, the Rust Policy Engine cannot link native Windows binaries directly with `cargo build`.
+
+### Supported Docker Workflow:
+Run tests or builds inside a Linux container using Docker:
+```powershell
+# Run policy engine test suite
+docker run --rm -v "${PWD}/services/policy-engine:/app" -w /app rust:1-slim cargo test
+
+# Offline test run (using local cargo registry cache)
+docker run --rm --network none `
+  -v "${PWD}/services/policy-engine:/app" `
+  -v "${HOME}/.cargo/registry:/usr/local/cargo/registry" `
+  -w /app rust:1-slim cargo test --offline
+```
+
+### Supported WSL Workflow:
+Inside Windows Subsystem for Linux (WSL Ubuntu):
+```bash
+cd services/policy-engine
+cargo test
+cargo build --release
+```
+Both container and WSL environments produce 100% reproducible test and build outputs identical to GitHub Actions CI.

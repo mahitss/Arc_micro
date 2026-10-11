@@ -146,3 +146,24 @@ cargo clippy
 # Run service locally on port 8081
 cargo run
 ```
+
+### Windows Local Development (Docker & WSL)
+
+On Windows developer machines without Visual Studio C++ Build Tools (`link.exe`), execute builds and tests in Docker or WSL:
+
+```powershell
+# Run test suite via Docker
+docker run --rm -v "${PWD}:/app" -w /app rust:1-slim cargo test
+
+# Offline test suite (using local cargo registry cache)
+docker run --rm --network none `
+  -v "${PWD}:/app" `
+  -v "${HOME}/.cargo/registry:/usr/local/cargo/registry" `
+  -w /app rust:1-slim cargo test --offline
+```
+
+Alternatively, run inside Windows Subsystem for Linux (WSL):
+```bash
+cargo test
+cargo build --release
+```
