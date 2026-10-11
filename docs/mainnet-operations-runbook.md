@@ -1,9 +1,12 @@
 # AgentPay Mainnet Operations Runbook
 
-**Target Network:** Arc Mainnet (EVM Chain ID `5042`)  
-**Settlement Asset:** Native USDC (`0x3600000000000000000000000000000000000000`)  
-**Security Freeze:** Day 9 Final Mainnet Production Freeze  
+**Target Network:** Arc Mainnet (EVM Chain ID `5042`)<br>
+**Settlement Asset:** Native USDC (`0x3600000000000000000000000000000000000000`)<br>
+**Release Target:** Release Candidate 2 (`v1.0.0-rc.2`)<br>
+**Frozen Commit:** `9575a7b64dff84fca686f96d99b21eea5f52d3c6`<br>
+**Security Freeze:** Day 9 Final Mainnet Production Freeze<br>
 **Classification:** Confidential Operator Runbook (Contains NO secrets)
+
 
 ---
 
@@ -156,6 +159,50 @@ To inspect, mutate, or revoke tenant-scoped resources (such as tenant API keys o
 > `resource not found in default organization scope: specify '?organization_id=<tenant_id>' or 'X-Organization-Id' header for tenant-scoped resources`.
 > Non-admin callers receive standard opaque `NOT_FOUND` or `FORBIDDEN` responses to guarantee absolute tenant isolation.
 
+### 4.2 Enterprise AWS KMS Signer Configuration
+
+For production enterprise deployments migrating from local hot keys (`SIGNER_BACKEND=local`) to hardware-backed key custody, configure AWS KMS:
+
+```env
+# Signer Backend Selection (switches from local private key to AWS KMS)
+SIGNER_BACKEND=kms
+
+# Canonical Key ARN (Mutable aliases and alias ARNs like alias/... are strictly rejected at startup)
+KMS_KEY_ID=arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
+
+# AWS Region where the KMS key is provisioned
+KMS_REGION=us-east-1
+
+# Optional Expected AWS Account ID (enforces 12-digit account match)
+KMS_EXPECTED_ACCOUNT=123456789012
+
+# Expected Ethereum Address derived from KMS public key (mandatory binding check)
+EXPECTED_EXECUTOR_ADDRESS=0x1234567890123456789012345678901234567890
+```
+
+#### AWS KMS Operational Rules & Least Privilege
+1. **Canonical Key ARN**: The gateway enforces an immutable canonical Key ARN format (`arn:aws:kms:<region>:<account>:key/<uuid>`). Key aliases (`alias/my-key` or `...:alias/...`) are explicitly rejected by `ValidateLiveExecutionRequirements` to prevent DNS/alias hijacking.
+2. **Key Specification**: The KMS key must be created with Key Spec `ECC_SECG_P256K1` and Key Usage `SIGN_VERIFY`.
+3. **IAM Least Privilege**: The gateway execution host role requires only two KMS actions restricted to the exact Key ARN:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "kms:GetPublicKey",
+           "kms:Sign"
+         ],
+         "Resource": "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+       }
+     ]
+   }
+   ```
+4. **Fail-Closed Startup Verification**: On boot, the gateway calls `kms:GetPublicKey`, derives the uncompressed 64-byte SECP256k1 public key, computes the Keccak-256 Ethereum address, and compares it to `EXPECTED_EXECUTOR_ADDRESS`. If the derived address does not match or KMS cannot be contacted, the gateway **halts immediately and refuses to serve traffic**.
+5. **Truth Attestation**: Live AWS KMS integration was tested in CI with unit tests and mock adapters only; live AWS KMS APIs were not contacted during offline audit gates.
+
+
 ---
 
 ## 5. Deployment Procedure
@@ -166,11 +213,54 @@ To inspect, mutate, or revoke tenant-scoped resources (such as tenant API keys o
    ```
    *Note: Requires interactive typing of confirmation token to prevent accidental execution.*
 
-2. **Run Database Migrations**:
+2. **Database Migration Procedure**:
    Ensure PostgreSQL migrations are applied cleanly before starting gateway instances:
+
+   **a. Obtain and Verify the Migration Tooling:**
+   Use the pinned, official `golang-migrate` release binary or container image:
+   ```bash
+   # Option 1: Pinned Docker Image (Recommended)
+   docker pull migrate/migrate:v4.17.0
+   docker run --rm migrate/migrate:v4.17.0 -version
+   # Expected output: v4.17.0
+
+   # Option 2: Binary release from https://github.com/golang-migrate/migrate/releases/tag/v4.17.0
+   migrate -version
+   # Expected output: 4.17.0
+   ```
+
+   **b. Pre-Migration Database Backup & Validation:**
+   Before running any schema migrations, create a binary custom-format backup and verify its archive integrity:
+   ```bash
+   # Create timestamped binary backup
+   pg_dump -Fc -v -d "$DATABASE_URL" -f "agentpay_pre_migration_$(date +%Y%m%d_%H%M%S).dump"
+
+   # Validate backup archive readability
+   pg_restore -l "agentpay_pre_migration_$(date +%Y%m%d_%H%M%S).dump" > /dev/null
+   ```
+
+   **c. Check Current Schema Version and Dirty State:**
+   ```bash
+   # Inspect current migration version
+   migrate -path services/gateway/migrations -database "$DATABASE_URL" version
+   ```
+   *If the version query reports `dirty: true`, migrations are locked. Do not proceed until dirty state is reconciled.*
+
+   **d. Apply Migrations:**
    ```bash
    migrate -path services/gateway/migrations -database "$DATABASE_URL" up
    ```
+
+   **e. Migration Failure & Dirty State Recovery:**
+   If a migration fails due to lock timeout or syntax error, PostgreSQL will leave the `schema_migrations` table in a dirty state (`dirty = true`):
+   1. Inspect database logs to identify the failing SQL statement.
+   2. Manually fix the failing statement in PostgreSQL or roll back the partial DDL.
+   3. Force the migration version back to the last known clean version:
+      ```bash
+      migrate -path services/gateway/migrations -database "$DATABASE_URL" force <LAST_CLEAN_VERSION>
+      ```
+   4. Re-run `migrate ... up` after resolving the root cause, or restore from the verified pre-migration dump.
+
 
 3. **Deploy Gateway & Policy Engine Services**:
    Launch the containerized microservices using the supported `docker-compose.yml` orchestrator, injecting production environment variables:
@@ -262,6 +352,49 @@ Monitor transactions in real time via structured logs and the Flight Recorder:
    curl -s "http://localhost:8080/v1/payment-intents/$INTENT_ID/trace" \
      -H "Authorization: Bearer $ADMIN_API_KEY" | jq .
    ```
+
+### 8.1 Safe Decision Procedure for Submitted or Ambiguous Transactions
+
+If a payment intent remains in `SUBMITTED` or transitions to `AMBIGUOUS` (e.g. following an RPC confirmation timeout), operators must execute this deterministic decision procedure before taking any operational action:
+
+1. **Query Intent Record & Extract Transaction Hash**:
+   ```bash
+   curl -s "http://localhost:8080/v1/payment-intents/$INTENT_ID" \
+     -H "Authorization: Bearer $ADMIN_API_KEY" | jq '{id, status, transaction_hash, created_at}'
+   ```
+   *If `transaction_hash` is present, the transaction was signed and broadcast to the Arc network.*
+
+2. **Query On-Chain Transaction Receipt Directly**:
+   ```bash
+   cast receipt $TX_HASH --rpc-url https://rpc.mainnet.arc.io
+   ```
+   - **Case A: Receipt Found with Status `1` (`0x1`)**:
+     The payment executed and settled successfully on-chain. Call `/v1/payment-intents/$INTENT_ID` or query trace to trigger gateway reconciliation to `CONFIRMED`.
+   - **Case B: Receipt Found with Status `0` (`0x0`)**:
+     The transaction was mined but reverted by EVM policy. The gateway reconciles the intent to `FAILED` and releases treasury reservations.
+   - **Case C: Receipt Not Found (RPC returns null or error)**:
+     Proceed to Step 3.
+
+3. **Query Mempool Status & Transaction Parameters**:
+   ```bash
+   cast tx $TX_HASH --rpc-url https://rpc.mainnet.arc.io
+   ```
+   Verify the broadcast payload parameters:
+   - **Chain ID**: Must equal `5042` (Arc Mainnet).
+   - **Sender**: Must match the Relayer executor address (`owner` of `AgentVault`).
+   - **Nonce**: Check the transaction nonce against current account nonces:
+     ```bash
+     cast nonce $RELAYER_ADDRESS --rpc-url https://rpc.mainnet.arc.io
+     ```
+
+4. **Strict Invariant: DO NOT BLINDLY RESUBMIT**:
+   - **NEVER** create a second payment intent for the same payment request. If the original broadcast is pending in the mempool or temporarily unindexed, creating a new intent causes irreversible double spending when the original transaction eventually mines.
+   - Operators must wait for the confirmation horizon (`ARC_CONFIRMATION_TIMEOUT_MS`) and confirm receipt resolution before attempting any business-level recovery.
+
+5. **Unresolved Operational Limitation: Nonce Replacement**:
+   - The current Gateway execution engine does **NOT** support automated replacement-nonce transactions (e.g. broadcasting a zero-value cancellation or higher-gas replacement transaction with the same nonce).
+   - Nonce management is delegated dynamically to `PendingNonceAt` from the RPC node at broadcast time.
+   - If an Arc transaction is dropped by mempool congestion or permanently stuck behind a low gas price, manual operator intervention at the blockchain level is required to clear the relayer nonce sequence.
 
 ---
 
