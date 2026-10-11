@@ -17,6 +17,7 @@ ARC_RPC_URL="${ARC_RPC_URL:-https://rpc.mainnet.arc.io}"
 ARC_CHAIN_ID="${ARC_CHAIN_ID:-5042}"
 ARC_USDC_ADDRESS="${ARC_USDC_ADDRESS:-0x3600000000000000000000000000000000000000}"
 AGENT_ID="${AGENT_ID:-research-agent}"
+COLD_MULTISIG_OWNER="${COLD_MULTISIG_OWNER:-}"
 
 echo "=================================================================="
 echo "          AgentPay: Secure Arc Mainnet Deployment                "
@@ -26,6 +27,7 @@ echo "Target Chain ID:     ${ARC_CHAIN_ID}"
 echo "Target RPC URL:      ${ARC_RPC_URL}"
 echo "USDC Contract:       ${ARC_USDC_ADDRESS}"
 echo "Agent ID:            ${AGENT_ID}"
+echo "Cold Multisig Owner: ${COLD_MULTISIG_OWNER}"
 echo "=================================================================="
 
 # Check for explicit confirmation
@@ -58,6 +60,14 @@ if [ -z "${DEPLOYER_PRIVATE_KEY:-}" ] && [ -z "${PRIVATE_KEY:-}" ]; then
 fi
 
 PRIV_KEY="${DEPLOYER_PRIVATE_KEY:-${PRIVATE_KEY}}"
+
+# Enforce COLD_MULTISIG_OWNER requirement (never default to deployer)
+if [ -z "${COLD_MULTISIG_OWNER}" ]; then
+  echo "ERROR: COLD_MULTISIG_OWNER must be set in the environment." >&2
+  echo "AgentVault requires a valid non-zero cold multisig address for initialOwner." >&2
+  echo "Deployment aborted to protect contract governance authority." >&2
+  exit 1
+fi
 
 # Verify Chain ID against live RPC before broadcasting
 echo "Querying live RPC at ${ARC_RPC_URL} for chain ID..."

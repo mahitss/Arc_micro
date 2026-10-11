@@ -23,9 +23,14 @@ contract DeployAgentVault is Script {
             revert(string.concat("Unexpected chain ID. Expected Arc Mainnet (5042), got: ", vm.toString(block.chainid)));
         }
 
+        address initialOwner = vm.envAddress("COLD_MULTISIG_OWNER");
+
         // Validate required configuration parameters
         if (usdcAddress == address(0)) {
             revert("ARC_USDC_ADDRESS must be set in environment before deployment.");
+        }
+        if (initialOwner == address(0)) {
+            revert("COLD_MULTISIG_OWNER must be configured as a non-zero address before deployment.");
         }
 
         // Verify contract code exists at USDC address (except during local Anvil tests where code may be mocked)
@@ -37,14 +42,15 @@ contract DeployAgentVault is Script {
         console2.log("Chain ID:", block.chainid);
         console2.log("USDC Token Address:", usdcAddress);
         console2.log("Agent ID:", agentId);
+        console2.log("Initial Owner (Cold Multisig):", initialOwner);
 
         vm.startBroadcast();
-        vault = new AgentVault(usdcAddress, agentId, msg.sender);
+        vault = new AgentVault(usdcAddress, agentId, initialOwner);
         vm.stopBroadcast();
 
         console2.log("=== Deployment Summary ===");
         console2.log("AgentVault Deployed Address:", address(vault));
-        console2.log("Vault Owner:", msg.sender);
+        console2.log("Vault Owner:", initialOwner);
         console2.log("Block Number:", block.number);
     }
 }

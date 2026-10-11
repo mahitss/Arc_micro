@@ -16,11 +16,11 @@
 | **Arc Mainnet RPC & Chain ID (Phase 1)** | **VERIFIED** | `https://rpc.mainnet.arc.io` online. Live RPC Chain ID queried: `5042` (`0x13b2`). |
 | **Native Arc USDC (Phase 1)** | **VERIFIED** | Address: `0x3600000000000000000000000000000000000000`. On-chain code length: 1,798 bytes. |
 | **Operator Deployer Address (Phase 2)** | **VERIFIED** | Derived from operator key: `0x2a3613D44799Ce28385058358586E8D311eE6C57`. Matches configured `DEPLOYER_ADDRESS`. |
-| **Deployer Gas Balance (Phase 2)** | **BLOCKED** | On-chain balance: `0 wei` (0.000000 ARC). Deployment requires real gas. |
-| **Cold Multisig Owner (Phase 2)** | **BLOCKED** | `COLD_MULTISIG_OWNER` is unconfigured (`None`). |
-| **Authorized Canary Recipient (Phase 2)** | **BLOCKED** | `AUTHORIZED_CANARY_RECIPIENT` is unconfigured (`None`). |
+| **Deployer Gas Balance (Phase 2)** | **AWAITING GAS** | On-chain balance: `0 wei` (0.000000 ARC). Deployment requires real gas. |
+| **Cold Multisig Owner (Phase 2)** | **VERIFIED** | Configured: `0x6430343103C16c6526E5AdAC6d1f410B659e4B77`. Non-zero valid EVM address. |
+| **Authorized Canary Recipient (Phase 2)** | **VERIFIED** | Configured: `0x2a3613D44799Ce28385058358586E8D311eE6C57`. Non-zero valid EVM address (operator MetaMask account). |
 | **AgentVault On-Chain State (Phase 3)** | **VERIFIED UNDEPLOYED** | Target address `0x10A8fA3D110a12e8c5Ff68202d0b5A1a65B49852`. `eth_getCode` returned `0x` (0 bytes). |
-| **Deployment Safety Gate (Phase 4)** | **HALTED** | Fails closed: missing gas, missing cold multisig, missing canary recipient. |
+| **Deployment Safety Gate (Phase 4)** | **HALTED** | Fails closed: missing gas (gas balance is 0 wei). Configuration verified 100% complete. |
 | **Signer Architecture (Phase 17)** | **PARTIAL / KMS BLOCKED** | LocalSigner loaded in gateway with derived address; enterprise KMS signer is unconfigured. |
 | **Live Execution Status (Phase 10/16)** | **HALTED** | `ENABLE_LIVE_EXECUTION=false`. Fail-closed simulation isolation active. |
 
@@ -77,9 +77,9 @@
 - **Preflight Gas Requirement:** Insufficient gas to broadcast contract creation transaction.
 
 ### Role & Address Verification
-- `COLD_MULTISIG_OWNER`: **UNCONFIGURED** (`None`). Preflight requirement for non-zero multisig address failed.
-- `AUTHORIZED_CANARY_RECIPIENT`: **UNCONFIGURED** (`None`). Preflight requirement for canary recipient failed.
-- **Safety Precondition Verdict:** **FAIL CLOSED — STOPPING BEFORE BROADCAST**.
+- `COLD_MULTISIG_OWNER`: **VERIFIED** (`0x6430343103C16c6526E5AdAC6d1f410B659e4B77`). Non-zero valid EVM address assigned for initial contract ownership.
+- `AUTHORIZED_CANARY_RECIPIENT`: **VERIFIED** (`0x2a3613D44799Ce28385058358586E8D311eE6C57`). Non-zero valid EVM address bound to operator MetaMask account.
+- **Safety Precondition Verdict:** **AWAITING NATIVE GAS — CONFIGURATION 100% READY**.
 
 ---
 
@@ -112,10 +112,10 @@ USDC Contract:       0x3600000000000000000000000000000000000000 (VERIFIED ON-CHA
 Agent ID:            research-agent
 Deployer Address:    0x2a3613D44799Ce28385058358586E8D311eE6C57
 Native Gas Balance:  0 wei (0.000000 ARC) -> INSUFFICIENT GAS
-Initial Owner:       [BLOCKED: COLD_MULTISIG_OWNER UNCONFIGURED]
-Canary Recipient:    [BLOCKED: AUTHORIZED_CANARY_RECIPIENT UNCONFIGURED]
+Initial Owner:       0x6430343103C16c6526E5AdAC6d1f410B659e4B77 (VERIFIED COLD MULTISIG)
+Canary Recipient:    0x2a3613D44799Ce28385058358586E8D311eE6C57 (VERIFIED OPERATOR METAMASK)
 ==================================================================
-SAFETY STATUS:       HALTED (Preconditions Incomplete)
+SAFETY STATUS:       HALTED (Awaiting Native Arc Gas for Deployer)
 ACTION:              DO NOT BROADCAST. NO REAL FUNDS MOVED.
 ==================================================================
 ```
