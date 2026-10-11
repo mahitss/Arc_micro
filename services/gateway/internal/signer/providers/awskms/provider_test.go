@@ -624,3 +624,236 @@ func TestProvider_New_ConfigValidation(t *testing.T) {
 	}
 }
 
+// 12. Test Key ARN Parsing and Alias Rejection
+func TestProvider_ParseKeyARN(t *testing.T) {
+	// Valid standard partition ARN
+	arn, err := awskms.ParseKeyARN("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012")
+	if err != nil {
+		t.Fatalf("expected valid ARN, got error: %v", err)
+	}
+	if arn.Region != "us-east-1" || arn.AccountID != "123456789012" || arn.KeyID != "12345678-1234-1234-1234-123456789012" {
+		t.Errorf("unexpected parsed ARN fields: %+v", arn)
+	}
+
+	// Valid GovCloud partition ARN
+	arnGov, err := awskms.ParseKeyARN("arn:aws-us-gov:kms:us-gov-west-1:123456789012:key/gov-key-id")
+	if err != nil || arnGov.Partition != "aws-us-gov" {
+		t.Errorf("expected valid GovCloud ARN, got: %v", err)
+	}
+
+	// Alias Name rejection
+	_, err = awskms.ParseKeyARN("alias/agentpay-signer")
+	if !errors.Is(err, awskms.ErrAliasNotPermitted) {
+		t.Errorf("expected ErrAliasNotPermitted for alias name, got: %v", err)
+	}
+
+	// Alias ARN rejection
+	_, err = awskms.ParseKeyARN("arn:aws:kms:us-east-1:123456789012:alias/agentpay-signer")
+	if !errors.Is(err, awskms.ErrAliasNotPermitted) {
+		t.Errorf("expected ErrAliasNotPermitted for alias ARN, got: %v", err)
+	}
+
+	// Malformed ARNs
+	malformed := []string{
+		"",                                                         // empty
+		"not-an-arn",                                               // no prefix
+		"arn:aws:kms:us-east-1:12345:key/foo",                      // account not 12 digits
+		"arn:aws:kms:us-east-1:123456789012:secret/foo",           // wrong resource type
+		"arn:aws:s3:::bucket/key",                                  // non-kms service
+		"arn:aws:kms:us-east-1:123456789012:key/",                  // empty key segment
+		"arn:aws:kms::123456789012:key/foo",                        // empty region
+	}
+
+	for _, raw := range malformed {
+		_, err = awskms.ParseKeyARN(raw)
+		if err == nil {
+			t.Errorf("expected error for malformed ARN %q, got nil", raw)
+		}
+	}
+}
+
+// 13. Test Alias Rejection in GetPublicKey and SignDigest
+func TestProvider_AliasRejection(t *testing.T) {
+	mock := &mockKMSClient{}
+	p, _ := awskms.NewWithClient(mock, "us-east-1", 0)
+
+	// A. Alias name in GetPublicKey
+	_, err := p.GetPublicKey(context.Background(), "alias/my-key")
+	if !errors.Is(err, awskms.ErrAliasNotPermitted) {
+		t.Errorf("expected ErrAliasNotPermitted for alias/my-key in GetPublicKey, got: %v", err)
+	}
+
+	// B. Alias ARN in GetPublicKey
+	_, err = p.GetPublicKey(context.Background(), "arn:aws:kms:us-east-1:123456789012:alias/my-key")
+	if !errors.Is(err, awskms.ErrAliasNotPermitted) {
+		t.Errorf("expected ErrAliasNotPermitted for alias ARN in GetPublicKey, got: %v", err)
+	}
+
+	// C. Alias name in SignDigest
+	_, err = p.SignDigest(context.Background(), "alias/my-key", make([]byte, 32))
+	if !errors.Is(err, awskms.ErrAliasNotPermitted) {
+		t.Errorf("expected ErrAliasNotPermitted for alias/my-key in SignDigest, got: %v", err)
+	}
+
+	// D. Alias ARN in SignDigest
+	_, err = p.SignDigest(context.Background(), "arn:aws:kms:us-east-1:123456789012:alias/my-key", make([]byte, 32))
+	if !errors.Is(err, awskms.ErrAliasNotPermitted) {
+		t.Errorf("expected ErrAliasNotPermitted for alias ARN in SignDigest, got: %v", err)
+	}
+}
+
+// 14. Test Region Mismatch and Account Mismatch
+func TestProvider_RegionAndAccountMismatch(t *testing.T) {
+	mock := &mockKMSClient{}
+
+	// A. Region mismatch: provider is us-east-1, ARN is us-west-2
+	pRegionMismatch, _ := awskms.NewWithClient(mock, "us-east-1", 0)
+	_, err := pRegionMismatch.GetPublicKey(context.Background(), "arn:aws:kms:us-west-2:123456789012:key/test-key")
+	if !errors.Is(err, awskms.ErrRegionMismatch) {
+		t.Errorf("expected ErrRegionMismatch, got: %v", err)
+	}
+
+	// B. Account mismatch: provider expected account is 111111111111, ARN has 222222222222
+	pAccountMismatch, _ := awskms.NewWithClientConfig(mock, awskms.Config{
+		Region:          "us-east-1",
+		ExpectedAccount: "111111111111",
+	})
+	_, err = pAccountMismatch.GetPublicKey(context.Background(), "arn:aws:kms:us-east-1:222222222222:key/test-key")
+	if !errors.Is(err, awskms.ErrAccountMismatch) {
+		t.Errorf("expected ErrAccountMismatch, got: %v", err)
+	}
+}
+
+// 15. Test Canonical Key Identity Retention and Mismatch Enforcement in SignDigest
+func TestProvider_CanonicalKeyIdentityRetention(t *testing.T) {
+	testPriv, _ := crypto.GenerateKey()
+	spkiBytes := encodeSPKIPublicKey(testPriv)
+
+	keyARN1 := "arn:aws:kms:us-east-1:123456789012:key/canonical-key-1"
+	keyARN2 := "arn:aws:kms:us-east-1:123456789012:key/canonical-key-2"
+	digest := crypto.Keccak256([]byte("test-digest"))
+
+	mock := &mockKMSClient{
+		getPublicKeyFn: func(ctx context.Context, params *kms.GetPublicKeyInput, optFns ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
+			return &kms.GetPublicKeyOutput{
+				KeyId:     aws.String(keyARN1),
+				KeySpec:   kmstypes.KeySpecEccSecgP256k1,
+				KeyUsage:  kmstypes.KeyUsageTypeSignVerify,
+				PublicKey: spkiBytes,
+				SigningAlgorithms: []kmstypes.SigningAlgorithmSpec{
+					kmstypes.SigningAlgorithmSpecEcdsaSha256,
+				},
+			}, nil
+		},
+		signFn: func(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
+			r, s, _ := ecdsa.Sign(rand.Reader, testPriv, params.Message)
+			return &kms.SignOutput{
+				KeyId:            aws.String(keyARN1),
+				SigningAlgorithm: kmstypes.SigningAlgorithmSpecEcdsaSha256,
+				Signature:        encodeDERSignature(r, s),
+			}, nil
+		},
+	}
+
+	p, err := awskms.NewWithClient(mock, "us-east-1", 0)
+	if err != nil {
+		t.Fatalf("failed to init provider: %v", err)
+	}
+
+	// Step 1: Initialize with keyARN1
+	_, err = p.GetPublicKey(context.Background(), keyARN1)
+	if err != nil {
+		t.Fatalf("GetPublicKey failed: %v", err)
+	}
+
+	if p.CanonicalKeyARN() != keyARN1 {
+		t.Errorf("expected canonical key %q, got %q", keyARN1, p.CanonicalKeyARN())
+	}
+
+	// Step 2: SignDigest with keyARN1 must succeed
+	_, err = p.SignDigest(context.Background(), keyARN1, digest)
+	if err != nil {
+		t.Fatalf("SignDigest with canonical key failed: %v", err)
+	}
+
+	// Step 3: SignDigest with keyARN2 must fail with ErrKeyIdentityMismatch
+	_, err = p.SignDigest(context.Background(), keyARN2, digest)
+	if !errors.Is(err, awskms.ErrKeyIdentityMismatch) {
+		t.Errorf("expected ErrKeyIdentityMismatch when requesting signing with different key, got: %v", err)
+	}
+}
+
+// 16. Test Unexpected Key Identity in AWS Response
+func TestProvider_AWSReturnsUnexpectedKeyResponse(t *testing.T) {
+	testPriv, _ := crypto.GenerateKey()
+	spkiBytes := encodeSPKIPublicKey(testPriv)
+
+	requestedARN := "arn:aws:kms:us-east-1:123456789012:key/requested-key"
+	unexpectedARN := "arn:aws:kms:us-east-1:123456789012:key/unexpected-key"
+
+	// A. GetPublicKey returns unexpected KeyId
+	mockPubUnexpected := &mockKMSClient{
+		getPublicKeyFn: func(ctx context.Context, params *kms.GetPublicKeyInput, optFns ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
+			return &kms.GetPublicKeyOutput{
+				KeyId:     aws.String(unexpectedARN), // KMS claims a different key
+				KeySpec:   kmstypes.KeySpecEccSecgP256k1,
+				KeyUsage:  kmstypes.KeyUsageTypeSignVerify,
+				PublicKey: spkiBytes,
+				SigningAlgorithms: []kmstypes.SigningAlgorithmSpec{
+					kmstypes.SigningAlgorithmSpecEcdsaSha256,
+				},
+			}, nil
+		},
+	}
+	pPubUnexpected, _ := awskms.NewWithClient(mockPubUnexpected, "us-east-1", 0)
+	_, err := pPubUnexpected.GetPublicKey(context.Background(), requestedARN)
+	if !errors.Is(err, awskms.ErrKeyIdentityMismatch) {
+		t.Errorf("expected ErrKeyIdentityMismatch when GetPublicKey returns unexpected key ARN, got: %v", err)
+	}
+
+	// B. SignDigest returns unexpected KeyId
+	mockSignUnexpected := &mockKMSClient{
+		getPublicKeyFn: func(ctx context.Context, params *kms.GetPublicKeyInput, optFns ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
+			return &kms.GetPublicKeyOutput{
+				KeyId:     aws.String(requestedARN),
+				KeySpec:   kmstypes.KeySpecEccSecgP256k1,
+				KeyUsage:  kmstypes.KeyUsageTypeSignVerify,
+				PublicKey: spkiBytes,
+				SigningAlgorithms: []kmstypes.SigningAlgorithmSpec{
+					kmstypes.SigningAlgorithmSpecEcdsaSha256,
+				},
+			}, nil
+		},
+		signFn: func(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
+			r, s, _ := ecdsa.Sign(rand.Reader, testPriv, params.Message)
+			return &kms.SignOutput{
+				KeyId:            aws.String(unexpectedARN), // KMS claims signature was done with unexpected key
+				SigningAlgorithm: kmstypes.SigningAlgorithmSpecEcdsaSha256,
+				Signature:        encodeDERSignature(r, s),
+			}, nil
+		},
+	}
+	pSignUnexpected, _ := awskms.NewWithClient(mockSignUnexpected, "us-east-1", 0)
+	_, _ = pSignUnexpected.GetPublicKey(context.Background(), requestedARN)
+	_, err = pSignUnexpected.SignDigest(context.Background(), requestedARN, make([]byte, 32))
+	if !errors.Is(err, awskms.ErrKeyIdentityMismatch) {
+		t.Errorf("expected ErrKeyIdentityMismatch when SignDigest returns unexpected key ARN, got: %v", err)
+	}
+}
+
+// 17. Test Strict ARN Mode Rejects Non-ARN Test Stubs in Production Mode
+func TestProvider_StrictARNMode(t *testing.T) {
+	mock := &mockKMSClient{}
+	pStrict, _ := awskms.NewWithClientConfig(mock, awskms.Config{
+		Region:    "us-east-1",
+		StrictARN: true,
+	})
+
+	// Non-ARN should be rejected in strict mode
+	_, err := pStrict.GetPublicKey(context.Background(), "simple-key-id")
+	if !errors.Is(err, awskms.ErrInvalidKeyARN) {
+		t.Errorf("expected ErrInvalidKeyARN in strict mode for non-ARN, got: %v", err)
+	}
+}
+
+

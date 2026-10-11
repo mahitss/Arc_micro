@@ -11,15 +11,30 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
 
+// FactoryOptions provides explicit dependency injection hooks for signer construction.
+// This ensures that the production KMS provider is explicitly provided rather than
+// silently initialized or falling back to local signers.
+type FactoryOptions struct {
+	// KMSProvider allows explicit injection of an initialized, validated KMS provider (e.g. awskms.Provider).
+	// If SIGNER_BACKEND=kms and KMSProvider is nil, factory strictly fails closed with ErrKMSSignerUnavailable.
+	KMSProvider KMSProvider
+}
+
 // NewSignerFromConfig constructs the configured TransactionSigner according to explicit configuration.
 // Failure behavior: Strictly fails closed without silent fallback between backends.
 func NewSignerFromConfig(cfg *config.Config, recorder AuditRecorder) (TransactionSigner, error) {
-	return NewSignerFromConfigWithContext(context.Background(), cfg, recorder)
+	return NewSignerFromConfigWithOptions(context.Background(), cfg, recorder, FactoryOptions{})
 }
 
 // NewSignerFromConfigWithContext constructs the configured TransactionSigner with a caller-provided context.
 // Failure behavior: Strictly fails closed without silent fallback between backends.
 func NewSignerFromConfigWithContext(ctx context.Context, cfg *config.Config, recorder AuditRecorder) (TransactionSigner, error) {
+	return NewSignerFromConfigWithOptions(ctx, cfg, recorder, FactoryOptions{})
+}
+
+// NewSignerFromConfigWithOptions constructs the configured TransactionSigner with explicit factory options.
+// Failure behavior: Strictly fails closed without silent fallback between backends.
+func NewSignerFromConfigWithOptions(ctx context.Context, cfg *config.Config, recorder AuditRecorder, opts FactoryOptions) (TransactionSigner, error) {
 	if cfg == nil {
 		return nil, ErrSignerNotConfigured
 	}
@@ -46,8 +61,13 @@ func NewSignerFromConfigWithContext(ctx context.Context, cfg *config.Config, rec
 		}
 		return s, nil
 	case "kms":
-		// Production KMS/HSM boundary — fails fast if not available, NO SILENT FALLBACK.
-		s, err := NewKMSSignerWithContext(ctx, cfg.KMSKeyID, cfg.KMSRegion, chainID, recorder, nil)
+		// Production KMS/HSM boundary — requires explicitly injected, approved KMSProvider.
+		// Never silently creates cloud clients or connects to cloud endpoints.
+		if opts.KMSProvider == nil {
+			return nil, fmt.Errorf("%w: SIGNER_BACKEND=kms requires an explicitly configured, approved KMSProvider (key_id: %q, region: %q)",
+				ErrKMSSignerUnavailable, cfg.KMSKeyID, cfg.KMSRegion)
+		}
+		s, err := NewKMSSignerWithContext(ctx, cfg.KMSKeyID, cfg.KMSRegion, chainID, recorder, opts.KMSProvider)
 		if err != nil {
 			return nil, err
 		}
