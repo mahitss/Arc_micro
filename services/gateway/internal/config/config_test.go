@@ -165,9 +165,9 @@ func TestValidateLiveExecutionRequirements(t *testing.T) {
 
 func TestIsProductionLike(t *testing.T) {
 	tests := []struct {
-		env         string
-		enableLive  bool
-		expected    bool
+		env        string
+		enableLive bool
+		expected   bool
 	}{
 		{"production", false, true},
 		{"Production", false, true},

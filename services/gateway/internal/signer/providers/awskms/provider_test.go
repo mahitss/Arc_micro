@@ -655,13 +655,13 @@ func TestProvider_ParseKeyARN(t *testing.T) {
 
 	// Malformed ARNs
 	malformed := []string{
-		"",                                                         // empty
-		"not-an-arn",                                               // no prefix
-		"arn:aws:kms:us-east-1:12345:key/foo",                      // account not 12 digits
-		"arn:aws:kms:us-east-1:123456789012:secret/foo",           // wrong resource type
-		"arn:aws:s3:::bucket/key",                                  // non-kms service
-		"arn:aws:kms:us-east-1:123456789012:key/",                  // empty key segment
-		"arn:aws:kms::123456789012:key/foo",                        // empty region
+		"",                                    // empty
+		"not-an-arn",                          // no prefix
+		"arn:aws:kms:us-east-1:12345:key/foo", // account not 12 digits
+		"arn:aws:kms:us-east-1:123456789012:secret/foo", // wrong resource type
+		"arn:aws:s3:::bucket/key",                       // non-kms service
+		"arn:aws:kms:us-east-1:123456789012:key/",       // empty key segment
+		"arn:aws:kms::123456789012:key/foo",             // empty region
 	}
 
 	for _, raw := range malformed {
@@ -855,5 +855,3 @@ func TestProvider_StrictARNMode(t *testing.T) {
 		t.Errorf("expected ErrInvalidKeyARN in strict mode for non-ARN, got: %v", err)
 	}
 }
-
-
