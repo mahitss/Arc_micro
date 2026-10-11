@@ -95,6 +95,8 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 	}
 	agentSvc := agent.NewService(mockModel, intentSvc, reg, false)
 
+	_, client := seedIntegrationAdminKey(t, repo)
+
 	router := gwHttp.NewRouter(cfg, pClient, nil, agentSvc, intentSvc, repo, reg)
 	server := httptest.NewServer(router)
 	defer server.Close()
@@ -105,7 +107,7 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 		"task":     "Research latest Arc protocol documentation",
 	}
 	taskReqJSON, _ := json.Marshal(taskReqBody)
-	resp, err := http.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(taskReqJSON))
+	resp, err := client.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(taskReqJSON))
 	if err != nil {
 		t.Fatalf("failed to post agent task: %v", err)
 	}
@@ -132,7 +134,7 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 	}
 
 	// 2. Query Payment Intent: GET /v1/payment-intents/{id}
-	getResp, err := http.Get(server.URL + "/v1/payment-intents/" + intentID)
+	getResp, err := client.Get(server.URL + "/v1/payment-intents/" + intentID)
 	if err != nil {
 		t.Fatalf("failed to get intent: %v", err)
 	}
@@ -143,7 +145,7 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 	}
 
 	// 3. Authorize Payment Intent: POST /v1/payment-intents/{id}/authorize
-	authResp, err := http.Post(server.URL+"/v1/payment-intents/"+intentID+"/authorize", "application/json", nil)
+	authResp, err := client.Post(server.URL+"/v1/payment-intents/"+intentID+"/authorize", "application/json", nil)
 	if err != nil {
 		t.Fatalf("failed to authorize intent: %v", err)
 	}
@@ -154,7 +156,7 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 	}
 
 	// 4. Confirm Payment Intent: POST /v1/payment-intents/{id}/confirm
-	confResp, err := http.Post(server.URL+"/v1/payment-intents/"+intentID+"/confirm", "application/json", nil)
+	confResp, err := client.Post(server.URL+"/v1/payment-intents/"+intentID+"/confirm", "application/json", nil)
 	if err != nil {
 		t.Fatalf("failed to confirm intent: %v", err)
 	}
@@ -169,7 +171,7 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 	}
 
 	// 5. Verify GET reflects CONFIRMED status and transaction hash
-	getAfterConf, err := http.Get(server.URL + "/v1/payment-intents/" + intentID)
+	getAfterConf, err := client.Get(server.URL + "/v1/payment-intents/" + intentID)
 	if err != nil {
 		t.Fatalf("failed to get confirmed intent: %v", err)
 	}

@@ -50,7 +50,7 @@ func (m *mockSimulationPolicyClient) CheckHealth(ctx context.Context) error {
 	return nil
 }
 
-func setupDay8TestServer(t *testing.T) (*httptest.Server, *registry.Registry, storage.Repository) {
+func setupDay8TestServer(t *testing.T) (*httptest.Server, *registry.Registry, storage.Repository, *http.Client) {
 	cfg := &config.Config{
 		Port:                    "8080",
 		PolicyEngineURL:         "http://localhost:8081",
@@ -78,16 +78,18 @@ func setupDay8TestServer(t *testing.T) (*httptest.Server, *registry.Registry, st
 		UpdatedAt:      time.Now(),
 	})
 
-	return server, reg, repo
+	_, client := seedIntegrationAdminKey(t, repo)
+
+	return server, reg, repo, client
 }
 
 // TestDay8_ServiceMarketplaceAndFiltering tests service discovery with filters.
 func TestDay8_ServiceMarketplaceAndFiltering(t *testing.T) {
-	server, _, _ := setupDay8TestServer(t)
+	server, _, _, client := setupDay8TestServer(t)
 	defer server.Close()
 
 	// 1. List all enabled services
-	resp, err := http.Get(server.URL + "/v1/services")
+	resp, err := client.Get(server.URL + "/v1/services")
 	if err != nil {
 		t.Fatalf("failed to list services: %v", err)
 	}
@@ -112,7 +114,7 @@ func TestDay8_ServiceMarketplaceAndFiltering(t *testing.T) {
 	}
 
 	// 2. Filter by category=RESEARCH
-	respCat, err := http.Get(server.URL + "/v1/services?category=RESEARCH")
+	respCat, err := client.Get(server.URL + "/v1/services?category=RESEARCH")
 	if err != nil {
 		t.Fatalf("failed to query category: %v", err)
 	}
@@ -132,12 +134,12 @@ func TestDay8_ServiceMarketplaceAndFiltering(t *testing.T) {
 
 // TestDay8_ServiceQuotes tests quote creation and expiration.
 func TestDay8_ServiceQuotes(t *testing.T) {
-	server, reg, _ := setupDay8TestServer(t)
+	server, reg, _, client := setupDay8TestServer(t)
 	defer server.Close()
 
 	// 1. Create a quote for web-research
 	payload := `{"amount":"500000","asset":"USDC"}`
-	resp, err := http.Post(server.URL+"/v1/services/web-research/quote", "application/json", bytes.NewBufferString(payload))
+	resp, err := client.Post(server.URL+"/v1/services/web-research/quote", "application/json", bytes.NewBufferString(payload))
 	if err != nil {
 		t.Fatalf("failed to request quote: %v", err)
 	}
@@ -166,7 +168,7 @@ func TestDay8_ServiceQuotes(t *testing.T) {
 	}
 
 	// 3. Request quote for non-existent service
-	resp404, _ := http.Post(server.URL+"/v1/services/nonexistent/quote", "application/json", bytes.NewBufferString(payload))
+	resp404, _ := client.Post(server.URL+"/v1/services/nonexistent/quote", "application/json", bytes.NewBufferString(payload))
 	if resp404.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected 404 for unknown service quote, got: %d", resp404.StatusCode)
 	}
@@ -174,10 +176,10 @@ func TestDay8_ServiceQuotes(t *testing.T) {
 
 // TestDay8_AgentBudgetEndpoint tests the safe read-only budget context.
 func TestDay8_AgentBudgetEndpoint(t *testing.T) {
-	server, _, _ := setupDay8TestServer(t)
+	server, _, _, client := setupDay8TestServer(t)
 	defer server.Close()
 
-	resp, err := http.Get(server.URL + "/v1/agent-budgets/agent_research_01")
+	resp, err := client.Get(server.URL + "/v1/agent-budgets/agent_research_01")
 	if err != nil {
 		t.Fatalf("failed to get agent budget: %v", err)
 	}
@@ -202,12 +204,12 @@ func TestDay8_AgentBudgetEndpoint(t *testing.T) {
 
 // TestDay8_SimulationMode tests the POST /v1/simulations endpoint.
 func TestDay8_SimulationMode(t *testing.T) {
-	server, _, repo := setupDay8TestServer(t)
+	server, _, repo, client := setupDay8TestServer(t)
 	defer server.Close()
 
 	// 1. Simulate standard payment: 500000 (0.50 USDC) -> WOULD_EXECUTE
 	simReq1 := `{"agent_id":"agent_research_01","service_id":"web-research","amount":"500000","asset":"USDC","purpose":"Simulation test"}`
-	resp1, err := http.Post(server.URL+"/v1/simulations", "application/json", bytes.NewBufferString(simReq1))
+	resp1, err := client.Post(server.URL+"/v1/simulations", "application/json", bytes.NewBufferString(simReq1))
 	if err != nil {
 		t.Fatalf("simulation 1 failed: %v", err)
 	}
@@ -227,7 +229,7 @@ func TestDay8_SimulationMode(t *testing.T) {
 
 	// 2. Simulate high-cost payment: 25000000 (25.00 USDC) -> APPROVAL_REQUIRED
 	simReq2 := `{"agent_id":"agent_research_01","service_id":"research-api","amount":"25000000","asset":"USDC","purpose":"Expensive intelligence"}`
-	resp2, err := http.Post(server.URL+"/v1/simulations", "application/json", bytes.NewBufferString(simReq2))
+	resp2, err := client.Post(server.URL+"/v1/simulations", "application/json", bytes.NewBufferString(simReq2))
 	if err != nil {
 		t.Fatalf("simulation 2 failed: %v", err)
 	}
@@ -244,7 +246,7 @@ func TestDay8_SimulationMode(t *testing.T) {
 
 	// 3. Simulate unapproved / price-exceeding payment -> WOULD_DENY
 	simReq3 := `{"agent_id":"agent_research_01","service_id":"web-research","amount":"99999999","asset":"USDC","purpose":"Price exceeded"}`
-	resp3, err := http.Post(server.URL+"/v1/simulations", "application/json", bytes.NewBufferString(simReq3))
+	resp3, err := client.Post(server.URL+"/v1/simulations", "application/json", bytes.NewBufferString(simReq3))
 	if err != nil {
 		t.Fatalf("simulation 3 failed: %v", err)
 	}

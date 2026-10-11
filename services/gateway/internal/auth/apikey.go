@@ -103,10 +103,10 @@ func MaskSecret(secret string) string {
 	return fmt.Sprintf("%s...%s", prefix, suffix)
 }
 
-// HasScope checks whether the granted scopes contain the required scope or wildcard (*).
+// HasScope checks whether the granted scopes contain the required scope, ScopeAdmin, or wildcard (*).
 func HasScope(grantedScopes []string, requiredScope string) bool {
 	for _, s := range grantedScopes {
-		if s == "*" || s == requiredScope {
+		if s == "*" || s == domain.ScopeAdmin || s == requiredScope {
 			return true
 		}
 	}

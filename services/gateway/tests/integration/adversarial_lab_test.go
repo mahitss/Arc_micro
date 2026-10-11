@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/adversarial"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	gwHttp "github.com/arc-agentpay/agentpay/services/gateway/internal/http"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
@@ -71,12 +73,31 @@ func TestAdversarialSecurityLab_HTTPEndpoints(t *testing.T) {
 	}
 	repo := storage.NewMemoryRepository()
 	reg := registry.NewDefaultRegistry()
+
+	// Seed test API key
+	secret, key, err := auth.GenerateAPIKey("org_default", "Adversarial Lab Test Key", []string{domain.ScopeAdmin, "*"})
+	if err != nil {
+		t.Fatalf("failed to generate key: %v", err)
+	}
+	_ = repo.SaveAPIKey(context.Background(), &storage.APIKey{
+		ID:             key.ID,
+		OrganizationID: key.OrganizationID,
+		KeyHash:        key.KeyHash,
+		Name:           key.Name,
+		MaskedKey:      key.MaskedKey,
+		Scopes:         "admin,*",
+		Status:         string(domain.APIKeyStatusActive),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	})
+
 	router := gwHttp.NewRouter(cfg, nil, nil, nil, nil, repo, reg)
 	server := httptest.NewServer(router)
 	defer server.Close()
 
 	// 1. GET report
 	reqGet, _ := http.NewRequest("GET", server.URL+"/v1/security-lab/report", nil)
+	reqGet.Header.Set("Authorization", "Bearer "+secret)
 	respGet, err := http.DefaultClient.Do(reqGet)
 	if err != nil {
 		t.Fatalf("failed GET /v1/security-lab/report: %v", err)
@@ -97,6 +118,7 @@ func TestAdversarialSecurityLab_HTTPEndpoints(t *testing.T) {
 
 	// 2. POST run
 	reqRun, _ := http.NewRequest("POST", server.URL+"/v1/security-lab/run", nil)
+	reqRun.Header.Set("Authorization", "Bearer "+secret)
 	respRun, err := http.DefaultClient.Do(reqRun)
 	if err != nil {
 		t.Fatalf("failed POST /v1/security-lab/run: %v", err)

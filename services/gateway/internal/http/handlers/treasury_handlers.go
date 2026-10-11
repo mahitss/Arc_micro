@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/treasury"
 )
@@ -96,9 +98,23 @@ func (h *TreasuryHandler) HandleCreateReservation(w http.ResponseWriter, r *http
 		return
 	}
 
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeTreasuryManage) && !auth.HasScope(callerScopes, domain.ScopePaymentsCreate) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires treasury:manage or payments:create", ctxReqID)
+		return
+	}
+
 	var req treasury.LiquidityReservationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error(), ctxReqID)
+		return
+	}
+
+	authOrgID := middleware.GetOrgID(r.Context())
+	if req.OrganizationID == "" {
+		req.OrganizationID = authOrgID
+	} else if authOrgID != "" && req.OrganizationID != authOrgID && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Cross-organization reservation access denied", ctxReqID)
 		return
 	}
 
@@ -116,6 +132,13 @@ func (h *TreasuryHandler) HandleCreateReservation(w http.ResponseWriter, r *http
 // HandleReleaseReservation handles POST /v1/treasury/reservations/{id}/release
 func (h *TreasuryHandler) HandleReleaseReservation(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
+
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeTreasuryManage) && !auth.HasScope(callerScopes, domain.ScopePaymentsCreate) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires treasury:manage or payments:create", ctxReqID)
+		return
+	}
+
 	id := r.PathValue("id")
 	if id == "" {
 		parts := strings.Split(r.URL.Path, "/")

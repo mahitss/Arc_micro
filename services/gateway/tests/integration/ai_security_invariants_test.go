@@ -420,10 +420,13 @@ func TestAIRoutes_Integration(t *testing.T) {
 	intentSvc := intent.NewService(repo, pClient, nil, reg, nil, 300*time.Second, false)
 	aiSvc, _ := ai.NewService("mock")
 
+	secret, _ := seedIntegrationAdminKey(t, repo)
+
 	router := gwHttp.NewRouter(cfg, pClient, nil, nil, intentSvc, repo, reg, aiSvc)
 
 	// Test GET /control/ai/telemetry
 	req := httptest.NewRequest(http.MethodGet, "/control/ai/telemetry", nil)
+	req.Header.Set("Authorization", "Bearer "+secret)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
@@ -432,6 +435,7 @@ func TestAIRoutes_Integration(t *testing.T) {
 
 	// Test GET /control/ai/health
 	reqH := httptest.NewRequest(http.MethodGet, "/control/ai/health", nil)
+	reqH.Header.Set("Authorization", "Bearer "+secret)
 	wH := httptest.NewRecorder()
 	router.ServeHTTP(wH, reqH)
 	if wH.Code != http.StatusOK {
@@ -440,6 +444,7 @@ func TestAIRoutes_Integration(t *testing.T) {
 
 	// Test GET /control/ai/models
 	reqM := httptest.NewRequest(http.MethodGet, "/control/ai/models", nil)
+	reqM.Header.Set("Authorization", "Bearer "+secret)
 	wM := httptest.NewRecorder()
 	router.ServeHTTP(wM, reqM)
 	if wM.Code != http.StatusOK {
@@ -448,6 +453,7 @@ func TestAIRoutes_Integration(t *testing.T) {
 
 	// Test GET /control/ai/prompts
 	reqP := httptest.NewRequest(http.MethodGet, "/control/ai/prompts", nil)
+	reqP.Header.Set("Authorization", "Bearer "+secret)
 	wP := httptest.NewRecorder()
 	router.ServeHTTP(wP, reqP)
 	if wP.Code != http.StatusOK {

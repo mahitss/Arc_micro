@@ -76,6 +76,9 @@ type Config struct {
 	SignerBackend string // "local" or "kms"
 	KMSKeyID      string
 	KMSRegion     string
+
+	// SEC-01: Bootstrap Admin API Key for initial operator configuration
+	BootstrapAPIKey string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -255,6 +258,11 @@ func Load() *Config {
 		}
 	}
 
+	bootstrapKey := os.Getenv("GATEWAY_ADMIN_API_KEY")
+	if bootstrapKey == "" {
+		bootstrapKey = os.Getenv("BOOTSTRAP_API_KEY")
+	}
+
 	return &Config{
 		Port:                   port,
 		PolicyEngineURL:        policyEngineURL,
@@ -288,6 +296,7 @@ func Load() *Config {
 		SignerBackend:           os.Getenv("SIGNER_BACKEND"),
 		KMSKeyID:                os.Getenv("KMS_KEY_ID"),
 		KMSRegion:               os.Getenv("KMS_REGION"),
+		BootstrapAPIKey:         strings.TrimSpace(bootstrapKey),
 	}
 }
 

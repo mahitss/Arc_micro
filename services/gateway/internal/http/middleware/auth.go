@@ -2,12 +2,14 @@ package middleware
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
@@ -21,12 +23,13 @@ const (
 	AuthenticatedKey authContextKey = "auth_authenticated"
 )
 
-// GetOrgID extracts the organization ID from request context, defaulting to "org_default".
+// GetOrgID extracts the organization ID from request context.
+// Returns empty string if unauthenticated or not present (never falls back to org_default).
 func GetOrgID(ctx context.Context) string {
 	if val, ok := ctx.Value(OrgIDKey).(string); ok && val != "" {
 		return val
 	}
-	return "org_default"
+	return ""
 }
 
 // GetKeyID extracts the authenticated API key ID.
@@ -53,11 +56,40 @@ func IsAuthenticated(ctx context.Context) bool {
 	return false
 }
 
+// isPublicEndpoint checks if a request path is an explicitly allowlisted public endpoint.
+// Only /health and /ready are public. /metrics is private and requires authentication.
+func isPublicEndpoint(path string) bool {
+	cleaned := strings.TrimRight(strings.ToLower(strings.TrimSpace(path)), "/")
+	if cleaned == "" {
+		cleaned = "/"
+	}
+	return cleaned == "/health" || cleaned == "/ready"
+}
+
 // APIKeyAuth validates API keys presented in Authorization (Bearer ...) or X-API-Key headers.
-func APIKeyAuth(repo storage.Repository) func(http.Handler) http.Handler {
+// Fail-closed: missing, invalid, expired, or revoked keys receive HTTP 401.
+// In production, missing authentication repositories fail closed immediately.
+func APIKeyAuth(repo storage.Repository, cfg ...*config.Config) func(http.Handler) http.Handler {
+	var gatewayCfg *config.Config
+	if len(cfg) > 0 {
+		gatewayCfg = cfg[0]
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			reqID := GetRequestID(r.Context())
+
+			// 1. CORS Preflight OPTIONS requests pass through
+			if r.Method == http.MethodOptions {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// 2. Allowlisted public endpoints (/health, /ready) pass through without credentials
+			if isPublicEndpoint(r.URL.Path) {
+				next.ServeHTTP(w, r)
+				return
+			}
 
 			// Extract API key from Authorization: Bearer <key> or X-API-Key: <key>
 			var apiKeySecret string
@@ -68,32 +100,57 @@ func APIKeyAuth(repo storage.Repository) func(http.Handler) http.Handler {
 				apiKeySecret = xKey
 			}
 
-			// If no key provided, pass along with unauthenticated context
+			// 3. Fail closed if authentication backend is missing/misconfigured in production
+			isProd := gatewayCfg != nil && (strings.EqualFold(gatewayCfg.Environment, "production") || gatewayCfg.EnableLiveExecution)
+			if repo == nil {
+				if isProd {
+					writeAuthError(w, http.StatusInternalServerError, "AUTH_UNAVAILABLE", "Authentication configuration unavailable; failing closed in production", reqID)
+					return
+				}
+				if apiKeySecret == "" {
+					writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "API key required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header.", reqID)
+					return
+				}
+			}
+
+			// 4. Missing API key on protected routes must receive HTTP 401
 			if apiKeySecret == "" {
-				ctx := context.WithValue(r.Context(), OrgIDKey, "org_default")
-				ctx = context.WithValue(ctx, ScopesKey, []string{"*"})
-				ctx = context.WithValue(ctx, AuthenticatedKey, false)
-				next.ServeHTTP(w, r.WithContext(ctx))
+				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "API key required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header.", reqID)
 				return
 			}
 
-			// Validate key secret format
+			// 5. Bootstrap Admin API Key verification (constant-time comparison)
+			if gatewayCfg != nil && strings.TrimSpace(gatewayCfg.BootstrapAPIKey) != "" {
+				if subtle.ConstantTimeCompare([]byte(apiKeySecret), []byte(strings.TrimSpace(gatewayCfg.BootstrapAPIKey))) == 1 {
+					ctx := context.WithValue(r.Context(), OrgIDKey, "org_default")
+					ctx = context.WithValue(ctx, KeyIDKey, "key_bootstrap_admin")
+					ctx = context.WithValue(ctx, ScopesKey, []string{domain.ScopeAdmin, "*"})
+					ctx = context.WithValue(ctx, AuthenticatedKey, true)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
+			}
+
+			// 6. Validate key secret format
 			if !strings.HasPrefix(apiKeySecret, auth.KeyPrefixLive) && !strings.HasPrefix(apiKeySecret, auth.KeyPrefixDemo) {
 				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid API key format", reqID)
 				return
 			}
 
-			// Compute SHA-256 hash of secret
-			keyHash := auth.HashSecret(apiKeySecret)
+			if repo == nil {
+				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid API key", reqID)
+				return
+			}
 
-			// Look up key in repository
+			// 7. Compute SHA-256 hash of secret and verify against repository
+			keyHash := auth.HashSecret(apiKeySecret)
 			key, err := repo.GetAPIKeyByHash(r.Context(), keyHash)
 			if err != nil {
 				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid API key", reqID)
 				return
 			}
 
-			// Check key status
+			// 8. Check key status
 			if key.Status == string(domain.APIKeyStatusRevoked) {
 				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "API key has been revoked", reqID)
 				return
@@ -103,18 +160,18 @@ func APIKeyAuth(repo storage.Repository) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Check expiration if set
+			// 9. Check expiration if set
 			if key.ExpiresAt != nil && time.Now().UTC().After(*key.ExpiresAt) {
 				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "API key has expired", reqID)
 				return
 			}
 
-			// Update last_used_at asynchronously
+			// 10. Update last_used_at asynchronously
 			go func() {
 				_ = repo.UpdateAPIKeyLastUsed(context.Background(), key.ID, time.Now().UTC())
 			}()
 
-			// Parse comma-separated scopes
+			// 11. Parse assigned scopes
 			var scopes []string
 			if key.Scopes != "" {
 				for _, s := range strings.Split(key.Scopes, ",") {
@@ -125,7 +182,7 @@ func APIKeyAuth(repo storage.Repository) func(http.Handler) http.Handler {
 				}
 			}
 
-			// Attach organization, key ID, scopes, and authenticated flag to context
+			// 12. Attach organization, key ID, scopes, and authenticated flag to context
 			ctx := context.WithValue(r.Context(), OrgIDKey, key.OrganizationID)
 			ctx = context.WithValue(ctx, KeyIDKey, key.ID)
 			ctx = context.WithValue(ctx, ScopesKey, scopes)

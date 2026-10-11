@@ -61,10 +61,26 @@ func (h *APIKeyHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
 	orgID := middleware.GetOrgID(r.Context())
 
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeAPIKeysManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires apikeys:manage or admin", reqID)
+		return
+	}
+
 	var req CreateKeyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err.Error() != "EOF" {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON payload", reqID)
 		return
+	}
+
+	// Prevent privilege escalation: non-admin callers cannot grant scopes exceeding their own
+	if !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		for _, s := range req.Scopes {
+			if !auth.HasScope(callerScopes, s) {
+				writeError(w, http.StatusForbidden, "FORBIDDEN", fmt.Sprintf("Privilege escalation prevented: cannot grant scope '%s'", s), reqID)
+				return
+			}
+		}
 	}
 
 	secret, apiKey, err := auth.GenerateAPIKey(orgID, req.Name, req.Scopes)
@@ -127,6 +143,12 @@ func (h *APIKeyHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
 	orgID := middleware.GetOrgID(r.Context())
 
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeAPIKeysManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires apikeys:manage or admin", reqID)
+		return
+	}
+
 	keys, err := h.repo.ListAPIKeys(r.Context(), orgID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to list API keys", reqID)
@@ -168,6 +190,13 @@ func (h *APIKeyHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 func (h *APIKeyHandler) HandleRevoke(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
 	orgID := middleware.GetOrgID(r.Context())
+
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeAPIKeysManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires apikeys:manage or admin", reqID)
+		return
+	}
+
 	keyID := r.PathValue("id")
 	if keyID == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_KEY_ID", "API key id is required", reqID)

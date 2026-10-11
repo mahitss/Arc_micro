@@ -193,10 +193,15 @@ const (
 	ScopePaymentsCreate  = "payments:create"
 	ScopePaymentsApprove = "payments:approve"
 	ScopeAgentsRead      = "agents:read"
+	ScopeAgentsManage    = "agents:manage"
 	ScopeServicesRead    = "services:read"
 	ScopeTreasuryRead    = "treasury:read"
+	ScopeTreasuryManage  = "treasury:manage"
 	ScopeWebhooksRead    = "webhooks:read"
 	ScopeWebhooksManage  = "webhooks:manage"
+	ScopeAPIKeysManage   = "apikeys:manage"
+	ScopeEmergencyManage = "emergency:manage"
+	ScopeAdmin           = "admin"
 )
 
 // APIKey represents an authorized developer platform credential.

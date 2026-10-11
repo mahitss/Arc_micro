@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
@@ -12,6 +13,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/constitution"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/control"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/demo"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/execution"
@@ -79,7 +81,7 @@ func NewRouter(
 		bc = bcp.BlockchainClient()
 	}
 	mux.Handle("GET /ready", handlers.NewReadyHandler(policyClient, bc, repo))
-	mux.HandleFunc("GET /metrics", metrics.DefaultMetrics.Handler)
+	mux.Handle("GET /metrics", middleware.RequireScope(domain.ScopeAdmin)(http.HandlerFunc(metrics.DefaultMetrics.Handler)))
 
 	// 2. V1 Authorization API
 	mux.Handle("POST /v1/payments/authorize", handlers.NewAuthorizeHandler(policyClient))
@@ -747,7 +749,9 @@ func NewRouter(
 
 	var handler http.Handler = mux
 	if repo != nil {
-		handler = middleware.APIKeyAuth(repo)(handler)
+		handler = middleware.APIKeyAuth(repo, cfg)(handler)
+	} else if cfg != nil && (strings.EqualFold(cfg.Environment, "production") || cfg.EnableLiveExecution) {
+		handler = middleware.APIKeyAuth(nil, cfg)(handler)
 	} else {
 		handler = middleware.AuthPlaceholder(handler)
 	}

@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/emergency"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 )
@@ -30,7 +32,17 @@ func (h *EmergencyHandler) HandlePauseAgent(w http.ResponseWriter, r *http.Reque
 	actorID := h.extractActor(r)
 	authOrgID := middleware.GetOrgID(r.Context())
 
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeEmergencyManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires emergency:manage or admin", ctxReqID)
+		return
+	}
+
 	if err := h.controller.PauseAgent(r.Context(), authOrgID, agentID, actorID); err != nil {
+		if strings.Contains(err.Error(), "cross-organization") {
+			writeError(w, http.StatusForbidden, "FORBIDDEN", err.Error(), ctxReqID)
+			return
+		}
 		writeError(w, http.StatusBadRequest, "PAUSE_FAILED", err.Error(), ctxReqID)
 		return
 	}
@@ -51,7 +63,17 @@ func (h *EmergencyHandler) HandleResumeAgent(w http.ResponseWriter, r *http.Requ
 	actorID := h.extractActor(r)
 	authOrgID := middleware.GetOrgID(r.Context())
 
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeEmergencyManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires emergency:manage or admin", ctxReqID)
+		return
+	}
+
 	if err := h.controller.ResumeAgent(r.Context(), authOrgID, agentID, actorID); err != nil {
+		if strings.Contains(err.Error(), "cross-organization") {
+			writeError(w, http.StatusForbidden, "FORBIDDEN", err.Error(), ctxReqID)
+			return
+		}
 		writeError(w, http.StatusBadRequest, "RESUME_FAILED", err.Error(), ctxReqID)
 		return
 	}
@@ -71,6 +93,12 @@ func (h *EmergencyHandler) HandlePauseOrganization(w http.ResponseWriter, r *htt
 	orgID := r.PathValue("id")
 	actorID := h.extractActor(r)
 	authOrgID := middleware.GetOrgID(r.Context())
+
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeEmergencyManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires emergency:manage or admin", ctxReqID)
+		return
+	}
 
 	if authOrgID != "" && authOrgID != orgID {
 		writeError(w, http.StatusForbidden, "FORBIDDEN", "cross-organization access denied", ctxReqID)
@@ -98,6 +126,12 @@ func (h *EmergencyHandler) HandleResumeOrganization(w http.ResponseWriter, r *ht
 	actorID := h.extractActor(r)
 	authOrgID := middleware.GetOrgID(r.Context())
 
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeEmergencyManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires emergency:manage or admin", ctxReqID)
+		return
+	}
+
 	if authOrgID != "" && authOrgID != orgID {
 		writeError(w, http.StatusForbidden, "FORBIDDEN", "cross-organization access denied", ctxReqID)
 		return
@@ -122,6 +156,12 @@ func (h *EmergencyHandler) HandlePauseGlobal(w http.ResponseWriter, r *http.Requ
 	ctxReqID := middleware.GetRequestID(r.Context())
 	actorID := h.extractActor(r)
 
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeEmergencyManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires emergency:manage or admin", ctxReqID)
+		return
+	}
+
 	if err := h.controller.PauseGlobalExecution(r.Context(), actorID); err != nil {
 		writeError(w, http.StatusInternalServerError, "GLOBAL_PAUSE_FAILED", err.Error(), ctxReqID)
 		return
@@ -139,6 +179,12 @@ func (h *EmergencyHandler) HandlePauseGlobal(w http.ResponseWriter, r *http.Requ
 func (h *EmergencyHandler) HandleResumeGlobal(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
 	actorID := h.extractActor(r)
+
+	callerScopes := middleware.GetScopes(r.Context())
+	if !auth.HasScope(callerScopes, domain.ScopeEmergencyManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
+		writeError(w, http.StatusForbidden, "FORBIDDEN", "Insufficient scope: requires emergency:manage or admin", ctxReqID)
+		return
+	}
 
 	if err := h.controller.ResumeGlobalExecution(r.Context(), actorID); err != nil {
 		writeError(w, http.StatusInternalServerError, "GLOBAL_RESUME_FAILED", err.Error(), ctxReqID)

@@ -50,6 +50,8 @@ func TestIntegration_AutonomousResearchAgent_FullHappyPath(t *testing.T) {
 	}
 	agentSvc := agent.NewService(mockModel, intentSvc, reg, true)
 
+	_, client := seedIntegrationAdminKey(t, repo)
+
 	router := gwHttp.NewRouter(cfg, pClient, execSvc, agentSvc, intentSvc, repo, reg)
 	server := httptest.NewServer(router)
 	defer server.Close()
@@ -62,7 +64,7 @@ func TestIntegration_AutonomousResearchAgent_FullHappyPath(t *testing.T) {
 		"autonomous":    true,
 	}
 	reqBytes, _ := json.Marshal(reqPayload)
-	resp, err := http.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(reqBytes))
+	resp, err := client.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(reqBytes))
 	if err != nil {
 		t.Fatalf("failed to post agent task: %v", err)
 	}
@@ -94,7 +96,7 @@ func TestIntegration_AutonomousResearchAgent_FullHappyPath(t *testing.T) {
 	}
 
 	// 2. Query Task State: GET /v1/agents/tasks/{id}
-	getResp, err := http.Get(server.URL + "/v1/agents/tasks/" + res.TaskID)
+	getResp, err := client.Get(server.URL + "/v1/agents/tasks/" + res.TaskID)
 	if err != nil {
 		t.Fatalf("failed to get task: %v", err)
 	}
@@ -139,6 +141,8 @@ func TestIntegration_AutonomousResearchAgent_ApprovalFlow(t *testing.T) {
 	}
 	agentSvc := agent.NewService(mockModel, intentSvc, reg, true)
 
+	_, client := seedIntegrationAdminKey(t, repo)
+
 	router := gwHttp.NewRouter(cfg, pClient, execSvc, agentSvc, intentSvc, repo, reg)
 	server := httptest.NewServer(router)
 	defer server.Close()
@@ -154,7 +158,7 @@ func TestIntegration_AutonomousResearchAgent_ApprovalFlow(t *testing.T) {
 				app, _ := repo.GetApprovalByIntent(ctx, intents[0].IntentID)
 				if app != nil {
 					appReqBody := bytes.NewReader([]byte(`{"approver_id":"human_controller","reason":"Approved research budget"}`))
-					resp, err := http.Post(server.URL+"/v1/approvals/"+app.ID+"/approve", "application/json", appReqBody)
+					resp, err := client.Post(server.URL+"/v1/approvals/"+app.ID+"/approve", "application/json", appReqBody)
 					if err == nil {
 						resp.Body.Close()
 						return
@@ -174,7 +178,7 @@ func TestIntegration_AutonomousResearchAgent_ApprovalFlow(t *testing.T) {
 		"approval_timeout_ms": 3000,
 	}
 	reqBytes, _ := json.Marshal(reqPayload)
-	resp, err := http.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(reqBytes))
+	resp, err := client.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(reqBytes))
 	if err != nil {
 		t.Fatalf("failed to post agent task: %v", err)
 	}
@@ -214,6 +218,8 @@ func TestIntegration_AutonomousResearchAgent_ApprovalRejectionFlow(t *testing.T)
 	pClient := &mockIntegrationPolicyApprovalClient{}
 	execSvc := &mockIntegrationExecutionService{}
 
+	_, client := seedIntegrationAdminKey(t, repo)
+
 	intentSvc := intent.NewService(repo, pClient, execSvc, reg, nil, 5*time.Minute, true)
 	mockModel := &agent.MockAgentModel{
 		CustomResponse: &agent.AIIntentResponse{
@@ -241,7 +247,7 @@ func TestIntegration_AutonomousResearchAgent_ApprovalRejectionFlow(t *testing.T)
 				app, _ := repo.GetApprovalByIntent(ctx, intents[0].IntentID)
 				if app != nil {
 					rejReqBody := bytes.NewReader([]byte(`{"approver_id":"human_controller","reason":"Budget denied"}`))
-					resp, err := http.Post(server.URL+"/v1/approvals/"+app.ID+"/reject", "application/json", rejReqBody)
+					resp, err := client.Post(server.URL+"/v1/approvals/"+app.ID+"/reject", "application/json", rejReqBody)
 					if err == nil {
 						resp.Body.Close()
 						return
@@ -261,7 +267,7 @@ func TestIntegration_AutonomousResearchAgent_ApprovalRejectionFlow(t *testing.T)
 		"approval_timeout_ms": 3000,
 	}
 	reqBytes, _ := json.Marshal(reqPayload)
-	resp, err := http.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(reqBytes))
+	resp, err := client.Post(server.URL+"/v1/agents/tasks", "application/json", bytes.NewReader(reqBytes))
 	if err != nil {
 		t.Fatalf("failed to post agent task: %v", err)
 	}

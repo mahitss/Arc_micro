@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/blockchain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
@@ -228,6 +229,23 @@ func TestDay9_IDOR_CrossOrganizationIsolation(t *testing.T) {
 
 	ctx := context.Background()
 
+	// Seed authenticated API key for Org A
+	secretA, keyA, err := auth.GenerateAPIKey("org_A", "Org A Test Key", []string{"*"})
+	if err != nil {
+		t.Fatalf("failed to generate org A key: %v", err)
+	}
+	_ = repo.SaveAPIKey(ctx, &storage.APIKey{
+		ID:             keyA.ID,
+		OrganizationID: keyA.OrganizationID,
+		KeyHash:        keyA.KeyHash,
+		Name:           keyA.Name,
+		MaskedKey:      keyA.MaskedKey,
+		Scopes:         "*",
+		Status:         string(domain.APIKeyStatusActive),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	})
+
 	// Create intent for Org B
 	piB, err := intentSvc.CreateIntent(ctx, intent.CreateIntentParams{
 		OrganizationID: "org_B",
@@ -245,6 +263,7 @@ func TestDay9_IDOR_CrossOrganizationIsolation(t *testing.T) {
 
 	// 1. Org A requests Org B intent via GET /v1/payment-intents/{id} with Org A header
 	req, _ := http.NewRequest("GET", server.URL+"/v1/payment-intents/"+piB.IntentID, nil)
+	req.Header.Set("Authorization", "Bearer "+secretA)
 	req.Header.Set("X-Organization-ID", "org_A")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -258,6 +277,7 @@ func TestDay9_IDOR_CrossOrganizationIsolation(t *testing.T) {
 
 	// 2. Org A attempts to read Org B agent budget
 	reqBudget, _ := http.NewRequest("GET", server.URL+"/v1/agent-budgets/agent_orgB_01", nil)
+	reqBudget.Header.Set("Authorization", "Bearer "+secretA)
 	reqBudget.Header.Set("X-Organization-ID", "org_A")
 	respBudget, err := http.DefaultClient.Do(reqBudget)
 	if err != nil {
@@ -271,6 +291,7 @@ func TestDay9_IDOR_CrossOrganizationIsolation(t *testing.T) {
 
 	// 3. Org A attempts to pause Org B organization
 	reqPause, _ := http.NewRequest("POST", server.URL+"/v1/organizations/org_B/pause", nil)
+	reqPause.Header.Set("Authorization", "Bearer "+secretA)
 	reqPause.Header.Set("X-Organization-ID", "org_A")
 	respPause, err := http.DefaultClient.Do(reqPause)
 	if err != nil {
@@ -294,6 +315,7 @@ func TestDay9_IDOR_CrossOrganizationIsolation(t *testing.T) {
 	_ = repo.SaveApproval(ctx, appB)
 
 	reqApp, _ := http.NewRequest("GET", server.URL+"/v1/approvals/"+appB.ID, nil)
+	reqApp.Header.Set("Authorization", "Bearer "+secretA)
 	reqApp.Header.Set("X-Organization-ID", "org_A")
 	respApp, err := http.DefaultClient.Do(reqApp)
 	if err != nil {
@@ -308,6 +330,7 @@ func TestDay9_IDOR_CrossOrganizationIsolation(t *testing.T) {
 	// 5. Org A attempts to approve Org B approval
 	approveBody := bytes.NewBufferString(`{"approver_id":"usr_attacker"}`)
 	reqApprove, _ := http.NewRequest("POST", server.URL+"/v1/approvals/"+appB.ID+"/approve", approveBody)
+	reqApprove.Header.Set("Authorization", "Bearer "+secretA)
 	reqApprove.Header.Set("X-Organization-ID", "org_A")
 	respApprove, err := http.DefaultClient.Do(reqApprove)
 	if err != nil {
@@ -327,6 +350,23 @@ func TestDay9_FinancialInvariants(t *testing.T) {
 
 	ctx := context.Background()
 	ds := service.NewDomainService(repo)
+
+	// Seed authenticated API key for Org A
+	secretA, keyA, err := auth.GenerateAPIKey("org_A", "Org A Test Key", []string{"*"})
+	if err != nil {
+		t.Fatalf("failed to generate org A key: %v", err)
+	}
+	_ = repo.SaveAPIKey(ctx, &storage.APIKey{
+		ID:             keyA.ID,
+		OrganizationID: keyA.OrganizationID,
+		KeyHash:        keyA.KeyHash,
+		Name:           keyA.Name,
+		MaskedKey:      keyA.MaskedKey,
+		Scopes:         "*",
+		Status:         string(domain.APIKeyStatusActive),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	})
 
 	// INVARIANT 4 & 5: HARD DENY cannot be overridden by human approval.
 	t.Run("HardDenyCannotBeOverriddenByApproval", func(t *testing.T) {
@@ -412,6 +452,7 @@ func TestDay9_FinancialInvariants(t *testing.T) {
 			"recipient": "0xAttackerControlledAddress00000000000000"
 		}`)
 		req, _ := http.NewRequest("POST", server.URL+"/v1/payment-intents", bytes.NewBuffer(payload))
+		req.Header.Set("Authorization", "Bearer "+secretA)
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -446,6 +487,7 @@ func TestDay9_FinancialInvariants(t *testing.T) {
 
 		// Request 1
 		req1, _ := http.NewRequest("POST", server.URL+"/v1/payment-intents", bytes.NewBuffer(payload))
+		req1.Header.Set("Authorization", "Bearer "+secretA)
 		req1.Header.Set("Content-Type", "application/json")
 		req1.Header.Set("Idempotency-Key", idempotencyKey)
 		resp1, err := http.DefaultClient.Do(req1)
@@ -461,6 +503,7 @@ func TestDay9_FinancialInvariants(t *testing.T) {
 
 		// Request 2 with same idempotency key
 		req2, _ := http.NewRequest("POST", server.URL+"/v1/payment-intents", bytes.NewBuffer(payload))
+		req2.Header.Set("Authorization", "Bearer "+secretA)
 		req2.Header.Set("Content-Type", "application/json")
 		req2.Header.Set("Idempotency-Key", idempotencyKey)
 		resp2, err := http.DefaultClient.Do(req2)

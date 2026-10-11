@@ -9,12 +9,45 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	gwHttp "github.com/arc-agentpay/agentpay/services/gateway/internal/http"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
+
+type integrationAuthTransport struct {
+	token string
+}
+
+func (at *integrationAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.Header.Get("Authorization") == "" {
+		req.Header.Set("Authorization", "Bearer "+at.token)
+	}
+	return http.DefaultTransport.RoundTrip(req)
+}
+
+func seedIntegrationAdminKey(t *testing.T, repo storage.Repository) (string, *http.Client) {
+	t.Helper()
+	secret, key, err := auth.GenerateAPIKey("org_default", "Integration Admin Key", []string{domain.ScopeAdmin, "*"})
+	if err != nil {
+		t.Fatalf("failed to generate admin key: %v", err)
+	}
+	_ = repo.SaveAPIKey(context.Background(), &storage.APIKey{
+		ID:             key.ID,
+		OrganizationID: key.OrganizationID,
+		KeyHash:        key.KeyHash,
+		Name:           key.Name,
+		MaskedKey:      key.MaskedKey,
+		Scopes:         "admin,*",
+		Status:         string(domain.APIKeyStatusActive),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	})
+	return secret, &http.Client{Transport: &integrationAuthTransport{token: secret}}
+}
 
 func TestIntegration_Day3ControlPlane(t *testing.T) {
 	cfg := &config.Config{
@@ -31,13 +64,15 @@ func TestIntegration_Day3ControlPlane(t *testing.T) {
 	pClient := &mockIntegrationPolicyClient{}
 	execSvc := &mockIntegrationExecutionService{}
 
+	_, client := seedIntegrationAdminKey(t, repo)
+
 	intentSvc := intent.NewService(repo, pClient, execSvc, reg, nil, 5*time.Minute, false)
 	router := gwHttp.NewRouter(cfg, pClient, nil, nil, intentSvc, repo, reg)
 	server := httptest.NewServer(router)
 	defer server.Close()
 
 	// 1. Test Treasury Summary API: GET /v1/treasury/summary
-	resp, err := http.Get(server.URL + "/v1/treasury/summary?organization_id=org_default&vault=0x1111111111111111111111111111111111111111")
+	resp, err := client.Get(server.URL + "/v1/treasury/summary?organization_id=org_default&vault=0x1111111111111111111111111111111111111111")
 	if err != nil {
 		t.Fatalf("failed to get treasury summary: %v", err)
 	}
@@ -58,7 +93,7 @@ func TestIntegration_Day3ControlPlane(t *testing.T) {
 	// 2. Test Global Execution Pause & Resume APIs
 	// POST /v1/system/pause
 	pauseBody := bytes.NewReader([]byte(`{"actor_id":"usr_admin"}`))
-	resp, err = http.Post(server.URL+"/v1/system/pause", "application/json", pauseBody)
+	resp, err = client.Post(server.URL+"/v1/system/pause", "application/json", pauseBody)
 	if err != nil {
 		t.Fatalf("failed to pause system: %v", err)
 	}
@@ -68,7 +103,7 @@ func TestIntegration_Day3ControlPlane(t *testing.T) {
 	}
 
 	// Verify GET /v1/system/status reflects PAUSED
-	statusResp, err := http.Get(server.URL + "/v1/system/status")
+	statusResp, err := client.Get(server.URL + "/v1/system/status")
 	if err != nil {
 		t.Fatalf("failed to get system status: %v", err)
 	}
@@ -81,7 +116,7 @@ func TestIntegration_Day3ControlPlane(t *testing.T) {
 
 	// Resume system: POST /v1/system/resume
 	resumeBody := bytes.NewReader([]byte(`{"actor_id":"usr_admin"}`))
-	resp, err = http.Post(server.URL+"/v1/system/resume", "application/json", resumeBody)
+	resp, err = client.Post(server.URL+"/v1/system/resume", "application/json", resumeBody)
 	if err != nil {
 		t.Fatalf("failed to resume system: %v", err)
 	}
@@ -121,7 +156,7 @@ func TestIntegration_Day3ControlPlane(t *testing.T) {
 	})
 
 	// GET /v1/approvals
-	appResp, err := http.Get(server.URL + "/v1/approvals?organization_id=org_default")
+	appResp, err := client.Get(server.URL + "/v1/approvals?organization_id=org_default")
 	if err != nil {
 		t.Fatalf("failed to list approvals: %v", err)
 	}
@@ -132,7 +167,7 @@ func TestIntegration_Day3ControlPlane(t *testing.T) {
 
 	// Self-Approval attempt by AI agent: MUST BE REJECTED with 403 Forbidden
 	selfApprBody := bytes.NewReader([]byte(`{"approver_id":"research-agent","reason":"AI self-approving"}`))
-	failResp, err := http.Post(server.URL+"/v1/approvals/"+appID+"/approve", "application/json", selfApprBody)
+	failResp, err := client.Post(server.URL+"/v1/approvals/"+appID+"/approve", "application/json", selfApprBody)
 	if err != nil {
 		t.Fatalf("failed to post approval: %v", err)
 	}
@@ -143,7 +178,7 @@ func TestIntegration_Day3ControlPlane(t *testing.T) {
 
 	// Valid human approval: POST /v1/approvals/{id}/approve
 	validApprBody := bytes.NewReader([]byte(`{"approver_id":"usr_compliance_manager","reason":"Approved after audit"}`))
-	okResp, err := http.Post(server.URL+"/v1/approvals/"+appID+"/approve", "application/json", validApprBody)
+	okResp, err := client.Post(server.URL+"/v1/approvals/"+appID+"/approve", "application/json", validApprBody)
 	if err != nil {
 		t.Fatalf("failed to post valid approval: %v", err)
 	}
