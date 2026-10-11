@@ -24,9 +24,9 @@ func NewControlHandler(cs control.Service) *ControlHandler {
 // HandleOverview handles GET /v1/control/overview and /api/control/overview.
 func (h *ControlHandler) HandleOverview(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 	mode := r.URL.Query().Get("mode")
 	if mode == "" {
@@ -47,9 +47,9 @@ func (h *ControlHandler) HandleOverview(w http.ResponseWriter, r *http.Request) 
 // HandleStateStrip handles GET /v1/control/state and /api/control/state.
 func (h *ControlHandler) HandleStateStrip(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 	mode := r.URL.Query().Get("mode")
 	if mode == "" {
@@ -70,9 +70,9 @@ func (h *ControlHandler) HandleStateStrip(w http.ResponseWriter, r *http.Request
 // HandleActivity handles GET /v1/control/activity and /api/control/activity.
 func (h *ControlHandler) HandleActivity(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 	mode := r.URL.Query().Get("mode")
 	category := r.URL.Query().Get("category")
@@ -109,9 +109,9 @@ func (h *ControlHandler) HandleFinancialTrace(w http.ResponseWriter, r *http.Req
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "target financial intent or trace ID is required", ctxReqID)
 		return
 	}
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	trace, err := h.controlService.GetFinancialTrace(r.Context(), orgID, id)
@@ -136,9 +136,9 @@ func (h *ControlHandler) HandleMissionCommandCenter(w http.ResponseWriter, r *ht
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "mission ID is required", ctxReqID)
 		return
 	}
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	mView, err := h.controlService.GetMissionCommandCenter(r.Context(), orgID, id)
@@ -155,9 +155,9 @@ func (h *ControlHandler) HandleMissionCommandCenter(w http.ResponseWriter, r *ht
 // HandleSecurity handles GET /v1/control/security and /api/control/security.
 func (h *ControlHandler) HandleSecurity(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	sec, err := h.controlService.GetSecurityCenter(r.Context(), orgID)
@@ -174,9 +174,9 @@ func (h *ControlHandler) HandleSecurity(w http.ResponseWriter, r *http.Request) 
 // HandleTreasury handles GET /v1/control/treasury and /api/control/treasury.
 func (h *ControlHandler) HandleTreasury(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 	mode := r.URL.Query().Get("mode")
 	if mode == "" {
@@ -212,9 +212,9 @@ func (h *ControlHandler) HandleArcStatus(w http.ResponseWriter, r *http.Request)
 // HandleIncidents handles GET /v1/control/incidents and /api/control/incidents.
 func (h *ControlHandler) HandleIncidents(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 	status := r.URL.Query().Get("status")
 
@@ -235,9 +235,9 @@ func (h *ControlHandler) HandleIncidents(w http.ResponseWriter, r *http.Request)
 // HandleIntelligence handles GET /v1/control/intelligence and /api/control/intelligence.
 func (h *ControlHandler) HandleIntelligence(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	intel, err := h.controlService.GetIntelligenceView(r.Context(), orgID)
@@ -254,9 +254,9 @@ func (h *ControlHandler) HandleIntelligence(w http.ResponseWriter, r *http.Reque
 // HandleSearch handles GET /v1/control/search and /api/control/search.
 func (h *ControlHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 	query := r.URL.Query().Get("q")
 	if query == "" {

@@ -48,10 +48,6 @@ func NewSimulationSuiteHandler(
 // Supports both new full Scenario simulations and legacy single-payment dry runs.
 func (h *SimulationSuiteHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
-	}
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -79,9 +75,11 @@ func (h *SimulationSuiteHandler) HandleCreate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if scenario.OrganizationID == "" {
-		scenario.OrganizationID = orgID
+	orgID, ok := resolveTenantFromRequest(w, r, scenario.OrganizationID, ctxReqID)
+	if !ok {
+		return
 	}
+	scenario.OrganizationID = orgID
 	if scenario.Name == "" {
 		scenario.Name = "Autonomous Economic Mission"
 	}
@@ -112,9 +110,9 @@ func (h *SimulationSuiteHandler) HandleCreate(w http.ResponseWriter, r *http.Req
 
 // HandleList handles GET /v1/simulations.
 func (h *SimulationSuiteHandler) HandleList(w http.ResponseWriter, r *http.Request) {
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	runs := h.engine.ListRuns(orgID)
@@ -373,13 +371,11 @@ func (h *SimulationSuiteHandler) HandleMonteCarlo(w http.ResponseWriter, r *http
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, req.Scenario.OrganizationID, ctxReqID)
+	if !ok {
+		return
 	}
-	if req.Scenario.OrganizationID == "" {
-		req.Scenario.OrganizationID = orgID
-	}
+	req.Scenario.OrganizationID = orgID
 
 	summary, err := h.monteCarlo.RunMonteCarlo(r.Context(), req)
 	if err != nil {
@@ -397,9 +393,9 @@ func (h *SimulationSuiteHandler) HandleMonteCarlo(w http.ResponseWriter, r *http
 func (h *SimulationSuiteHandler) HandleExecutePlan(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
 	id := r.PathValue("id")
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	// Capture fresh live snapshot

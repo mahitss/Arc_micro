@@ -56,6 +56,28 @@ func IsAuthenticated(ctx context.Context) bool {
 	return false
 }
 
+// ResolveTenantOrg resolves the authoritative organization ID for the request.
+// If the caller is not authenticated, returns ("", false).
+// If requestedOrg is empty or matches the authenticated org, returns (authOrgID, true).
+// If requestedOrg != authOrgID, returns requestedOrg only if caller has ScopeAdmin;
+// otherwise returns ("", false) indicating forbidden cross-organization access.
+func ResolveTenantOrg(ctx context.Context, requestedOrg string) (string, bool) {
+	authOrgID := GetOrgID(ctx)
+	if authOrgID == "" {
+		return "", false
+	}
+	requestedOrg = strings.TrimSpace(requestedOrg)
+	if requestedOrg == "" || requestedOrg == authOrgID {
+		return authOrgID, true
+	}
+	// Cross-tenant access requested: only allowed with ScopeAdmin or wildcard
+	scopes := GetScopes(ctx)
+	if auth.HasScope(scopes, domain.ScopeAdmin) {
+		return requestedOrg, true
+	}
+	return "", false
+}
+
 // isPublicEndpoint checks if a request path is an explicitly allowlisted public endpoint.
 // Only /health and /ready are public. /metrics is private and requires authentication.
 func isPublicEndpoint(path string) bool {

@@ -24,7 +24,13 @@ func NewTreasuryHandler(ts treasury.Service) *TreasuryHandler {
 // HandleSummary handles GET /v1/treasury/summary
 func (h *TreasuryHandler) HandleSummary(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
+	}
 	vault := r.URL.Query().Get("vault")
 
 	summary, err := h.treasuryService.GetTreasurySummary(r.Context(), orgID, vault)
@@ -41,9 +47,12 @@ func (h *TreasuryHandler) HandleSummary(w http.ResponseWriter, r *http.Request) 
 // HandleState handles GET /v1/treasury/state or /api/treasury/state
 func (h *TreasuryHandler) HandleState(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
 	}
 	modeStr := r.URL.Query().Get("mode")
 	mode := treasury.ModeReal
@@ -69,7 +78,13 @@ func (h *TreasuryHandler) HandleBalance(w http.ResponseWriter, r *http.Request) 
 // HandleListReservations handles GET /v1/treasury/reservations or /api/treasury/reservations
 func (h *TreasuryHandler) HandleListReservations(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
+	}
 	modeStr := r.URL.Query().Get("mode")
 	mode := treasury.ModeReal
 	if strings.ToUpper(modeStr) == "SIMULATION" {
@@ -110,13 +125,15 @@ func (h *TreasuryHandler) HandleCreateReservation(w http.ResponseWriter, r *http
 		return
 	}
 
-	authOrgID := middleware.GetOrgID(r.Context())
-	if req.OrganizationID == "" {
-		req.OrganizationID = authOrgID
-	} else if authOrgID != "" && req.OrganizationID != authOrgID && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
-		writeError(w, http.StatusForbidden, "FORBIDDEN", "Cross-organization reservation access denied", ctxReqID)
+	orgID, ok := resolveTenantFromRequest(w, r, req.OrganizationID, ctxReqID)
+
+	if !ok {
+
 		return
+
 	}
+
+	req.OrganizationID = orgID
 
 	res, err := h.treasuryService.ReserveLiquidityAtomic(r.Context(), &req)
 	if err != nil {
@@ -172,6 +189,11 @@ func (h *TreasuryHandler) HandleCommitments(w http.ResponseWriter, r *http.Reque
 			writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error(), ctxReqID)
 			return
 		}
+		orgID, ok := resolveTenantFromRequest(w, r, c.OrganizationID, ctxReqID)
+		if !ok {
+			return
+		}
+		c.OrganizationID = orgID
 		if err := h.treasuryService.CreateCommitment(r.Context(), &c); err != nil {
 			writeError(w, http.StatusBadRequest, "COMMITMENT_FAILED", err.Error(), ctxReqID)
 			return
@@ -182,7 +204,13 @@ func (h *TreasuryHandler) HandleCommitments(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
+	}
 	commitments, err := h.treasuryService.ListCommitments(r.Context(), orgID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "COMMITMENTS_FAILED", err.Error(), ctxReqID)
@@ -199,9 +227,12 @@ func (h *TreasuryHandler) HandleCommitments(w http.ResponseWriter, r *http.Reque
 // HandleExposure handles GET /v1/treasury/exposure
 func (h *TreasuryHandler) HandleExposure(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
 	}
 	modeStr := r.URL.Query().Get("mode")
 	mode := treasury.ModeReal
@@ -222,9 +253,12 @@ func (h *TreasuryHandler) HandleExposure(w http.ResponseWriter, r *http.Request)
 // HandleForecast handles GET /v1/treasury/forecast
 func (h *TreasuryHandler) HandleForecast(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
 	}
 	horizon := treasury.ForecastHorizon(r.URL.Query().Get("horizon"))
 	if horizon == "" {
@@ -253,9 +287,12 @@ func (h *TreasuryHandler) HandleForecast(w http.ResponseWriter, r *http.Request)
 // HandleStress handles POST /v1/treasury/stress
 func (h *TreasuryHandler) HandleStress(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
 	}
 	modeStr := r.URL.Query().Get("mode")
 	mode := treasury.ModeReal
@@ -281,9 +318,12 @@ func (h *TreasuryHandler) HandleStress(w http.ResponseWriter, r *http.Request) {
 // HandleReconciliation handles GET /v1/treasury/reconciliation
 func (h *TreasuryHandler) HandleReconciliation(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
 	}
 	vault := r.URL.Query().Get("vault")
 	modeStr := r.URL.Query().Get("mode")
@@ -305,9 +345,12 @@ func (h *TreasuryHandler) HandleReconciliation(w http.ResponseWriter, r *http.Re
 // HandleAnomalies handles GET /v1/treasury/anomalies
 func (h *TreasuryHandler) HandleAnomalies(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
 	}
 	modeStr := r.URL.Query().Get("mode")
 	mode := treasury.ModeReal
@@ -331,9 +374,12 @@ func (h *TreasuryHandler) HandleAnomalies(w http.ResponseWriter, r *http.Request
 // HandleHealth handles GET /v1/treasury/health
 func (h *TreasuryHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
 	}
 	modeStr := r.URL.Query().Get("mode")
 	mode := treasury.ModeReal
@@ -360,6 +406,11 @@ func (h *TreasuryHandler) HandleInflows(w http.ResponseWriter, r *http.Request) 
 			writeError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error(), ctxReqID)
 			return
 		}
+		orgID, ok := resolveTenantFromRequest(w, r, inf.OrganizationID, ctxReqID)
+		if !ok {
+			return
+		}
+		inf.OrganizationID = orgID
 		if err := h.treasuryService.RecordExpectedInflow(r.Context(), &inf); err != nil {
 			writeError(w, http.StatusBadRequest, "INFLOW_FAILED", err.Error(), ctxReqID)
 			return
@@ -370,7 +421,13 @@ func (h *TreasuryHandler) HandleInflows(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+
+	if !ok {
+
+		return
+
+	}
 	inflows, err := h.treasuryService.ListExpectedInflows(r.Context(), orgID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "INFLOWS_FAILED", err.Error(), ctxReqID)

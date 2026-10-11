@@ -31,6 +31,7 @@ func NewWebhookHandler(repo storage.Repository, dispatcher *webhook.Dispatcher, 
 
 // CreateWebhookEndpointRequest defines the input payload for registering a webhook endpoint.
 type CreateWebhookEndpointRequest struct {
+	OrganizationID   string   `json:"organization_id,omitempty"`
 	URL              string   `json:"url"`
 	Description      string   `json:"description,omitempty"`
 	SubscribedEvents []string `json:"subscribed_events,omitempty"`
@@ -74,11 +75,18 @@ type UpdateWebhookEndpointRequest struct {
 // HandleCreate processes POST /v1/webhooks.
 func (h *WebhookHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 
 	var req CreateWebhookEndpointRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON payload", reqID)
+		return
+	}
+	orgID, ok = resolveTenantFromRequest(w, r, req.OrganizationID, reqID)
+	if !ok {
 		return
 	}
 
@@ -160,7 +168,10 @@ func (h *WebhookHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 // HandleList processes GET /v1/webhooks.
 func (h *WebhookHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 
 	endpoints, err := h.repo.ListWebhookEndpoints(r.Context(), orgID)
 	if err != nil {
@@ -194,7 +205,10 @@ func (h *WebhookHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 // HandleGet processes GET /v1/webhooks/{id}.
 func (h *WebhookHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 
 	ep, err := h.repo.GetWebhookEndpoint(r.Context(), id, orgID)
@@ -225,7 +239,10 @@ func (h *WebhookHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 // HandleUpdate processes PATCH /v1/webhooks/{id}.
 func (h *WebhookHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 
 	ep, err := h.repo.GetWebhookEndpoint(r.Context(), id, orgID)
@@ -293,7 +310,10 @@ func (h *WebhookHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 // HandleDelete processes DELETE /v1/webhooks/{id}.
 func (h *WebhookHandler) HandleDelete(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 
 	if err := h.repo.DeleteWebhookEndpoint(r.Context(), id, orgID); err != nil {
@@ -328,7 +348,10 @@ func (h *WebhookHandler) HandleDelete(w http.ResponseWriter, r *http.Request) {
 // HandleListDeliveries processes GET /v1/webhooks/{id}/deliveries.
 func (h *WebhookHandler) HandleListDeliveries(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 
 	limit := 50
@@ -354,7 +377,10 @@ func (h *WebhookHandler) HandleListDeliveries(w http.ResponseWriter, r *http.Req
 // HandleTest processes POST /v1/webhooks/{id}/test.
 func (h *WebhookHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 
 	ep, err := h.repo.GetWebhookEndpoint(r.Context(), id, orgID)

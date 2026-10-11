@@ -56,6 +56,12 @@ func (h *AuthorizeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	activeReqID := req.RequestID
 	w.Header().Set("X-Request-ID", activeReqID)
 
+	targetOrg, ok := resolveTenantFromRequest(w, r, req.OrganizationID, activeReqID)
+	if !ok {
+		return
+	}
+	req.OrganizationID = targetOrg
+
 	// Validate basic request shape and required fields
 	if err := req.Validate(); err != nil {
 		writeError(w, http.StatusBadRequest, "VALIDATION_FAILED", err.Error(), activeReqID)

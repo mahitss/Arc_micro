@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
-	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 )
 
 // SwarmsHandler handles HTTP endpoints for the Swarm Orchestration Layer.
@@ -39,12 +38,11 @@ func (h *SwarmsHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.OrganizationID == "" {
-		req.OrganizationID = middleware.GetOrgID(r.Context())
-		if req.OrganizationID == "" {
-			req.OrganizationID = "org_default"
-		}
+	orgID, ok := resolveTenantFromRequest(w, r, req.OrganizationID, "")
+	if !ok {
+		return
 	}
+	req.OrganizationID = orgID
 
 	swarm, graph, tasks, err := h.swarmEngine.CreateSwarm(r.Context(), req)
 	if err != nil {
@@ -150,9 +148,11 @@ func (h *SwarmsHandler) HandleSimulate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.OrganizationID == "" {
-		req.OrganizationID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, req.OrganizationID, "")
+	if !ok {
+		return
 	}
+	req.OrganizationID = orgID
 
 	trace, err := h.swarmEngine.SimulateSwarm(r.Context(), req)
 	if err != nil {

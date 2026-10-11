@@ -34,6 +34,11 @@ func (h *ClearinghouseHandler) HandleCreateObligation(w http.ResponseWriter, r *
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, req.OrganizationID, "")
+	if !ok {
+		return
+	}
+	req.OrganizationID = orgID
 	ob, err := h.service.CreateObligation(r.Context(), &req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -45,7 +50,10 @@ func (h *ClearinghouseHandler) HandleCreateObligation(w http.ResponseWriter, r *
 }
 
 func (h *ClearinghouseHandler) HandleListObligations(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	obs, err := h.service.ListObligations(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -94,6 +102,11 @@ func (h *ClearinghouseHandler) HandleCreateInvoice(w http.ResponseWriter, r *htt
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, inv.OrganizationID, "")
+	if !ok {
+		return
+	}
+	inv.OrganizationID = orgID
 	created, err := h.service.CreateInvoice(r.Context(), &inv)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -105,7 +118,10 @@ func (h *ClearinghouseHandler) HandleCreateInvoice(w http.ResponseWriter, r *htt
 }
 
 func (h *ClearinghouseHandler) HandleListInvoices(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	invs, err := h.service.ListInvoices(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -171,7 +187,10 @@ func (h *ClearinghouseHandler) HandleCreateEscrow(w http.ResponseWriter, r *http
 }
 
 func (h *ClearinghouseHandler) HandleListEscrows(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	list, err := h.service.ListEscrows(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -318,6 +337,11 @@ func (h *ClearinghouseHandler) HandleProposeNetting(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, body.OrganizationID, "")
+	if !ok {
+		return
+	}
+	body.OrganizationID = orgID
 	ttl := time.Duration(body.TTLSeconds) * time.Second
 	prop, err := h.service.ProposeNetting(r.Context(), body.OrganizationID, body.AgentA, body.AgentB, body.Currency, ttl)
 	if err != nil {
@@ -330,7 +354,10 @@ func (h *ClearinghouseHandler) HandleProposeNetting(w http.ResponseWriter, r *ht
 }
 
 func (h *ClearinghouseHandler) HandleListNetting(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	list, err := h.service.ListNettingProposals(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -388,6 +415,11 @@ func (h *ClearinghouseHandler) HandleCreateBatch(w http.ResponseWriter, r *http.
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, body.OrganizationID, "")
+	if !ok {
+		return
+	}
+	body.OrganizationID = orgID
 	batch, err := h.service.CreateBatch(r.Context(), body.OrganizationID, body.Currency, body.ObligationIDs, body.ExecutionMode)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -399,7 +431,10 @@ func (h *ClearinghouseHandler) HandleCreateBatch(w http.ResponseWriter, r *http.
 }
 
 func (h *ClearinghouseHandler) HandleListBatches(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	list, err := h.service.ListBatches(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -452,7 +487,10 @@ func (h *ClearinghouseHandler) HandleRequestRefund(w http.ResponseWriter, r *htt
 }
 
 func (h *ClearinghouseHandler) HandleListRefunds(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	list, err := h.service.ListRefunds(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -492,7 +530,10 @@ func (h *ClearinghouseHandler) HandleExecuteRefund(w http.ResponseWriter, r *htt
 // -----------------------------------------------------------------------------
 
 func (h *ClearinghouseHandler) HandleListReconciliation(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	list, err := h.service.ListReconciliationRecords(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -521,9 +562,9 @@ func (h *ClearinghouseHandler) HandleReconcileObligation(w http.ResponseWriter, 
 // -----------------------------------------------------------------------------
 
 func (h *ClearinghouseHandler) HandleGetExposure(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 	mode := clearinghouse.ModeReal
 	if strings.EqualFold(r.URL.Query().Get("mode"), "SIMULATION") {
@@ -539,9 +580,9 @@ func (h *ClearinghouseHandler) HandleGetExposure(w http.ResponseWriter, r *http.
 }
 
 func (h *ClearinghouseHandler) HandleGetHealth(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 	bal := r.URL.Query().Get("balance")
 	if bal == "" {
@@ -565,7 +606,10 @@ func (h *ClearinghouseHandler) HandleGetHealth(w http.ResponseWriter, r *http.Re
 // -----------------------------------------------------------------------------
 
 func (h *ClearinghouseHandler) HandleGetLedger(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	entries, err := h.service.GetLedgerEntries(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -602,7 +646,10 @@ func (h *ClearinghouseHandler) HandleRegisterCounterparty(w http.ResponseWriter,
 
 func (h *ClearinghouseHandler) HandleListCounterparties(w http.ResponseWriter, r *http.Request) {
 	tenantID := r.URL.Query().Get("tenant_id")
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	list, err := h.service.ListCounterparties(r.Context(), tenantID, orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -674,6 +721,12 @@ func (h *ClearinghouseHandler) HandleProposeMultiPartyNetting(w http.ResponseWri
 	if req.TTLSeconds > 0 {
 		ttl = time.Duration(req.TTLSeconds) * time.Second
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, req.OrganizationID, "")
+	if !ok {
+		return
+	}
+	req.OrganizationID = orgID
+	req.TenantID = orgID
 	prop, err := h.service.ProposeMultiPartyNetting(r.Context(), req.TenantID, req.OrganizationID, req.Currency, req.ObligationIDs, ttl)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -701,7 +754,10 @@ func (h *ClearinghouseHandler) HandleGetNettingCounterfactual(w http.ResponseWri
 
 // Settlements
 func (h *ClearinghouseHandler) HandleListSettlements(w http.ResponseWriter, r *http.Request) {
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	batches, err := h.service.ListBatches(r.Context(), orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -733,7 +789,10 @@ func (h *ClearinghouseHandler) HandleGetSettlement(w http.ResponseWriter, r *htt
 // Reconciliation
 func (h *ClearinghouseHandler) HandleListReconciliationItems(w http.ResponseWriter, r *http.Request) {
 	tenantID := r.URL.Query().Get("tenant_id")
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	items, err := h.service.ListReconciliationItems(r.Context(), tenantID, orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -781,7 +840,10 @@ func (h *ClearinghouseHandler) HandleCreateDispute(w http.ResponseWriter, r *htt
 
 func (h *ClearinghouseHandler) HandleListDisputes(w http.ResponseWriter, r *http.Request) {
 	tenantID := r.URL.Query().Get("tenant_id")
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	list, err := h.service.ListDisputes(r.Context(), tenantID, orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -824,7 +886,10 @@ func (h *ClearinghouseHandler) HandleGetFinancialTrace(w http.ResponseWriter, r 
 
 func (h *ClearinghouseHandler) HandleGetObligationGraph(w http.ResponseWriter, r *http.Request) {
 	tenantID := r.URL.Query().Get("tenant_id")
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	graph, err := h.service.GetObligationGraph(r.Context(), tenantID, orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -851,7 +916,10 @@ func (h *ClearinghouseHandler) HandleExplainUnsettled(w http.ResponseWriter, r *
 
 func (h *ClearinghouseHandler) HandleGetClearingNetworkHealth(w http.ResponseWriter, r *http.Request) {
 	tenantID := r.URL.Query().Get("tenant_id")
-	orgID := r.URL.Query().Get("organization_id")
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 	health, err := h.service.GetClearingHealth(r.Context(), tenantID, orgID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -866,9 +934,9 @@ func (h *ClearinghouseHandler) HandleRunFlagshipSimulation(w http.ResponseWriter
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	orgID := r.URL.Query().Get("org_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 	res, err := h.service.RunFlagshipSimulation(r.Context(), orgID)
 	if err != nil {
@@ -884,9 +952,9 @@ func (h *ClearinghouseHandler) HandleResetSimulation(w http.ResponseWriter, r *h
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	orgID := r.URL.Query().Get("org_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 	if err := h.service.ResetSimulation(r.Context(), orgID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -901,9 +969,9 @@ func (h *ClearinghouseHandler) HandleGetFlagshipSimulation(w http.ResponseWriter
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	orgID := r.URL.Query().Get("org_id")
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 	res, err := h.service.GetFlagshipSimulation(r.Context(), orgID)
 	if err != nil {

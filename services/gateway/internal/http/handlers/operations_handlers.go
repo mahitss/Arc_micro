@@ -25,7 +25,10 @@ func (h *OperationsHandler) HandleGetStatus(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	snap, err := h.opsService.GetSnapshot(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -52,7 +55,10 @@ func (h *OperationsHandler) HandleGetHealth(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	health := h.opsService.GetHealth(r.Context(), tenantID)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(health)
@@ -64,7 +70,10 @@ func (h *OperationsHandler) HandleGetSnapshot(w http.ResponseWriter, r *http.Req
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	snap, err := h.opsService.GetSnapshot(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -80,7 +89,10 @@ func (h *OperationsHandler) HandleListWorkflows(w http.ResponseWriter, r *http.R
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	wfs, err := h.opsService.ListSupervisedWorkflows(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -99,7 +111,10 @@ func (h *OperationsHandler) HandleListWorkers(w http.ResponseWriter, r *http.Req
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	workers, err := h.opsService.ListSupervisedWorkers(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -118,7 +133,10 @@ func (h *OperationsHandler) HandleGetQueues(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	qData := h.opsService.GetQueues(r.Context(), tenantID)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(qData)
@@ -130,7 +148,10 @@ func (h *OperationsHandler) HandleListIncidents(w http.ResponseWriter, r *http.R
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	incidents, err := h.opsService.ListIncidents(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -149,7 +170,10 @@ func (h *OperationsHandler) HandleMitigateIncident(w http.ResponseWriter, r *htt
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	incidentID := r.PathValue("id")
 	if incidentID == "" {
 		http.Error(w, "missing incident id", http.StatusBadRequest)
@@ -183,7 +207,10 @@ func (h *OperationsHandler) HandleGetTopology(w http.ResponseWriter, r *http.Req
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	topo := h.opsService.GetTopology(r.Context(), tenantID)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(topo)
@@ -195,7 +222,10 @@ func (h *OperationsHandler) HandleGetTimeline(w http.ResponseWriter, r *http.Req
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	limit := 50
 	if lStr := r.URL.Query().Get("limit"); lStr != "" {
 		if parsed, err := strconv.Atoi(lStr); err == nil && parsed > 0 {
@@ -217,7 +247,10 @@ func (h *OperationsHandler) HandleGetGraph(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	graph, err := h.opsService.GetOperationalGraph(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -233,7 +266,10 @@ func (h *OperationsHandler) HandleGetReplay(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	workflowID := r.PathValue("workflowId")
 	if workflowID == "" {
 		http.Error(w, "missing workflow id", http.StatusBadRequest)
@@ -256,7 +292,10 @@ func (h *OperationsHandler) HandleGetStateAt(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	tsParam := r.PathValue("timestamp")
 	if tsParam == "" {
 		http.Error(w, "missing timestamp", http.StatusBadRequest)
@@ -285,7 +324,10 @@ func (h *OperationsHandler) HandleExplainEvent(w http.ResponseWriter, r *http.Re
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	eventID := r.PathValue("eventId")
 	if eventID == "" {
 		http.Error(w, "missing event id", http.StatusBadRequest)
@@ -308,7 +350,10 @@ func (h *OperationsHandler) HandleGetNextAction(w http.ResponseWriter, r *http.R
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	workflowID := r.PathValue("workflowId")
 	if workflowID == "" {
 		http.Error(w, "missing workflow id", http.StatusBadRequest)

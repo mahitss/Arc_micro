@@ -26,8 +26,9 @@ func NewAPIKeyHandler(repo storage.Repository) *APIKeyHandler {
 
 // CreateKeyRequest defines the input payload for creating an API key.
 type CreateKeyRequest struct {
-	Name   string   `json:"name"`
-	Scopes []string `json:"scopes,omitempty"`
+	OrganizationID string   `json:"organization_id,omitempty"`
+	Name           string   `json:"name"`
+	Scopes         []string `json:"scopes,omitempty"`
 }
 
 // CreateKeyResponse returns the generated key with its secret shown ONLY ONCE.
@@ -59,7 +60,10 @@ type KeyListItemResponse struct {
 // HandleCreate processes POST /v1/api-keys.
 func (h *APIKeyHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 
 	callerScopes := middleware.GetScopes(r.Context())
 	if !auth.HasScope(callerScopes, domain.ScopeAPIKeysManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
@@ -70,6 +74,10 @@ func (h *APIKeyHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	var req CreateKeyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err.Error() != "EOF" {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON payload", reqID)
+		return
+	}
+	orgID, ok = resolveTenantFromRequest(w, r, req.OrganizationID, reqID)
+	if !ok {
 		return
 	}
 
@@ -141,7 +149,10 @@ func (h *APIKeyHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 // HandleList processes GET /v1/api-keys.
 func (h *APIKeyHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 
 	callerScopes := middleware.GetScopes(r.Context())
 	if !auth.HasScope(callerScopes, domain.ScopeAPIKeysManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {
@@ -189,7 +200,10 @@ func (h *APIKeyHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 // HandleRevoke processes DELETE /v1/api-keys/{id}.
 func (h *APIKeyHandler) HandleRevoke(w http.ResponseWriter, r *http.Request) {
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 
 	callerScopes := middleware.GetScopes(r.Context())
 	if !auth.HasScope(callerScopes, domain.ScopeAPIKeysManage) && !auth.HasScope(callerScopes, domain.ScopeAdmin) {

@@ -16,12 +16,13 @@ import (
 
 // ExecutePaymentRequest is the incoming payload for POST /v1/payments/execute.
 type ExecutePaymentRequest struct {
-	RequestID    string `json:"request_id"`
-	AgentID      string `json:"agent_id"`
-	VaultAddress string `json:"vault_address"`
-	Recipient    string `json:"recipient"`
-	Amount       string `json:"amount"`
-	Purpose      string `json:"purpose"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	RequestID      string `json:"request_id"`
+	AgentID        string `json:"agent_id"`
+	VaultAddress   string `json:"vault_address"`
+	Recipient      string `json:"recipient"`
+	Amount         string `json:"amount"`
+	Purpose        string `json:"purpose"`
 }
 
 // ExecutePaymentResponse represents the unified response for payment execution requests.
@@ -105,13 +106,18 @@ func (h *ExecuteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Mandatory Rust Policy Authorization: NEVER bypass the Rust policy engine
+	targetOrg, ok := resolveTenantFromRequest(w, r, req.OrganizationID, activeReqID)
+	if !ok {
+		return
+	}
 	authReq := domain.PaymentRequest{
-		RequestID: activeReqID,
-		AgentID:   req.AgentID,
-		Recipient: req.Recipient,
-		Amount:    req.Amount,
-		Asset:     "USDC",
-		Purpose:   req.Purpose,
+		RequestID:      activeReqID,
+		AgentID:        req.AgentID,
+		OrganizationID: targetOrg,
+		Recipient:      req.Recipient,
+		Amount:         req.Amount,
+		Asset:          "USDC",
+		Purpose:        req.Purpose,
 	}
 
 	authDecision, err := h.policyClient.Authorize(r.Context(), authReq)

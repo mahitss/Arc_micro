@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -47,6 +48,8 @@ func (m *mockPolicyClient) CheckHealth(ctx context.Context) error {
 	return nil
 }
 
+const testAPIKey = "ap_live_test_bootstrap_key_12345"
+
 func setupTestRouter(mock *mockPolicyClient, maxBodyBytes int64) http.Handler {
 	cfg := &config.Config{
 		Port:                "8080",
@@ -54,8 +57,15 @@ func setupTestRouter(mock *mockPolicyClient, maxBodyBytes int64) http.Handler {
 		PolicyEngineTimeout: 2 * time.Second,
 		CORSAllowedOrigins:  []string{"http://localhost:3000"},
 		MaxRequestBodyBytes: maxBodyBytes,
+		BootstrapAPIKey:     testAPIKey,
 	}
 	return gwHttp.NewRouter(cfg, mock, nil, nil, nil, nil, nil)
+}
+
+func newAuthRequest(method, url string, body io.Reader) *http.Request {
+	req := httptest.NewRequest(method, url, body)
+	req.Header.Set("Authorization", "Bearer "+testAPIKey)
+	return req
 }
 
 func validPayload(reqID string) domain.PaymentRequest {
@@ -90,7 +100,7 @@ func TestAuthorize_Allow(t *testing.T) {
 
 	router := setupTestRouter(mock, 1048576)
 	reqBody, _ := json.Marshal(validPayload("req_allow_1"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(reqBody))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -133,7 +143,7 @@ func TestAuthorize_Deny(t *testing.T) {
 
 	router := setupTestRouter(mock, 1048576)
 	reqBody, _ := json.Marshal(validPayload("req_deny_1"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(reqBody))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -160,7 +170,7 @@ func TestAuthorize_MalformedJSON(t *testing.T) {
 	mock := &mockPolicyClient{}
 	router := setupTestRouter(mock, 1048576)
 
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", strings.NewReader(`{invalid json`))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", strings.NewReader(`{invalid json`))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -201,7 +211,7 @@ func TestAuthorize_MissingRequiredFields(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			b, _ := json.Marshal(tc.payload)
-			req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
+			req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
@@ -229,7 +239,7 @@ func TestAuthorize_RustInvalidJSON(t *testing.T) {
 
 	router := setupTestRouter(mock, 1048576)
 	b, _ := json.Marshal(validPayload("req_inv_json"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -255,7 +265,7 @@ func TestAuthorize_RustUnavailable(t *testing.T) {
 
 	router := setupTestRouter(mock, 1048576)
 	b, _ := json.Marshal(validPayload("req_unavail"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -280,7 +290,7 @@ func TestAuthorize_RustTimeout(t *testing.T) {
 
 	router := setupTestRouter(mock, 1048576)
 	b, _ := json.Marshal(validPayload("req_timeout"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -317,7 +327,7 @@ func TestAuthorize_RequestID_Handling(t *testing.T) {
 	// Case A: Client supplies request_id in payload
 	{
 		b, _ := json.Marshal(validPayload("custom_req_123"))
-		req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
+		req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -339,7 +349,7 @@ func TestAuthorize_RequestID_Handling(t *testing.T) {
 	{
 		payload := validPayload("")
 		b, _ := json.Marshal(payload)
-		req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
+		req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
 		w := httptest.NewRecorder()
 
 		router.ServeHTTP(w, req)
@@ -376,7 +386,7 @@ func TestAuthorize_ContextCancellation(t *testing.T) {
 	cancel() // Cancel immediately
 
 	b, _ := json.Marshal(validPayload("req_cancel"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b)).WithContext(ctx)
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b)).WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -390,7 +400,7 @@ func TestAuthorize_OversizedRequestBody(t *testing.T) {
 	router := setupTestRouter(mock, 64)
 
 	hugePayload := strings.Repeat("A", 200)
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", strings.NewReader(hugePayload))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", strings.NewReader(hugePayload))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -411,7 +421,7 @@ func TestAuthorize_NoSensitiveInfoInErrors(t *testing.T) {
 
 	router := setupTestRouter(mock, 1048576)
 	b, _ := json.Marshal(validPayload("req_sec"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/authorize", bytes.NewReader(b))
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)

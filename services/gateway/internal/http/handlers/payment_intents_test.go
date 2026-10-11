@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/trace"
@@ -42,8 +43,11 @@ func TestPaymentIntentsHandler_HandleGetTrace(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/payment-intents/{id}/trace", handler.HandleGetTrace)
 
+	ctxAuth := context.WithValue(context.Background(), middleware.OrgIDKey, "org_default")
+	ctxAuth = context.WithValue(ctxAuth, middleware.AuthenticatedKey, true)
+
 	// 1. Success case
-	req := httptest.NewRequest("GET", "/v1/payment-intents/pi_trace_http_01/trace", nil)
+	req := httptest.NewRequest("GET", "/v1/payment-intents/pi_trace_http_01/trace", nil).WithContext(ctxAuth)
 	rr := httptest.NewRecorder()
 	mux.ServeHTTP(rr, req)
 
@@ -64,7 +68,7 @@ func TestPaymentIntentsHandler_HandleGetTrace(t *testing.T) {
 	}
 
 	// 2. Not found case
-	req404 := httptest.NewRequest("GET", "/v1/payment-intents/non_existent/trace", nil)
+	req404 := httptest.NewRequest("GET", "/v1/payment-intents/non_existent/trace", nil).WithContext(ctxAuth)
 	rr404 := httptest.NewRecorder()
 	mux.ServeHTTP(rr404, req404)
 

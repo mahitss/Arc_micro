@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/economy"
-	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 )
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -40,9 +39,9 @@ func (h *IntelligenceHandler) HandleGetServicePerformance(w http.ResponseWriter,
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	windowStr := r.URL.Query().Get("window")
@@ -73,9 +72,9 @@ func (h *IntelligenceHandler) HandleGetServiceReputation(w http.ResponseWriter, 
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	rep, err := h.missionService.GetServiceReputation(r.Context(), orgID, serviceID)
@@ -100,9 +99,9 @@ func (h *IntelligenceHandler) HandleGetServiceAnomalies(w http.ResponseWriter, r
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	signals, cbStatus, err := h.missionService.GetServiceAnomalies(r.Context(), orgID, serviceID)
@@ -131,9 +130,9 @@ func (h *IntelligenceHandler) HandleGetMissionObservations(w http.ResponseWriter
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	obs, err := h.missionService.GetMissionObservations(r.Context(), orgID, missionID)
@@ -165,9 +164,9 @@ func (h *IntelligenceHandler) HandleGetMissionRecommendations(w http.ResponseWri
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	rec, err := h.missionService.GetMissionRecommendations(r.Context(), orgID, missionID)
@@ -196,9 +195,9 @@ func (h *IntelligenceHandler) HandleReplanMission(w http.ResponseWriter, r *http
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	proposal, err := h.missionService.ReplanMission(r.Context(), orgID, missionID)
@@ -227,9 +226,9 @@ func (h *IntelligenceHandler) HandleGetMissionRecovery(w http.ResponseWriter, r 
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	intel, err := h.missionService.GetMissionIntelligence(r.Context(), orgID, missionID)
@@ -264,9 +263,9 @@ func (h *IntelligenceHandler) HandleGetMissionIntelligence(w http.ResponseWriter
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if qOrg := r.URL.Query().Get("organization_id"); qOrg != "" {
-		orgID = qOrg
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
 	}
 
 	intel, err := h.missionService.GetMissionIntelligence(r.Context(), orgID, missionID)

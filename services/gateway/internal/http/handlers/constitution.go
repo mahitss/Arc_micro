@@ -33,9 +33,9 @@ func NewConstitutionHandler(store constitution.Store) *ConstitutionHandler {
 // HandleGetActive handles GET /v1/constitutions/active
 func (h *ConstitutionHandler) HandleGetActive(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	active, err := h.store.GetActiveConstitution(r.Context(), orgID)
@@ -57,9 +57,9 @@ func (h *ConstitutionHandler) HandleGetActive(w http.ResponseWriter, r *http.Req
 // HandleList handles GET /v1/constitutions
 func (h *ConstitutionHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	list, err := h.store.ListConstitutions(r.Context(), orgID)
@@ -85,9 +85,9 @@ func (h *ConstitutionHandler) HandleList(w http.ResponseWriter, r *http.Request)
 // HandleGetByVersion handles GET /v1/constitutions/{version}
 func (h *ConstitutionHandler) HandleGetByVersion(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	verStr := r.PathValue("version")
@@ -114,9 +114,9 @@ func (h *ConstitutionHandler) HandleGetByVersion(w http.ResponseWriter, r *http.
 // HandlePropose handles POST /v1/constitutions
 func (h *ConstitutionHandler) HandlePropose(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	var payload struct {
@@ -149,9 +149,9 @@ func (h *ConstitutionHandler) HandlePropose(w http.ResponseWriter, r *http.Reque
 // HandleEvaluate handles POST /v1/constitutions/evaluate
 func (h *ConstitutionHandler) HandleEvaluate(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	var ctx constitution.PolicyEvaluationContext
@@ -159,9 +159,11 @@ func (h *ConstitutionHandler) HandleEvaluate(w http.ResponseWriter, r *http.Requ
 		writeError(w, http.StatusBadRequest, "INVALID_PAYLOAD", "Malformed evaluation context", ctxReqID)
 		return
 	}
-	if ctx.OrganizationID == "" {
-		ctx.OrganizationID = orgID
+	orgID, ok = resolveTenantFromRequest(w, r, ctx.OrganizationID, ctxReqID)
+	if !ok {
+		return
 	}
+	ctx.OrganizationID = orgID
 
 	active, err := h.store.GetActiveConstitution(r.Context(), ctx.OrganizationID)
 	if err != nil {
@@ -183,9 +185,9 @@ func (h *ConstitutionHandler) HandleEvaluate(w http.ResponseWriter, r *http.Requ
 // HandleDiff handles POST /v1/constitutions/diff
 func (h *ConstitutionHandler) HandleDiff(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	var req struct {
@@ -222,9 +224,9 @@ func (h *ConstitutionHandler) HandleDiff(w http.ResponseWriter, r *http.Request)
 // HandleTest handles POST /v1/constitutions/test
 func (h *ConstitutionHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	var req struct {
@@ -285,9 +287,9 @@ func (h *ConstitutionHandler) HandleActivate(w http.ResponseWriter, r *http.Requ
 // HandleRollback handles POST /v1/constitutions/rollback
 func (h *ConstitutionHandler) HandleRollback(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	var req struct {
@@ -320,9 +322,9 @@ func (h *ConstitutionHandler) HandleRollback(w http.ResponseWriter, r *http.Requ
 // HandleListChanges handles GET /v1/constitutions/changes
 func (h *ConstitutionHandler) HandleListChanges(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	list, err := h.store.ListChangeRequests(r.Context(), orgID)

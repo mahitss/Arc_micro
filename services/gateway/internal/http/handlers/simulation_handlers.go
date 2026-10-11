@@ -38,11 +38,12 @@ func NewSimulationHandler(
 
 // SimulationRequest represents the input parameters for simulating a payment.
 type SimulationRequest struct {
-	AgentID   string `json:"agent_id"`
-	ServiceID string `json:"service_id"`
-	Amount    string `json:"amount"`
-	Asset     string `json:"asset"`
-	Purpose   string `json:"purpose"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	AgentID        string `json:"agent_id"`
+	ServiceID      string `json:"service_id"`
+	Amount         string `json:"amount"`
+	Asset          string `json:"asset"`
+	Purpose        string `json:"purpose"`
 }
 
 // SimulationResponse represents the structured prediction of what would happen.
@@ -65,16 +66,16 @@ type SimulationResponse struct {
 // HandleSimulate processes POST /v1/simulations.
 func (h *SimulationHandler) HandleSimulate(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID == "" {
-		orgID = "org_default"
-	}
-
 	var req SimulationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "MALFORMED_JSON", "invalid request body", ctxReqID)
 		return
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, req.OrganizationID, ctxReqID)
+	if !ok {
+		return
+	}
+	req.OrganizationID = orgID
 
 	if req.AgentID == "" || req.ServiceID == "" || req.Amount == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_FIELDS", "agent_id, service_id, and amount are required", ctxReqID)

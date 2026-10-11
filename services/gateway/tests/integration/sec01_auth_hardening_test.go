@@ -203,7 +203,10 @@ func TestSEC01_Case04_InsufficientScope_Returns403(t *testing.T) {
 	reqCreateKey, _ := http.NewRequest("POST", server.URL+"/v1/api-keys", bytes.NewReader([]byte(`{"name":"New Key"}`)))
 	reqCreateKey.Header.Set("Authorization", "Bearer "+secretRead)
 	reqCreateKey.Header.Set("Content-Type", "application/json")
-	respCreateKey, _ := http.DefaultClient.Do(reqCreateKey)
+	respCreateKey, err := http.DefaultClient.Do(reqCreateKey)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respCreateKey.Body.Close()
 	if respCreateKey.StatusCode != http.StatusForbidden {
 		t.Fatalf("expected 403 Forbidden for API key creation with read-only key, got %d", respCreateKey.StatusCode)
@@ -213,7 +216,10 @@ func TestSEC01_Case04_InsufficientScope_Returns403(t *testing.T) {
 	reqPause, _ := http.NewRequest("POST", server.URL+"/v1/system/pause", bytes.NewReader([]byte(`{"actor_id":"attacker"}`)))
 	reqPause.Header.Set("Authorization", "Bearer "+secretRead)
 	reqPause.Header.Set("Content-Type", "application/json")
-	respPause, _ := http.DefaultClient.Do(reqPause)
+	respPause, err := http.DefaultClient.Do(reqPause)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respPause.Body.Close()
 	if respPause.StatusCode != http.StatusForbidden {
 		t.Fatalf("expected 403 Forbidden for system pause with read-only key, got %d", respPause.StatusCode)
@@ -222,7 +228,10 @@ func TestSEC01_Case04_InsufficientScope_Returns403(t *testing.T) {
 	// Attempt to access private /metrics with read-only key -> 403
 	reqMetrics, _ := http.NewRequest("GET", server.URL+"/metrics", nil)
 	reqMetrics.Header.Set("Authorization", "Bearer "+secretRead)
-	respMetrics, _ := http.DefaultClient.Do(reqMetrics)
+	respMetrics, err := http.DefaultClient.Do(reqMetrics)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respMetrics.Body.Close()
 	if respMetrics.StatusCode != http.StatusForbidden {
 		t.Fatalf("expected 403 Forbidden for /metrics with read-only key, got %d", respMetrics.StatusCode)
@@ -305,7 +314,10 @@ func TestSEC01_Case07_UnauthenticatedCallers_CannotCreateOrRevokeKeys(t *testing
 	// 1. Unauthenticated creation
 	reqCreate, _ := http.NewRequest("POST", server.URL+"/v1/api-keys", bytes.NewReader([]byte(`{"name":"Hacked Key"}`)))
 	reqCreate.Header.Set("Content-Type", "application/json")
-	respCreate, _ := http.DefaultClient.Do(reqCreate)
+	respCreate, err := http.DefaultClient.Do(reqCreate)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respCreate.Body.Close()
 	if respCreate.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("expected 401 Unauthorized for unauthenticated key creation, got %d", respCreate.StatusCode)
@@ -313,7 +325,10 @@ func TestSEC01_Case07_UnauthenticatedCallers_CannotCreateOrRevokeKeys(t *testing
 
 	// 2. Unauthenticated listing
 	reqList, _ := http.NewRequest("GET", server.URL+"/v1/api-keys", nil)
-	respList, _ := http.DefaultClient.Do(reqList)
+	respList, err := http.DefaultClient.Do(reqList)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respList.Body.Close()
 	if respList.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("expected 401 Unauthorized for unauthenticated key listing, got %d", respList.StatusCode)
@@ -321,7 +336,10 @@ func TestSEC01_Case07_UnauthenticatedCallers_CannotCreateOrRevokeKeys(t *testing
 
 	// 3. Unauthenticated revocation
 	reqRevoke, _ := http.NewRequest("DELETE", server.URL+"/v1/api-keys/key_somekey123", nil)
-	respRevoke, _ := http.DefaultClient.Do(reqRevoke)
+	respRevoke, err := http.DefaultClient.Do(reqRevoke)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respRevoke.Body.Close()
 	if respRevoke.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("expected 401 Unauthorized for unauthenticated key revocation, got %d", respRevoke.StatusCode)
@@ -421,7 +439,10 @@ func TestSEC01_Case10_CrossOrganizationResourceAccess_Denied(t *testing.T) {
 	reqPause, _ := http.NewRequest("POST", server.URL+"/v1/agents/agent_orgA_target/pause", bytes.NewReader([]byte(`{"actor_id":"orgB_attacker"}`)))
 	reqPause.Header.Set("Authorization", "Bearer "+secretB)
 	reqPause.Header.Set("Content-Type", "application/json")
-	respPause, _ := http.DefaultClient.Do(reqPause)
+	respPause, err := http.DefaultClient.Do(reqPause)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respPause.Body.Close()
 	if respPause.StatusCode != http.StatusForbidden {
 		t.Fatalf("expected 403 Forbidden for cross-org agent pause, got %d", respPause.StatusCode)
@@ -430,7 +451,10 @@ func TestSEC01_Case10_CrossOrganizationResourceAccess_Denied(t *testing.T) {
 	// Org B attempts to read Org A's agent details -> 404 Not Found (tenant isolation)
 	reqGetAgent, _ := http.NewRequest("GET", server.URL+"/v1/agents/agent_orgA_target", nil)
 	reqGetAgent.Header.Set("Authorization", "Bearer "+secretB)
-	respGetAgent, _ := http.DefaultClient.Do(reqGetAgent)
+	respGetAgent, err := http.DefaultClient.Do(reqGetAgent)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respGetAgent.Body.Close()
 	if respGetAgent.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected 404 Not Found for cross-org agent inspection, got %d", respGetAgent.StatusCode)
@@ -441,7 +465,10 @@ func TestSEC01_Case10_CrossOrganizationResourceAccess_Denied(t *testing.T) {
 	reqReserve, _ := http.NewRequest("POST", server.URL+"/v1/treasury/reservations", bytes.NewReader([]byte(resPayload)))
 	reqReserve.Header.Set("Authorization", "Bearer "+secretB)
 	reqReserve.Header.Set("Content-Type", "application/json")
-	respReserve, _ := http.DefaultClient.Do(reqReserve)
+	respReserve, err := http.DefaultClient.Do(reqReserve)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
 	defer respReserve.Body.Close()
 	if respReserve.StatusCode != http.StatusForbidden {
 		t.Fatalf("expected 403 Forbidden for cross-org treasury reservation, got %d", respReserve.StatusCode)

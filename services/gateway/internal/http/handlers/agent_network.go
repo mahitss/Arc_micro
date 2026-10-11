@@ -62,13 +62,9 @@ func writeJSONError(w http.ResponseWriter, status int, message string) {
 	})
 }
 
-// resolveOrg extracts tenant boundary from X-Tenant-ID header or defaults to org_default.
-func (h *AgentNetworkHandler) resolveOrg(r *http.Request) string {
-	org := r.Header.Get("X-Tenant-ID")
-	if org == "" {
-		org = "org_default"
-	}
-	return org
+// resolveOrg extracts tenant boundary and enforces authenticated tenant isolation.
+func (h *AgentNetworkHandler) resolveOrg(w http.ResponseWriter, r *http.Request, explicitOrg string) (string, bool) {
+	return resolveTenantFromRequest(w, r, explicitOrg, "")
 }
 
 // HandleRegisterAgent registers a new agent manifest: POST /v1/agent-network/agents/register
@@ -78,9 +74,11 @@ func (h *AgentNetworkHandler) HandleRegisterAgent(w http.ResponseWriter, r *http
 		writeJSONError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
-	if manifest.OrganizationID == "" {
-		manifest.OrganizationID = h.resolveOrg(r)
+	orgID, ok := h.resolveOrg(w, r, manifest.OrganizationID)
+	if !ok {
+		return
 	}
+	manifest.OrganizationID = orgID
 
 	identity, err := h.discovery.RegisterAgent(r.Context(), &manifest)
 	if err != nil {
@@ -97,6 +95,10 @@ func (h *AgentNetworkHandler) HandleListAgents(w http.ResponseWriter, r *http.Re
 	q := r.URL.Query()
 	limit, _ := strconv.Atoi(q.Get("limit"))
 	minTrust, _ := strconv.ParseInt(q.Get("min_trust_score"), 10, 64)
+	orgID, ok := h.resolveOrg(w, r, "")
+	if !ok {
+		return
+	}
 
 	filter := network.DiscoveryFilter{
 		Capability:      q.Get("capability"),
@@ -104,7 +106,7 @@ func (h *AgentNetworkHandler) HandleListAgents(w http.ResponseWriter, r *http.Re
 		PricingModel:    q.Get("pricing_model"),
 		Availability:    q.Get("availability"),
 		MinTrustScore:   minTrust,
-		OrganizationID:  h.resolveOrg(r),
+		OrganizationID:  orgID,
 		Limit:           limit,
 	}
 
@@ -159,9 +161,11 @@ func (h *AgentNetworkHandler) HandleUpdateManifest(w http.ResponseWriter, r *htt
 	if manifest.AgentID == "" {
 		manifest.AgentID = agentID
 	}
-	if manifest.OrganizationID == "" {
-		manifest.OrganizationID = h.resolveOrg(r)
+	orgID, ok := h.resolveOrg(w, r, manifest.OrganizationID)
+	if !ok {
+		return
 	}
+	manifest.OrganizationID = orgID
 
 	identity, err := h.discovery.UpdateManifest(r.Context(), &manifest)
 	if err != nil {
@@ -209,9 +213,11 @@ func (h *AgentNetworkHandler) HandleRoutePlan(w http.ResponseWriter, r *http.Req
 		writeJSONError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
-	if req.OrganizationID == "" {
-		req.OrganizationID = h.resolveOrg(r)
+	orgID, ok := h.resolveOrg(w, r, req.OrganizationID)
+	if !ok {
+		return
 	}
+	req.OrganizationID = orgID
 
 	plan, err := h.economicRouter.RouteTask(r.Context(), req)
 	if err != nil {
@@ -229,9 +235,11 @@ func (h *AgentNetworkHandler) HandleCreateContract(w http.ResponseWriter, r *htt
 		writeJSONError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
-	if c.OrganizationID == "" {
-		c.OrganizationID = h.resolveOrg(r)
+	orgID, ok := h.resolveOrg(w, r, c.OrganizationID)
+	if !ok {
+		return
 	}
+	c.OrganizationID = orgID
 
 	created, err := h.contractMgr.CreateContract(r.Context(), &c)
 	if err != nil {
@@ -245,7 +253,11 @@ func (h *AgentNetworkHandler) HandleCreateContract(w http.ResponseWriter, r *htt
 
 // HandleListContracts lists contracts for tenant: GET /v1/agent-network/contracts
 func (h *AgentNetworkHandler) HandleListContracts(w http.ResponseWriter, r *http.Request) {
-	contracts, err := h.repo.ListServiceContracts(r.Context(), h.resolveOrg(r))
+	orgID, ok := h.resolveOrg(w, r, "")
+	if !ok {
+		return
+	}
+	contracts, err := h.repo.ListServiceContracts(r.Context(), orgID)
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -385,7 +397,11 @@ func (h *AgentNetworkHandler) HandleOpenDispute(w http.ResponseWriter, r *http.R
 
 // HandleListDisputes lists disputes: GET /v1/agent-network/disputes
 func (h *AgentNetworkHandler) HandleListDisputes(w http.ResponseWriter, r *http.Request) {
-	disputes, err := h.repo.ListDisputes(r.Context(), h.resolveOrg(r))
+	orgID, ok := h.resolveOrg(w, r, "")
+	if !ok {
+		return
+	}
+	disputes, err := h.repo.ListDisputes(r.Context(), orgID)
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -433,7 +449,11 @@ func (h *AgentNetworkHandler) HandleResolveDispute(w http.ResponseWriter, r *htt
 
 // HandleGetGraph returns the network graph: GET /v1/agent-network/graph
 func (h *AgentNetworkHandler) HandleGetGraph(w http.ResponseWriter, r *http.Request) {
-	graph, err := h.graphService.BuildGraph(r.Context(), h.resolveOrg(r))
+	orgID, ok := h.resolveOrg(w, r, "")
+	if !ok {
+		return
+	}
+	graph, err := h.graphService.BuildGraph(r.Context(), orgID)
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -447,7 +467,11 @@ func (h *AgentNetworkHandler) HandleGetTrust(w http.ResponseWriter, r *http.Requ
 	agentID := r.PathValue("id")
 	profile, err := h.repo.GetTrustProfile(r.Context(), agentID)
 	if err != nil {
-		profile = &network.AgentTrustProfile{AgentID: agentID, OrganizationID: h.resolveOrg(r)}
+		orgID, ok := h.resolveOrg(w, r, "")
+		if !ok {
+			return
+		}
+		profile = &network.AgentTrustProfile{AgentID: agentID, OrganizationID: orgID}
 	}
 
 	eval, err := h.trustEvaluator.Evaluate(profile)

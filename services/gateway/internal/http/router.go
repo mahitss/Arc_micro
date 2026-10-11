@@ -2,7 +2,6 @@ package http
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/agent"
@@ -748,13 +747,7 @@ func NewRouter(
 	rateLimiter := middleware.NewRateLimiter(60, 100)
 
 	var handler http.Handler = mux
-	if repo != nil {
-		handler = middleware.APIKeyAuth(repo, cfg)(handler)
-	} else if cfg != nil && (strings.EqualFold(cfg.Environment, "production") || cfg.EnableLiveExecution) {
-		handler = middleware.APIKeyAuth(nil, cfg)(handler)
-	} else {
-		handler = middleware.AuthPlaceholder(handler)
-	}
+	handler = middleware.APIKeyAuth(repo, cfg)(handler)
 	handler = middleware.BodyLimit(cfg.MaxRequestBodyBytes)(handler)
 	handler = rateLimiter.Middleware(handler)
 	handler = middleware.Logger(handler)

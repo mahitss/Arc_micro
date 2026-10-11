@@ -52,6 +52,7 @@ func setupExecuteTestRouter(pMock *mockPolicyClient, eMock *mockExecutionService
 		MaxRequestBodyBytes: 1048576,
 		ArcChainID:          "5042",
 		ArcExplorerURL:      "https://explorer.arc.io",
+		BootstrapAPIKey:     testAPIKey,
 	}
 	return gwHttp.NewRouter(cfg, pMock, eMock, nil, nil, nil, nil)
 }
@@ -83,7 +84,7 @@ func TestExecute_PolicyAllow_ExecutionDisabled(t *testing.T) {
 
 	router := setupExecuteTestRouter(pMock, eMock)
 	b, _ := json.Marshal(validExecutePayload("req_exec_allow"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -128,7 +129,7 @@ func TestExecute_PolicyDeny_NoExecution(t *testing.T) {
 
 	router := setupExecuteTestRouter(pMock, eMock)
 	b, _ := json.Marshal(validExecutePayload("req_exec_deny"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -161,7 +162,7 @@ func TestExecute_PolicyUnavailable_FailClosed(t *testing.T) {
 
 	router := setupExecuteTestRouter(pMock, eMock)
 	b, _ := json.Marshal(validExecutePayload("req_exec_unavail"))
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -174,7 +175,7 @@ func TestExecute_PolicyUnavailable_FailClosed(t *testing.T) {
 // 4. Malformed JSON -> 400
 func TestExecute_MalformedJSON(t *testing.T) {
 	router := setupExecuteTestRouter(&mockPolicyClient{}, &mockExecutionService{})
-	req := httptest.NewRequest(http.MethodPost, "/v1/payments/execute", strings.NewReader(`{invalid json`))
+	req := newAuthRequest(http.MethodPost, "/v1/payments/execute", strings.NewReader(`{invalid json`))
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -202,7 +203,7 @@ func TestExecute_MissingFields(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			b, _ := json.Marshal(tc.payload)
-			req := httptest.NewRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
+			req := newAuthRequest(http.MethodPost, "/v1/payments/execute", bytes.NewReader(b))
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)

@@ -31,10 +31,9 @@ func NewApprovalsHandler(repo storage.Repository, ds service.DomainService) *App
 // HandleList handles GET /v1/approvals
 func (h *ApprovalsHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := r.URL.Query().Get("organization_id")
-	authOrgID := middleware.GetOrgID(r.Context())
-	if authOrgID != "" {
-		orgID = authOrgID
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
 	}
 
 	apps, err := h.repo.ListApprovals(r.Context(), orgID)
@@ -54,7 +53,6 @@ func (h *ApprovalsHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 // HandleGet handles GET /v1/approvals/{id}
 func (h *ApprovalsHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	authOrgID := middleware.GetOrgID(r.Context())
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "approval id is required", ctxReqID)
@@ -71,8 +69,11 @@ func (h *ApprovalsHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Tenant isolation: prevent IDOR across organizations
-	if app.OrganizationID != "" && authOrgID != "" && app.OrganizationID != authOrgID {
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
+	if app.OrganizationID != "" && app.OrganizationID != targetOrg {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "approval not found", ctxReqID)
 		return
 	}
@@ -94,7 +95,6 @@ func (h *ApprovalsHandler) HandleReject(w http.ResponseWriter, r *http.Request) 
 
 func (h *ApprovalsHandler) resolveApproval(w http.ResponseWriter, r *http.Request, approve bool) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	authOrgID := middleware.GetOrgID(r.Context())
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "approval id is required", ctxReqID)
@@ -111,8 +111,11 @@ func (h *ApprovalsHandler) resolveApproval(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Tenant isolation: prevent cross-organization approval manipulation
-	if app.OrganizationID != "" && authOrgID != "" && app.OrganizationID != authOrgID {
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
+	if app.OrganizationID != "" && app.OrganizationID != targetOrg {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "approval not found", ctxReqID)
 		return
 	}

@@ -32,9 +32,11 @@ func (h *RuntimeHandler) HandleCreateWorkflow(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if req.TenantID == "" {
-		req.TenantID = getTenantID(r)
+	tenantID, ok := getTenantID(w, r, req.TenantID)
+	if !ok {
+		return
 	}
+	req.TenantID = tenantID
 
 	wf, err := h.runtimeService.CreateWorkflow(r.Context(), req)
 	if err != nil {
@@ -60,7 +62,10 @@ func (h *RuntimeHandler) HandleGetWorkflow(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	wf, err := h.runtimeService.GetWorkflow(r.Context(), tenantID, workflowID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -82,7 +87,10 @@ func (h *RuntimeHandler) HandleListWorkflows(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	state := runtime.WorkflowState(r.URL.Query().Get("state"))
 	limitStr := r.URL.Query().Get("limit")
 	limit := 50
@@ -113,7 +121,10 @@ func (h *RuntimeHandler) HandlePauseWorkflow(w http.ResponseWriter, r *http.Requ
 	}
 
 	workflowID := r.PathValue("id")
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	idemKey := r.Header.Get("Idempotency-Key")
 	if idemKey == "" {
 		idemKey = "pause_" + workflowID
@@ -145,7 +156,10 @@ func (h *RuntimeHandler) HandleResumeWorkflow(w http.ResponseWriter, r *http.Req
 	}
 
 	workflowID := r.PathValue("id")
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	idemKey := r.Header.Get("Idempotency-Key")
 	if idemKey == "" {
 		idemKey = "resume_" + workflowID
@@ -169,7 +183,10 @@ func (h *RuntimeHandler) HandleCancelWorkflow(w http.ResponseWriter, r *http.Req
 	}
 
 	workflowID := r.PathValue("id")
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	idemKey := r.Header.Get("Idempotency-Key")
 	if idemKey == "" {
 		idemKey = "cancel_" + workflowID
@@ -201,7 +218,10 @@ func (h *RuntimeHandler) HandleRetryStep(w http.ResponseWriter, r *http.Request)
 	}
 
 	workflowID := r.PathValue("id")
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	idemKey := r.Header.Get("Idempotency-Key")
 	if idemKey == "" {
 		idemKey = "retry_" + workflowID
@@ -230,7 +250,10 @@ func (h *RuntimeHandler) HandleListSteps(w http.ResponseWriter, r *http.Request)
 	}
 
 	workflowID := r.PathValue("id")
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 
 	steps, err := h.runtimeService.ListSteps(r.Context(), tenantID, workflowID)
 	if err != nil {
@@ -254,7 +277,10 @@ func (h *RuntimeHandler) HandleListCheckpoints(w http.ResponseWriter, r *http.Re
 	}
 
 	workflowID := r.PathValue("id")
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 
 	checkpoints, err := h.runtimeService.ListCheckpoints(r.Context(), tenantID, workflowID)
 	if err != nil {
@@ -297,7 +323,10 @@ func (h *RuntimeHandler) HandleGetQueues(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	metrics, err := h.runtimeService.GetMetrics(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -321,7 +350,10 @@ func (h *RuntimeHandler) HandleGetRecoveryQueue(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	recoverySteps, err := h.runtimeService.GetRecoveryQueue(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -342,7 +374,10 @@ func (h *RuntimeHandler) HandleListIncidents(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	state := r.URL.Query().Get("state")
 
 	incidents, err := h.runtimeService.ListIncidents(r.Context(), tenantID, state)
@@ -366,7 +401,10 @@ func (h *RuntimeHandler) HandleReconcileIncident(w http.ResponseWriter, r *http.
 	}
 
 	incidentID := r.PathValue("id")
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	idemKey := r.Header.Get("Idempotency-Key")
 	if idemKey == "" {
 		idemKey = "recon_" + incidentID
@@ -392,7 +430,10 @@ func (h *RuntimeHandler) HandleGetMetrics(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	tenantID := getTenantID(r)
+	tenantID, ok := getTenantID(w, r, "")
+	if !ok {
+		return
+	}
 	metrics, err := h.runtimeService.GetMetrics(r.Context(), tenantID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -403,13 +444,6 @@ func (h *RuntimeHandler) HandleGetMetrics(w http.ResponseWriter, r *http.Request
 	_ = json.NewEncoder(w).Encode(metrics)
 }
 
-func getTenantID(r *http.Request) string {
-	tid := r.Header.Get("X-Organization-Id")
-	if tid == "" {
-		tid = r.URL.Query().Get("organization_id")
-	}
-	if tid == "" {
-		tid = "default"
-	}
-	return tid
+func getTenantID(w http.ResponseWriter, r *http.Request, explicitTenant string) (string, bool) {
+	return resolveTenantFromRequest(w, r, explicitTenant, "")
 }

@@ -47,15 +47,16 @@ type ConfirmIntentResponse struct {
 
 // CreatePaymentIntentRequest represents the developer-facing request payload for POST /v1/payment-intents.
 type CreatePaymentIntentRequest struct {
-	AgentID       string `json:"agent_id"`
-	Service       string `json:"service"`
-	ServiceID     string `json:"service_id,omitempty"`
-	QuoteID       string `json:"quote_id,omitempty"`
-	Amount        string `json:"amount"`
-	Asset         string `json:"asset"`
-	Purpose       string `json:"purpose"`
-	Justification string `json:"justification,omitempty"`
-	VaultAddress  string `json:"vault_address,omitempty"`
+	OrganizationID string `json:"organization_id,omitempty"`
+	AgentID        string `json:"agent_id"`
+	Service        string `json:"service"`
+	ServiceID      string `json:"service_id,omitempty"`
+	QuoteID        string `json:"quote_id,omitempty"`
+	Amount         string `json:"amount"`
+	Asset          string `json:"asset"`
+	Purpose        string `json:"purpose"`
+	Justification  string `json:"justification,omitempty"`
+	VaultAddress   string `json:"vault_address,omitempty"`
 }
 
 // PaymentIntentResponse represents the developer-friendly response matching Section 9.
@@ -102,7 +103,6 @@ func (h *PaymentIntentsHandler) SetTraceService(ts trace.Service) {
 // HandleCreate processes POST /v1/payment-intents with idempotency and server-side recipient resolution.
 func (h *PaymentIntentsHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 
 	// 1. Extract idempotency key
 	idempotencyKey := strings.TrimSpace(r.Header.Get("Idempotency-Key"))
@@ -113,6 +113,10 @@ func (h *PaymentIntentsHandler) HandleCreate(w http.ResponseWriter, r *http.Requ
 	var req CreatePaymentIntentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON payload", ctxReqID)
+		return
+	}
+	orgID, ok := resolveTenantFromRequest(w, r, req.OrganizationID, ctxReqID)
+	if !ok {
 		return
 	}
 
@@ -208,7 +212,10 @@ func (h *PaymentIntentsHandler) HandleCreate(w http.ResponseWriter, r *http.Requ
 // HandleGet processes GET /v1/payment-intents/{id} with tenant isolation.
 func (h *PaymentIntentsHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
 	intentID := r.PathValue("id")
 	if intentID == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_INTENT_ID", "intent id is required", ctxReqID)
@@ -274,7 +281,10 @@ func (h *PaymentIntentsHandler) HandleGet(w http.ResponseWriter, r *http.Request
 // HandleGetTrace processes GET /v1/payment-intents/{id}/trace with tenant isolation.
 func (h *PaymentIntentsHandler) HandleGetTrace(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
 	intentID := r.PathValue("id")
 	if intentID == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_INTENT_ID", "intent id is required", ctxReqID)
@@ -304,7 +314,10 @@ func (h *PaymentIntentsHandler) HandleGetTrace(w http.ResponseWriter, r *http.Re
 // HandleAuthorize processes POST /v1/payment-intents/{id}/authorize with tenant isolation.
 func (h *PaymentIntentsHandler) HandleAuthorize(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
 	intentID := r.PathValue("id")
 	if intentID == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_INTENT_ID", "intent id is required", ctxReqID)
@@ -353,7 +366,10 @@ func (h *PaymentIntentsHandler) HandleAuthorize(w http.ResponseWriter, r *http.R
 // HandleConfirm processes POST /v1/payment-intents/{id}/confirm with tenant isolation.
 func (h *PaymentIntentsHandler) HandleConfirm(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
 	intentID := r.PathValue("id")
 	if intentID == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_INTENT_ID", "intent id is required", ctxReqID)

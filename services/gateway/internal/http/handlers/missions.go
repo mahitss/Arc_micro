@@ -42,7 +42,6 @@ func (h *MissionsHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 
 	var params economy.CreateMissionParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
@@ -50,9 +49,11 @@ func (h *MissionsHandler) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if params.OrganizationID == "" {
-		params.OrganizationID = orgID
+	targetOrg, ok := resolveTenantFromRequest(w, r, params.OrganizationID, reqID)
+	if !ok {
+		return
 	}
+	params.OrganizationID = targetOrg
 
 	mission, plan, err := h.missionService.CreateMission(r.Context(), params)
 	if err != nil {
@@ -79,9 +80,12 @@ func (h *MissionsHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 
-	missions, err := h.missionService.ListMissions(r.Context(), orgID)
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
+	missions, err := h.missionService.ListMissions(r.Context(), targetOrg)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "STORAGE_ERROR", err.Error(), reqID)
 		return
@@ -103,6 +107,10 @@ func (h *MissionsHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "Mission ID is required", reqID)
@@ -115,8 +123,7 @@ func (h *MissionsHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orgID := middleware.GetOrgID(r.Context())
-	if orgID != "" && mission.OrganizationID != "" && mission.OrganizationID != orgID {
+	if targetOrg != "" && mission.OrganizationID != "" && mission.OrganizationID != targetOrg {
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "Mission not found", reqID)
 		return
 	}
@@ -134,12 +141,21 @@ func (h *MissionsHandler) HandleStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "Mission ID is required", reqID)
 		return
 	}
 
+	existing, err := h.missionService.GetMission(r.Context(), id)
+	if err != nil || (orgID != "" && existing.OrganizationID != "" && existing.OrganizationID != orgID) {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "Mission not found", reqID)
+		return
+	}
 	mission, err := h.missionService.StartMission(r.Context(), id)
 	if err != nil {
 		metrics.DefaultMetrics.IncrMissionsFailed()
@@ -164,12 +180,21 @@ func (h *MissionsHandler) HandleCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_ID", "Mission ID is required", reqID)
 		return
 	}
 
+	existing, err := h.missionService.GetMission(r.Context(), id)
+	if err != nil || (orgID != "" && existing.OrganizationID != "" && existing.OrganizationID != orgID) {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "Mission not found", reqID)
+		return
+	}
 	mission, err := h.missionService.CancelMission(r.Context(), id)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "CANCEL_FAILED", err.Error(), reqID)
@@ -189,7 +214,6 @@ func (h *MissionsHandler) HandleSimulate(w http.ResponseWriter, r *http.Request)
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 
 	var params economy.CreateMissionParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
@@ -197,9 +221,11 @@ func (h *MissionsHandler) HandleSimulate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if params.OrganizationID == "" {
-		params.OrganizationID = orgID
+	targetOrg, ok := resolveTenantFromRequest(w, r, params.OrganizationID, reqID)
+	if !ok {
+		return
 	}
+	params.OrganizationID = targetOrg
 
 	result, err := h.missionService.SimulateMission(r.Context(), params)
 	if err != nil {
@@ -220,8 +246,11 @@ func (h *MissionsHandler) HandleGetTrace(w http.ResponseWriter, r *http.Request)
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
+	orgID, ok := resolveTenantFromRequest(w, r, "", reqID)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
-	orgID := middleware.GetOrgID(r.Context())
 
 	trace, err := h.missionService.GetMissionTrace(r.Context(), orgID, id)
 	if err != nil {
@@ -240,8 +269,11 @@ func (h *MissionsHandler) HandleMarketplace(w http.ResponseWriter, r *http.Reque
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed", "")
 		return
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 
-	orgID := middleware.GetOrgID(r.Context())
 	services := h.reg.List()
 
 	type MarketplaceItem struct {
@@ -275,8 +307,11 @@ func (h *MissionsHandler) HandleReputation(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed", "")
 		return
 	}
+	orgID, ok := resolveTenantFromRequest(w, r, "", "")
+	if !ok {
+		return
+	}
 
-	orgID := middleware.GetOrgID(r.Context())
 	services := h.reg.List()
 
 	reputations := make([]*economy.ServiceReputation, 0, len(services))

@@ -44,7 +44,11 @@ func NewListHandler(repo storage.Repository, reg *registry.Registry) *ListHandle
 // HandleListAgents processes GET /v1/agents with organization isolation.
 func (h *ListHandler) HandleListAgents(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
+
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
 
 	agents, err := h.repo.ListAgents(r.Context())
 	if err != nil {
@@ -52,10 +56,9 @@ func (h *ListHandler) HandleListAgents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Filter by organization if authenticated with a specific org
 	filtered := make([]*storage.Agent, 0)
 	for _, a := range agents {
-		if a.OrganizationID == "" || orgID == "" || a.OrganizationID == orgID {
+		if a.OrganizationID == targetOrg {
 			filtered = append(filtered, a)
 		}
 	}
@@ -70,7 +73,6 @@ func (h *ListHandler) HandleListAgents(w http.ResponseWriter, r *http.Request) {
 // HandleGetAgent processes GET /v1/agents/{id} with organization isolation.
 func (h *ListHandler) HandleGetAgent(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_AGENT_ID", "agent id is required", ctxReqID)
@@ -83,8 +85,11 @@ func (h *ListHandler) HandleGetAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Tenant isolation: do not leak another org's agent
-	if agent.OrganizationID != "" && orgID != "" && agent.OrganizationID != orgID {
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
+	if agent.OrganizationID != "" && agent.OrganizationID != targetOrg {
 		writeError(w, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", ctxReqID)
 		return
 	}
@@ -144,7 +149,6 @@ func (h *ListHandler) HandleListServices(w http.ResponseWriter, r *http.Request)
 // HandleGetAgentBudget processes GET /v1/agents/{id}/budget returning safe read-only financial limits.
 func (h *ListHandler) HandleGetAgentBudget(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 	id := r.PathValue("id")
 	if id == "" {
 		writeError(w, http.StatusBadRequest, "MISSING_AGENT_ID", "agent id is required", ctxReqID)
@@ -157,7 +161,11 @@ func (h *ListHandler) HandleGetAgentBudget(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if agent.OrganizationID != "" && orgID != "" && agent.OrganizationID != orgID {
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
+	if agent.OrganizationID != "" && agent.OrganizationID != targetOrg {
 		writeError(w, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", ctxReqID)
 		return
 	}
@@ -185,8 +193,11 @@ func (h *ListHandler) HandleGetAgentBudget(w http.ResponseWriter, r *http.Reques
 // HandleListIntents processes GET /v1/payment-intents with organization isolation.
 func (h *ListHandler) HandleListIntents(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
 	intents, err := h.repo.ListIntents(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
@@ -196,8 +207,7 @@ func (h *ListHandler) HandleListIntents(w http.ResponseWriter, r *http.Request) 
 	statusFilter := strings.TrimSpace(r.URL.Query().Get("status"))
 	filtered := make([]*intent.PaymentIntent, 0)
 	for _, pi := range intents {
-		// Organization isolation
-		if pi.OrganizationID != "" && orgID != "" && pi.OrganizationID != orgID {
+		if pi.OrganizationID != "" && pi.OrganizationID != targetOrg {
 			continue
 		}
 		if statusFilter != "" && !strings.EqualFold(string(pi.Status), statusFilter) {
@@ -216,8 +226,11 @@ func (h *ListHandler) HandleListIntents(w http.ResponseWriter, r *http.Request) 
 // HandleListTransactions processes GET /v1/transactions with organization isolation.
 func (h *ListHandler) HandleListTransactions(w http.ResponseWriter, r *http.Request) {
 	ctxReqID := middleware.GetRequestID(r.Context())
-	orgID := middleware.GetOrgID(r.Context())
 
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
 	executions, err := h.repo.ListExecutions(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error(), ctxReqID)
@@ -229,7 +242,7 @@ func (h *ListHandler) HandleListTransactions(w http.ResponseWriter, r *http.Requ
 	for _, ex := range executions {
 		pi, err := h.repo.GetIntent(r.Context(), ex.IntentID)
 		if err == nil && pi != nil {
-			if pi.OrganizationID != "" && orgID != "" && pi.OrganizationID != orgID {
+			if pi.OrganizationID != "" && pi.OrganizationID != targetOrg {
 				continue
 			}
 		}

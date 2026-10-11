@@ -12,10 +12,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	gwHttp "github.com/arc-agentpay/agentpay/services/gateway/internal/http"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
 
 // TestGatewayToPolicyEngine_Integration verifies the full Gateway -> Policy Engine pipeline.
@@ -93,8 +95,25 @@ func TestGatewayToPolicyEngine_Integration(t *testing.T) {
 		CORSAllowedOrigins:  []string{"http://localhost:3000"},
 		MaxRequestBodyBytes: 1048576,
 	}
+	repo := storage.NewMemoryRepository()
+	secret, apiKey, err := auth.GenerateAPIKey("org_test", "Policy Test Key", []string{domain.ScopePaymentsCreate, domain.ScopeAdmin, "*"})
+	if err != nil {
+		t.Fatalf("failed to generate key: %v", err)
+	}
+	_ = repo.SaveAPIKey(context.Background(), &storage.APIKey{
+		ID:             apiKey.ID,
+		OrganizationID: apiKey.OrganizationID,
+		KeyHash:        apiKey.KeyHash,
+		Name:           apiKey.Name,
+		MaskedKey:      apiKey.MaskedKey,
+		Scopes:         "payments:create,admin,*",
+		Status:         string(domain.APIKeyStatusActive),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	})
+
 	policyClient := policy.NewClient(cfg.PolicyEngineURL, cfg.PolicyEngineTimeout)
-	gatewayHandler := gwHttp.NewRouter(cfg, policyClient, nil, nil, nil, nil, nil)
+	gatewayHandler := gwHttp.NewRouter(cfg, policyClient, nil, nil, nil, repo, nil)
 	gatewayServer := httptest.NewServer(gatewayHandler)
 	defer gatewayServer.Close()
 
@@ -122,7 +141,14 @@ func TestGatewayToPolicyEngine_Integration(t *testing.T) {
 		}
 		b, _ := json.Marshal(allowPayload)
 
-		resp, err := http.Post(gatewayServer.URL+"/v1/payments/authorize", "application/json", bytes.NewReader(b))
+		req, err := http.NewRequest(http.MethodPost, gatewayServer.URL+"/v1/payments/authorize", bytes.NewReader(b))
+		if err != nil {
+			t.Fatalf("ALLOW request failed: %v", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+secret)
+
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Fatalf("ALLOW request failed: %v", err)
 		}
@@ -162,7 +188,14 @@ func TestGatewayToPolicyEngine_Integration(t *testing.T) {
 		}
 		b, _ := json.Marshal(denyPayload)
 
-		resp, err := http.Post(gatewayServer.URL+"/v1/payments/authorize", "application/json", bytes.NewReader(b))
+		req, err := http.NewRequest(http.MethodPost, gatewayServer.URL+"/v1/payments/authorize", bytes.NewReader(b))
+		if err != nil {
+			t.Fatalf("DENY request failed: %v", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+secret)
+
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Fatalf("DENY request failed: %v", err)
 		}
