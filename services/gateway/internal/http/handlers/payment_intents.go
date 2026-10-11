@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/auth"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/domain"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
@@ -234,6 +235,13 @@ func (h *PaymentIntentsHandler) HandleGet(w http.ResponseWriter, r *http.Request
 
 	// Organization isolation check: never leak another org's intent
 	if pi.OrganizationID != "" && orgID != "" && pi.OrganizationID != orgID {
+		callerScopes := middleware.GetScopes(r.Context())
+		qOrg, _ := getQueryOrg(r)
+		hOrg, _ := getHeaderOrg(r)
+		if auth.HasScope(callerScopes, domain.ScopeAdmin) && qOrg == "" && hOrg == "" {
+			writeError(w, http.StatusNotFound, "NOT_FOUND", "Payment intent not found in default organization scope: specify '?organization_id=<tenant_id>' or 'X-Organization-Id' header for tenant-scoped resources", ctxReqID)
+			return
+		}
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "Payment intent not found", ctxReqID)
 		return
 	}

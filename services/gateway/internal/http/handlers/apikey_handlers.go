@@ -231,6 +231,12 @@ func (h *APIKeyHandler) HandleRevoke(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !found {
+		qOrg, _ := getQueryOrg(r)
+		hOrg, _ := getHeaderOrg(r)
+		if auth.HasScope(callerScopes, domain.ScopeAdmin) && qOrg == "" && hOrg == "" {
+			writeError(w, http.StatusNotFound, "NOT_FOUND", "API key not found in default organization scope: specify '?organization_id=<tenant_id>' or 'X-Organization-Id' header for tenant-scoped resources", reqID)
+			return
+		}
 		// Safe error response: never leak existence across tenants
 		writeError(w, http.StatusNotFound, "NOT_FOUND", "API key not found", reqID)
 		return

@@ -126,6 +126,36 @@ ARC_CONFIRMATION_TIMEOUT_MS=60000
 PAYMENT_INTENT_TTL_SECONDS=300
 ```
 
+### 4.1 Multi-Tenant Administration & Operator Scoping
+
+Operators using the Bootstrap Admin Key (`GATEWAY_ADMIN_API_KEY` / `BOOTSTRAP_API_KEY`) authenticate with the root administration scope (`org_default`).
+
+To inspect, mutate, or revoke tenant-scoped resources (such as tenant API keys or payment intents), administrators **must explicitly provide the target tenant's organization ID**:
+
+1. **Via URL Query Parameter**:
+   ```bash
+   # Query tenant payment intent
+   curl -s -X GET "http://localhost:8080/v1/payment-intents/$INTENT_ID?organization_id=tenant-alpha" \
+     -H "Authorization: Bearer $ADMIN_API_KEY"
+
+   # Revoke tenant API key
+   curl -s -X DELETE "http://localhost:8080/v1/api-keys/$KEY_ID?organization_id=tenant-alpha" \
+     -H "Authorization: Bearer $ADMIN_API_KEY"
+   ```
+
+2. **Via Request Header**:
+   ```bash
+   curl -s -X DELETE "http://localhost:8080/v1/api-keys/$KEY_ID" \
+     -H "Authorization: Bearer $ADMIN_API_KEY" \
+     -H "X-Organization-Id: tenant-alpha"
+   ```
+
+> [!IMPORTANT]
+> **Operator Ergonomic Guardrail**:
+> If an administrator omits the tenant parameter when requesting a resource outside `org_default`, the gateway returns HTTP 404 with actionable guidance:
+> `resource not found in default organization scope: specify '?organization_id=<tenant_id>' or 'X-Organization-Id' header for tenant-scoped resources`.
+> Non-admin callers receive standard opaque `NOT_FOUND` or `FORBIDDEN` responses to guarantee absolute tenant isolation.
+
 ---
 
 ## 5. Deployment Procedure

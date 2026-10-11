@@ -136,7 +136,21 @@ Evaluates whether a payment satisfies policy without initiating blockchain execu
 ### 3. `GET /health` and `GET /ready`
 
 - `GET /health`: Liveness probe for Gateway service (`{"status":"ok","service":"gateway"}`).
-- `GET /ready`: Readiness probe verifying reachability of upstream dependencies.
+- `GET /ready`: Readiness probe verifying upstream dependencies.
+  - When `ENABLE_LIVE_EXECUTION=false` (safe mode): Arc RPC is not required; reports `"disabled_in_safe_mode"` without making external network calls. Essential local dependencies (PostgreSQL storage and Policy Engine) are strictly checked (fail-closed).
+  - When `ENABLE_LIVE_EXECUTION=true` (live mode): Arc RPC network connectivity (`ChainID` check) is strictly enforced and fails closed if unavailable.
+
+---
+
+## Multi-Tenant Administration & Operator Ergonomics
+
+Operators using the Bootstrap Admin Key (`GATEWAY_ADMIN_API_KEY` / `BOOTSTRAP_API_KEY`) authenticate with the root administration scope (`org_default`).
+
+To inspect, mutate, or revoke tenant-scoped resources (such as tenant API keys or payment intents), administrators **must explicitly supply the target organization ID**:
+- Via query parameter: `?organization_id=<tenant_id>` (also supports `?org_id=` and `?tenant_id=`)
+- OR via request header: `X-Organization-Id: <tenant_id>`
+
+If an administrator requests a tenant-scoped resource without specifying the organization parameter, the gateway returns HTTP 404 with actionable operator guidance reminding them that the resource was not found in their default scope and directing them to supply `?organization_id=<tenant_id>`. Non-admin callers receive standard opaque `NOT_FOUND` responses to preserve tenant privacy and isolation.
 
 ---
 

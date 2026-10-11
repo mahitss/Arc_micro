@@ -79,7 +79,11 @@ func NewRouter(
 	if bcp, ok := execService.(interface{ BlockchainClient() blockchain.Client }); ok {
 		bc = bcp.BlockchainClient()
 	}
-	mux.Handle("GET /ready", handlers.NewReadyHandler(policyClient, bc, repo))
+	var enableLive bool
+	if cfg != nil {
+		enableLive = cfg.EnableLiveExecution
+	}
+	mux.Handle("GET /ready", handlers.NewReadyHandler(policyClient, bc, repo, enableLive))
 	mux.Handle("GET /metrics", middleware.RequireScope(domain.ScopeAdmin)(http.HandlerFunc(metrics.DefaultMetrics.Handler)))
 
 	// 2. V1 Authorization API

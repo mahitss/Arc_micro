@@ -253,7 +253,7 @@ func Load() *Config {
 	if storageMode == "" {
 		if strings.TrimSpace(os.Getenv("DATABASE_URL")) != "" {
 			storageMode = "postgres"
-		} else if strings.EqualFold(env, "production") || enableLiveExecution {
+		} else if IsProductionLikeEnv(env) || enableLiveExecution {
 			storageMode = "postgres"
 		} else {
 			storageMode = "memory"
@@ -315,6 +315,23 @@ func Load() *Config {
 		ExpectedExecutorAddress: strings.TrimSpace(expectedExecutor),
 		BootstrapAPIKey:         strings.TrimSpace(bootstrapKey),
 	}
+}
+
+// IsProductionLikeEnv reports whether an environment string corresponds to a production-like environment (production or staging).
+func IsProductionLikeEnv(env string) bool {
+	lower := strings.ToLower(strings.TrimSpace(env))
+	return lower == "production" || lower == "prod" || lower == "staging" || lower == "stage"
+}
+
+// IsProductionLike reports whether the configuration represents a production-like environment (production, staging, or live execution enabled).
+func (c *Config) IsProductionLike() bool {
+	if c == nil {
+		return false
+	}
+	if c.EnableLiveExecution {
+		return true
+	}
+	return IsProductionLikeEnv(c.Environment)
 }
 
 // ValidateLiveExecutionRequirements verifies all critical mainnet safety preconditions.

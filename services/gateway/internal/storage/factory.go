@@ -49,7 +49,7 @@ func SanitizeDatabaseURL(rawURL string) string {
 // 3. DATABASE_URL present: Defaults to postgres storage mode if unspecified.
 // 4. On connection failure or migration failure: Fails fast without silent fallback to memory.
 func InitializeRepository(ctx context.Context, cfg *config.Config) (Repository, *sql.DB, error) {
-	isProduction := strings.EqualFold(cfg.Environment, "production") || cfg.EnableLiveExecution
+	isProduction := cfg != nil && cfg.IsProductionLike()
 	mode := strings.ToLower(strings.TrimSpace(cfg.StorageMode))
 	dbURL := strings.TrimSpace(cfg.DatabaseURL)
 

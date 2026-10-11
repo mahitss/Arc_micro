@@ -123,7 +123,7 @@ func APIKeyAuth(repo storage.Repository, cfg ...*config.Config) func(http.Handle
 			}
 
 			// 3. Fail closed if authentication backend is missing/misconfigured in production
-			isProd := gatewayCfg != nil && (strings.EqualFold(gatewayCfg.Environment, "production") || gatewayCfg.EnableLiveExecution)
+			isProd := gatewayCfg != nil && gatewayCfg.IsProductionLike()
 			if repo == nil {
 				if isProd {
 					writeAuthError(w, http.StatusInternalServerError, "AUTH_UNAVAILABLE", "Authentication configuration unavailable; failing closed in production", reqID)

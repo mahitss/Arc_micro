@@ -162,3 +162,37 @@ func TestValidateLiveExecutionRequirements(t *testing.T) {
 		}
 	})
 }
+
+func TestIsProductionLike(t *testing.T) {
+	tests := []struct {
+		env         string
+		enableLive  bool
+		expected    bool
+	}{
+		{"production", false, true},
+		{"Production", false, true},
+		{"prod", false, true},
+		{"PROD", false, true},
+		{"staging", false, true},
+		{"Staging", false, true},
+		{"stage", false, true},
+		{"STAGE", false, true},
+		{"development", true, true}, // Live execution forces production-like safeguards
+		{"test", true, true},
+		{"development", false, false},
+		{"test", false, false},
+		{"local", false, false},
+		{"", false, false},
+	}
+
+	for _, tc := range tests {
+		cfg := &Config{
+			Environment:         tc.env,
+			EnableLiveExecution: tc.enableLive,
+		}
+		actual := cfg.IsProductionLike()
+		if actual != tc.expected {
+			t.Errorf("IsProductionLike(env=%q, live=%v) = %v, expected %v", tc.env, tc.enableLive, actual, tc.expected)
+		}
+	}
+}

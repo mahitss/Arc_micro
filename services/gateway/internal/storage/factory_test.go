@@ -135,6 +135,67 @@ func TestInitializeRepository_Selection(t *testing.T) {
 		}
 	})
 
+	t.Run("Staging mode without DATABASE_URL fails fast", func(t *testing.T) {
+		cfg := &config.Config{
+			Environment: "staging",
+			DatabaseURL: "",
+		}
+		repo, db, err := InitializeRepository(ctx, cfg)
+		if err == nil {
+			t.Fatal("expected error in staging mode without DATABASE_URL, got nil")
+		}
+		if db != nil {
+			defer db.Close()
+		}
+		if repo != nil {
+			t.Fatalf("expected nil repo on failure, got: %T", repo)
+		}
+		if !strings.Contains(err.Error(), "DATABASE_URL is required in production mode") {
+			t.Errorf("unexpected error message: %v", err)
+		}
+	})
+
+	t.Run("Staging mode with STORAGE_MODE=memory is strictly forbidden", func(t *testing.T) {
+		cfg := &config.Config{
+			Environment: "staging",
+			StorageMode: "memory",
+			DatabaseURL: "",
+		}
+		repo, db, err := InitializeRepository(ctx, cfg)
+		if err == nil {
+			t.Fatal("expected error in staging mode with STORAGE_MODE=memory, got nil")
+		}
+		if db != nil {
+			defer db.Close()
+		}
+		if repo != nil {
+			t.Fatalf("CRITICAL: in-memory repo initialized in staging! Got: %T", repo)
+		}
+		if err != ErrMemoryStorageForbiddenInProduction {
+			t.Errorf("expected ErrMemoryStorageForbiddenInProduction, got: %v", err)
+		}
+	})
+
+	t.Run("Prod and Stage aliases reject in-memory storage", func(t *testing.T) {
+		aliases := []string{"prod", "stage", "STAGING", "PRODUCTION"}
+		for _, envAlias := range aliases {
+			cfg := &config.Config{
+				Environment: envAlias,
+				StorageMode: "memory",
+			}
+			repo, db, err := InitializeRepository(ctx, cfg)
+			if err != ErrMemoryStorageForbiddenInProduction {
+				t.Errorf("expected ErrMemoryStorageForbiddenInProduction for env=%s, got: %v", envAlias, err)
+			}
+			if db != nil {
+				_ = db.Close()
+			}
+			if repo != nil {
+				t.Errorf("repo should be nil for env=%s", envAlias)
+			}
+		}
+	})
+
 	t.Run("Explicit STORAGE_MODE=postgres requires DATABASE_URL", func(t *testing.T) {
 		cfg := &config.Config{
 			Environment: "development",
