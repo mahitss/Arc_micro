@@ -73,9 +73,11 @@ type Config struct {
 	AllowLocalhostWebhooks bool
 
 	// Day 3 Hardening: Blockchain Signer Boundary
-	SignerBackend string // "local" or "kms"
-	KMSKeyID      string
-	KMSRegion     string
+	SignerBackend           string // "local" or "kms"
+	KMSKeyID                string
+	KMSRegion               string
+	KMSExpectedAccount      string
+	ExpectedExecutorAddress string
 
 	// SEC-01: Bootstrap Admin API Key for initial operator configuration
 	BootstrapAPIKey string
@@ -263,6 +265,19 @@ func Load() *Config {
 		bootstrapKey = os.Getenv("BOOTSTRAP_API_KEY")
 	}
 
+	kmsExpectedAccount := os.Getenv("KMS_EXPECTED_ACCOUNT")
+	if kmsExpectedAccount == "" {
+		kmsExpectedAccount = os.Getenv("AWS_ACCOUNT_ID")
+	}
+
+	expectedExecutor := os.Getenv("EXPECTED_EXECUTOR_ADDRESS")
+	if expectedExecutor == "" {
+		expectedExecutor = os.Getenv("DEPLOYER_ADDRESS")
+	}
+	if expectedExecutor == "" {
+		expectedExecutor = os.Getenv("EXECUTOR_ADDRESS")
+	}
+
 	return &Config{
 		Port:                   port,
 		PolicyEngineURL:        policyEngineURL,
@@ -296,6 +311,8 @@ func Load() *Config {
 		SignerBackend:           os.Getenv("SIGNER_BACKEND"),
 		KMSKeyID:                os.Getenv("KMS_KEY_ID"),
 		KMSRegion:               os.Getenv("KMS_REGION"),
+		KMSExpectedAccount:      strings.TrimSpace(kmsExpectedAccount),
+		ExpectedExecutorAddress: strings.TrimSpace(expectedExecutor),
 		BootstrapAPIKey:         strings.TrimSpace(bootstrapKey),
 	}
 }
@@ -326,18 +343,38 @@ func (c *Config) ValidateLiveExecutionRequirements() error {
 		backend = "local"
 	}
 	if backend == "kms" {
-		return &SafetyCheckError{Reason: "KMS signer configured but not available: production KMS/HSM integration requires AWS/GCP KMS key ARN and client adapter"}
-	}
-	if backend != "local" {
+		trimmedKey := strings.TrimSpace(c.KMSKeyID)
+		if trimmedKey == "" {
+			return &SafetyCheckError{Reason: "KMS signer configured but not available: production KMS/HSM integration requires AWS/GCP KMS key ARN and client adapter"}
+		}
+		if strings.HasPrefix(trimmedKey, "alias/") || strings.Contains(trimmedKey, ":alias/") {
+			return &SafetyCheckError{Reason: "mutable KMS key aliases and alias ARNs are not permitted for production KMS signing"}
+		}
+		if strings.TrimSpace(c.KMSRegion) == "" {
+			return &SafetyCheckError{Reason: "KMS_REGION must be specified when SIGNER_BACKEND is 'kms'"}
+		}
+		if c.ExpectedExecutorAddress != "" {
+			trimmedAddr := strings.TrimSpace(c.ExpectedExecutorAddress)
+			if len(trimmedAddr) != 42 || !strings.HasPrefix(trimmedAddr, "0x") {
+				return &SafetyCheckError{Reason: "EXPECTED_EXECUTOR_ADDRESS must be a valid 42-character 0x hex address"}
+			}
+		}
+	} else if backend == "local" {
+		trimmedKey := strings.TrimSpace(strings.TrimPrefix(c.ExecutorPrivateKey, "0x"))
+		if trimmedKey == "" {
+			return &SafetyCheckError{Reason: "EXECUTOR_PRIVATE_KEY must be provided when ENABLE_LIVE_EXECUTION is true"}
+		}
+		if len(trimmedKey) != 64 {
+			return &SafetyCheckError{Reason: "EXECUTOR_PRIVATE_KEY must be a 64-character hex string (32 bytes)"}
+		}
+		if c.ExpectedExecutorAddress != "" {
+			trimmedAddr := strings.TrimSpace(c.ExpectedExecutorAddress)
+			if len(trimmedAddr) != 42 || !strings.HasPrefix(trimmedAddr, "0x") {
+				return &SafetyCheckError{Reason: "EXPECTED_EXECUTOR_ADDRESS must be a valid 42-character 0x hex address"}
+			}
+		}
+	} else {
 		return &SafetyCheckError{Reason: "unsupported SIGNER_BACKEND: only 'local' and 'kms' are recognized"}
-	}
-
-	trimmedKey := strings.TrimSpace(strings.TrimPrefix(c.ExecutorPrivateKey, "0x"))
-	if trimmedKey == "" {
-		return &SafetyCheckError{Reason: "EXECUTOR_PRIVATE_KEY must be provided when ENABLE_LIVE_EXECUTION is true"}
-	}
-	if len(trimmedKey) != 64 {
-		return &SafetyCheckError{Reason: "EXECUTOR_PRIVATE_KEY must be a 64-character hex string (32 bytes)"}
 	}
 
 	trimmedVault := strings.TrimSpace(c.AgentVaultAddress)

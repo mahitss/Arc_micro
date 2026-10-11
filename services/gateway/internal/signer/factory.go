@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
@@ -18,6 +20,9 @@ type FactoryOptions struct {
 	// KMSProvider allows explicit injection of an initialized, validated KMS provider (e.g. awskms.Provider).
 	// If SIGNER_BACKEND=kms and KMSProvider is nil, factory strictly fails closed with ErrKMSSignerUnavailable.
 	KMSProvider KMSProvider
+
+	// ExpectedAddress, if non-empty, enforces that the derived signer address matches this address.
+	ExpectedAddress string
 }
 
 // NewSignerFromConfig constructs the configured TransactionSigner according to explicit configuration.
@@ -53,13 +58,14 @@ func NewSignerFromConfigWithOptions(ctx context.Context, cfg *config.Config, rec
 		backend = "local"
 	}
 
+	var s TransactionSigner
 	switch backend {
 	case "local":
-		s, err := NewLocalSigner(cfg.ExecutorPrivateKey, chainID, recorder)
+		localSigner, err := NewLocalSigner(cfg.ExecutorPrivateKey, chainID, recorder)
 		if err != nil {
 			return nil, err
 		}
-		return s, nil
+		s = localSigner
 	case "kms":
 		// Production KMS/HSM boundary — requires explicitly injected, approved KMSProvider.
 		// Never silently creates cloud clients or connects to cloud endpoints.
@@ -67,14 +73,32 @@ func NewSignerFromConfigWithOptions(ctx context.Context, cfg *config.Config, rec
 			return nil, fmt.Errorf("%w: SIGNER_BACKEND=kms requires an explicitly configured, approved KMSProvider (key_id: %q, region: %q)",
 				ErrKMSSignerUnavailable, cfg.KMSKeyID, cfg.KMSRegion)
 		}
-		s, err := NewKMSSignerWithContext(ctx, cfg.KMSKeyID, cfg.KMSRegion, chainID, recorder, opts.KMSProvider)
+		kmsSigner, err := NewKMSSignerWithContext(ctx, cfg.KMSKeyID, cfg.KMSRegion, chainID, recorder, opts.KMSProvider)
 		if err != nil {
 			return nil, err
 		}
-		return s, nil
+		s = kmsSigner
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrSignerBackendUnsupported, backend)
 	}
+
+	// Address identity verification: verify signer matches expected deployer/executor address if configured
+	expectedAddrStr := strings.TrimSpace(opts.ExpectedAddress)
+	if expectedAddrStr == "" {
+		expectedAddrStr = strings.TrimSpace(cfg.ExpectedExecutorAddress)
+	}
+	if expectedAddrStr != "" {
+		if !common.IsHexAddress(expectedAddrStr) {
+			return nil, fmt.Errorf("%w: invalid expected executor address %q", ErrSignerAddressMismatch, expectedAddrStr)
+		}
+		expectedAddr := common.HexToAddress(expectedAddrStr)
+		if s.Address() != expectedAddr {
+			return nil, fmt.Errorf("%w: derived signer address %s does not match expected address %s",
+				ErrSignerAddressMismatch, s.Address().Hex(), expectedAddr.Hex())
+		}
+	}
+
+	return s, nil
 }
 
 // StorageAuditRecorder adapts a storage.Repository to record signing audit events.

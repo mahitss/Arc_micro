@@ -113,4 +113,52 @@ func TestValidateLiveExecutionRequirements(t *testing.T) {
 			t.Fatalf("expected error for unsupported signer backend, got: %v", err)
 		}
 	})
+
+	t.Run("Rejects KMS alias key ID", func(t *testing.T) {
+		cfg := validConfig()
+		cfg.SignerBackend = "kms"
+		cfg.KMSKeyID = "alias/my-key"
+		cfg.KMSRegion = "us-east-1"
+		err := cfg.ValidateLiveExecutionRequirements()
+		if err == nil || !strings.Contains(err.Error(), "mutable KMS key aliases and alias ARNs are not permitted") {
+			t.Fatalf("expected error rejecting alias name, got: %v", err)
+		}
+
+		cfg.KMSKeyID = "arn:aws:kms:us-east-1:123456789012:alias/my-key"
+		err = cfg.ValidateLiveExecutionRequirements()
+		if err == nil || !strings.Contains(err.Error(), "mutable KMS key aliases and alias ARNs are not permitted") {
+			t.Fatalf("expected error rejecting alias ARN, got: %v", err)
+		}
+	})
+
+	t.Run("Rejects KMS missing region", func(t *testing.T) {
+		cfg := validConfig()
+		cfg.SignerBackend = "kms"
+		cfg.KMSKeyID = "arn:aws:kms:us-east-1:123456789012:key/test-key-id"
+		cfg.KMSRegion = ""
+		err := cfg.ValidateLiveExecutionRequirements()
+		if err == nil || !strings.Contains(err.Error(), "KMS_REGION must be specified") {
+			t.Fatalf("expected error for missing KMS region, got: %v", err)
+		}
+	})
+
+	t.Run("Rejects invalid expected executor address format", func(t *testing.T) {
+		cfg := validConfig()
+		cfg.ExpectedExecutorAddress = "0xinvalid"
+		err := cfg.ValidateLiveExecutionRequirements()
+		if err == nil || !strings.Contains(err.Error(), "EXPECTED_EXECUTOR_ADDRESS must be a valid 42-character") {
+			t.Fatalf("expected error for invalid executor address format, got: %v", err)
+		}
+	})
+
+	t.Run("Valid KMS configuration with full key ARN passes", func(t *testing.T) {
+		cfg := validConfig()
+		cfg.SignerBackend = "kms"
+		cfg.KMSKeyID = "arn:aws:kms:us-east-1:123456789012:key/test-key-id"
+		cfg.KMSRegion = "us-east-1"
+		cfg.ExpectedExecutorAddress = "0x2222222222222222222222222222222222222222"
+		if err := cfg.ValidateLiveExecutionRequirements(); err != nil {
+			t.Fatalf("expected valid KMS config to pass, got: %v", err)
+		}
+	})
 }

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/config"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/signer"
 )
@@ -130,5 +132,118 @@ func TestFactory_InvalidConfigurationsFailClosed(t *testing.T) {
 	_, err = signer.NewSignerFromConfig(cfgUnsupported, nil)
 	if !errors.Is(err, signer.ErrSignerBackendUnsupported) {
 		t.Errorf("expected ErrSignerBackendUnsupported, got: %v", err)
+	}
+}
+
+// 5. Signer identity matches expected deployer/executor address
+func TestFactory_AddressIdentityVerification(t *testing.T) {
+	keyID := "arn:aws:kms:us-east-1:123456789012:key/test-key-factory"
+	mockProv, err := NewMockKMSProvider(keyID, testHexKey1, "spki")
+	if err != nil {
+		t.Fatalf("failed to create mock provider: %v", err)
+	}
+
+	// Derive the expected address for testHexKey1
+	priv, _ := crypto.HexToECDSA(testHexKey1)
+	expectedAddr := crypto.PubkeyToAddress(priv.PublicKey).Hex()
+	attackerAddr := "0xdead00000000000000000000000000000000dead"
+
+	cfg := &config.Config{
+		SignerBackend: "kms",
+		KMSKeyID:      keyID,
+		KMSRegion:     "us-east-1",
+		ArcChainID:    "5042",
+	}
+
+	// A: Matching address via FactoryOptions passes
+	sMatch, err := signer.NewSignerFromConfigWithOptions(context.Background(), cfg, nil, signer.FactoryOptions{
+		KMSProvider:     mockProv,
+		ExpectedAddress: expectedAddr,
+	})
+	if err != nil {
+		t.Fatalf("expected matching address to succeed, got: %v", err)
+	}
+	if sMatch.Address().Hex() != expectedAddr {
+		t.Errorf("expected address %s, got %s", expectedAddr, sMatch.Address().Hex())
+	}
+
+	// B: Mismatched address via FactoryOptions strictly fails with ErrSignerAddressMismatch
+	_, err = signer.NewSignerFromConfigWithOptions(context.Background(), cfg, nil, signer.FactoryOptions{
+		KMSProvider:     mockProv,
+		ExpectedAddress: attackerAddr,
+	})
+	if !errors.Is(err, signer.ErrSignerAddressMismatch) {
+		t.Errorf("expected ErrSignerAddressMismatch for mismatched address, got: %v", err)
+	}
+
+	// C: Matching address via Config.ExpectedExecutorAddress passes
+	cfgWithAddr := &config.Config{
+		SignerBackend:           "kms",
+		KMSKeyID:                keyID,
+		KMSRegion:               "us-east-1",
+		ArcChainID:              "5042",
+		ExpectedExecutorAddress: expectedAddr,
+	}
+	sCfgMatch, err := signer.NewSignerFromConfigWithOptions(context.Background(), cfgWithAddr, nil, signer.FactoryOptions{
+		KMSProvider: mockProv,
+	})
+	if err != nil {
+		t.Fatalf("expected matching config address to succeed, got: %v", err)
+	}
+	if sCfgMatch.Address().Hex() != expectedAddr {
+		t.Errorf("expected address %s, got %s", expectedAddr, sCfgMatch.Address().Hex())
+	}
+
+	// D: Mismatched address via Config.ExpectedExecutorAddress fails closed
+	cfgWithWrongAddr := &config.Config{
+		SignerBackend:           "kms",
+		KMSKeyID:                keyID,
+		KMSRegion:               "us-east-1",
+		ArcChainID:              "5042",
+		ExpectedExecutorAddress: attackerAddr,
+	}
+	_, err = signer.NewSignerFromConfigWithOptions(context.Background(), cfgWithWrongAddr, nil, signer.FactoryOptions{
+		KMSProvider: mockProv,
+	})
+	if !errors.Is(err, signer.ErrSignerAddressMismatch) {
+		t.Errorf("expected ErrSignerAddressMismatch for wrong config address, got: %v", err)
+	}
+
+	// E: Invalid non-hex address string fails closed
+	_, err = signer.NewSignerFromConfigWithOptions(context.Background(), cfg, nil, signer.FactoryOptions{
+		KMSProvider:     mockProv,
+		ExpectedAddress: "not-a-valid-hex-address",
+	})
+	if !errors.Is(err, signer.ErrSignerAddressMismatch) {
+		t.Errorf("expected ErrSignerAddressMismatch for invalid address format, got: %v", err)
+	}
+}
+
+// 6. LocalSigner also enforces address identity when configured
+func TestFactory_LocalSignerAddressIdentityVerification(t *testing.T) {
+	priv, _ := crypto.HexToECDSA(testHexKey1)
+	expectedAddr := crypto.PubkeyToAddress(priv.PublicKey).Hex()
+	attackerAddr := "0xdead00000000000000000000000000000000dead"
+
+	cfg := &config.Config{
+		SignerBackend:      "local",
+		ExecutorPrivateKey: testHexKey1,
+		ArcChainID:         "5042",
+	}
+
+	// A: Matching address passes
+	_, err := signer.NewSignerFromConfigWithOptions(context.Background(), cfg, nil, signer.FactoryOptions{
+		ExpectedAddress: expectedAddr,
+	})
+	if err != nil {
+		t.Fatalf("expected matching local signer address to pass, got: %v", err)
+	}
+
+	// B: Mismatched address fails closed
+	_, err = signer.NewSignerFromConfigWithOptions(context.Background(), cfg, nil, signer.FactoryOptions{
+		ExpectedAddress: attackerAddr,
+	})
+	if !errors.Is(err, signer.ErrSignerAddressMismatch) {
+		t.Errorf("expected ErrSignerAddressMismatch for local signer address mismatch, got: %v", err)
 	}
 }

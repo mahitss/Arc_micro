@@ -411,3 +411,40 @@ func (m *mockFailingSigner) Backend() string         { return "mock_failing" }
 func (m *mockFailingSigner) SignTransaction(ctx context.Context, tx *types.Transaction, binding *signer.TransactionBinding) (*types.Transaction, error) {
 	return nil, m.err
 }
+
+// 12. Address mismatch halts execution before signing or broadcasting
+func TestExecutionService_SignerAddressMismatchHaltsBeforeSigning(t *testing.T) {
+	attackerAddress := common.HexToAddress("0xdead00000000000000000000000000000000dead")
+	cfg := &config.Config{
+		EnableLiveExecution:     true,
+		ArcChainID:              "5042",
+		ExpectedExecutorAddress: attackerAddress.Hex(), // Config expects attacker address
+		ExecutorPrivateKey:      "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+	}
+
+	sent := false
+	mockClient := &mockBlockchainClient{
+		sendTransactionFn: func(ctx context.Context, tx *types.Transaction) error {
+			sent = true
+			return nil
+		},
+	}
+
+	// Service without pre-injected signer triggers getSigner() at runtime
+	svc := execution.NewExecutionService(cfg, mockClient, nil)
+
+	req := validExecRequest("req_addr_mismatch")
+	res, err := svc.ExecutePayment(context.Background(), req)
+	if err == nil {
+		t.Fatal("expected error due to signer address mismatch, got nil")
+	}
+	if sent {
+		t.Fatal("CRITICAL: transaction was broadcast despite address mismatch!")
+	}
+	if res != nil {
+		t.Fatalf("expected nil result on address mismatch, got %+v", res)
+	}
+	if !strings.Contains(err.Error(), "does not match expected address") {
+		t.Errorf("expected address mismatch error message, got: %v", err)
+	}
+}

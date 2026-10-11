@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/policy"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/registry"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/signer"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/signer/providers/awskms"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 )
 
@@ -88,7 +90,32 @@ func main() {
 
 	// Initialize Blockchain Transaction Signer Boundary (Day 3 Hardening)
 	auditRecorder := signer.NewStorageAuditRecorder(repo)
-	txSigner, err := signer.NewSignerFromConfig(cfg, auditRecorder)
+
+	var factoryOpts signer.FactoryOptions
+	if strings.EqualFold(strings.TrimSpace(cfg.SignerBackend), "kms") {
+		if cfg.EnableLiveExecution {
+			// Production live execution path:
+			// Explicitly construct and inject the validated AWS KMS provider.
+			kmsProv, err := awskms.New(context.Background(), awskms.Config{
+				Region:          cfg.KMSRegion,
+				ExpectedAccount: cfg.KMSExpectedAccount,
+				StrictARN:       true,
+			})
+			if err != nil {
+				log.Fatalf("[AgentPay Gateway] FATAL: failed to initialize AWS KMS provider: %v", err)
+			}
+			factoryOpts.KMSProvider = kmsProv
+		} else {
+			// Safe mode / simulation mode (ENABLE_LIVE_EXECUTION=false):
+			// Strictly avoid AWS client construction, credentials loading, or network calls.
+			log.Printf("[AgentPay Gateway] Safe mode active (ENABLE_LIVE_EXECUTION=false): skipping AWS KMS client construction to avoid cloud/credential calls.")
+		}
+	}
+	if cfg.ExpectedExecutorAddress != "" {
+		factoryOpts.ExpectedAddress = cfg.ExpectedExecutorAddress
+	}
+
+	txSigner, err := signer.NewSignerFromConfigWithOptions(context.Background(), cfg, auditRecorder, factoryOpts)
 	if err != nil {
 		if cfg.EnableLiveExecution {
 			log.Fatalf("[AgentPay Gateway] FATAL: failed to initialize transaction signer: %v", err)
