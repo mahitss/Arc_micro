@@ -61,7 +61,7 @@
 | **Smart Contracts** | Foundry 1.8.1, `solc 0.8.24` (SVM) | `.github/workflows/ci.yml` & `contracts/foundry.toml` | `VERIFIED CI` |
 | **Web Frontend** | Node.js 20.x (`npm ci`) | `.github/workflows/ci.yml` & `apps/web/package-lock.json` | `VERIFIED CI` |
 | **TypeScript SDK** | Node.js 20.x (`npm ci`) | `.github/workflows/ci.yml` & `packages/sdk-typescript/package-lock.json` | `VERIFIED CI` |
-| **Python SDK** | Python 3.11 (`actions/setup-python@v5`) | `.github/workflows/ci.yml` & `packages/sdk-python` | `VERIFIED CI` |
+| **Python SDK** | Python 3.11 (`actions/setup-python@v5`) | `.github/workflows/ci.yml` & `packages/sdk-python/pyproject.toml` | `VERIFIED CI` |
 | **Operator CLI** | Node.js 20.x (`npm ci`) | `.github/workflows/ci.yml` & `packages/cli/package-lock.json` | `VERIFIED CI` |
 
 ### 4.2 Local Automated Test Suites Summary

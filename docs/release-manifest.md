@@ -65,7 +65,7 @@ $$\mathbf{SUBMISSION\ READY\ /\ DEMO\ READY\ /\ OPERATOR\ BLOCKED\ (FOR\ LIVE\ M
   - Rust `1.85.0` (`services/policy-engine/Dockerfile`, `.github/workflows/ci.yml`)
   - Foundry `1.8.1` (`solc 0.8.24`) (`.github/workflows/ci.yml`, `contracts/foundry.toml`)
   - Node.js `20.x` (`npm ci`) (`.github/workflows/ci.yml`)
-  - Python `3.11` (`packages/sdk-python`, `.github/workflows/ci.yml`)
+  - Python `3.11` (`packages/sdk-python/pyproject.toml`, `.github/workflows/ci.yml`)
 
 ### RC2 Verified Test Counts
 - **Total Local Verified Tests:** **696 passed, 0 failures**
