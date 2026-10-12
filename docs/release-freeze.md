@@ -44,11 +44,11 @@
 
 | Attribute | State / Value |
 |---|---|
-| **Target Release Candidate** | `v1.0.0-rc.2` (Tag recommended; not yet created) |
+| **Target Release Candidate** | `v1.0.0-rc.2` (Created & verified) |
 | **Frozen Commit Hash** | `9575a7b64dff84fca686f96d99b21eea5f52d3c6` |
 | **Git Branch** | `main` (synchronized with `origin/main`) |
 | **Working Tree Status** | Clean (0 uncommitted modifications, 0 untracked files) |
-| **GitHub Actions CI Status** | **ALL GREEN (SUCCESS)** across all 6 subsystem matrix jobs |
+| **GitHub Actions CI Status** | **ALL GREEN (SUCCESS)** across all 7 subsystem matrix jobs |
 | **Execution Safety Mode** | `ENABLE_LIVE_EXECUTION=false` strictly enforced |
 | **Budget Expended** | ₹0 |
 
@@ -61,6 +61,7 @@
 | **Smart Contracts** | Foundry 1.8.1, `solc 0.8.24` (SVM) | `.github/workflows/ci.yml` & `contracts/foundry.toml` | `VERIFIED CI` |
 | **Web Frontend** | Node.js 20.x (`npm ci`) | `.github/workflows/ci.yml` & `apps/web/package-lock.json` | `VERIFIED CI` |
 | **TypeScript SDK** | Node.js 20.x (`npm ci`) | `.github/workflows/ci.yml` & `packages/sdk-typescript/package-lock.json` | `VERIFIED CI` |
+| **Python SDK** | Python 3.11 (`actions/setup-python@v5`) | `.github/workflows/ci.yml` & `packages/sdk-python` | `VERIFIED CI` |
 | **Operator CLI** | Node.js 20.x (`npm ci`) | `.github/workflows/ci.yml` & `packages/cli/package-lock.json` | `VERIFIED CI` |
 
 ### 4.2 Local Automated Test Suites Summary

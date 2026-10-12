@@ -59,12 +59,13 @@ $$\mathbf{SUBMISSION\ READY\ /\ DEMO\ READY\ /\ OPERATOR\ BLOCKED\ (FOR\ LIVE\ M
 - **Release Target:** AgentPay Release Candidate 2 (`v1.0.0-rc.2`)
 - **Frozen Commit:** `9575a7b64dff84fca686f96d99b21eea5f52d3c6`
 - **Branch:** `main` (synchronized with `origin/main`)
-- **CI Verification:** **100% Green / All 6 Jobs Passing** on GitHub Actions (`web`, `gateway`, `policy-engine`, `contracts`, `sdk-typescript`, `cli`)
+- **CI Verification:** **100% Green / All 7 Jobs Passing** on GitHub Actions (`web`, `gateway`, `policy-engine`, `contracts`, `sdk-typescript`, `sdk-python`, `cli`)
 - **Toolchain Baseline:**
   - Go `1.24` (`services/gateway/go.mod`, `.github/workflows/ci.yml`, `services/gateway/Dockerfile`)
   - Rust `1.85.0` (`services/policy-engine/Dockerfile`, `.github/workflows/ci.yml`)
   - Foundry `1.8.1` (`solc 0.8.24`) (`.github/workflows/ci.yml`, `contracts/foundry.toml`)
   - Node.js `20.x` (`npm ci`) (`.github/workflows/ci.yml`)
+  - Python `3.11` (`packages/sdk-python`, `.github/workflows/ci.yml`)
 
 ### RC2 Verified Test Counts
 - **Total Local Verified Tests:** **696 passed, 0 failures**
