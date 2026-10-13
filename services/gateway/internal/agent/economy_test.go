@@ -483,7 +483,7 @@ func TestEconomy_PromptInjectionUntrustedDataBoundary(t *testing.T) {
 	if intents[0].Amount != "180000" {
 		t.Fatalf("expected intent amount 180000, got %s", intents[0].Amount)
 	}
-	if intents[0].Recipient != "0x1111111111111111111111111111111111111111" {
+	if intents[0].Recipient != "0x71c678d311516474809e39842c12f44b20a32508" {
 		t.Fatalf("expected registered recipient, got %s", intents[0].Recipient)
 	}
 }

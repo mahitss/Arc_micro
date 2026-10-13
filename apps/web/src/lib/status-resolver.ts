@@ -67,7 +67,7 @@ export interface CanonicalStatusModel {
 export async function probeArcRpc(rpcEndpoint?: string): Promise<'CONNECTED' | 'UNAVAILABLE'> {
   const url = rpcEndpoint || ARC_PROTOCOL_CONFIG.RPC_ENDPOINT || 'https://rpc.mainnet.arc.io';
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2500);
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   try {
     const res = await fetch(url, {

@@ -12,6 +12,7 @@ bin/
 target/
 cache/
 *.exe
+*.exe~
 *.tsbuildinfo
 
 # Foundry / Solidity

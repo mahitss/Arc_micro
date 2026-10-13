@@ -103,12 +103,17 @@ func (h *AgentEconomyHandler) HandleCreateQuote(w http.ResponseWriter, r *http.R
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) < 3 {
+	serviceID := r.PathValue("id")
+	if serviceID == "" {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) >= 3 {
+			serviceID = parts[2]
+		}
+	}
+	if serviceID == "" {
 		writeError(w, http.StatusBadRequest, "BAD_REQUEST", "Missing service ID in path", reqID)
 		return
 	}
-	serviceID := parts[1]
 
 	var params economy.CreateAgentQuoteParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
@@ -137,12 +142,17 @@ func (h *AgentEconomyHandler) HandleGetQuote(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) < 2 {
+	quoteID := r.PathValue("id")
+	if quoteID == "" {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) >= 2 {
+			quoteID = parts[len(parts)-1]
+		}
+	}
+	if quoteID == "" {
 		writeError(w, http.StatusBadRequest, "BAD_REQUEST", "Missing quote ID", "")
 		return
 	}
-	quoteID := parts[1]
 
 	quote, err := h.agentCoord.GetQuote(quoteID)
 	if err != nil {
@@ -163,12 +173,17 @@ func (h *AgentEconomyHandler) HandleAcceptQuote(w http.ResponseWriter, r *http.R
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) < 2 {
+	quoteID := r.PathValue("id")
+	if quoteID == "" {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) >= 2 {
+			quoteID = parts[len(parts)-2]
+		}
+	}
+	if quoteID == "" {
 		writeError(w, http.StatusBadRequest, "BAD_REQUEST", "Missing quote ID", reqID)
 		return
 	}
-	quoteID := parts[1]
 
 	var body struct {
 		BuyerAgentID string `json:"buyer_agent_id"`
@@ -196,12 +211,17 @@ func (h *AgentEconomyHandler) HandleRejectQuote(w http.ResponseWriter, r *http.R
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) < 2 {
+	quoteID := r.PathValue("id")
+	if quoteID == "" {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) >= 2 {
+			quoteID = parts[len(parts)-2]
+		}
+	}
+	if quoteID == "" {
 		writeError(w, http.StatusBadRequest, "BAD_REQUEST", "Missing quote ID", reqID)
 		return
 	}
-	quoteID := parts[1]
 
 	var body struct {
 		Reason string `json:"reason"`
@@ -229,12 +249,17 @@ func (h *AgentEconomyHandler) HandleCounterQuote(w http.ResponseWriter, r *http.
 	}
 
 	reqID := middleware.GetRequestID(r.Context())
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) < 2 {
+	quoteID := r.PathValue("id")
+	if quoteID == "" {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) >= 2 {
+			quoteID = parts[len(parts)-2]
+		}
+	}
+	if quoteID == "" {
 		writeError(w, http.StatusBadRequest, "BAD_REQUEST", "Missing quote ID", reqID)
 		return
 	}
-	quoteID := parts[1]
 
 	var body struct {
 		ProposerAgentID string            `json:"proposer_agent_id"`

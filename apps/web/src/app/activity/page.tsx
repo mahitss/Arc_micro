@@ -410,7 +410,7 @@ export default function ActivityStreamPage() {
                         {evt.category}
                       </span>
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-mono text-[#D6A83A] bg-[#0E0E0E] border border-[#222222]">
-                        {evt.is_simulated || dataMode === 'SIMULATION' ? 'SIMULATED — NO FUNDS MOVED' : 'VERIFIED ON-CHAIN'}
+                        {evt.is_simulated !== false ? 'SIMULATED — NO FUNDS MOVED' : 'VERIFIED ON-CHAIN'}
                       </span>
                     </div>
                     <span className="text-[11px] text-[#716F69]">{evt.display_time || new Date(evt.timestamp).toLocaleTimeString()}</span>
@@ -499,7 +499,7 @@ export default function ActivityStreamPage() {
                     <span className="text-[#50504C] block text-[10px] uppercase">FINANCIAL VALUE</span>
                     <span className="text-[#2FB36F] font-bold text-xs">{selectedEvent.formatted_amount}</span>
                     <span className="text-[10px] text-[#716F69] block">
-                      Provenance: {selectedEvent.is_simulated ? 'SIMULATED (No real funds moved)' : 'ON-CHAIN VERIFIED'}
+                      Provenance: {selectedEvent.is_simulated !== false ? 'SIMULATED (No real funds moved)' : 'ON-CHAIN VERIFIED'}
                     </span>
                   </div>
                 )}
@@ -537,6 +537,60 @@ export default function ActivityStreamPage() {
                     <div className="flex flex-col text-[11px]">
                       <span className="text-[#716F69]">Causation ID:</span>
                       <span className="text-[#B0ADA5] font-mono break-all">{selectedEvent.causation_id}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Policy & Governance Outcome (When Present) */}
+              {(selectedEvent.payload?.decision || selectedEvent.payload?.reason || selectedEvent.payload?.reason_code || selectedEvent.payload?.checks) && (
+                <div className="space-y-2 p-3 rounded-xl bg-[#0B0B0B] border border-[#1A1A1A]">
+                  <span className="text-[#50504C] block text-[10px] uppercase font-bold tracking-wider">
+                    POLICY OUTCOME & INVARIANTS
+                  </span>
+                  {selectedEvent.payload.decision && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[#716F69]">Decision:</span>
+                      <span className={`font-bold font-mono px-2 py-0.5 rounded text-[10px] ${
+                        selectedEvent.payload.decision === 'ALLOW' || selectedEvent.payload.decision === 'APPROVED'
+                          ? 'text-[#2FB36F] bg-[#2FB36F]/10 border border-[#2FB36F]/30'
+                          : 'text-[#D85C5C] bg-[#D85C5C]/10 border border-[#D85C5C]/30'
+                      }`}>
+                        {selectedEvent.payload.decision}
+                      </span>
+                    </div>
+                  )}
+                  {selectedEvent.payload.reason_code && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[#716F69]">Reason Code:</span>
+                      <span className="text-[#D6A83A] font-mono text-[10px]">{selectedEvent.payload.reason_code}</span>
+                    </div>
+                  )}
+                  {selectedEvent.payload.reason && (
+                    <div className="text-[11px] text-[#B0ADA5] pt-1">
+                      <span className="text-[#716F69] block text-[10px] uppercase">Reason:</span>
+                      <p className="mt-0.5 leading-relaxed">{selectedEvent.payload.reason}</p>
+                    </div>
+                  )}
+                  {selectedEvent.payload.policy_version && (
+                    <div className="flex items-center justify-between text-[11px] text-[#716F69]">
+                      <span>Constitution Version:</span>
+                      <span className="font-mono text-[#F2F0EA]">{selectedEvent.payload.policy_version}</span>
+                    </div>
+                  )}
+                  {Array.isArray(selectedEvent.payload.checks) && selectedEvent.payload.checks.length > 0 && (
+                    <div className="pt-1.5 space-y-1">
+                      <span className="text-[#716F69] block text-[10px] uppercase font-bold">Rule Invariants:</span>
+                      <div className="space-y-1 max-h-36 overflow-y-auto pl-1">
+                        {selectedEvent.payload.checks.map((chk: any, idx: number) => (
+                          <div key={idx} className="flex items-center justify-between text-[10px] border-b border-[#181818] pb-0.5">
+                            <span className="font-mono text-[#B0ADA5]">{chk.rule}</span>
+                            <span className={chk.passed ? 'text-[#2FB36F]' : 'text-[#D85C5C]'}>
+                              {chk.passed ? '✓ PASS' : '✕ FAIL'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

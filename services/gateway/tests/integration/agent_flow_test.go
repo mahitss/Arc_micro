@@ -86,7 +86,7 @@ func TestIntegration_AgentTaskToExecutionBoundary(t *testing.T) {
 		CustomResponse: &agent.AIIntentResponse{
 			RequiresPayment: true,
 			Service:         "web-research",
-			Recipient:       "0x1111111111111111111111111111111111111111",
+			Recipient:       "0x71c678d311516474809e39842c12f44b20a32508",
 			Amount:          "180000",
 			Asset:           "USDC",
 			Purpose:         "api_usage",
@@ -203,7 +203,7 @@ func TestIntegration_AutoExecutionEnabled(t *testing.T) {
 		CustomResponse: &agent.AIIntentResponse{
 			RequiresPayment: true,
 			Service:         "web-research",
-			Recipient:       "0x1111111111111111111111111111111111111111",
+			Recipient:       "0x71c678d311516474809e39842c12f44b20a32508",
 			Amount:          "180000",
 			Asset:           "USDC",
 			Purpose:         "api_usage",

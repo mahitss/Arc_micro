@@ -12,6 +12,8 @@ import {
   UniversalFinancialTrace,
   ControlSearchResult,
 } from '../../lib/api/control';
+import { fetchSystemHealth } from '../../lib/api/health';
+import { SystemHealth } from '../../lib/api/types';
 import {
   AgentPayCard,
   AgentPayBadge,
@@ -424,12 +426,15 @@ const CANONICAL_ATTACK_SCENARIOS: SecurityAttackScenario[] = [
 
 export default function ControlTowerPage() {
   const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
+  const [health, setHealth] = useState<SystemHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [execMode, setExecMode] = useState<'REAL' | 'SIMULATION'>('SIMULATION');
   const [selectedEventIndex, setSelectedEventIndex] = useState<number>(4); // Provider Selected
   const [activeSecurityTest, setActiveSecurityTest] = useState<SecurityAttackScenario>(CANONICAL_ATTACK_SCENARIOS[0]);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [inspectingEntity, setInspectingEntity] = useState<InspectorEntity | null>(null);
+
+  const isArcConnected = health?.arc_rpc_status === 'CONNECTED' || health?.arc_rpc === 'HEALTHY';
 
   const [aiTelemetry, setAiTelemetry] = useState<{
     provider: string;
@@ -472,6 +477,7 @@ export default function ControlTowerPage() {
   async function loadData() {
     setLoading(true);
     try {
+      fetchSystemHealth().then(setHealth).catch(() => null);
       const ov = await fetchControlOverview('org_default', execMode);
       setOverview(ov);
     } catch (err) {
@@ -543,7 +549,7 @@ export default function ControlTowerPage() {
               </AgentPayBadge>
               <span className="text-xs text-[#716F69]">·</span>
               <span className="text-xs text-[#B0ADA5]">
-                Arc RPC: <span className="font-mono text-[#2FB36F]">CONNECTED (Chain 5042)</span>
+                Arc RPC: <span className={`font-mono ${isArcConnected ? 'text-[#2FB36F]' : 'text-[#D85C5C]'}`}>{isArcConnected ? 'CONNECTED (Chain 5042)' : 'UNAVAILABLE (Chain 5042)'}</span>
               </span>
               <span className="text-xs text-[#716F69]">·</span>
               <span className="text-xs text-[#D6A83A]">
@@ -622,7 +628,7 @@ export default function ControlTowerPage() {
         <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 0} subtext="Dual-custody >$20" provenance="SIMULATED" highlight />
         <AgentPayMetric label="Running Workflows" value="8" subtext="Durable state" provenance="SIMULATED" />
         <AgentPayMetric label="Simulated Settled" value="$1,204.32" subtext="0 Real Arc Settlements" provenance="SIMULATED" />
-        <AgentPayMetric label="Arc RPC" value="CONNECTED" subtext="Chain 5042 (0 Real Tx)" provenance="VERIFIED" />
+        <AgentPayMetric label="Arc RPC" value={isArcConnected ? 'CONNECTED' : 'UNAVAILABLE'} subtext={isArcConnected ? 'Chain 5042 (0 Real Tx)' : 'Chain 5042 (RPC Unreachable)'} provenance={isArcConnected ? 'VERIFIED' : 'UNAVAILABLE'} />
       </div>
 
       {/* 3. AI VS AUTHORITY COMPARISON PANEL (TASK 38 SIGNATURE) */}
@@ -1181,9 +1187,9 @@ export default function ControlTowerPage() {
             <div className="space-y-3 font-mono text-xs">
               <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">
                 <span className="text-[#716F69]">Arc Mainnet RPC</span>
-                <span className="text-[#2FB36F] font-semibold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F]" />
-                  CONNECTED · Chain 5042
+                <span className={`${isArcConnected ? 'text-[#2FB36F]' : 'text-[#D85C5C]'} font-semibold flex items-center gap-1.5`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isArcConnected ? 'bg-[#2FB36F]' : 'bg-[#D85C5C]'}`} />
+                  {isArcConnected ? 'CONNECTED · Chain 5042' : 'UNAVAILABLE · Chain 5042'}
                 </span>
               </div>
               <div className="p-3 rounded-lg bg-[#141414] border border-[#222222] flex items-center justify-between">

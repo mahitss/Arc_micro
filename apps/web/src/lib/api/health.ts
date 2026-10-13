@@ -38,7 +38,14 @@ export async function fetchSystemHealth(): Promise<SystemHealth> {
   }
 
   // Probe Arc RPC connectivity independently from Gateway and execution state
-  const arcRpcConnectivity = await probeArcRpc();
+  let arcRpcConnectivity = await probeArcRpc();
+  if (
+    arcRpcConnectivity !== 'CONNECTED' &&
+    readyResp &&
+    (readyResp.dependencies?.arc_rpc === 'ok' || readyResp.dependencies?.arc_rpc === 'connected')
+  ) {
+    arcRpcConnectivity = 'CONNECTED';
+  }
   const isArcHealthy = arcRpcConnectivity === 'CONNECTED';
 
   return {

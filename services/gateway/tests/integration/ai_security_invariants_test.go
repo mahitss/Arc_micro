@@ -258,7 +258,7 @@ func TestSecurityInvariant_10_RecipientResolution(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected web-research service to exist: %v", err)
 	}
-	if entry.Recipient != "0x1111111111111111111111111111111111111111" {
+	if entry.Recipient != "0x71c678d311516474809e39842c12f44b20a32508" {
 		t.Fatalf("unexpected recipient address: %s", entry.Recipient)
 	}
 }

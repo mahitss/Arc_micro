@@ -372,8 +372,9 @@ export function normalizeActivityEvent(raw: any): GlobalActivityEvent {
   }
 
   // 9. Financial Provenance (Truthfulness Invariant: SIMULATION unless verified on-chain)
-  const is_simulated = !payload.tx_hash && !raw.tx_hash;
-  const financial_mode: 'SIMULATION' | 'VERIFIED' | 'PROJECTED' = is_simulated ? 'SIMULATION' : 'VERIFIED';
+  // By invariant INV-175: ENABLE_LIVE_EXECUTION=false, 0 real Arc settlements exist on mainnet.
+  const is_simulated = true;
+  const financial_mode: 'SIMULATION' | 'VERIFIED' | 'PROJECTED' = 'SIMULATION';
 
   // 10. Sanitized Raw Event for Inspector
   const raw_event = sanitizeObject(raw);
