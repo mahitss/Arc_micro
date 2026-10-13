@@ -561,7 +561,7 @@ export default function SecurityCenterPage() {
           <span className="w-1.5 h-1.5 rounded-full bg-[#D6A83A]" />
           <span>PROVENANCE: Deterministic Simulation Engine & Invariant Verifier. Zero real funds moved.</span>
         </div>
-        <span className="text-[10px] text-[#50504C]">AgentVault: 44/44 Foundry Invariant Tests Passing</span>
+        <span className="text-[10px] text-[#50504C]">AgentVault: 44/44 Foundry Invariant Tests Passing (Offline Suite) · Undeployed on Mainnet (0x)</span>
       </div>
     </div>
   );

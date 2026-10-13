@@ -606,12 +606,24 @@ export async function fetchGlobalActivity(options?: {
 }
 
 export async function fetchSecurityReport(options?: { useDemo?: boolean }): Promise<SecuritySubsystemsReport> {
-  let policyOperational = true;
+  let policyOperational = false;
   try {
-    const ready = await apiRequest<{ status: string }>('/ready', { timeoutMs: 2500 });
-    policyOperational = ready.status === 'ready';
+    const ready = await apiRequest<{
+      status: string;
+      dependencies?: { policy_engine?: string; storage?: string };
+    }>('/ready', { timeoutMs: 6000 });
+    const peStatus = ready.dependencies?.policy_engine;
+    policyOperational = ready.status === 'ready' || peStatus === 'ok';
   } catch {
-    policyOperational = options?.useDemo ? true : false;
+    // If /ready times out due to remote storage round-trip, check Gateway /health probe
+    try {
+      const health = await apiRequest<{ status: string }>('/health', { timeoutMs: 2500 });
+      if (health.status === 'ok') {
+        policyOperational = true;
+      }
+    } catch {
+      policyOperational = options?.useDemo ? true : false;
+    }
   }
 
   return {
