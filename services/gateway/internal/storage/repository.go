@@ -2404,7 +2404,7 @@ func (p *PostgresRepository) SaveMission(ctx context.Context, m *economy.Mission
 }
 
 func (p *PostgresRepository) GetMission(ctx context.Context, id string) (*economy.Mission, error) {
-	query := `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, current_step, failure_reason, metadata, correlation_id
+	query := `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, COALESCE(current_step, ''), COALESCE(failure_reason, ''), COALESCE(metadata::text, '{}'), COALESCE(correlation_id, '')
 	          FROM missions WHERE id = $1`
 	var m economy.Mission
 	var statusStr, metaStr string
@@ -2430,9 +2430,9 @@ func (p *PostgresRepository) ListMissions(ctx context.Context, orgID string) ([]
 	var rows *sql.Rows
 	var err error
 	if orgID != "" {
-		rows, err = p.db.QueryContext(ctx, `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, current_step, failure_reason, metadata, correlation_id FROM missions WHERE organization_id = $1 ORDER BY created_at DESC`, orgID)
+		rows, err = p.db.QueryContext(ctx, `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, COALESCE(current_step, ''), COALESCE(failure_reason, ''), COALESCE(metadata::text, '{}'), COALESCE(correlation_id, '') FROM missions WHERE organization_id = $1 ORDER BY created_at DESC`, orgID)
 	} else {
-		rows, err = p.db.QueryContext(ctx, `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, current_step, failure_reason, metadata, correlation_id FROM missions ORDER BY created_at DESC`)
+		rows, err = p.db.QueryContext(ctx, `SELECT id, organization_id, agent_id, objective, status, budget, spent, remaining_budget, currency, max_execution_amount, created_at, started_at, completed_at, deadline, COALESCE(current_step, ''), COALESCE(failure_reason, ''), COALESCE(metadata::text, '{}'), COALESCE(correlation_id, '') FROM missions ORDER BY created_at DESC`)
 	}
 	if err != nil {
 		return nil, err
@@ -2500,7 +2500,7 @@ func (p *PostgresRepository) SaveMissionStep(ctx context.Context, step *economy.
 }
 
 func (p *PostgresRepository) GetMissionStep(ctx context.Context, missionID, stepID string) (*economy.MissionStep, error) {
-	query := `SELECT step_id, mission_id, step_index, required_capability, category, max_budget, selected_service_id, selected_quote_id, payment_intent_id, status, result_data, error, started_at, completed_at
+	query := `SELECT step_id, mission_id, step_index, required_capability, COALESCE(category, ''), max_budget, COALESCE(selected_service_id, ''), COALESCE(selected_quote_id, ''), COALESCE(payment_intent_id, ''), status, COALESCE(result_data, ''), COALESCE(error, ''), started_at, completed_at
 	          FROM mission_steps WHERE mission_id = $1 AND step_id = $2`
 	var step economy.MissionStep
 	err := p.db.QueryRowContext(ctx, query, missionID, stepID).Scan(
@@ -2518,7 +2518,7 @@ func (p *PostgresRepository) GetMissionStep(ctx context.Context, missionID, step
 }
 
 func (p *PostgresRepository) ListMissionSteps(ctx context.Context, missionID string) ([]*economy.MissionStep, error) {
-	query := `SELECT step_id, mission_id, step_index, required_capability, category, max_budget, selected_service_id, selected_quote_id, payment_intent_id, status, result_data, error, started_at, completed_at
+	query := `SELECT step_id, mission_id, step_index, required_capability, COALESCE(category, ''), max_budget, COALESCE(selected_service_id, ''), COALESCE(selected_quote_id, ''), COALESCE(payment_intent_id, ''), status, COALESCE(result_data, ''), COALESCE(error, ''), started_at, completed_at
 	          FROM mission_steps WHERE mission_id = $1 ORDER BY step_index ASC`
 	rows, err := p.db.QueryContext(ctx, query, missionID)
 	if err != nil {

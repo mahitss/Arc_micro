@@ -29,6 +29,18 @@ export function getBaseApiUrl(): string {
   return 'http://localhost:8080';
 }
 
+export function getApiKey(): string | undefined {
+  if (typeof process !== 'undefined' && process.env) {
+    return (
+      process.env.NEXT_PUBLIC_DEMO_API_KEY ||
+      process.env.NEXT_PUBLIC_API_KEY ||
+      process.env.NEXT_PUBLIC_AGENTPAY_API_KEY ||
+      undefined
+    );
+  }
+  return undefined;
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit & { timeoutMs?: number } = {}
@@ -41,15 +53,41 @@ export async function apiRequest<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  const defaultHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  };
+
+  const apiKey = getApiKey();
+  if (apiKey) {
+    defaultHeaders['Authorization'] = `Bearer ${apiKey}`;
+  }
+
+  let customHeaders: Record<string, string> = {};
+  if (fetchOptions.headers) {
+    if (fetchOptions.headers instanceof Headers) {
+      fetchOptions.headers.forEach((val, key) => {
+        customHeaders[key] = val;
+      });
+    } else if (Array.isArray(fetchOptions.headers)) {
+      fetchOptions.headers.forEach(([k, v]) => {
+        customHeaders[k] = v;
+      });
+    } else {
+      customHeaders = { ...(fetchOptions.headers as Record<string, string>) };
+    }
+  }
+
+  const finalHeaders = {
+    ...defaultHeaders,
+    ...customHeaders,
+  };
+
   try {
     const res = await fetch(url, {
       ...fetchOptions,
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...fetchOptions.headers,
-      },
+      headers: finalHeaders,
     });
 
     const requestId = res.headers.get('x-request-id') || undefined;

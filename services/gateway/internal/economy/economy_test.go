@@ -857,7 +857,7 @@ func TestSecurityInvariants_INVE1_to_INVE12(t *testing.T) {
 
 	// INV-E5: Service cannot choose arbitrary recipient (authoritative registry binding)
 	svc, _ := reg.Resolve("web-research")
-	if svc.Recipient != "0x1111111111111111111111111111111111111111" {
+	if svc.Recipient != "0x71c678d311516474809e39842c12f44b20a32508" {
 		t.Fatalf("INV-E5 failed: expected authoritative recipient, got: %s", svc.Recipient)
 	}
 

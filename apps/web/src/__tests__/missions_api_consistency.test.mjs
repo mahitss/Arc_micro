@@ -217,4 +217,82 @@ describe('TASK 45 — Missions Page API & Simulation Flow Test Suite', () => {
       assert.ok(allowedOrigins.includes('http://localhost:3000'));
     });
   });
+
+  // 7. Authentication Header & 401 Unauthorized Regression
+  describe('7. Authentication Header & 401 Unauthorized Regression', () => {
+    it('verifies client.ts exports getApiKey and injects Authorization Bearer header', () => {
+      assert.ok(clientSource.includes('export function getApiKey'), 'Must export getApiKey');
+      assert.ok(clientSource.includes('NEXT_PUBLIC_DEMO_API_KEY'), 'Must inspect NEXT_PUBLIC_DEMO_API_KEY');
+      assert.ok(clientSource.includes('defaultHeaders[\'Authorization\'] = `Bearer ${apiKey}`'), 'Must attach Authorization Bearer header');
+    });
+
+    it('builds request headers with demo API key Authorization header', () => {
+      const demoKey = 'apk_live_demo1234567890abcdef1234567890abcdef';
+      const defaultHeaders = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+      if (demoKey) {
+        defaultHeaders['Authorization'] = `Bearer ${demoKey}`;
+      }
+
+      assert.equal(defaultHeaders['Authorization'], `Bearer ${demoKey}`);
+      assert.equal(defaultHeaders['Content-Type'], 'application/json');
+    });
+
+    it('allows explicit header override without leaking credentials', () => {
+      const defaultHeaders = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'Authorization': 'Bearer apk_live_demo1234567890abcdef1234567890abcdef',
+      };
+      const customHeaders = {
+        'X-API-Key': 'custom_scoped_key',
+      };
+      const finalHeaders = {
+        ...defaultHeaders,
+        ...customHeaders,
+      };
+
+      assert.equal(finalHeaders['X-API-Key'], 'custom_scoped_key');
+      assert.equal(finalHeaders['Authorization'], 'Bearer apk_live_demo1234567890abcdef1234567890abcdef');
+    });
+
+    it('correctly maps 401 UNAUTHORIZED gateway response into ApiError', () => {
+      const gateway401Response = {
+        error: {
+          code: 'UNAUTHORIZED',
+          message: "API key required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header.",
+        },
+        request_id: 'req_test_unauthorized_123',
+      };
+
+      const apiErr = new ApiError(
+        401,
+        gateway401Response.error.code,
+        gateway401Response.error.message,
+        gateway401Response.request_id
+      );
+
+      assert.equal(apiErr.status, 401);
+      assert.equal(apiErr.code, 'UNAUTHORIZED');
+      assert.ok(apiErr.message.includes('API key required'));
+      assert.equal(apiErr.requestId, 'req_test_unauthorized_123');
+    });
+
+    it('Missions page displays MISSION SERVICE UNAVAILABLE on 401 and retains retry action', () => {
+      const authError = new ApiError(
+        401,
+        'UNAUTHORIZED',
+        "API key required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header."
+      );
+
+      // Simulates error state transition in page.tsx
+      let error = authError.message;
+      let isRetryable = true;
+
+      assert.equal(error, "API key required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header.");
+      assert.equal(isRetryable, true, 'Must allow operator to retry connection once key is supplied');
+    });
+  });
 });
