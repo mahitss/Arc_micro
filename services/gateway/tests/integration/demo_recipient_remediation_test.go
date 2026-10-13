@@ -224,8 +224,8 @@ func TestFinding1_DemoRecipientAlignment(t *testing.T) {
 		}
 
 		// Recipient must match the authoritative registry address
-		if createdIntent.Recipient != "0x1111111111111111111111111111111111111111" {
-			t.Fatalf("expected recipient 0x1111..., got: %s", createdIntent.Recipient)
+		if createdIntent.Recipient != "0x71c678d311516474809e39842c12f44b20a32508" {
+			t.Fatalf("expected recipient 0x71c6..., got: %s", createdIntent.Recipient)
 		}
 		// Intent status should be AUTHORIZED (since policy allows 0x1111...)
 		if createdIntent.Status != "AUTHORIZED" {

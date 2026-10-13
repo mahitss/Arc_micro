@@ -41,6 +41,35 @@ func SanitizeDatabaseURL(rawURL string) string {
 	return u.String()
 }
 
+// NormalizeDatabaseURL ensures that database connection strings using lib/pq with connection
+// poolers (such as PgBouncer or Neon transaction pooling) have binary_parameters=yes configured.
+// Without this parameter, lib/pq executes parameterized queries using a two-phase protocol
+// with an intermediate SYNC between Parse and Bind. In transaction pooling mode, PgBouncer reclaims
+// or switches the server connection upon receiving SYNC, causing subsequent Bind calls to fail
+// with "pq: unnamed prepared statement does not exist (26000)".
+// Setting binary_parameters=yes instructs lib/pq to pipeline Parse+Bind+Describe+Execute+Sync
+// into a single network buffer, eliminating statement dissociation across pooled connections.
+func NormalizeDatabaseURL(rawURL string) string {
+	if rawURL == "" {
+		return ""
+	}
+	u, err := url.Parse(rawURL)
+	if err == nil && u.Scheme != "" {
+		q := u.Query()
+		if !q.Has("binary_parameters") {
+			q.Set("binary_parameters", "yes")
+			u.RawQuery = q.Encode()
+			return u.String()
+		}
+		return rawURL
+	}
+	// For key-value DSN style
+	if !strings.Contains(rawURL, "binary_parameters=") {
+		return strings.TrimSpace(rawURL) + " binary_parameters=yes"
+	}
+	return rawURL
+}
+
 // InitializeRepository creates the appropriate repository based on explicit configuration.
 //
 // Rules:
@@ -85,11 +114,12 @@ func InitializeRepository(ctx context.Context, cfg *config.Config) (Repository, 
 			return nil, nil, ErrDatabaseURLRequired
 		}
 
-		sanitizedURL := SanitizeDatabaseURL(dbURL)
+		normalizedURL := NormalizeDatabaseURL(dbURL)
+		sanitizedURL := SanitizeDatabaseURL(normalizedURL)
 		log.Printf("[AgentPay Storage] backend=postgres")
 		log.Printf("[AgentPay Storage] connecting to %s...", sanitizedURL)
 
-		db, err := sql.Open("postgres", dbURL)
+		db, err := sql.Open("postgres", normalizedURL)
 		if err != nil {
 			return nil, nil, fmt.Errorf("%w: %v", ErrDatabaseConnectionFailed, err)
 		}

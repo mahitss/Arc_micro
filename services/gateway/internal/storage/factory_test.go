@@ -52,6 +52,55 @@ func TestSanitizeDatabaseURL(t *testing.T) {
 	}
 }
 
+// TestNormalizeDatabaseURL verifies that binary_parameters=yes is added to connection strings.
+func TestNormalizeDatabaseURL(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Empty URL",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Neon pooled URL without binary_parameters",
+			input:    "postgresql://neondb_owner:pass@ep-pooler.c-3.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+			expected: "postgresql://neondb_owner:pass@ep-pooler.c-3.aws.neon.tech/neondb?binary_parameters=yes&channel_binding=require&sslmode=require",
+		},
+		{
+			name:     "URL already having binary_parameters=yes",
+			input:    "postgresql://neondb_owner:pass@ep-pooler.c-3.aws.neon.tech/neondb?binary_parameters=yes&sslmode=require",
+			expected: "postgresql://neondb_owner:pass@ep-pooler.c-3.aws.neon.tech/neondb?binary_parameters=yes&sslmode=require",
+		},
+		{
+			name:     "Standard URL with no query params",
+			input:    "postgres://user:pass@localhost:5432/mydb",
+			expected: "postgres://user:pass@localhost:5432/mydb?binary_parameters=yes",
+		},
+		{
+			name:     "DSN key-value format without binary_parameters",
+			input:    "host=localhost port=5432 dbname=mydb user=agentpay",
+			expected: "host=localhost port=5432 dbname=mydb user=agentpay binary_parameters=yes",
+		},
+		{
+			name:     "DSN key-value format already with binary_parameters",
+			input:    "host=localhost port=5432 dbname=mydb binary_parameters=yes",
+			expected: "host=localhost port=5432 dbname=mydb binary_parameters=yes",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := NormalizeDatabaseURL(tc.input)
+			if actual != tc.expected {
+				t.Errorf("NormalizeDatabaseURL(%q) = %q, expected %q", tc.input, actual, tc.expected)
+			}
+		})
+	}
+}
+
 // TestInitializeRepository_Selection verifies explicit repository selection and fail-fast guarantees.
 func TestInitializeRepository_Selection(t *testing.T) {
 	ctx := context.Background()
