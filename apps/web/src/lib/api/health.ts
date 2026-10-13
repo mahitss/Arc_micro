@@ -20,8 +20,14 @@ export async function fetchSystemHealth(): Promise<SystemHealth> {
     gatewayStatus = 'OFFLINE';
   }
 
+  let readyResp: {
+    status: string;
+    dependencies?: { policy_engine?: string; arc_rpc?: string };
+    components?: { policy_engine?: string };
+  } | null = null;
+
   try {
-    const readyResp = await apiRequest<{
+    readyResp = await apiRequest<{
       status: string;
       dependencies?: { policy_engine?: string; arc_rpc?: string };
       components?: { policy_engine?: string };
