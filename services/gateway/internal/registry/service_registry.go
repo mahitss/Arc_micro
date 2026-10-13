@@ -114,7 +114,7 @@ func NewDefaultRegistry() *Registry {
 		Description:           "Real-time web search, document scraping, and intelligence synthesis.",
 		Category:              CategoryResearch,
 		Capabilities:          []string{"web_search", "scraping", "summarization"},
-		Recipient:             "0x1111111111111111111111111111111111111111",
+		Recipient:             "0x71c678d311516474809e39842c12f44b20a32508",
 		Asset:                 "USDC",
 		Enabled:               true,
 		MaxPrice:              "500000", // 0.50 USDC
