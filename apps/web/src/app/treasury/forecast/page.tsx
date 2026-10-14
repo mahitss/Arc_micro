@@ -8,11 +8,10 @@ import {
   TreasuryExecutionMode,
 } from '@/lib/api/treasury';
 import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
+import { formatUsdcMicro } from '@/lib/utils/format';
 
-function formatUsdc(microUnits: string | number): string {
-  const val = typeof microUnits === 'string' ? parseFloat(microUnits) : microUnits;
-  if (isNaN(val)) return '$0.00';
-  return `$${(val / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatUsdc(microUnits: string | number | null | undefined): string {
+  return formatUsdcMicro(microUnits, '—');
 }
 
 export default function TreasuryForecastPage() {
@@ -191,7 +190,7 @@ export default function TreasuryForecastPage() {
           </div>
         </div>
         <div className="text-xs font-mono text-[#716F69]">
-          Confidence Level: <span className="text-[#2FB36F] font-bold">{forecast ? `${(forecast.confidence * 100).toFixed(0)}%` : '---'}</span> (Sample: {forecast?.sample_size || 0} runs)
+          Confidence Level: <span className="text-[#2FB36F] font-bold">{Number.isFinite(Number(forecast?.confidence)) ? `${(Number(forecast?.confidence) * 100).toFixed(0)}%` : '—'}</span> (Sample: {forecast?.sample_size || 0} runs)
         </div>
       </div>
 

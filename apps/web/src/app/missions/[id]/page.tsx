@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { fetchMission, fetchMissionTrace } from '../../../lib/api/missions';
+import { fetchMission, fetchMissionTrace, DEMO_MISSIONS } from '../../../lib/api/missions';
 import { fetchMissionIntelligence } from '../../../lib/api/intelligence';
 import { Mission, MissionTrace, MissionIntelligence } from '../../../lib/api/types';
 import { VisualMissionTimeline } from '../../../components/VisualMissionTimeline';
@@ -14,7 +14,8 @@ import { DataAuthorityBadge } from '../../../components/DataAuthorityBadge';
 
 export default function MissionDetailPage() {
   const params = useParams();
-  const missionId = params.id as string;
+  const rawId = params?.id;
+  const missionId = typeof rawId === 'string' ? rawId.trim() : (Array.isArray(rawId) ? (rawId[0] || '').trim() : '');
 
   const [mission, setMission] = useState<Mission | null>(null);
   const [trace, setTrace] = useState<MissionTrace | null>(null);
@@ -24,13 +25,24 @@ export default function MissionDetailPage() {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   const loadData = async (demo: boolean) => {
+    if (!missionId) {
+      setError('Invalid mission ID specified');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     try {
-      const [m, t] = await Promise.all([
-        fetchMission(missionId, { useDemo: demo }),
-        fetchMissionTrace(missionId, { useDemo: demo }),
-      ]);
+      const m = await fetchMission(missionId, { useDemo: demo });
       setMission(m);
-      setTrace(t);
+
+      try {
+        const t = await fetchMissionTrace(missionId, { useDemo: demo });
+        setTrace(t);
+      } catch (traceErr) {
+        console.warn('Trace not available for mission:', missionId, traceErr);
+        setTrace(null);
+      }
+
       try {
         const intel = await fetchMissionIntelligence(missionId);
         setIntelligence(intel);
@@ -175,6 +187,25 @@ export default function MissionDetailPage() {
     }
   };
 
+  if (!missionId) {
+    return (
+      <div className="p-8 max-w-5xl mx-auto text-center space-y-4">
+        <div className="p-5 rounded-2xl bg-[#D85C5C]/10 border border-[#D85C5C]/30 text-[#D85C5C] font-mono text-xs space-y-1">
+          <div className="font-bold text-sm">Invalid Mission Route</div>
+          <div className="text-[#B0ADA5]">No valid mission identifier was provided in the route URL.</div>
+        </div>
+        <div className="flex justify-center gap-3 font-mono text-xs">
+          <Link
+            href="/missions"
+            className="px-4 py-2 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
+          >
+            ← Return to Missions
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="p-16 text-center text-[#716F69] font-mono text-sm max-w-5xl mx-auto space-y-3">
@@ -185,12 +216,22 @@ export default function MissionDetailPage() {
   }
 
   if (error || !mission) {
+    const isNotFound = error?.toLowerCase().includes('not found') || !mission;
+    const isSandboxFixture = DEMO_MISSIONS.some((m) => m.id === missionId);
+
     return (
       <div className="p-8 max-w-5xl mx-auto text-center space-y-4">
-        <div className="p-5 rounded-2xl bg-[#D85C5C]/10 border border-[#D85C5C]/30 text-[#D85C5C] font-mono text-xs">
-          Error: {error || 'Mission not found'}
+        <div className="p-5 rounded-2xl bg-[#D85C5C]/10 border border-[#D85C5C]/30 text-[#D85C5C] font-mono text-xs space-y-2">
+          <div className="font-bold text-sm">
+            {isNotFound ? 'Mission Not Found' : 'Mission Telemetry Degraded'}
+          </div>
+          <div className="text-[#B0ADA5]">
+            {isNotFound
+              ? `Mission "${missionId}" does not exist in the active organization ledger.`
+              : error || 'Failed to communicate with the mission gateway.'}
+          </div>
         </div>
-        <div className="flex justify-center gap-3 font-mono text-xs">
+        <div className="flex justify-center gap-3 font-mono text-xs flex-wrap">
           <Link
             href="/missions"
             className="px-4 py-2 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#F2F0EA] border border-[#222222] transition-colors"
@@ -198,14 +239,22 @@ export default function MissionDetailPage() {
             ← Return to Missions
           </Link>
           <button
-            onClick={() => {
-              setIsDemoMode(true);
-              loadData(true);
-            }}
-            className="px-4 py-2 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold transition-colors"
+            onClick={() => loadData(false)}
+            className="px-4 py-2 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#B0ADA5] hover:text-[#F2F0EA] border border-[#222222] transition-colors"
           >
-            Load in Sandboxed Demo Mode
+            ↻ Retry Connection
           </button>
+          {isSandboxFixture && (
+            <button
+              onClick={() => {
+                setIsDemoMode(true);
+                loadData(true);
+              }}
+              className="px-4 py-2 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold transition-colors"
+            >
+              Load Sandboxed Demo Fixture
+            </button>
+          )}
         </div>
       </div>
     );
@@ -260,6 +309,7 @@ export default function MissionDetailPage() {
           <span className="font-mono text-xs text-[#F2F0EA] font-bold">
             MISSION #AP-{mission.id.slice(-8).toUpperCase()}
           </span>
+          <DataAuthorityBadge provenance={isDemoMode || mission.id.startsWith('msn_demo_') ? 'SIMULATION — NO FUNDS MOVED' : 'LIVE'} />
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
@@ -281,6 +331,20 @@ export default function MissionDetailPage() {
           </Link>
         </div>
       </div>
+
+      {/* Explicit Sandbox Isolation Banner */}
+      {(isDemoMode || mission.id.startsWith('msn_demo_')) && (
+        <div className="p-3 bg-[#D6A83A]/10 border border-[#D6A83A]/30 rounded-xl text-xs font-mono text-[#D6A83A] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
+            <span className="font-bold">SANDBOX / SIMULATION ENVIRONMENT</span>
+            <span>— Isolated fixture. No real funds encumbered or settled on Arc.</span>
+          </div>
+          <Link href="/missions" className="underline hover:text-[#F2F0EA] font-bold">
+            Return to Live Missions →
+          </Link>
+        </div>
+      )}
 
       {/* Hero Header */}
       <div className="p-8 rounded-2xl bg-[#101010] border border-[#222222] shadow-sm space-y-4">

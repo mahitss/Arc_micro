@@ -11,11 +11,10 @@ import {
   ExpectedInflow,
   TreasuryExecutionMode,
 } from '@/lib/api/treasury';
+import { formatRatio, formatUsdcMicro } from '@/lib/utils/format';
 
-function formatUsdc(microUnits: string | number): string {
-  const val = typeof microUnits === 'string' ? parseFloat(microUnits) : microUnits;
-  if (isNaN(val)) return '$0.00';
-  return `$${(val / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatUsdc(microUnits: string | number | null | undefined): string {
+  return formatUsdcMicro(microUnits, '—');
 }
 
 export default function TreasuryExposurePage() {
@@ -107,7 +106,7 @@ export default function TreasuryExposurePage() {
           <div className="text-right">
             <span className="text-xs font-mono text-[#716F69] block">Solvency Ratio</span>
             <span className="text-lg font-bold text-[#F2F0EA] font-mono">
-              {envelope ? envelope.effective_solvency_ratio.toFixed(2) : '---'}x
+              {formatRatio(envelope?.effective_solvency_ratio)}
             </span>
           </div>
         </div>
@@ -206,7 +205,7 @@ export default function TreasuryExposurePage() {
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#D6A83A]">{inf.inflow_id}</span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2FB36F]/10 text-[#2FB36F] border border-[#2FB36F]/30">
-                    {(inf.confidence * 100).toFixed(0)}% CONFIDENCE
+                    {Number.isFinite(Number(inf.confidence)) ? `${(Number(inf.confidence) * 100).toFixed(0)}%` : '—'} CONFIDENCE
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[#716F69]">

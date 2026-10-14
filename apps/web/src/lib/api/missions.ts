@@ -172,8 +172,9 @@ export const DEMO_SERVICES: MarketplaceService[] = [
 export async function fetchMissions(options?: { useDemo?: boolean }): Promise<Mission[]> {
   if (options?.useDemo) return DEMO_MISSIONS;
   try {
-    const resp = await apiRequest<{ missions: Mission[] }>('/v1/missions');
-    return resp.missions || [];
+    const resp = await apiRequest<{ missions: Mission[] } | Mission[]>('/v1/missions');
+    if (Array.isArray(resp)) return resp;
+    return resp?.missions || [];
   } catch (err) {
     if (options?.useDemo) return DEMO_MISSIONS;
     throw err;
@@ -183,16 +184,27 @@ export async function fetchMissions(options?: { useDemo?: boolean }): Promise<Mi
 export const listMissions = fetchMissions;
 
 export async function fetchMission(id: string, options?: { useDemo?: boolean }): Promise<Mission> {
+  if (!id || typeof id !== 'string' || !id.trim()) {
+    throw new Error('Valid mission ID is required');
+  }
+  const cleanId = id.trim();
+
   if (options?.useDemo) {
-    const found = DEMO_MISSIONS.find((m) => m.id === id);
+    const found = DEMO_MISSIONS.find((m) => m.id === cleanId);
     if (found) return found;
   }
   try {
-    const resp = await apiRequest<{ mission: Mission }>(`/v1/missions/${encodeURIComponent(id)}`);
-    return resp.mission;
+    const resp = await apiRequest<Mission | { mission: Mission }>(`/v1/missions/${encodeURIComponent(cleanId)}`);
+    const mission = (resp && typeof resp === 'object' && 'mission' in resp && (resp as any).mission)
+      ? (resp as any).mission
+      : (resp as Mission);
+    if (!mission || typeof mission !== 'object' || !mission.id) {
+      throw new Error(`Mission '${cleanId}' not found`);
+    }
+    return mission;
   } catch (err) {
     if (options?.useDemo) {
-      const found = DEMO_MISSIONS.find((m) => m.id === id);
+      const found = DEMO_MISSIONS.find((m) => m.id === cleanId);
       if (found) return found;
     }
     throw err;
@@ -207,17 +219,31 @@ export async function createMission(input: CreateMissionInput): Promise<{ missio
 }
 
 export async function startMission(id: string): Promise<Mission> {
-  const resp = await apiRequest<{ mission: Mission }>(`/v1/missions/${encodeURIComponent(id)}/start`, {
+  if (!id || typeof id !== 'string' || !id.trim()) {
+    throw new Error('Valid mission ID is required');
+  }
+  const cleanId = id.trim();
+  const resp = await apiRequest<Mission | { mission: Mission }>(`/v1/missions/${encodeURIComponent(cleanId)}/start`, {
     method: 'POST',
   });
-  return resp.mission;
+  const mission = (resp && typeof resp === 'object' && 'mission' in resp && (resp as any).mission)
+    ? (resp as any).mission
+    : (resp as Mission);
+  return mission;
 }
 
 export async function cancelMission(id: string): Promise<Mission> {
-  const resp = await apiRequest<{ mission: Mission }>(`/v1/missions/${encodeURIComponent(id)}/cancel`, {
+  if (!id || typeof id !== 'string' || !id.trim()) {
+    throw new Error('Valid mission ID is required');
+  }
+  const cleanId = id.trim();
+  const resp = await apiRequest<Mission | { mission: Mission }>(`/v1/missions/${encodeURIComponent(cleanId)}/cancel`, {
     method: 'POST',
   });
-  return resp.mission;
+  const mission = (resp && typeof resp === 'object' && 'mission' in resp && (resp as any).mission)
+    ? (resp as any).mission
+    : (resp as Mission);
+  return mission;
 }
 
 export async function simulateMission(input: Partial<CreateMissionInput>): Promise<MissionSimulationResponse> {
@@ -228,9 +254,16 @@ export async function simulateMission(input: Partial<CreateMissionInput>): Promi
 }
 
 export async function fetchMissionTrace(id: string, options?: { useDemo?: boolean }): Promise<MissionTrace> {
+  if (!id || typeof id !== 'string' || !id.trim()) {
+    throw new Error('Valid mission ID is required');
+  }
+  const cleanId = id.trim();
   try {
-    const resp = await apiRequest<{ trace: MissionTrace }>(`/v1/missions/${encodeURIComponent(id)}/trace`);
-    return resp.trace;
+    const resp = await apiRequest<MissionTrace | { trace: MissionTrace }>(`/v1/missions/${encodeURIComponent(cleanId)}/trace`);
+    const trace = (resp && typeof resp === 'object' && 'trace' in resp && (resp as any).trace)
+      ? (resp as any).trace
+      : (resp as MissionTrace);
+    return trace;
   } catch (err) {
     if (options?.useDemo) {
       return {

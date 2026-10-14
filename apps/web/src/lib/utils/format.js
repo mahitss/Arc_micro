@@ -101,3 +101,34 @@ export function formatCount(val, fallback = '0') {
   if (isNaN(num) || !Number.isFinite(num)) return fallback;
   return num.toLocaleString();
 }
+
+export function formatRatio(val, options) {
+  const decimals = options?.decimals ?? 2;
+  const suffix = options?.suffix ?? 'x';
+  const fallback = options?.fallback ?? '—';
+
+  if (val === null || val === undefined || val === '' || typeof val === 'object') {
+    return fallback;
+  }
+
+  const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.-]+/g, ''));
+  if (isNaN(num) || !Number.isFinite(num)) {
+    return fallback;
+  }
+
+  return `${num.toFixed(decimals)}${suffix}`;
+}
+
+export function formatUsdcMicro(microUnits, fallback = '—') {
+  if (microUnits === null || microUnits === undefined || microUnits === '' || typeof microUnits === 'object') {
+    return fallback;
+  }
+  const num = typeof microUnits === 'number' ? microUnits : parseFloat(String(microUnits).replace(/[^0-9.-]+/g, ''));
+  if (isNaN(num) || !Number.isFinite(num)) {
+    return fallback;
+  }
+  const isNegative = num < 0;
+  const absVal = Math.abs(num) / 1_000_000;
+  const formatted = absVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return isNegative ? `-$${formatted}` : `$${formatted}`;
+}

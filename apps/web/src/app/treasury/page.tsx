@@ -15,11 +15,10 @@ import {
   TreasuryExecutionMode,
 } from '@/lib/api/treasury';
 import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
+import { formatRatio, formatUsdcMicro } from '@/lib/utils/format';
 
-function formatUsdc(microUnits: string | number): string {
-  const val = typeof microUnits === 'string' ? parseFloat(microUnits) : microUnits;
-  if (isNaN(val)) return '$0.00';
-  return `$${(val / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatUsdc(microUnits: string | number | null | undefined): string {
+  return formatUsdcMicro(microUnits, '—');
 }
 
 export default function TreasuryDashboardPage() {
@@ -29,10 +28,12 @@ export default function TreasuryDashboardPage() {
   const [reservations, setReservations] = useState<LiquidityReservation[]>([]);
   const [anomalies, setAnomalies] = useState<LiquidityAnomaly[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [s, h, res, anom] = await Promise.all([
         fetchTreasuryState('org_default', mode),
@@ -42,10 +43,11 @@ export default function TreasuryDashboardPage() {
       ]);
       setState(s);
       setHealth(h);
-      setReservations(res);
-      setAnomalies(anom);
-    } catch (err) {
+      setReservations(res || []);
+      setAnomalies(anom || []);
+    } catch (err: unknown) {
       console.error('Failed to load treasury data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to communicate with treasury gateway');
     } finally {
       setLoading(false);
     }
@@ -136,6 +138,22 @@ export default function TreasuryDashboardPage() {
         </div>
       </div>
 
+      {/* Error / Alert Banner */}
+      {error && (
+        <div className="p-4 rounded-xl bg-[#D85C5C]/10 border border-[#D85C5C]/30 text-[#D85C5C] text-xs font-mono flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">Treasury Telemetry Degraded:</span>
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={loadData}
+            className="px-3 py-1 bg-[#D85C5C]/20 hover:bg-[#D85C5C]/30 text-[#F2F0EA] rounded font-bold transition"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Sub-Navigation Hub */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Link
@@ -179,7 +197,7 @@ export default function TreasuryDashboardPage() {
             <span className={`h-2 w-2 rounded-full ${mode === 'SIMULATION' ? 'bg-[#D6A83A]' : 'bg-[#D85C5C]'}`} />
           </div>
           <div className="mt-3 text-3xl font-extrabold text-[#F2F0EA] font-mono">
-            {mode === 'SIMULATION' ? (state ? formatUsdc(state.total_balance) : '---') : 'NOT DEPLOYED'}
+            {mode === 'SIMULATION' ? (state ? formatUsdc(state.total_balance) : '—') : 'NOT DEPLOYED'}
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[#716F69] font-mono">
             <span>Asset: USDC</span>
@@ -198,12 +216,12 @@ export default function TreasuryDashboardPage() {
             <span className={`h-2 w-2 rounded-full ${mode === 'SIMULATION' ? 'bg-[#2FB36F]' : 'bg-[#D85C5C]'}`} />
           </div>
           <div className="mt-3 text-3xl font-extrabold text-[#2FB36F] font-mono">
-            {mode === 'SIMULATION' ? (state ? formatUsdc(state.available_balance) : '---') : 'UNAVAILABLE'}
+            {mode === 'SIMULATION' ? (state ? formatUsdc(state.available_balance) : '—') : 'UNAVAILABLE'}
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[#716F69] font-mono">
             <span>Safe Capacity:</span>
             <span className="text-[#F2F0EA] font-bold">
-              {mode === 'SIMULATION' ? (state ? formatUsdc(state.safe_capacity) : '---') : 'DISABLED'}
+              {mode === 'SIMULATION' ? formatUsdc(state?.safe_capacity ?? health?.safe_capacity) : 'DISABLED'}
             </span>
           </div>
         </div>
@@ -215,7 +233,7 @@ export default function TreasuryDashboardPage() {
             <span className="h-2 w-2 rounded-full bg-[#B0ADA5]" />
           </div>
           <div className="mt-3 text-3xl font-extrabold text-[#F2F0EA] font-mono">
-            {state ? formatUsdc(state.reserved_balance) : '---'}
+            {state ? formatUsdc(state.reserved_balance) : '—'}
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[#716F69] font-mono">
             <span>Active Count:</span>
@@ -230,7 +248,7 @@ export default function TreasuryDashboardPage() {
             <span className="h-2 w-2 rounded-full bg-[#D6A83A]" />
           </div>
           <div className="mt-3 text-3xl font-extrabold text-[#D6A83A] font-mono">
-            {state ? formatUsdc(state.minimum_buffer) : '---'}
+            {state ? formatUsdc(state.minimum_buffer) : '—'}
           </div>
           <div className="mt-2 flex items-center justify-between text-xs text-[#716F69] font-mono">
             <span>Invariant:</span>
@@ -245,20 +263,20 @@ export default function TreasuryDashboardPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono uppercase text-[#716F69]">Solvency & Gating Status:</span>
-              {getModeBadge(state?.operational_mode)}
+              {getModeBadge(state?.operational_mode ?? health?.operational_mode)}
             </div>
             <div className="flex items-center gap-6 text-sm font-mono text-[#B0ADA5]">
               <div>
                 Solvency Ratio:{' '}
                 <span className="text-[#F2F0EA] font-bold text-base">
-                  {state ? state.solvency_ratio.toFixed(2) : '---'}x
+                  {formatRatio(state?.solvency_ratio ?? health?.solvency_ratio)}
                 </span>
               </div>
               <div className="hidden sm:block text-[#222222]">|</div>
               <div>
                 Worst-Case Exposure:{' '}
                 <span className="text-[#F2F0EA] font-bold">
-                  {state ? formatUsdc(state.worst_case_exposure) : '---'}
+                  {formatUsdc(state?.worst_case_exposure ?? health?.worst_case_exposure)}
                 </span>
               </div>
               <div className="hidden sm:block text-[#222222]">|</div>

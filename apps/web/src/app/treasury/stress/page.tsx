@@ -7,11 +7,10 @@ import {
   LiquidityStressResult,
   TreasuryExecutionMode,
 } from '@/lib/api/treasury';
+import { formatRatio, formatUsdcMicro } from '@/lib/utils/format';
 
-function formatUsdc(microUnits: string | number): string {
-  const val = typeof microUnits === 'string' ? parseFloat(microUnits) : microUnits;
-  if (isNaN(val)) return '$0.00';
-  return `$${(val / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatUsdc(microUnits: string | number | null | undefined): string {
+  return formatUsdcMicro(microUnits, '—');
 }
 
 export default function TreasuryStressPage() {
@@ -242,7 +241,7 @@ export default function TreasuryStressPage() {
               <div className="p-3 rounded-lg bg-[#0B0B0B] border border-[#222222]">
                 <span className="text-[#716F69] block">Capital Adequacy Ratio:</span>
                 <span className="text-[#F2F0EA] font-bold text-base mt-1 block">
-                  {result.capital_adequacy_ratio.toFixed(2)}x
+                  {formatRatio(result.capital_adequacy_ratio)}
                 </span>
                 <span className="text-[10px] text-[#716F69]">Target &gt; 1.50x</span>
               </div>
