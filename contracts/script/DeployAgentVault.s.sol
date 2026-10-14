@@ -16,6 +16,16 @@ contract DeployAgentVault is Script {
         // Read configuration from environment
         address usdcAddress = vm.envOr("ARC_USDC_ADDRESS", address(0x3600000000000000000000000000000000000000));
         string memory agentId = vm.envOr("AGENT_ID", string("research-agent"));
+        address initialOwner = vm.envOr("COLD_MULTISIG_OWNER", vm.envOr("INITIAL_OWNER", address(0)));
+
+        return deploy(usdcAddress, agentId, initialOwner);
+    }
+
+    function runWithArgs(address _usdc, string calldata _agentId, address _initialOwner) external returns (AgentVault vault) {
+        return deploy(_usdc, _agentId, _initialOwner);
+    }
+
+    function deploy(address usdcAddress, string memory agentId, address initialOwner) public returns (AgentVault vault) {
         bool requireMainnet = vm.envOr("ARC_REQUIRE_MAINNET", true);
 
         // Enforce Arc Mainnet Chain ID (5042) if required
@@ -23,14 +33,15 @@ contract DeployAgentVault is Script {
             revert(string.concat("Unexpected chain ID. Expected Arc Mainnet (5042), got: ", vm.toString(block.chainid)));
         }
 
-        address initialOwner = vm.envAddress("COLD_MULTISIG_OWNER");
-
         // Validate required configuration parameters
         if (usdcAddress == address(0)) {
             revert("ARC_USDC_ADDRESS must be set in environment before deployment.");
         }
         if (initialOwner == address(0)) {
             revert("COLD_MULTISIG_OWNER must be configured as a non-zero address before deployment.");
+        }
+        if (bytes(agentId).length == 0) {
+            revert("agentId cannot be empty");
         }
 
         // Verify contract code exists at USDC address (except during local Anvil tests where code may be mocked)
