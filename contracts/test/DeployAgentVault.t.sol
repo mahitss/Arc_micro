@@ -12,6 +12,7 @@ contract DeployAgentVaultTest is Test {
     address internal coldMultisig = makeAddr("coldMultisig");
 
     function setUp() public {
+        vm.setEnv("ARC_REQUIRE_MAINNET", "true");
         deployScript = new DeployAgentVault();
         mockUsdc = new MockUSDC();
     }
@@ -52,6 +53,7 @@ contract DeployAgentVaultTest is Test {
     }
 
     function test_RevertIf_InvalidChainId() public {
+        vm.setEnv("ARC_REQUIRE_MAINNET", "true");
         // Change chain ID to an arbitrary testnet (e.g. Sepolia 11155111)
         vm.chainId(11155111);
         vm.expectRevert(bytes("Unexpected chain ID. Expected Arc Mainnet (5042), got: 11155111"));
@@ -64,4 +66,19 @@ contract DeployAgentVaultTest is Test {
         AgentVault vault = deployScript.runWithArgs(address(mockUsdc), "agent-1", coldMultisig);
         assertEq(vault.owner(), coldMultisig);
     }
+
+    function test_Allow_ArcTestnetChainId() public {
+        vm.setEnv("ARC_REQUIRE_MAINNET", "false");
+        vm.chainId(5042002);
+        AgentVault vault = deployScript.runWithArgs(address(mockUsdc), "agent-1", coldMultisig);
+        assertEq(vault.owner(), coldMultisig);
+    }
+
+    function test_RevertIf_InvalidChainId_WhenNotRequireMainnet() public {
+        vm.setEnv("ARC_REQUIRE_MAINNET", "false");
+        vm.chainId(999999);
+        vm.expectRevert(bytes("Unexpected chain ID. Expected Arc Mainnet (5042) or Testnet (5042002), got: 999999"));
+        deployScript.runWithArgs(address(mockUsdc), "agent-1", coldMultisig);
+    }
 }
+

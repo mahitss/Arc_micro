@@ -26,11 +26,18 @@ contract DeployAgentVault is Script {
     }
 
     function deploy(address usdcAddress, string memory agentId, address initialOwner) public returns (AgentVault vault) {
-        bool requireMainnet = vm.envOr("ARC_REQUIRE_MAINNET", true);
+        string memory requireMainnetStr = vm.envOr("ARC_REQUIRE_MAINNET", string("true"));
+        bool requireMainnet = keccak256(bytes(requireMainnetStr)) != keccak256(bytes("false")) &&
+                              keccak256(bytes(requireMainnetStr)) != keccak256(bytes("0"));
 
         // Enforce Arc Mainnet Chain ID (5042) if required
         if (requireMainnet && block.chainid != 5042 && block.chainid != 31337) {
             revert(string.concat("Unexpected chain ID. Expected Arc Mainnet (5042), got: ", vm.toString(block.chainid)));
+        }
+
+        // If requireMainnet is false, enforce valid Arc network (5042 or 5042002)
+        if (!requireMainnet && block.chainid != 5042 && block.chainid != 5042002 && block.chainid != 31337) {
+            revert(string.concat("Unexpected chain ID. Expected Arc Mainnet (5042) or Testnet (5042002), got: ", vm.toString(block.chainid)));
         }
 
         // Validate required configuration parameters
@@ -45,7 +52,7 @@ contract DeployAgentVault is Script {
         }
 
         // Verify contract code exists at USDC address (except during local Anvil tests where code may be mocked)
-        if (block.chainid == 5042 && usdcAddress.code.length == 0) {
+        if ((block.chainid == 5042 || block.chainid == 5042002) && usdcAddress.code.length == 0) {
             revert("No contract code found at configured ARC_USDC_ADDRESS.");
         }
 
