@@ -591,16 +591,16 @@ export default function ControlTowerPage() {
 
           <div className="flex flex-wrap lg:flex-col gap-2.5 shrink-0">
             <Link
-              href="/missions/demo/replay"
+              href="/control/operations/timeline"
               className="h-9 px-4 rounded-lg bg-[#D6A83A] hover:bg-[#D6A83A]/90 text-black text-xs font-bold transition-colors flex items-center justify-center text-center gap-1.5 shadow-sm"
             >
-              ▶ Open Mission Replay
+              Operations Timeline →
             </Link>
             <button
-              onClick={handleResetDemo}
-              className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#B0ADA5] hover:text-[#F2F0EA] text-xs font-medium border border-[#222222] transition-colors"
+              onClick={loadData}
+              className="h-9 px-4 rounded-lg bg-[#141414] hover:bg-[#1a1a1a] text-[#B0ADA5] hover:text-[#F2F0EA] text-xs font-medium border border-[#222222] transition-colors flex items-center justify-center gap-1.5"
             >
-              Reset Demo
+              <span>↻</span> Refresh Telemetry
             </button>
             <Link
               href="/missions"
@@ -625,7 +625,7 @@ export default function ControlTowerPage() {
         <AgentPayMetric label="Active Agents" value={overview?.active_agents_count ?? 1} subtext="Keyless runtime" provenance="SIMULATED" />
         <AgentPayMetric label="Committed Capital" value="$182.40" subtext="Projected in-flight" provenance="SIMULATED" />
         <AgentPayMetric label="Projected Margin" value="$24.10" subtext="Simulation estimate" provenance="PROJECTED" />
-        <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 0} subtext="Dual-custody >$20" provenance="SIMULATED" highlight />
+        <AgentPayMetric label="Pending Approval" value={overview?.active_approvals_count ?? 0} subtext="Dual-custody >$20" provenance="SIMULATED" highlight={Boolean(overview?.active_approvals_count)} />
         <AgentPayMetric label="Running Workflows" value="8" subtext="Durable state" provenance="SIMULATED" />
         <AgentPayMetric label="Simulated Settled" value="$1,204.32" subtext="0 Real Arc Settlements" provenance="SIMULATED" />
         <AgentPayMetric label="Arc RPC" value={isArcConnected ? 'CONNECTED' : 'UNAVAILABLE'} subtext={isArcConnected ? 'Chain 5042 (0 Real Tx)' : 'Chain 5042 (RPC Unreachable)'} provenance={isArcConnected ? 'VERIFIED' : 'UNAVAILABLE'} />
@@ -978,10 +978,10 @@ export default function ControlTowerPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#D6A83A]" />
                     <h4 className="text-sm font-bold text-[#F2F0EA]">
-                      Autonomous Market Intelligence (Flagship Demo)
+                      Autonomous Market Intelligence (Reference Architecture)
                     </h4>
                   </div>
-                  <AgentPayBadge variant="accent">SIMULATION REPLAY</AgentPayBadge>
+                  <AgentPayBadge variant="accent">GOVERNANCE TRACE</AgentPayBadge>
                 </div>
 
                 <p className="text-xs text-[#B0ADA5]">
@@ -1003,8 +1003,8 @@ export default function ControlTowerPage() {
 
                 <div className="flex items-center justify-between pt-2 border-t border-[#222222] text-[11px] font-mono text-[#716F69]">
                   <span>5 Agents · 1 Violation Blocked · 1 Recovered</span>
-                  <Link href="/missions/demo/replay" className="text-[#D6A83A] font-bold hover:underline">
-                    Open Replay Engine →
+                  <Link href="/control/operations/timeline" className="text-[#D6A83A] font-bold hover:underline">
+                    View Audit Timeline →
                   </Link>
                 </div>
               </div>
@@ -1017,7 +1017,7 @@ export default function ControlTowerPage() {
                       Autonomous Treasury Rebalance Swarm
                     </h4>
                   </div>
-                  <AgentPayBadge variant="neutral">DEMO SCENARIO (STEP 4 / 6)</AgentPayBadge>
+                  <AgentPayBadge variant="neutral">ACTIVE ALLOCATION (STEP 4 / 6)</AgentPayBadge>
                 </div>
 
                 <p className="text-xs text-[#B0ADA5]">
@@ -1131,18 +1131,24 @@ export default function ControlTowerPage() {
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center font-mono">
                 <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
                   <span className="text-[10px] text-[#716F69] block mb-1">AVAILABLE</span>
-                  <span className="text-base font-bold text-[#2FB36F] block">$81.50</span>
-                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                  <span className="text-base font-bold text-[#2FB36F] block">
+                    {overview?.available_liquidity ? `$${(Number(overview.available_liquidity) / 1e6).toFixed(2)}` : '$0.00'}
+                  </span>
+                  <span className="text-[9px] text-[#716F69]">SIMULATED</span>
                 </div>
                 <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
                   <span className="text-[10px] text-[#716F69] block mb-1">COMMITTED</span>
-                  <span className="text-base font-bold text-[#F2F0EA] block">$12.50</span>
-                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                  <span className="text-base font-bold text-[#F2F0EA] block">
+                    {overview?.outstanding_obligations ? `$${(Number(overview.outstanding_obligations) / 1e6).toFixed(2)}` : '$0.00'}
+                  </span>
+                  <span className="text-[9px] text-[#716F69]">SIMULATED</span>
                 </div>
                 <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
                   <span className="text-[10px] text-[#716F69] block mb-1">RESERVED</span>
-                  <span className="text-base font-bold text-[#D6A83A] block">$14.00</span>
-                  <span className="text-[9px] text-[#716F69]">PROJECTED</span>
+                  <span className="text-base font-bold text-[#D6A83A] block">
+                    {overview?.reserved_liquidity ? `$${(Number(overview.reserved_liquidity) / 1e6).toFixed(2)}` : '$0.00'}
+                  </span>
+                  <span className="text-[9px] text-[#716F69]">ENCUMBERED</span>
                 </div>
                 <div className="p-3 rounded-lg bg-[#141414] border border-[#222222]">
                   <span className="text-[10px] text-[#716F69] block mb-1">AT RISK</span>

@@ -24,7 +24,7 @@ export function GlobalTopBar() {
   const isPolicyOnline = health?.policy_engine_status === 'ONLINE' || health?.policy_engine === 'HEALTHY';
   const isPolicyReady = isPolicyOnline || health?.policy_engine_status === 'READY (SIM)' || isGatewayHealthy;
   const isRuntimeHealthy = health?.runtime_status === 'HEALTHY' || isGatewayHealthy;
-  const isAIConnected = true; // OpenRouter provider is configured and available for advisory reasoning
+  const isAIConnected = health?.ai_status === 'READY' || health?.ai_status === 'CONNECTED' || isGatewayHealthy;
 
   const renderStatusDot = (isOk: boolean, isDegraded = false) => {
     if (isOk) return <span className="w-1.5 h-1.5 rounded-full bg-[#2FB36F] shrink-0" />;

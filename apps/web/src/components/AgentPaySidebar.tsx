@@ -141,10 +141,17 @@ export const TOOLS_ITEMS: NavItem[] = [
   },
   {
     id: 'replay',
-    label: 'REPLAY',
+    label: 'AUDIT REPLAY',
     href: '/control/operations/timeline',
     icon: '↺',
     isMatch: (p) => p.includes('/replay') || p.includes('/timeline'),
+  },
+  {
+    id: 'demo',
+    label: 'SANDBOX DEMO',
+    href: '/demo',
+    icon: '🎮',
+    isMatch: (p) => p.startsWith('/demo') || p.startsWith('/missions/demo'),
   },
   {
     id: 'ai-providers',
@@ -152,13 +159,6 @@ export const TOOLS_ITEMS: NavItem[] = [
     href: '/settings/ai',
     icon: '⚡',
     isMatch: (p) => p.startsWith('/settings/ai'),
-  },
-  {
-    id: 'demo',
-    label: 'DEMO',
-    href: '/demo',
-    icon: '▶',
-    isMatch: (p) => p.startsWith('/demo'),
   },
 ];
 
