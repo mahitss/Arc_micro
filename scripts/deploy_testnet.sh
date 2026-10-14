@@ -96,13 +96,16 @@ if [ -n "${PRIV_KEY}" ]; then
   echo "Executing Foundry deployment script with private key..."
   forge script script/DeployAgentVault.s.sol:DeployAgentVault \
     --rpc-url "${ARC_RPC_URL}" \
+    --sender "${INITIAL_OWNER}" \
     --private-key "${PRIV_KEY}" \
     --broadcast \
     --slow
 else
   echo "Executing Foundry deployment script with interactive signer prompt..."
+  echo "Target Sender Address: ${INITIAL_OWNER}"
   forge script script/DeployAgentVault.s.sol:DeployAgentVault \
     --rpc-url "${ARC_RPC_URL}" \
+    --sender "${INITIAL_OWNER}" \
     --interactive \
     --broadcast \
     --slow

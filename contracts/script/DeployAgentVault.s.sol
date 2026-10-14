@@ -29,14 +29,24 @@ contract DeployAgentVault is Script {
         string memory requireMainnetStr = vm.envOr("ARC_REQUIRE_MAINNET", string("true"));
         bool requireMainnet = keccak256(bytes(requireMainnetStr)) != keccak256(bytes("false")) &&
                               keccak256(bytes(requireMainnetStr)) != keccak256(bytes("0"));
+        uint256 expectedChainId = vm.envOr("ARC_CHAIN_ID", uint256(0));
 
+        return deployWithConfig(usdcAddress, agentId, initialOwner, requireMainnet, expectedChainId);
+    }
+
+    function deployWithConfig(
+        address usdcAddress,
+        string memory agentId,
+        address initialOwner,
+        bool requireMainnet,
+        uint256 expectedChainId
+    ) public returns (AgentVault vault) {
         // Enforce Arc Mainnet Chain ID (5042) if required
         if (requireMainnet && block.chainid != 5042 && block.chainid != 31337) {
             revert(string.concat("Unexpected chain ID. Expected Arc Mainnet (5042), got: ", vm.toString(block.chainid)));
         }
 
         // Enforce explicit ARC_CHAIN_ID if specified in environment
-        uint256 expectedChainId = vm.envOr("ARC_CHAIN_ID", uint256(0));
         if (expectedChainId != 0 && block.chainid != expectedChainId && block.chainid != 31337) {
             revert(string.concat("Unexpected chain ID. Expected: ", vm.toString(expectedChainId), ", got: ", vm.toString(block.chainid)));
         }
@@ -68,7 +78,7 @@ contract DeployAgentVault is Script {
         console2.log("Agent ID:", agentId);
         console2.log("Initial Owner (Cold Multisig):", initialOwner);
 
-        vm.startBroadcast();
+        vm.startBroadcast(initialOwner);
         vault = new AgentVault(usdcAddress, agentId, initialOwner);
         vm.stopBroadcast();
 

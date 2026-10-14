@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console2} from "forge-std/Test.sol";
 import {DeployAgentVault} from "../script/DeployAgentVault.s.sol";
 import {AgentVault} from "../src/AgentVault.sol";
 import {MockUSDC} from "./mocks/MockUSDC.sol";
@@ -13,6 +13,7 @@ contract DeployAgentVaultTest is Test {
 
     function setUp() public {
         vm.setEnv("ARC_REQUIRE_MAINNET", "true");
+        vm.setEnv("ARC_CHAIN_ID", "0");
         deployScript = new DeployAgentVault();
         mockUsdc = new MockUSDC();
     }
@@ -53,32 +54,35 @@ contract DeployAgentVaultTest is Test {
     }
 
     function test_RevertIf_InvalidChainId() public {
-        vm.setEnv("ARC_REQUIRE_MAINNET", "true");
         // Change chain ID to an arbitrary testnet (e.g. Sepolia 11155111)
         vm.chainId(11155111);
         vm.expectRevert(bytes("Unexpected chain ID. Expected Arc Mainnet (5042), got: 11155111"));
-        deployScript.runWithArgs(address(mockUsdc), "agent-1", coldMultisig);
+        deployScript.deployWithConfig(address(mockUsdc), "agent-1", coldMultisig, true, 0);
     }
 
     function test_Allow_ArcMainnetChainId() public {
         vm.chainId(5042);
         // On 5042, if code length is 0 at USDC address it would revert, but mockUsdc has code
-        AgentVault vault = deployScript.runWithArgs(address(mockUsdc), "agent-1", coldMultisig);
+        AgentVault vault = deployScript.deployWithConfig(address(mockUsdc), "agent-1", coldMultisig, true, 0);
         assertEq(vault.owner(), coldMultisig);
     }
 
     function test_Allow_ArcTestnetChainId() public {
-        vm.setEnv("ARC_REQUIRE_MAINNET", "false");
         vm.chainId(5042002);
-        AgentVault vault = deployScript.runWithArgs(address(mockUsdc), "agent-1", coldMultisig);
+        AgentVault vault = deployScript.deployWithConfig(address(mockUsdc), "agent-1", coldMultisig, false, 0);
         assertEq(vault.owner(), coldMultisig);
     }
 
     function test_RevertIf_InvalidChainId_WhenNotRequireMainnet() public {
-        vm.setEnv("ARC_REQUIRE_MAINNET", "false");
         vm.chainId(999999);
         vm.expectRevert(bytes("Unexpected chain ID. Expected Arc Mainnet (5042) or Testnet (5042002), got: 999999"));
-        deployScript.runWithArgs(address(mockUsdc), "agent-1", coldMultisig);
+        deployScript.deployWithConfig(address(mockUsdc), "agent-1", coldMultisig, false, 0);
+    }
+
+    function test_RevertIf_ArcChainIdMismatch() public {
+        vm.chainId(5042);
+        vm.expectRevert(bytes("Unexpected chain ID. Expected: 5042002, got: 5042"));
+        deployScript.deployWithConfig(address(mockUsdc), "agent-1", coldMultisig, false, 5042002);
     }
 }
 
