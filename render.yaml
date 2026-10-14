@@ -1,0 +1,76 @@
+# ==============================================================================
+# AgentPay Render Blueprint Specification
+# ==============================================================================
+# Deploys the AgentPay financial control plane on Render:
+# 1. agentpay-gateway: Go Financial Gateway (Public Web Service)
+# 2. agentpay-policy-engine: Rust Policy Engine (Internal Private Service)
+# 3. agentpay-postgres: PostgreSQL Database with automatic schema migrations
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # AgentPay Gateway (Web Service)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: agentpay-gateway
+    runtime: docker
+    dockerfilePath: ./services/gateway/Dockerfile
+    dockerContext: ./services/gateway
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: STORAGE_MODE
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agentpay-postgres
+          property: connectionString
+      - key: POLICY_ENGINE_URL
+        value: http://agentpay-policy-engine:8081
+      - key: POLICY_ENGINE_TIMEOUT_MS
+        value: "2000"
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: ENABLE_LIVE_EXECUTION
+        value: "false"
+      - key: AUTO_MIGRATE
+        value: "true"
+      - key: ARC_RPC_URL
+        value: https://rpc.mainnet.arc.io
+      - key: ARC_CHAIN_ID
+        value: "5042"
+      - key: ARC_USDC_ADDRESS
+        value: "0x3600000000000000000000000000000000000000"
+      - key: ARC_EXPLORER_URL
+        value: https://explorer.arc.io
+      - key: GATEWAY_ADMIN_API_KEY
+        generateValue: true
+      - key: AI_PROVIDER
+        value: mock
+
+  # ----------------------------------------------------------------------------
+  # AgentPay Rust Deterministic Policy Engine (Private Service)
+  # ----------------------------------------------------------------------------
+  # Internal only: reachable by agentpay-gateway via Render private network.
+  # ----------------------------------------------------------------------------
+  - type: pserv
+    name: agentpay-policy-engine
+    runtime: docker
+    dockerfilePath: ./services/policy-engine/Dockerfile
+    dockerContext: ./services/policy-engine
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: POLICY_ENGINE_PORT
+        value: "8081"
+
+databases:
+  # ----------------------------------------------------------------------------
+  # AgentPay PostgreSQL Managed Database
+  # ----------------------------------------------------------------------------
+  - name: agentpay-postgres
+    plan: starter
+    databaseName: agentpay
+    user: agentpay

@@ -364,6 +364,7 @@ export type MissionStatus =
   | 'SELECTING'
   | 'AWAITING_APPROVAL'
   | 'EXECUTING'
+  | 'IN_PROGRESS'
   | 'WAITING_FOR_RESULT'
   | 'EVALUATING_RESULT'
   | 'CONTINUING'

@@ -130,6 +130,7 @@ export default function MissionsPage() {
         );
       case 'EXECUTING':
       case 'CONTINUING':
+      case 'IN_PROGRESS':
         return (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-[#141414] text-[#F2F0EA] border border-[#222222]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#6B8FD6]" />
@@ -224,7 +225,7 @@ export default function MissionsPage() {
           <div>
             <span className="text-[11px] text-[#716F69] uppercase block font-medium">ACTIVE MISSIONS</span>
             <span className="text-2xl font-bold text-[#F2F0EA] mt-0.5 block">
-              {error ? '—' : loading ? '...' : missions.filter((m) => ['PLANNING', 'DISCOVERING', 'EXECUTING'].includes(m.status)).length}
+              {error ? '—' : loading ? '...' : missions.filter((m) => ['PLANNING', 'DISCOVERING', 'EXECUTING', 'IN_PROGRESS', 'CONTINUING'].includes(m.status)).length}
             </span>
             <span className="text-[11px] text-[#716F69] block">
               {error ? 'DATA UNAVAILABLE' : 'In flight workflows'}

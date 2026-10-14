@@ -42,7 +42,7 @@ export function LiveAdaptationVisualizer({
     }
     if (!latestTrace) return 0;
 
-    const stage = latestTrace.stage.toUpperCase();
+    const stage = (latestTrace.stage || '').toUpperCase();
     if (stage.includes('FAILED') || stage.includes('FAILURE')) return 0;
     if (stage.includes('ANALYZ') || stage.includes('EVALUAT')) return 1;
     if (stage.includes('DISCOVER') || stage.includes('ALTERNATIVE')) return 2;

@@ -17,28 +17,45 @@ export class ApiError extends Error {
   }
 }
 
-const DEFAULT_TIMEOUT_MS = 10000;
+export const DEFAULT_DEMO_API_KEY = 'apk_live_demo1234567890abcdef1234567890abcdef';
+export const DEFAULT_ORG_ID = 'org_default';
+export const DEFAULT_TIMEOUT_MS = 10000;
 
 export function getBaseApiUrl(): string {
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GATEWAY_URL) {
-    return process.env.NEXT_PUBLIC_GATEWAY_URL;
+  if (typeof process !== 'undefined' && process.env) {
+    const configured = (
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_GATEWAY_URL ||
+      process.env.GATEWAY_URL
+    );
+    if (configured && configured.trim()) {
+      return configured.trim().replace(/\/$/, '');
+    }
   }
   return 'http://localhost:8080';
 }
 
+export function getDefaultOrgId(): string {
+  if (typeof process !== 'undefined' && process.env) {
+    const org = (
+      process.env.NEXT_PUBLIC_ORGANIZATION_ID ||
+      process.env.NEXT_PUBLIC_ORG_ID
+    );
+    if (org && org.trim()) return org.trim();
+  }
+  return DEFAULT_ORG_ID;
+}
+
 export function getApiKey(): string | undefined {
   if (typeof process !== 'undefined' && process.env) {
-    return (
+    const key = (
       process.env.NEXT_PUBLIC_DEMO_API_KEY ||
       process.env.NEXT_PUBLIC_API_KEY ||
-      process.env.NEXT_PUBLIC_AGENTPAY_API_KEY ||
-      undefined
+      process.env.NEXT_PUBLIC_AGENTPAY_API_KEY
     );
+    if (key && key.trim()) return key.trim();
   }
-  return undefined;
+  return DEFAULT_DEMO_API_KEY;
 }
 
 export async function apiRequest<T>(
@@ -56,6 +73,7 @@ export async function apiRequest<T>(
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    'X-Organization-Id': getDefaultOrgId(),
   };
 
   const apiKey = getApiKey();
@@ -94,6 +112,12 @@ export async function apiRequest<T>(
 
     if (!res.ok) {
       let errorCode = 'UNKNOWN_ERROR';
+      if (res.status === 404) errorCode = 'NOT_FOUND';
+      else if (res.status === 401) errorCode = 'UNAUTHORIZED';
+      else if (res.status === 403) errorCode = 'FORBIDDEN';
+      else if (res.status === 408) errorCode = 'REQUEST_TIMEOUT';
+      else if (res.status >= 500) errorCode = 'INTERNAL_ERROR';
+
       let errorMessage = `API request failed with status ${res.status}`;
 
       try {

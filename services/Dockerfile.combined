@@ -1,0 +1,43 @@
+# ==============================================================================
+# AgentPay Combined Services Dockerfile (Render Single Web Service)
+# ==============================================================================
+# Builds both the Rust Policy Engine and the Go Gateway into a single,
+# lightweight, secure Alpine container for single-service deployment on Render.
+# ==============================================================================
+
+# Stage 1: Build Rust Policy Engine
+FROM rust:1.85-alpine AS rust-builder
+RUN apk add --no-cache musl-dev
+WORKDIR /app/policy-engine
+COPY services/policy-engine/Cargo.toml services/policy-engine/Cargo.lock ./
+RUN mkdir src && echo "pub fn lib() {}" > src/lib.rs && echo "fn main() {}" > src/main.rs
+RUN cargo build --release || true
+RUN rm -rf src
+COPY services/policy-engine .
+RUN cargo build --release
+
+# Stage 2: Build Go Gateway
+FROM golang:1.24-alpine AS go-builder
+WORKDIR /app/gateway
+COPY services/gateway/go.mod services/gateway/go.sum ./
+RUN go mod download
+COPY services/gateway .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/gateway ./cmd/server
+
+# Stage 3: Unified Alpine Runtime
+FROM alpine:3.20
+RUN apk --no-cache add ca-certificates curl bash
+WORKDIR /app
+
+# Copy compiled binaries
+COPY --from=rust-builder /app/policy-engine/target/release/policy-engine ./policy-engine
+COPY --from=go-builder /bin/gateway ./gateway
+
+# Copy orchestration script
+COPY services/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh ./policy-engine ./gateway
+
+# Default ports: Gateway listens on $PORT, Policy engine on 8081 loopback
+EXPOSE 8080 8081
+
+ENTRYPOINT ["./entrypoint.sh"]

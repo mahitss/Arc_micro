@@ -40,41 +40,70 @@ export async function fetchServiceAnomalies(serviceId: string): Promise<AnomalyS
   return res.anomalies || [];
 }
 
-export async function fetchMissionObservations(missionId: string): Promise<EconomicObservation[]> {
-  const res = await apiRequest<{ observations: EconomicObservation[] }>(
-    `/v1/missions/${encodeURIComponent(missionId)}/observations`
+export async function fetchMissionObservations(
+  missionId: string,
+  options?: { timeoutMs?: number }
+): Promise<EconomicObservation[]> {
+  const res = await apiRequest<{ observations?: EconomicObservation[] } | EconomicObservation[]>(
+    `/v1/missions/${encodeURIComponent(missionId)}/observations`,
+    { timeoutMs: options?.timeoutMs }
   );
+  if (Array.isArray(res)) return res;
   return res.observations || [];
 }
 
-export async function fetchMissionRecommendations(missionId: string): Promise<ProposedStep[]> {
-  const res = await apiRequest<{ recommendations: ProposedStep[] }>(
-    `/v1/missions/${encodeURIComponent(missionId)}/recommendations`
+export async function fetchMissionRecommendations(
+  missionId: string,
+  options?: { timeoutMs?: number }
+): Promise<ProposedStep[]> {
+  const res = await apiRequest<{ recommendations?: ProposedStep[] } | ProposedStep[]>(
+    `/v1/missions/${encodeURIComponent(missionId)}/recommendations`,
+    { timeoutMs: options?.timeoutMs }
   );
+  if (Array.isArray(res)) return res;
   return res.recommendations || [];
 }
 
-export async function replanMission(missionId: string): Promise<ReplanProposal> {
-  const res = await apiRequest<{ proposal: ReplanProposal }>(
+export async function replanMission(
+  missionId: string,
+  options?: { timeoutMs?: number }
+): Promise<ReplanProposal> {
+  const res = await apiRequest<{ proposal?: ReplanProposal } | ReplanProposal>(
     `/v1/missions/${encodeURIComponent(missionId)}/replan`,
     {
       method: 'POST',
       body: JSON.stringify({}),
+      timeoutMs: options?.timeoutMs,
     }
   );
-  return res.proposal;
+  if (res && typeof res === 'object' && 'proposal' in res && (res as any).proposal) {
+    return (res as any).proposal;
+  }
+  return res as ReplanProposal;
 }
 
-export async function fetchMissionRecovery(missionId: string): Promise<ReplanProposal[]> {
-  const res = await apiRequest<{ recovery_history: ReplanProposal[] }>(
-    `/v1/missions/${encodeURIComponent(missionId)}/recovery`
+export async function fetchMissionRecovery(
+  missionId: string,
+  options?: { timeoutMs?: number }
+): Promise<ReplanProposal[]> {
+  const res = await apiRequest<{ recovery_history?: ReplanProposal[] } | ReplanProposal[]>(
+    `/v1/missions/${encodeURIComponent(missionId)}/recovery`,
+    { timeoutMs: options?.timeoutMs }
   );
+  if (Array.isArray(res)) return res;
   return res.recovery_history || [];
 }
 
-export async function fetchMissionIntelligence(missionId: string): Promise<MissionIntelligence> {
-  const res = await apiRequest<{ intelligence: MissionIntelligence }>(
-    `/v1/missions/${encodeURIComponent(missionId)}/intelligence`
+export async function fetchMissionIntelligence(
+  missionId: string,
+  options?: { timeoutMs?: number }
+): Promise<MissionIntelligence> {
+  const res = await apiRequest<{ intelligence?: MissionIntelligence } | MissionIntelligence>(
+    `/v1/missions/${encodeURIComponent(missionId)}/intelligence`,
+    { timeoutMs: options?.timeoutMs }
   );
-  return res.intelligence;
+  if (res && typeof res === 'object' && 'intelligence' in res && (res as any).intelligence) {
+    return (res as any).intelligence;
+  }
+  return res as MissionIntelligence;
 }

@@ -3,7 +3,7 @@
  * @description API queries and mutations for the AgentPay Autonomous Mission Control Center.
  */
 
-import { apiRequest } from './client';
+import { apiRequest, ApiError } from './client';
 import {
   Mission,
   MissionTrace,
@@ -33,6 +33,26 @@ export interface CreateMissionInput {
 // -----------------------------------------------------------------------------
 
 export const DEMO_MISSIONS: Mission[] = [
+  {
+    id: 'msn_market_intel_001',
+    organization_id: 'org_default',
+    agent_id: 'research-agent',
+    objective: 'Execute autonomous market intelligence research, competitive pricing scan, and risk assessment across distributed intelligence agents.',
+    status: 'IN_PROGRESS',
+    budget: '5000000',
+    spent: '1250000',
+    remaining_budget: '3750000',
+    currency: 'USDC',
+    max_execution_amount: '500000',
+    created_at: '2026-10-13T13:52:07.934201Z',
+    started_at: '2026-10-13T14:02:07.934201Z',
+    current_step: 'STEP_12_SYNTHESIS',
+    metadata: {
+      category: 'market_intelligence',
+      flagship: 'canonical',
+      environment: 'sandbox',
+    },
+  },
   {
     id: 'msn_demo_weather_01',
     organization_id: 'org_default',
@@ -169,10 +189,17 @@ export const DEMO_SERVICES: MarketplaceService[] = [
 // Real Backend API Queries
 // -----------------------------------------------------------------------------
 
-export async function fetchMissions(options?: { useDemo?: boolean }): Promise<Mission[]> {
+export async function fetchMissions(options?: { useDemo?: boolean; orgId?: string; timeoutMs?: number }): Promise<Mission[]> {
   if (options?.useDemo) return DEMO_MISSIONS;
   try {
-    const resp = await apiRequest<{ missions: Mission[] } | Mission[]>('/v1/missions');
+    const headers: Record<string, string> = {};
+    if (options?.orgId) {
+      headers['X-Organization-Id'] = options.orgId;
+    }
+    const resp = await apiRequest<{ missions: Mission[] } | Mission[]>('/v1/missions', {
+      headers,
+      timeoutMs: options?.timeoutMs,
+    });
     if (Array.isArray(resp)) return resp;
     return resp?.missions || [];
   } catch (err) {
@@ -183,9 +210,12 @@ export async function fetchMissions(options?: { useDemo?: boolean }): Promise<Mi
 
 export const listMissions = fetchMissions;
 
-export async function fetchMission(id: string, options?: { useDemo?: boolean }): Promise<Mission> {
+export async function fetchMission(
+  id: string,
+  options?: { useDemo?: boolean; orgId?: string; timeoutMs?: number }
+): Promise<Mission> {
   if (!id || typeof id !== 'string' || !id.trim()) {
-    throw new Error('Valid mission ID is required');
+    throw new ApiError(400, 'INVALID_ID', 'Valid mission ID is required');
   }
   const cleanId = id.trim();
 
@@ -194,12 +224,19 @@ export async function fetchMission(id: string, options?: { useDemo?: boolean }):
     if (found) return found;
   }
   try {
-    const resp = await apiRequest<Mission | { mission: Mission }>(`/v1/missions/${encodeURIComponent(cleanId)}`);
+    const headers: Record<string, string> = {};
+    if (options?.orgId) {
+      headers['X-Organization-Id'] = options.orgId;
+    }
+    const resp = await apiRequest<Mission | { mission: Mission }>(
+      `/v1/missions/${encodeURIComponent(cleanId)}`,
+      { headers, timeoutMs: options?.timeoutMs }
+    );
     const mission = (resp && typeof resp === 'object' && 'mission' in resp && (resp as any).mission)
       ? (resp as any).mission
       : (resp as Mission);
     if (!mission || typeof mission !== 'object' || !mission.id) {
-      throw new Error(`Mission '${cleanId}' not found`);
+      throw new ApiError(404, 'NOT_FOUND', `Mission '${cleanId}' not found`);
     }
     return mission;
   } catch (err) {
@@ -211,55 +248,108 @@ export async function fetchMission(id: string, options?: { useDemo?: boolean }):
   }
 }
 
-export async function createMission(input: CreateMissionInput): Promise<{ mission: Mission; plan: any }> {
+export async function createMission(
+  input: CreateMissionInput,
+  options?: { orgId?: string; timeoutMs?: number }
+): Promise<{ mission: Mission; plan: any }> {
+  const headers: Record<string, string> = {};
+  const targetOrg = options?.orgId || input.organization_id;
+  if (targetOrg) {
+    headers['X-Organization-Id'] = targetOrg;
+  }
   return apiRequest<{ mission: Mission; plan: any }>('/v1/missions', {
     method: 'POST',
     body: JSON.stringify(input),
+    headers,
+    timeoutMs: options?.timeoutMs,
   });
 }
 
-export async function startMission(id: string): Promise<Mission> {
+export async function startMission(
+  id: string,
+  options?: { orgId?: string; timeoutMs?: number }
+): Promise<Mission> {
   if (!id || typeof id !== 'string' || !id.trim()) {
-    throw new Error('Valid mission ID is required');
+    throw new ApiError(400, 'INVALID_ID', 'Valid mission ID is required');
   }
   const cleanId = id.trim();
-  const resp = await apiRequest<Mission | { mission: Mission }>(`/v1/missions/${encodeURIComponent(cleanId)}/start`, {
-    method: 'POST',
-  });
+  const headers: Record<string, string> = {};
+  if (options?.orgId) {
+    headers['X-Organization-Id'] = options.orgId;
+  }
+  const resp = await apiRequest<Mission | { mission: Mission }>(
+    `/v1/missions/${encodeURIComponent(cleanId)}/start`,
+    {
+      method: 'POST',
+      headers,
+      timeoutMs: options?.timeoutMs,
+    }
+  );
   const mission = (resp && typeof resp === 'object' && 'mission' in resp && (resp as any).mission)
     ? (resp as any).mission
     : (resp as Mission);
   return mission;
 }
 
-export async function cancelMission(id: string): Promise<Mission> {
+export async function cancelMission(
+  id: string,
+  options?: { orgId?: string; timeoutMs?: number }
+): Promise<Mission> {
   if (!id || typeof id !== 'string' || !id.trim()) {
-    throw new Error('Valid mission ID is required');
+    throw new ApiError(400, 'INVALID_ID', 'Valid mission ID is required');
   }
   const cleanId = id.trim();
-  const resp = await apiRequest<Mission | { mission: Mission }>(`/v1/missions/${encodeURIComponent(cleanId)}/cancel`, {
-    method: 'POST',
-  });
+  const headers: Record<string, string> = {};
+  if (options?.orgId) {
+    headers['X-Organization-Id'] = options.orgId;
+  }
+  const resp = await apiRequest<Mission | { mission: Mission }>(
+    `/v1/missions/${encodeURIComponent(cleanId)}/cancel`,
+    {
+      method: 'POST',
+      headers,
+      timeoutMs: options?.timeoutMs,
+    }
+  );
   const mission = (resp && typeof resp === 'object' && 'mission' in resp && (resp as any).mission)
     ? (resp as any).mission
     : (resp as Mission);
   return mission;
 }
 
-export async function simulateMission(input: Partial<CreateMissionInput>): Promise<MissionSimulationResponse> {
+export async function simulateMission(
+  input: Partial<CreateMissionInput>,
+  options?: { orgId?: string; timeoutMs?: number }
+): Promise<MissionSimulationResponse> {
+  const headers: Record<string, string> = {};
+  if (options?.orgId || input.organization_id) {
+    headers['X-Organization-Id'] = options?.orgId || input.organization_id || 'org_default';
+  }
   return apiRequest<MissionSimulationResponse>('/v1/missions/simulate', {
     method: 'POST',
     body: JSON.stringify(input),
+    headers,
+    timeoutMs: options?.timeoutMs,
   });
 }
 
-export async function fetchMissionTrace(id: string, options?: { useDemo?: boolean }): Promise<MissionTrace> {
+export async function fetchMissionTrace(
+  id: string,
+  options?: { useDemo?: boolean; orgId?: string; timeoutMs?: number }
+): Promise<MissionTrace> {
   if (!id || typeof id !== 'string' || !id.trim()) {
-    throw new Error('Valid mission ID is required');
+    throw new ApiError(400, 'INVALID_ID', 'Valid mission ID is required');
   }
   const cleanId = id.trim();
   try {
-    const resp = await apiRequest<MissionTrace | { trace: MissionTrace }>(`/v1/missions/${encodeURIComponent(cleanId)}/trace`);
+    const headers: Record<string, string> = {};
+    if (options?.orgId) {
+      headers['X-Organization-Id'] = options.orgId;
+    }
+    const resp = await apiRequest<MissionTrace | { trace: MissionTrace }>(
+      `/v1/missions/${encodeURIComponent(cleanId)}/trace`,
+      { headers, timeoutMs: options?.timeoutMs }
+    );
     const trace = (resp && typeof resp === 'object' && 'trace' in resp && (resp as any).trace)
       ? (resp as any).trace
       : (resp as MissionTrace);

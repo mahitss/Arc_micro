@@ -47,12 +47,14 @@ export function VisualMissionTimeline({
   currentStatus,
   failureReason,
 }: VisualMissionTimelineProps) {
-  const isFailed = currentStatus === 'FAILED' || currentStatus === 'BUDGET_EXHAUSTED';
-  const isCancelled = currentStatus === 'CANCELLED';
-  const isCompleted = currentStatus === 'COMPLETED';
+  const normalizedStatus = (currentStatus === 'IN_PROGRESS' || currentStatus === 'STARTING') ? 'EXECUTING' : currentStatus;
+  const isFailed = normalizedStatus === 'FAILED' || normalizedStatus === 'BUDGET_EXHAUSTED';
+  const isCancelled = normalizedStatus === 'CANCELLED';
+  const isCompleted = normalizedStatus === 'COMPLETED';
 
   // Find index of current status in progression
-  const currentIndex = ORDERED_STATES.indexOf(currentStatus);
+  const rawIndex = ORDERED_STATES.indexOf(normalizedStatus);
+  const currentIndex = rawIndex >= 0 ? rawIndex : (normalizedStatus ? 6 : 0);
 
   const getNodeState = (nodeIndex: number) => {
     if (isCompleted) return 'COMPLETED';

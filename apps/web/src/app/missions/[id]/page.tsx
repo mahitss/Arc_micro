@@ -1,16 +1,24 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { fetchMission, fetchMissionTrace, DEMO_MISSIONS } from '../../../lib/api/missions';
 import { fetchMissionIntelligence } from '../../../lib/api/intelligence';
+import { ApiError, getBaseApiUrl } from '../../../lib/api/client';
 import { Mission, MissionTrace, MissionIntelligence } from '../../../lib/api/types';
 import { VisualMissionTimeline } from '../../../components/VisualMissionTimeline';
 import { AutonomousActivityStream } from '../../../components/AutonomousActivityStream';
 import { ServiceDecisionPanel, DecisionCandidate } from '../../../components/ServiceDecisionPanel';
 import { LiveAdaptationVisualizer } from '../../../components/LiveAdaptationVisualizer';
 import { DataAuthorityBadge } from '../../../components/DataAuthorityBadge';
+
+interface MissionErrorDetails {
+  message: string;
+  status?: number;
+  code?: string;
+  requestId?: string;
+}
 
 export default function MissionDetailPage() {
   const params = useParams();
@@ -20,44 +28,63 @@ export default function MissionDetailPage() {
   const [mission, setMission] = useState<Mission | null>(null);
   const [trace, setTrace] = useState<MissionTrace | null>(null);
   const [intelligence, setIntelligence] = useState<MissionIntelligence | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<MissionErrorDetails | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
-  const loadData = async (demo: boolean) => {
+  const missionRef = useRef<Mission | null>(null);
+  missionRef.current = mission;
+
+  const loadData = useCallback(async (demo: boolean, isInitial: boolean = false) => {
     if (!missionId) {
-      setError('Invalid mission ID specified');
-      setLoading(false);
+      setErrorDetails({
+        message: 'Invalid mission ID specified in the route URL.',
+        code: 'INVALID_ID',
+        status: 400,
+      });
+      setInitialLoading(false);
+      setIsRefreshing(false);
       return;
     }
-    setLoading(true);
+
+    if (isInitial) {
+      setInitialLoading(true);
+      setErrorDetails(null);
+    } else {
+      setIsRefreshing(true);
+    }
+
     try {
-      const m = await fetchMission(missionId, { useDemo: demo });
+      // Bounded 8000ms timeout for authoritative mission lookup
+      const m = await fetchMission(missionId, { useDemo: demo, timeoutMs: 8000 });
       setMission(m);
 
-      try {
-        const t = await fetchMissionTrace(missionId, { useDemo: demo });
-        setTrace(t);
-      } catch (traceErr) {
-        console.warn('Trace not available for mission:', missionId, traceErr);
+      // Concurrently fetch trace and intelligence
+      const [traceResult, intelResult] = await Promise.allSettled([
+        fetchMissionTrace(missionId, { useDemo: demo, timeoutMs: 6000 }),
+        fetchMissionIntelligence(missionId, { timeoutMs: 6000 }),
+      ]);
+
+      if (traceResult.status === 'fulfilled') {
+        setTrace(traceResult.value);
+      } else {
         setTrace(null);
       }
 
-      try {
-        const intel = await fetchMissionIntelligence(missionId);
-        setIntelligence(intel);
-      } catch {
-        if (demo) {
-          setIntelligence({
-            mission_id: missionId,
-            current_recommendation: {
-              step_number: 1,
-              capability: 'data_analysis',
-              recommended_service_id: 'srv_data_agent_b',
-              estimated_cost: '$0.35',
-              estimated_duration_ms: 380,
-              reason: 'Highest contextual reliability (98.0%) within remaining budget margin',
-            },
+      if (intelResult.status === 'fulfilled' && intelResult.value) {
+        setIntelligence(intelResult.value);
+      } else if (demo) {
+        setIntelligence({
+          mission_id: missionId,
+          current_recommendation: {
+            step_number: 1,
+            capability: 'data_analysis',
+            recommended_service_id: 'srv_data_agent_b',
+            estimated_cost: '$0.35',
+            estimated_duration_ms: 380,
+            reason: 'Highest contextual reliability (98.0%) within remaining budget margin',
+          },
           why_recommended: 'DataAgent Beta exhibits superior 98% contextual reliability with 380ms latency.',
           previous_attempts: 1,
           recovery_history: [
@@ -135,28 +162,70 @@ export default function MissionDetailPage() {
       } else {
         setIntelligence(null);
       }
-      }
-      setError(null);
+
+      setErrorDetails(null);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load mission data');
+      if (!isInitial && missionRef.current) {
+        console.warn('Background mission telemetry poll failed:', err);
+      } else {
+        let status = 500;
+        let code = 'UNKNOWN_ERROR';
+        let message = 'Failed to load mission telemetry';
+        let requestId: string | undefined;
+
+        if (err instanceof ApiError) {
+          status = err.status;
+          code = err.code;
+          message = err.message;
+          requestId = err.requestId;
+        } else if (err instanceof Error) {
+          message = err.message;
+          if (message.includes('404') || message.toLowerCase().includes('not found')) {
+            status = 404;
+            code = 'NOT_FOUND';
+          } else if (message.includes('401') || message.toLowerCase().includes('unauthorized')) {
+            status = 401;
+            code = 'UNAUTHORIZED';
+          } else if (message.includes('403') || message.toLowerCase().includes('forbidden')) {
+            status = 403;
+            code = 'FORBIDDEN';
+          } else if (message.includes('408') || message.toLowerCase().includes('timeout') || message.toLowerCase().includes('timed out')) {
+            status = 408;
+            code = 'REQUEST_TIMEOUT';
+          } else if (message.includes('503') || message.toLowerCase().includes('connect') || message.toLowerCase().includes('network')) {
+            status = 503;
+            code = 'NETWORK_UNAVAILABLE';
+          }
+        }
+
+        setErrorDetails({ status, code, message, requestId });
+      }
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [missionId]);
 
   useEffect(() => {
-    loadData(isDemoMode);
+    let isCancelled = false;
+
+    // Initial load
+    loadData(isDemoMode, true);
 
     // Active polling if mission is non-terminal
     const interval = setInterval(() => {
-      if (mission && !['COMPLETED', 'FAILED', 'CANCELLED', 'BUDGET_EXHAUSTED', 'EXPIRED'].includes(mission.status)) {
-        loadData(isDemoMode);
+      if (isCancelled) return;
+      const current = missionRef.current;
+      if (current && !['COMPLETED', 'FAILED', 'CANCELLED', 'BUDGET_EXHAUSTED', 'EXPIRED'].includes(current.status)) {
+        loadData(isDemoMode, false);
       }
-    }, 2500);
+    }, 3000);
 
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missionId, isDemoMode, mission?.status]);
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [missionId, isDemoMode, loadData]);
 
   const formatUsdc = (baseUnits?: string) => {
     const val = parseInt(baseUnits || '0', 10);
@@ -169,12 +238,13 @@ export default function MissionDetailPage() {
         return 'bg-[#2FB36F]/10 text-[#2FB36F] border-[#2FB36F]/30';
       case 'EXECUTING':
       case 'CONTINUING':
-        return 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30 animate-pulse';
+      case 'IN_PROGRESS':
+        return 'bg-[#6B8FD6]/10 text-[#6B8FD6] border-[#6B8FD6]/30 animate-pulse';
       case 'PLANNING':
       case 'DISCOVERING':
       case 'EVALUATING':
       case 'SELECTING':
-        return 'bg-[#141414] text-[#B0ADA5] border-[#222222]';
+        return 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30';
       case 'AWAITING_APPROVAL':
         return 'bg-[#D6A83A]/10 text-[#D6A83A] border-[#D6A83A]/30';
       case 'BUDGET_EXHAUSTED':
@@ -206,7 +276,7 @@ export default function MissionDetailPage() {
     );
   }
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="p-16 text-center text-[#716F69] font-mono text-sm max-w-5xl mx-auto space-y-3">
         <div className="w-8 h-8 rounded-full border-2 border-[#D6A83A] border-t-transparent animate-spin mx-auto" />
@@ -215,21 +285,61 @@ export default function MissionDetailPage() {
     );
   }
 
-  if (error || !mission) {
-    const isNotFound = error?.toLowerCase().includes('not found') || !mission;
+  if (errorDetails || !mission) {
+    const status = errorDetails?.status;
+    const code = errorDetails?.code;
+    const message = errorDetails?.message || 'No mission record returned from authoritative ledger.';
+
+    const isNotFound = status === 404 || code === 'NOT_FOUND';
+    const isAuth = status === 401 || status === 403 || code === 'UNAUTHORIZED' || code === 'FORBIDDEN';
+    const isTimeout = status === 408 || code === 'REQUEST_TIMEOUT';
+    const isGatewayOffline = status === 503 || code === 'NETWORK_UNAVAILABLE';
+    const isStorageError = (status && status >= 500) || code === 'STORAGE_ERROR' || code === 'INTERNAL_ERROR';
+
+    let errorBadge = 'TELEMETRY DEGRADED';
+    let errorTitle = 'Mission Telemetry Degraded';
+    let errorSubtitle = message;
+
+    if (isNotFound) {
+      errorBadge = 'MISSION NOT FOUND';
+      errorTitle = 'Mission Not Found';
+      errorSubtitle = `Mission "${missionId}" does not exist in the active organization ledger.`;
+    } else if (isAuth) {
+      errorBadge = 'AUTHORIZATION REQUIRED';
+      errorTitle = 'Mission Access Denied';
+      errorSubtitle = `Insufficient credentials or unauthorized organization context for mission "${missionId}".`;
+    } else if (isTimeout) {
+      errorBadge = 'REQUEST TIMED OUT';
+      errorTitle = 'Telemetry Connection Timed Out';
+      errorSubtitle = `Connection to mission telemetry exceeded the deadline. The gateway or network did not respond in time.`;
+    } else if (isGatewayOffline) {
+      errorBadge = 'GATEWAY OFFLINE';
+      errorTitle = 'AgentPay Gateway Offline';
+      errorSubtitle = `Unable to connect to AgentPay Gateway at ${getBaseApiUrl()}. Ensure the backend gateway is running and reachable.`;
+    } else if (isStorageError) {
+      errorBadge = 'LEDGER ERROR';
+      errorTitle = 'Mission Ledger Storage Error';
+      errorSubtitle = `The backend service encountered an internal database or ledger error while retrieving mission "${missionId}".`;
+    }
+
     const isSandboxFixture = DEMO_MISSIONS.some((m) => m.id === missionId);
 
     return (
       <div className="p-8 max-w-5xl mx-auto text-center space-y-4">
         <div className="p-5 rounded-2xl bg-[#D85C5C]/10 border border-[#D85C5C]/30 text-[#D85C5C] font-mono text-xs space-y-2">
-          <div className="font-bold text-sm">
-            {isNotFound ? 'Mission Not Found' : 'Mission Telemetry Degraded'}
+          <div className="flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#D85C5C]" />
+            <span className="font-bold text-sm">{errorTitle}</span>
+            <span className="px-2 py-0.5 rounded text-[10px] bg-[#141414] text-[#D85C5C] border border-[#D85C5C]/30">
+              {errorBadge}
+            </span>
           </div>
-          <div className="text-[#B0ADA5]">
-            {isNotFound
-              ? `Mission "${missionId}" does not exist in the active organization ledger.`
-              : error || 'Failed to communicate with the mission gateway.'}
-          </div>
+          <div className="text-[#B0ADA5]">{errorSubtitle}</div>
+          {status && (
+            <div className="text-[11px] text-[#716F69] font-mono">
+              HTTP {status} {code ? `• [${code}]` : ''} {errorDetails?.requestId ? `• Request ID: ${errorDetails.requestId}` : ''}
+            </div>
+          )}
         </div>
         <div className="flex justify-center gap-3 font-mono text-xs flex-wrap">
           <Link
@@ -239,7 +349,7 @@ export default function MissionDetailPage() {
             ← Return to Missions
           </Link>
           <button
-            onClick={() => loadData(false)}
+            onClick={() => loadData(false, true)}
             className="px-4 py-2 rounded-lg bg-[#141414] hover:bg-[#181818] text-[#B0ADA5] hover:text-[#F2F0EA] border border-[#222222] transition-colors"
           >
             ↻ Retry Connection
@@ -248,7 +358,7 @@ export default function MissionDetailPage() {
             <button
               onClick={() => {
                 setIsDemoMode(true);
-                loadData(true);
+                loadData(true, true);
               }}
               className="px-4 py-2 rounded-lg bg-[#F2F0EA] hover:bg-white text-[#080808] font-semibold transition-colors"
             >
@@ -260,7 +370,7 @@ export default function MissionDetailPage() {
     );
   }
 
-  const isActive = ['PLANNING', 'DISCOVERING', 'EVALUATING', 'SELECTING', 'EXECUTING'].includes(mission.status);
+  const isActive = ['PLANNING', 'DISCOVERING', 'EVALUATING', 'SELECTING', 'EXECUTING', 'IN_PROGRESS', 'CONTINUING'].includes(mission.status);
   const spentNum = parseInt(mission.spent || '0', 10);
   const budgetNum = parseInt(mission.budget || '1', 10);
   const pctSpent = Math.min(100, Math.round((spentNum / (budgetNum || 1)) * 100));
@@ -322,6 +432,11 @@ export default function MissionDetailPage() {
             <span className={isActive ? 'text-[#2FB36F]' : 'text-[#716F69]'}>
               {isActive ? 'STATUS: LIVE ACTIVE' : 'STATUS: FINALIZED'}
             </span>
+            {isRefreshing && (
+              <span className="text-[10px] text-[#716F69] animate-pulse" title="Refreshing telemetry in background">
+                ↻
+              </span>
+            )}
           </div>
           <Link
             href={`/trace?mission_id=${mission.id}`}

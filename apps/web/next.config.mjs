@@ -1,3 +1,10 @@
+const gatewayUrl = (
+  process.env.GATEWAY_URL ||
+  process.env.NEXT_PUBLIC_GATEWAY_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:8080'
+).replace(/\/$/, '');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -17,7 +24,9 @@ const nextConfig = {
       { source: '/swarm/:path*', destination: '/swarms/:path*' },
       { source: '/replay', destination: '/control/operations/timeline' },
       { source: '/replay/:path*', destination: '/control/operations/replay/:path*' },
-      { source: '/v1/:path*', destination: 'http://localhost:8080/v1/:path*' },
+      { source: '/v1/:path*', destination: `${gatewayUrl}/v1/:path*` },
+      { source: '/protocol/v1/:path*', destination: `${gatewayUrl}/protocol/v1/:path*` },
+      { source: '/api/proxy/:path*', destination: `${gatewayUrl}/:path*` },
     ];
   },
 };
