@@ -85,6 +85,7 @@ echo "Verified live RPC Chain ID matches expected Arc Testnet: ${ARC_CHAIN_ID} (
 # Run Foundry Deployment Script
 cd "$(dirname "$0")/../contracts"
 export ARC_REQUIRE_MAINNET="false"
+export ARC_CHAIN_ID="${ARC_CHAIN_ID}"
 export ARC_USDC_ADDRESS="${ARC_USDC_ADDRESS}"
 export AGENT_ID="${AGENT_ID}"
 export COLD_MULTISIG_OWNER="${INITIAL_OWNER}"

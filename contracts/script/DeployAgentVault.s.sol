@@ -35,6 +35,12 @@ contract DeployAgentVault is Script {
             revert(string.concat("Unexpected chain ID. Expected Arc Mainnet (5042), got: ", vm.toString(block.chainid)));
         }
 
+        // Enforce explicit ARC_CHAIN_ID if specified in environment
+        uint256 expectedChainId = vm.envOr("ARC_CHAIN_ID", uint256(0));
+        if (expectedChainId != 0 && block.chainid != expectedChainId && block.chainid != 31337) {
+            revert(string.concat("Unexpected chain ID. Expected: ", vm.toString(expectedChainId), ", got: ", vm.toString(block.chainid)));
+        }
+
         // If requireMainnet is false, enforce valid Arc network (5042 or 5042002)
         if (!requireMainnet && block.chainid != 5042 && block.chainid != 5042002 && block.chainid != 31337) {
             revert(string.concat("Unexpected chain ID. Expected Arc Mainnet (5042) or Testnet (5042002), got: ", vm.toString(block.chainid)));
