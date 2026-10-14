@@ -6,6 +6,7 @@
 # ==============================================================================
 param(
     [switch]$Confirm,
+    [string]$Account,
     [switch]$VerifySigner
 )
 
@@ -44,6 +45,11 @@ Write-Host "Target RPC URL:      $ARC_RPC_URL"
 Write-Host "USDC Contract:       $ARC_USDC_ADDRESS"
 Write-Host "Agent ID:            $AGENT_ID"
 Write-Host "Initial Vault Owner: $INITIAL_OWNER"
+if ($Account) {
+    Write-Host "Signing Method:      Foundry Keystore Account ($Account)" -ForegroundColor Yellow
+} else {
+    Write-Host "Signing Method:      Interactive Hidden Console Prompt" -ForegroundColor Yellow
+}
 Write-Host "==================================================================" -ForegroundColor Cyan
 
 if (-not $Confirm) {
@@ -72,8 +78,12 @@ Write-Host "Verified live RPC Chain ID matches expected Arc Testnet: $ARC_CHAIN_
 # Optional local signer pre-verification
 if ($VerifySigner) {
     Write-Host "Verifying signer identity locally before broadcasting..." -ForegroundColor Yellow
-    Write-Host "Enter Account 1 private key into cast prompt to verify public address:" -ForegroundColor Cyan
-    $derivedAddress = (& $castExe wallet address --interactive).Trim()
+    if ($Account) {
+        $derivedAddress = (& $castExe wallet address --account "$Account").Trim()
+    } else {
+        Write-Host "Enter Account 1 private key into cast prompt to verify public address:" -ForegroundColor Cyan
+        $derivedAddress = (& $castExe wallet address --interactive).Trim()
+    }
     $castExit = $LASTEXITCODE
     if ($castExit -ne 0 -or [string]::IsNullOrWhiteSpace($derivedAddress)) {
         Write-Error "Signer verification failed or was cancelled (exit code: $castExit)."
@@ -86,17 +96,43 @@ if ($VerifySigner) {
     Write-Host "Signer identity verified: $derivedAddress matches intended initial owner!" -ForegroundColor Green
 }
 
-Push-Location $contractsDir
+# Flush any stray buffered input in the console window
 try {
+    if (-not [Console]::IsInputRedirected) {
+        while ([Console]::KeyAvailable) {
+            [void][Console]::ReadKey($true)
+        }
+    }
+} catch {
+    # Ignore if non-interactive host
+}
+
+# Build Forge Script arguments
+$forgeArgs = @(
+    "script", "script/DeployAgentVault.s.sol:DeployAgentVault",
+    "--rpc-url", "$ARC_RPC_URL",
+    "--sender", "$INITIAL_OWNER",
+    "--broadcast",
+    "--slow"
+)
+
+if ($Account) {
+    $forgeArgs += @("--account", "$Account")
+    Write-Host "Launching Foundry with keystore account: $Account..." -ForegroundColor Yellow
+    Write-Host "Target Sender Address: $INITIAL_OWNER" -ForegroundColor Cyan
+} else {
+    $forgeArgs += @("--interactive")
     Write-Host "Launching Foundry with interactive secure signer prompt..." -ForegroundColor Yellow
     Write-Host "Target Sender Address: $INITIAL_OWNER" -ForegroundColor Cyan
-    Write-Host "Paste your MetaMask Account 1 private key when prompted below:" -ForegroundColor Green
-    & $forgeExe script script/DeployAgentVault.s.sol:DeployAgentVault `
-        --rpc-url "$ARC_RPC_URL" `
-        --sender "$INITIAL_OWNER" `
-        --interactive `
-        --broadcast `
-        --slow
+    Write-Host "IMPORTANT: Forge will first compile and simulate the script." -ForegroundColor Magenta
+    Write-Host "WAIT until simulation finishes and you see the prompt:" -ForegroundColor Magenta
+    Write-Host "    Enter private key:" -ForegroundColor Green
+    Write-Host "Do NOT paste or press Enter before that prompt appears." -ForegroundColor Magenta
+}
+
+Push-Location $contractsDir
+try {
+    & $forgeExe @forgeArgs
 
     $forgeExit = $LASTEXITCODE
     if ($forgeExit -ne 0) {
