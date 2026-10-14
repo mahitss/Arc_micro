@@ -48,6 +48,11 @@ export function getDefaultOrgId(): string {
 
 export function getApiKey(): string | undefined {
   if (typeof process !== 'undefined' && process.env) {
+    // When executing server-side (Next.js server components or API routes), prefer unexposed private keys
+    if (typeof window === 'undefined') {
+      const serverKey = process.env.GATEWAY_API_KEY || process.env.AGENTPAY_API_KEY;
+      if (serverKey && serverKey.trim()) return serverKey.trim();
+    }
     const key = (
       process.env.NEXT_PUBLIC_DEMO_API_KEY ||
       process.env.NEXT_PUBLIC_API_KEY ||

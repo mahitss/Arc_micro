@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "[AgentPay Combined] Starting Rust Policy Engine on 127.0.0.1:8081..."
@@ -21,15 +21,6 @@ else
   echo "[AgentPay Combined] Policy Engine is healthy."
 fi
 
-# Trap shutdown signals to terminate policy engine cleanly
-cleanup() {
-  echo "[AgentPay Combined] Caught termination signal, shutting down..."
-  kill -TERM "$POLICY_PID" 2>/dev/null || true
-  wait "$POLICY_PID" 2>/dev/null || true
-  exit 0
-}
-trap cleanup SIGTERM SIGINT
-
 # Configure gateway to reach policy engine locally
 export POLICY_ENGINE_URL="http://127.0.0.1:8081"
 export GATEWAY_PORT="${PORT:-8080}"
@@ -38,10 +29,19 @@ echo "[AgentPay Combined] Starting Go Gateway on port ${GATEWAY_PORT}..."
 ./gateway &
 GATEWAY_PID=$!
 
+# Trap shutdown signals to terminate child processes cleanly
+cleanup() {
+  echo "[AgentPay Combined] Caught termination signal, shutting down..."
+  kill -TERM "$GATEWAY_PID" 2>/dev/null || true
+  kill -TERM "$POLICY_PID" 2>/dev/null || true
+  wait "$GATEWAY_PID" 2>/dev/null || true
+  wait "$POLICY_PID" 2>/dev/null || true
+  exit 0
+}
+trap cleanup SIGTERM SIGINT
+
 # Wait for either process to exit
 wait -n "$POLICY_PID" "$GATEWAY_PID"
 EXIT_CODE=$?
-echo "[AgentPay Combined] A process exited with code $EXIT_CODE. Shutting down container..."
-kill -TERM "$POLICY_PID" 2>/dev/null || true
-kill -TERM "$GATEWAY_PID" 2>/dev/null || true
-exit $EXIT_CODE
+echo "[AgentPay Combined] Process exited with code $EXIT_CODE. Shutting down container..."
+cleanup
