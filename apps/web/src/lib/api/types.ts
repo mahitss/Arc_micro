@@ -1140,6 +1140,73 @@ export interface SimulateSwarmResponse {
   tasks: TaskNode[];
 }
 
+export interface AuditEventNode {
+  index: number;
+  id: string;
+  correlation_id: string;
+  timestamp: string;
+  event_type: string;
+  outcome: string;
+  actor_id: string;
+  resource_id: string;
+  payload: Record<string, any>;
+  payload_hash: string;
+  prev_hash: string;
+  block_hash: string;
+}
+
+export interface ChainVerificationResult {
+  is_valid: boolean;
+  total_nodes: number;
+  head_hash: string;
+  broken_node_index?: number;
+  broken_node_id?: string;
+  failure_reason?: string;
+  verified_at: string;
+  threat_model_notes: string;
+}
+
+export interface AuditChainResponse {
+  total_events: number;
+  verification: ChainVerificationResult;
+  nodes: AuditEventNode[];
+  threat_model: string;
+}
+
+export interface AgentTrustScore {
+  agent_id: string;
+  score_bps: number;
+  trust_tier: 'TRUSTED' | 'PROBATIONARY' | 'UNVERIFIED' | 'FLAGGED';
+  confidence: 'UNKNOWN' | 'LOW' | 'MEDIUM' | 'HIGH';
+  total_recorded_events: number;
+  successful_actions: number;
+  policy_violations: number;
+  over_budget_attempts: number;
+  tamper_detections: number;
+  replay_attempts: number;
+  scoring_formula: string;
+  explanation: string;
+  evaluated_at: string;
+}
+
+export interface TrustScoresResponse {
+  total_evaluated: number;
+  scores: AgentTrustScore[];
+  scoring_formula: string;
+  threat_model: string;
+}
+
+export interface RedTeamReport {
+  executed_at: string;
+  duration_ms: number;
+  total_scenarios: number;
+  passed_scenarios: number;
+  failed_scenarios: number;
+  scenarios: SecurityScenario[];
+  audit_verification: ChainVerificationResult;
+  threat_model: string;
+}
+
 
 
 

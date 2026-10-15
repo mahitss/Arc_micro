@@ -34,6 +34,7 @@ import (
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/storage"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/trace"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/treasury"
+	"github.com/arc-agentpay/agentpay/services/gateway/internal/trust"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/webhook"
 )
 
@@ -323,10 +324,22 @@ func NewRouter(
 		mux.HandleFunc("GET /v1/events", eventHandler.HandleList)
 		mux.HandleFunc("GET /v1/events/{id}", eventHandler.HandleGet)
 
-		// 12. Day 7: Adversarial Security Lab Control Plane
+		// 12. Security Lab & Red-Team Trust Control Plane
 		securityLabHandler := handlers.NewSecurityLabHandler(nil)
 		mux.HandleFunc("GET /v1/security-lab/report", securityLabHandler.HandleGetReport)
 		mux.HandleFunc("POST /v1/security-lab/run", securityLabHandler.HandleRunSuite)
+
+		auditChain := trust.NewAuditChain()
+		trustEngine := trust.NewTrustEngine(auditChain)
+		redTeamSuite := trust.NewRedTeamSuite(auditChain, reg)
+		trustHandler := handlers.NewTrustHandler(auditChain, trustEngine, redTeamSuite, reg)
+
+		mux.HandleFunc("GET /v1/redteam/report", trustHandler.HandleGetRedTeamReport)
+		mux.HandleFunc("POST /v1/redteam/run", trustHandler.HandleRunRedTeam)
+		mux.HandleFunc("GET /v1/trust/audit-chain", trustHandler.HandleGetAuditChain)
+		mux.HandleFunc("POST /v1/trust/audit-chain/verify", trustHandler.HandleVerifyAuditChain)
+		mux.HandleFunc("GET /v1/trust/scores", trustHandler.HandleGetTrustScores)
+		mux.HandleFunc("GET /v1/trust/scores/{id}", trustHandler.HandleGetAgentTrustScore)
 
 		// 13. Open Agent Network Subsystem
 		allowLocalhostNet := cfg != nil && cfg.AllowLocalhostWebhooks
