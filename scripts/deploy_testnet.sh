@@ -19,7 +19,7 @@ ARC_RPC_URL="${ARC_RPC_URL:-https://rpc.testnet.arc.network}"
 ARC_CHAIN_ID="${ARC_CHAIN_ID:-5042002}"
 ARC_USDC_ADDRESS="${ARC_USDC_ADDRESS:-0x3600000000000000000000000000000000000000}"
 AGENT_ID="${AGENT_ID:-research-agent}"
-INITIAL_OWNER="${COLD_MULTISIG_OWNER:-${INITIAL_OWNER:-}}"
+INITIAL_OWNER="${COLD_MULTISIG_OWNER:-${INITIAL_OWNER:-0x2a3613d44799ce28385058358586e8d311ee6c57}}"
 
 echo "=================================================================="
 echo "          AgentPay: Secure Arc Testnet Deployment                 "

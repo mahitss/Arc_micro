@@ -23,7 +23,7 @@ $ARC_RPC_URL = if ($env:ARC_RPC_URL) { $env:ARC_RPC_URL } else { "https://rpc.te
 $ARC_CHAIN_ID = 5042002
 $ARC_USDC_ADDRESS = "0x3600000000000000000000000000000000000000"
 $AGENT_ID = "research-agent"
-$INITIAL_OWNER = if ($env:COLD_MULTISIG_OWNER) { $env:COLD_MULTISIG_OWNER } elseif ($env:INITIAL_OWNER) { $env:INITIAL_OWNER } else { "0x6430343103C16c6526E5AdAC6d1f410B659e4B77" }
+$INITIAL_OWNER = if ($env:COLD_MULTISIG_OWNER) { $env:COLD_MULTISIG_OWNER } elseif ($env:INITIAL_OWNER) { $env:INITIAL_OWNER } else { "0x2a3613d44799ce28385058358586e8d311ee6c57" }
 
 # Resolve Foundry binary paths
 $foundryBin = Join-Path $env:USERPROFILE ".foundry\bin"
