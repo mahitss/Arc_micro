@@ -29,42 +29,45 @@ const (
 // Mission represents an autonomous economic objective governed by AgentPay controls.
 // All financial amounts are integer base-unit strings (e.g., micro-USDC).
 type Mission struct {
-	ID                 string            `json:"id"`
-	OrganizationID     string            `json:"organization_id"`
-	AgentID            string            `json:"agent_id"`
-	Objective          string            `json:"objective"`
-	Status             MissionStatus     `json:"status"`
-	Budget             string            `json:"budget"`               // Total authorized budget in base units
-	Spent              string            `json:"spent"`                // Settled disbursements in base units
-	RemainingBudget    string            `json:"remaining_budget"`     // Available uncommitted budget in base units
-	Currency           string            `json:"currency"`             // e.g. "USDC"
-	MaxExecutionAmount string            `json:"max_execution_amount"` // Maximum allowable spend per single step
-	CreatedAt          time.Time         `json:"created_at"`
-	StartedAt          *time.Time        `json:"started_at,omitempty"`
-	CompletedAt        *time.Time        `json:"completed_at,omitempty"`
-	Deadline           *time.Time        `json:"deadline,omitempty"`
-	CurrentStep        string            `json:"current_step,omitempty"`
-	FailureReason      string            `json:"failure_reason,omitempty"`
-	Metadata           map[string]string `json:"metadata,omitempty"`
-	CorrelationID      string            `json:"correlation_id"`
+	ID                   string            `json:"id"`
+	OrganizationID       string            `json:"organization_id"`
+	AgentID              string            `json:"agent_id"`
+	Objective            string            `json:"objective"`
+	RequiredCapabilities []string          `json:"required_capabilities,omitempty"`
+	Constraints          map[string]string `json:"constraints,omitempty"`
+	Status               MissionStatus     `json:"status"`
+	Budget               string            `json:"budget"`               // Total authorized budget in base units
+	Spent                string            `json:"spent"`                // Settled disbursements in base units
+	RemainingBudget      string            `json:"remaining_budget"`     // Available uncommitted budget in base units
+	Currency             string            `json:"currency"`             // e.g. "USDC"
+	MaxExecutionAmount   string            `json:"max_execution_amount"` // Maximum allowable spend per single step
+	CreatedAt            time.Time         `json:"created_at"`
+	StartedAt            *time.Time        `json:"started_at,omitempty"`
+	CompletedAt          *time.Time        `json:"completed_at,omitempty"`
+	Deadline             *time.Time        `json:"deadline,omitempty"`
+	CurrentStep          string            `json:"current_step,omitempty"`
+	FailureReason        string            `json:"failure_reason,omitempty"`
+	Metadata             map[string]string `json:"metadata,omitempty"`
+	CorrelationID        string            `json:"correlation_id"`
 }
 
 // MissionStep represents a planned operational unit within a mission.
 type MissionStep struct {
-	StepID             string     `json:"step_id"`
-	MissionID          string     `json:"mission_id"`
-	Index              int        `json:"index"`
-	RequiredCapability string     `json:"required_capability"`
-	Category           string     `json:"category,omitempty"`
-	MaxBudget          string     `json:"max_budget"` // Max base units allocated to this step
-	SelectedServiceID  string     `json:"selected_service_id,omitempty"`
-	SelectedQuoteID    string     `json:"selected_quote_id,omitempty"`
-	PaymentIntentID    string     `json:"payment_intent_id,omitempty"`
-	Status             string     `json:"status"` // PENDING, EXECUTING, COMPLETED, FAILED, SKIPPED
-	ResultData         string     `json:"result_data,omitempty"`
-	Error              string     `json:"error,omitempty"`
-	StartedAt          *time.Time `json:"started_at,omitempty"`
-	CompletedAt        *time.Time `json:"completed_at,omitempty"`
+	StepID             string           `json:"step_id"`
+	MissionID          string           `json:"mission_id"`
+	Index              int              `json:"index"`
+	RequiredCapability string           `json:"required_capability"`
+	Category           string           `json:"category,omitempty"`
+	MaxBudget          string           `json:"max_budget"` // Max base units allocated to this step
+	SelectedServiceID  string           `json:"selected_service_id,omitempty"`
+	SelectedQuoteID    string           `json:"selected_quote_id,omitempty"`
+	PaymentIntentID    string           `json:"payment_intent_id,omitempty"`
+	Status             string           `json:"status"` // PENDING, EXECUTING, COMPLETED, FAILED, SKIPPED
+	ResultData         string           `json:"result_data,omitempty"`
+	Error              string           `json:"error,omitempty"`
+	SelectionRecord    *SelectionRecord `json:"selection_record,omitempty"`
+	StartedAt          *time.Time       `json:"started_at,omitempty"`
+	CompletedAt        *time.Time       `json:"completed_at,omitempty"`
 }
 
 // MissionPlan encapsulates the structured decomposition of an objective.
@@ -88,6 +91,10 @@ type Quote struct {
 	ExpiresAt          time.Time `json:"expires_at"`
 	RecipientBinding   string    `json:"recipient_binding"` // Server-resolved authoritative address
 	CreatedAt          time.Time `json:"created_at"`
+	CapabilityEvidence string    `json:"capability_evidence,omitempty"`
+	ServiceTerms       string    `json:"service_terms,omitempty"`
+	IsMockProvider     bool      `json:"is_mock_provider"`
+	Source             string    `json:"source,omitempty"` // "REAL_REGISTRY" or "MOCK"
 }
 
 // ScoredCandidate holds a quote evaluated by the Economic Selection Engine.
@@ -104,6 +111,30 @@ type ScoredCandidate struct {
 	RiskPenalty         int64           `json:"risk_penalty"`
 	Confidence          ConfidenceLevel `json:"confidence,omitempty"`
 	Explanation         string          `json:"explanation"`
+}
+
+// RejectedCandidate documents a candidate quote filtered out by deterministic gates.
+type RejectedCandidate struct {
+	ServiceID      string `json:"service_id"`
+	QuoteID        string `json:"quote_id,omitempty"`
+	Reason         string `json:"reason"` // OVER_BUDGET, EXPIRED, CURRENCY_MISMATCH, INCOMPATIBLE_CAPABILITY, MALFORMED_PRICE, INCOMPLETE_QUOTE
+	Details        string `json:"details"`
+	QuotedPrice    string `json:"quoted_price,omitempty"`
+	IsMockProvider bool   `json:"is_mock_provider"`
+	Source         string `json:"source,omitempty"` // "REAL_REGISTRY" or "MOCK"
+}
+
+// SelectionRecord provides an explainable audit trail of service ranking and filtering.
+type SelectionRecord struct {
+	StepID             string              `json:"step_id"`
+	RequiredCapability string              `json:"required_capability"`
+	MaxBudget          string              `json:"max_budget"`
+	Currency           string              `json:"currency"`
+	EligibleCandidates []ScoredCandidate   `json:"eligible_candidates"`
+	RejectedCandidates []RejectedCandidate `json:"rejected_candidates"`
+	SelectedCandidate  *ScoredCandidate    `json:"selected_candidate,omitempty"`
+	SelectionRationale string              `json:"selection_rationale"`
+	EvaluatedAt        time.Time           `json:"evaluated_at"`
 }
 
 // SelectionWeights defines deterministic weights for the utility scoring formula.

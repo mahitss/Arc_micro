@@ -374,6 +374,56 @@ export type MissionStatus =
   | 'BUDGET_EXHAUSTED'
   | 'EXPIRED';
 
+export interface RejectedCandidate {
+  service_id: string;
+  quote_id?: string;
+  reason: string;
+  details: string;
+  quoted_price?: string;
+  is_mock_provider?: boolean;
+  source?: string;
+}
+
+export interface CandidateQuote {
+  quote_id: string;
+  service_id: string;
+  price: string;
+  asset: string;
+  estimated_latency_ms?: number;
+  quality_score?: number;
+  risk_score?: number;
+  reputation_score?: number;
+  expires_at?: string;
+  capability_evidence?: string;
+  service_terms?: string;
+  is_mock_provider?: boolean;
+  source?: string;
+}
+
+export interface ScoredCandidate {
+  quote?: CandidateQuote;
+  utility_score: number;
+  quality_contrib?: number;
+  reliability_contrib?: number;
+  reputation_contrib?: number;
+  latency_contrib?: number;
+  price_penalty?: number;
+  risk_penalty?: number;
+  explanation?: string;
+}
+
+export interface SelectionRecord {
+  step_id: string;
+  required_capability: string;
+  max_budget: string;
+  currency: string;
+  eligible_candidates?: ScoredCandidate[];
+  rejected_candidates?: RejectedCandidate[];
+  selected_candidate?: ScoredCandidate;
+  selection_rationale?: string;
+  evaluated_at?: string;
+}
+
 export interface MissionStep {
   step_id: string;
   mission_id: string;
@@ -385,6 +435,7 @@ export interface MissionStep {
   payment_intent_id?: string;
   status: string;
   result_data?: string;
+  selection_record?: SelectionRecord;
   created_at: string;
   started_at?: string;
   completed_at?: string;

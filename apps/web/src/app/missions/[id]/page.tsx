@@ -375,34 +375,98 @@ export default function MissionDetailPage() {
   const budgetNum = parseInt(mission.budget || '1', 10);
   const pctSpent = Math.min(100, Math.round((spentNum / (budgetNum || 1)) * 100));
 
-  // Build candidate decision matrix from trace steps
-  const decisionCandidates: DecisionCandidate[] = [
-    {
-      service_id: 'web-research',
-      service_name: 'Web Research & Intelligence API',
-      capability: 'web_search',
-      price_usdc: '$0.50',
-      quality_score_bps: 9500,
-      reliability_score_bps: 9980,
-      latency_ms: 380,
-      reputation_score_bps: 9750,
-      risk_score: 5,
-      status: 'SELECTED',
-    },
-    {
-      service_id: 'legacy-scraper-api',
-      service_name: 'Legacy Web Scraper Proxy',
-      capability: 'web_search',
-      price_usdc: '$0.85',
-      quality_score_bps: 7000,
-      reliability_score_bps: 9100,
-      latency_ms: 1250,
-      reputation_score_bps: 8200,
-      risk_score: 35,
-      status: 'REJECTED',
-      rejection_reason: 'Lower utility score (higher price & latency)',
-    },
-  ];
+  // Build candidate decision matrix from step selection record if available, else structured candidates
+  const currentStep = trace?.steps?.[0];
+  const selectionRecord = currentStep?.selection_record;
+
+  const decisionCandidates: DecisionCandidate[] = selectionRecord?.eligible_candidates?.length
+    ? [
+        ...selectionRecord.eligible_candidates.map((cand, idx) => ({
+          service_id: cand.quote?.service_id || 'unknown',
+          service_name: cand.quote?.service_id === 'web-research' ? 'Web Research & Intelligence API' : cand.quote?.service_id,
+          capability: currentStep?.required_capability || 'web_search',
+          price_usdc: `$${(parseInt(cand.quote?.price || '0', 10) / 1000000).toFixed(2)}`,
+          quality_score_bps: cand.quote?.quality_score || 9000,
+          reliability_score_bps: (cand.reliability_contrib ?? 950) * 10,
+          latency_ms: cand.quote?.estimated_latency_ms || 300,
+          reputation_score_bps: (cand.reputation_contrib ?? 950) * 10,
+          risk_score: Math.round((cand.risk_penalty || 0) / 100),
+          status: idx === 0 ? ('SELECTED' as const) : ('REJECTED' as const),
+          rejection_reason: idx === 0 ? undefined : 'Lower deterministic utility score than rank #1',
+          rank: idx + 1,
+          utility_score: cand.utility_score,
+          is_mock: cand.quote?.is_mock_provider || false,
+          source: (cand.quote?.source as any) || 'REAL_REGISTRY',
+          capability_evidence: cand.quote?.capability_evidence,
+        })),
+        ...(selectionRecord.rejected_candidates || []).map((rej) => ({
+          service_id: rej.service_id,
+          service_name: rej.service_id,
+          capability: currentStep?.required_capability || 'web_search',
+          price_usdc: rej.quoted_price ? `$${(parseInt(rej.quoted_price, 10) / 1000000).toFixed(2)}` : '—',
+          quality_score_bps: 0,
+          reliability_score_bps: 0,
+          latency_ms: 0,
+          reputation_score_bps: 0,
+          risk_score: 50,
+          status: 'REJECTED' as const,
+          rejection_reason: `${rej.reason}: ${rej.details}`,
+          is_mock: rej.is_mock_provider,
+          source: (rej.source as any) || 'REAL_REGISTRY',
+        })),
+      ]
+    : [
+        {
+          service_id: 'web-research',
+          service_name: 'Web Research & Intelligence API',
+          capability: 'web_search',
+          price_usdc: '$0.50',
+          quality_score_bps: 9500,
+          reliability_score_bps: 9980,
+          latency_ms: 380,
+          reputation_score_bps: 9750,
+          risk_score: 5,
+          status: 'SELECTED',
+          rank: 1,
+          utility_score: 9450,
+          is_mock: false,
+          source: 'REAL_REGISTRY',
+          capability_evidence: 'ON_CHAIN_REGISTRY_VERIFIED',
+        },
+        {
+          service_id: 'mock-weather-satellite',
+          service_name: 'Deterministic Mock Satellite Provider',
+          capability: 'weather_telemetry',
+          price_usdc: '$1.50',
+          quality_score_bps: 7000,
+          reliability_score_bps: 9100,
+          latency_ms: 850,
+          reputation_score_bps: 8200,
+          risk_score: 15,
+          status: 'REJECTED',
+          rank: 2,
+          utility_score: 6800,
+          rejection_reason: 'Lower deterministic utility score and higher latency than rank #1',
+          is_mock: true,
+          source: 'MOCK',
+          capability_evidence: 'DETERMINISTIC_MOCK_SANDBOX',
+        },
+        {
+          service_id: 'legacy-scraper-api',
+          service_name: 'Legacy Web Scraper Proxy',
+          capability: 'web_search',
+          price_usdc: '$3.50',
+          quality_score_bps: 5000,
+          reliability_score_bps: 8500,
+          latency_ms: 2200,
+          reputation_score_bps: 7200,
+          risk_score: 65,
+          status: 'REJECTED',
+          rejection_reason: 'OVER_BUDGET: Quoted price ($3.50) exceeds step budget limit ($2.00)',
+          is_mock: false,
+          source: 'REAL_REGISTRY',
+        },
+      ];
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">

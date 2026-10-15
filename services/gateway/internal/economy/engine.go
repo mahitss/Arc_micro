@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"time"
 )
 
 var (
@@ -207,14 +208,14 @@ func (e *EconomyEngine) RankCandidatesAdaptive(
 
 // SelectBestCandidate selects the highest ranked candidate under deterministic scoring.
 func (e *EconomyEngine) SelectBestCandidate(step *MissionStep, quotes []*Quote, reputations map[string]*ServiceReputation) (*ScoredCandidate, error) {
-	ranked, err := e.RankCandidates(step, quotes, reputations)
+	record, err := e.EvaluateAndSelectCandidate(step, quotes, reputations, nil)
 	if err != nil {
 		return nil, err
 	}
-	if len(ranked) == 0 {
+	if record.SelectedCandidate == nil {
 		return nil, ErrNoQuotesProvided
 	}
-	return &ranked[0], nil
+	return record.SelectedCandidate, nil
 }
 
 // SelectBestCandidateAdaptive selects the highest ranked candidate under adaptive contextual scoring.
@@ -224,12 +225,163 @@ func (e *EconomyEngine) SelectBestCandidateAdaptive(
 	reputations map[string]*ServiceReputation,
 	perfs map[string]*ServicePerformance,
 ) (*ScoredCandidate, error) {
-	ranked, err := e.RankCandidatesAdaptive(step, quotes, reputations, perfs)
+	record, err := e.EvaluateAndSelectCandidate(step, quotes, reputations, perfs)
 	if err != nil {
 		return nil, err
 	}
-	if len(ranked) == 0 {
+	if record.SelectedCandidate == nil {
 		return nil, ErrNoQuotesProvided
 	}
-	return &ranked[0], nil
+	return record.SelectedCandidate, nil
+}
+
+// EvaluateAndSelectCandidate filters invalid/expired/over-budget/incompatible quotes,
+// deterministically ranks eligible candidates, and produces an explainable SelectionRecord.
+func (e *EconomyEngine) EvaluateAndSelectCandidate(
+	step *MissionStep,
+	quotes []*Quote,
+	reputations map[string]*ServiceReputation,
+	perfs map[string]*ServicePerformance,
+) (*SelectionRecord, error) {
+	record := &SelectionRecord{
+		StepID:             step.StepID,
+		RequiredCapability: step.RequiredCapability,
+		MaxBudget:          step.MaxBudget,
+		Currency:           "USDC",
+		EligibleCandidates: make([]ScoredCandidate, 0),
+		RejectedCandidates: make([]RejectedCandidate, 0),
+		EvaluatedAt:        time.Now().UTC(),
+	}
+
+	if len(quotes) == 0 {
+		record.SelectionRationale = "No candidate quotes provided for economic evaluation."
+		return record, ErrNoQuotesProvided
+	}
+
+	stepBudgetInt, ok := new(big.Int).SetString(step.MaxBudget, 10)
+	if !ok || stepBudgetInt.Sign() <= 0 {
+		record.SelectionRationale = "Invalid or zero step budget."
+		return record, ErrZeroStepBudget
+	}
+
+	now := time.Now().UTC()
+	var eligibleQuotes []*Quote
+
+	for _, q := range quotes {
+		if q == nil {
+			continue
+		}
+
+		// 1. Completeness validation
+		if strings.TrimSpace(q.QuoteID) == "" || strings.TrimSpace(q.ServiceID) == "" {
+			record.RejectedCandidates = append(record.RejectedCandidates, RejectedCandidate{
+				ServiceID:      q.ServiceID,
+				QuoteID:        q.QuoteID,
+				Reason:         "INCOMPLETE_QUOTE",
+				Details:        "Quote missing mandatory quote_id or service_id",
+				QuotedPrice:    q.Price,
+				IsMockProvider: q.IsMockProvider,
+				Source:         q.Source,
+			})
+			continue
+		}
+
+		// 2. Expiration validation
+		if !q.ExpiresAt.IsZero() && now.After(q.ExpiresAt) {
+			record.RejectedCandidates = append(record.RejectedCandidates, RejectedCandidate{
+				ServiceID:      q.ServiceID,
+				QuoteID:        q.QuoteID,
+				Reason:         "EXPIRED",
+				Details:        fmt.Sprintf("Quote expired at %s (evaluated at %s)", q.ExpiresAt.Format(time.RFC3339), now.Format(time.RFC3339)),
+				QuotedPrice:    q.Price,
+				IsMockProvider: q.IsMockProvider,
+				Source:         q.Source,
+			})
+			continue
+		}
+
+		// 3. Currency / Asset validation
+		if q.Asset != "" && !strings.EqualFold(q.Asset, "USDC") {
+			record.RejectedCandidates = append(record.RejectedCandidates, RejectedCandidate{
+				ServiceID:      q.ServiceID,
+				QuoteID:        q.QuoteID,
+				Reason:         "CURRENCY_MISMATCH",
+				Details:        fmt.Sprintf("Quote asset '%s' does not match required currency 'USDC'", q.Asset),
+				QuotedPrice:    q.Price,
+				IsMockProvider: q.IsMockProvider,
+				Source:         q.Source,
+			})
+			continue
+		}
+
+		// 4. Price validity
+		priceInt, ok := new(big.Int).SetString(strings.TrimSpace(q.Price), 10)
+		if !ok || priceInt.Sign() <= 0 {
+			record.RejectedCandidates = append(record.RejectedCandidates, RejectedCandidate{
+				ServiceID:      q.ServiceID,
+				QuoteID:        q.QuoteID,
+				Reason:         "MALFORMED_PRICE",
+				Details:        fmt.Sprintf("Price '%s' is not a positive base-unit integer", q.Price),
+				QuotedPrice:    q.Price,
+				IsMockProvider: q.IsMockProvider,
+				Source:         q.Source,
+			})
+			continue
+		}
+
+		// 5. Budget ceiling check
+		if priceInt.Cmp(stepBudgetInt) > 0 {
+			record.RejectedCandidates = append(record.RejectedCandidates, RejectedCandidate{
+				ServiceID:      q.ServiceID,
+				QuoteID:        q.QuoteID,
+				Reason:         "OVER_BUDGET",
+				Details:        fmt.Sprintf("Price %s micro-USDC exceeds authorized step budget %s micro-USDC", q.Price, step.MaxBudget),
+				QuotedPrice:    q.Price,
+				IsMockProvider: q.IsMockProvider,
+				Source:         q.Source,
+			})
+			continue
+		}
+
+		// 6. Capability compatibility check
+		if q.CapabilityEvidence != "" && strings.Contains(strings.ToLower(q.CapabilityEvidence), "incompatible") {
+			record.RejectedCandidates = append(record.RejectedCandidates, RejectedCandidate{
+				ServiceID:      q.ServiceID,
+				QuoteID:        q.QuoteID,
+				Reason:         "INCOMPATIBLE_CAPABILITY",
+				Details:        fmt.Sprintf("Capability evidence indicates incompatibility: %s", q.CapabilityEvidence),
+				QuotedPrice:    q.Price,
+				IsMockProvider: q.IsMockProvider,
+				Source:         q.Source,
+			})
+			continue
+		}
+
+		eligibleQuotes = append(eligibleQuotes, q)
+	}
+
+	if len(eligibleQuotes) == 0 {
+		record.SelectionRationale = fmt.Sprintf("No eligible candidates found. All %d quotes were rejected by deterministic gates.", len(quotes))
+		return record, fmt.Errorf("%w: all quotes rejected by deterministic gates", ErrQuoteExceedsBudget)
+	}
+
+	// Rank eligible quotes deterministically
+	rankedCandidates, err := e.RankCandidatesAdaptive(step, eligibleQuotes, reputations, perfs)
+	if err != nil {
+		return record, err
+	}
+
+	record.EligibleCandidates = rankedCandidates
+	if len(rankedCandidates) > 0 {
+		record.SelectedCandidate = &rankedCandidates[0]
+		record.SelectionRationale = fmt.Sprintf(
+			"Selected provider '%s' (rank #1, utility score: %d bps) from %d eligible candidates. %d quotes rejected by deterministic policy gates.",
+			rankedCandidates[0].Quote.ServiceID,
+			rankedCandidates[0].UtilityScore,
+			len(rankedCandidates),
+			len(record.RejectedCandidates),
+		)
+	}
+
+	return record, nil
 }
