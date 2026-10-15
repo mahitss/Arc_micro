@@ -69,6 +69,15 @@ type Config struct {
 	// Task 8: Verified AgentVault address
 	AgentVaultAddress string
 
+	// Arc Testnet Verified Deployment
+	TestnetArcRPCURL         string
+	TestnetArcChainID        string
+	TestnetArcUSDCAddress    string
+	TestnetArcExplorerURL    string
+	TestnetAgentVaultAddress string
+	TestnetDeploymentTx      string
+	TestnetVaultOwner        string
+
 	// Day 6: Webhook security configuration
 	AllowLocalhostWebhooks bool
 
@@ -308,6 +317,13 @@ func Load() *Config {
 		AIModel:                 aiModel,
 		AIAPIKey:                aiAPIKey,
 		AgentVaultAddress:       os.Getenv("AGENTVAULT_ADDRESS"),
+		TestnetArcRPCURL:         os.Getenv("TESTNET_ARC_RPC_URL"),
+		TestnetArcChainID:        os.Getenv("TESTNET_ARC_CHAIN_ID"),
+		TestnetArcUSDCAddress:    os.Getenv("TESTNET_ARC_USDC_ADDRESS"),
+		TestnetArcExplorerURL:    os.Getenv("TESTNET_ARC_EXPLORER_URL"),
+		TestnetAgentVaultAddress: os.Getenv("TESTNET_AGENTVAULT_ADDRESS"),
+		TestnetDeploymentTx:      os.Getenv("TESTNET_DEPLOYMENT_TX"),
+		TestnetVaultOwner:        os.Getenv("TESTNET_AGENTVAULT_OWNER"),
 		SignerBackend:           os.Getenv("SIGNER_BACKEND"),
 		KMSKeyID:                os.Getenv("KMS_KEY_ID"),
 		KMSRegion:               os.Getenv("KMS_REGION"),

@@ -261,6 +261,15 @@ type ArcStatusView struct {
 	VerifiedTreasuryBalance string    `json:"verified_treasury_balance"`
 	LiveExecutionEnabled    bool      `json:"live_execution_enabled"`
 	LastCheckedAt           time.Time `json:"last_checked_at"`
+
+	// Testnet verified deployment fields
+	TestnetChainID            string `json:"testnet_chain_id,omitempty"`
+	TestnetRPCURL             string `json:"testnet_rpc_url,omitempty"`
+	TestnetAgentVaultAddress  string `json:"testnet_agent_vault_address,omitempty"`
+	TestnetAgentVaultDeployed bool   `json:"testnet_agent_vault_deployed"`
+	TestnetDeploymentTx       string `json:"testnet_deployment_tx,omitempty"`
+	TestnetVaultOwner         string `json:"testnet_vault_owner,omitempty"`
+	TestnetExplorerURL        string `json:"testnet_explorer_url,omitempty"`
 }
 
 // ControlSearchResult item across tenant scope.

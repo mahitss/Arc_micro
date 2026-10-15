@@ -193,6 +193,13 @@ export interface ArcStatusView {
   verified_treasury_balance: string;
   live_execution_enabled: boolean;
   last_checked_at: string;
+  testnet_chain_id?: string;
+  testnet_rpc_url?: string;
+  testnet_agent_vault_address?: string;
+  testnet_agent_vault_deployed?: boolean;
+  testnet_deployment_tx?: string;
+  testnet_vault_owner?: string;
+  testnet_explorer_url?: string;
 }
 
 export interface IncidentTimelineStep {
@@ -468,6 +475,13 @@ export const FALLBACK_ARC_STATUS: ArcStatusView = {
   verified_treasury_balance: '0',
   live_execution_enabled: false,
   last_checked_at: new Date().toISOString(),
+  testnet_chain_id: '5042002',
+  testnet_rpc_url: 'https://rpc.testnet.arc.network',
+  testnet_agent_vault_address: '0x7789bC3d8366782b97496165C24BD5bB09302843',
+  testnet_agent_vault_deployed: true,
+  testnet_deployment_tx: '0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70',
+  testnet_vault_owner: '0x2a3613D44799Ce28385058358586E8D311eE6C57',
+  testnet_explorer_url: 'https://testnet.arcscan.app',
 };
 
 // -------------------------------------------------------------

@@ -837,18 +837,53 @@ func (s *DefaultService) GetArcStatus(ctx context.Context) (*ArcStatusView, erro
 		balanceStr = "UNVERIFIED"
 	}
 
+	testnetChainID := "5042002"
+	testnetRPC := "https://rpc.testnet.arc.network"
+	testnetVault := "0x7789bC3d8366782b97496165C24BD5bB09302843"
+	testnetTx := "0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70"
+	testnetOwner := "0x2a3613D44799Ce28385058358586E8D311eE6C57"
+	testnetExplorer := "https://testnet.arcscan.app"
+
+	if s.cfg != nil {
+		if s.cfg.TestnetArcChainID != "" {
+			testnetChainID = s.cfg.TestnetArcChainID
+		}
+		if s.cfg.TestnetArcRPCURL != "" {
+			testnetRPC = s.cfg.TestnetArcRPCURL
+		}
+		if s.cfg.TestnetAgentVaultAddress != "" {
+			testnetVault = s.cfg.TestnetAgentVaultAddress
+		}
+		if s.cfg.TestnetDeploymentTx != "" {
+			testnetTx = s.cfg.TestnetDeploymentTx
+		}
+		if s.cfg.TestnetVaultOwner != "" {
+			testnetOwner = s.cfg.TestnetVaultOwner
+		}
+		if s.cfg.TestnetArcExplorerURL != "" {
+			testnetExplorer = s.cfg.TestnetArcExplorerURL
+		}
+	}
+
 	return &ArcStatusView{
-		ChainID:                 chainID,
-		RPCURL:                  rpcURL,
-		RPCReachable:            rpcReachable,
-		LatestBlockNumber:       blockNum,
-		AgentVaultAddress:       vaultAddr,
-		AgentVaultDeployed:      liveEnabled && vaultAddr != "",
-		AgentVaultPaused:        false,
-		USDCAddress:             usdcAddr,
-		VerifiedTreasuryBalance: balanceStr,
-		LiveExecutionEnabled:    liveEnabled,
-		LastCheckedAt:           time.Now().UTC(),
+		ChainID:                   chainID,
+		RPCURL:                    rpcURL,
+		RPCReachable:              rpcReachable,
+		LatestBlockNumber:         blockNum,
+		AgentVaultAddress:         vaultAddr,
+		AgentVaultDeployed:        liveEnabled && vaultAddr != "",
+		AgentVaultPaused:          false,
+		USDCAddress:               usdcAddr,
+		VerifiedTreasuryBalance:   balanceStr,
+		LiveExecutionEnabled:      liveEnabled,
+		LastCheckedAt:             time.Now().UTC(),
+		TestnetChainID:            testnetChainID,
+		TestnetRPCURL:             testnetRPC,
+		TestnetAgentVaultAddress:  testnetVault,
+		TestnetAgentVaultDeployed: testnetVault != "",
+		TestnetDeploymentTx:       testnetTx,
+		TestnetVaultOwner:         testnetOwner,
+		TestnetExplorerURL:        testnetExplorer,
 	}, nil
 }
 

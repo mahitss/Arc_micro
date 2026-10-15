@@ -1,0 +1,31 @@
+{
+  "network": "Arc Testnet",
+  "chainId": 5042002,
+  "chainIdHex": "0x4cef52",
+  "rpcUrl": "https://rpc.testnet.arc.network",
+  "explorerUrl": "https://testnet.arcscan.app",
+  "contractName": "AgentVault",
+  "contractAddress": "0x7789bC3d8366782b97496165C24BD5bB09302843",
+  "deploymentTransaction": "0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70",
+  "blockNumber": 67246545,
+  "deployer": "0x2a3613D44799Ce28385058358586E8D311eE6C57",
+  "owner": "0x2a3613D44799Ce28385058358586E8D311eE6C57",
+  "usdcAddress": "0x3600000000000000000000000000000000000000",
+  "agentId": "research-agent",
+  "gasUsed": 1236065,
+  "gasPrice": "25000000000",
+  "status": "VERIFIED_DEPLOYED",
+  "policy": {
+    "enabled": false,
+    "perTransactionLimit": "0",
+    "dailyLimit": "0",
+    "dailySpent": "0",
+    "dailyTransactionCount": "0",
+    "maxTransactionsPerDay": "0",
+    "currentDay": 20741
+  },
+  "paused": false,
+  "allowlistEnabled": false,
+  "liveExecutionEnabled": false,
+  "verifiedAt": "2026-10-15T00:48:45Z"
+}

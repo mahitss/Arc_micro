@@ -280,6 +280,13 @@ export default function ProtocolControlOverviewPage() {
           </div>
           <span className="text-[#333333]">•</span>
           <div className="flex items-center gap-1.5">
+            <span className="text-[#50504C]">TESTNET VAULT:</span>
+            <span className="text-[#2FB36F] font-semibold">
+              0x7789...2843 (VERIFIED)
+            </span>
+          </div>
+          <span className="text-[#333333]">•</span>
+          <div className="flex items-center gap-1.5">
             <span className="text-[#50504C]">REAL ARC SETTLEMENTS:</span>
             <span className="text-[#F2F0EA] font-semibold">{snapshot?.arc?.real_settlements ?? 0}</span>
           </div>

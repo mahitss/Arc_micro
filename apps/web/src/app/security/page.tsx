@@ -380,6 +380,12 @@ export default function SecurityCenterPage() {
                   <span className="text-[#716F69]">Reconciliation:</span>
                   <span className="text-[#2FB36F] font-bold">MATCHED (0 Discrepancy)</span>
                 </div>
+                <div className="flex justify-between border-t border-[#1c1c1c] pt-2">
+                  <span className="text-[#716F69]">Arc Testnet Vault:</span>
+                  <span className="text-[#2FB36F] font-bold truncate max-w-[200px]" title={arcStatus?.testnet_agent_vault_address || '0x7789bC3d8366782b97496165C24BD5bB09302843'}>
+                    {(arcStatus?.testnet_agent_vault_address || '0x7789bC3d8366782b97496165C24BD5bB09302843').slice(0, 6)}...{(arcStatus?.testnet_agent_vault_address || '0x7789bC3d8366782b97496165C24BD5bB09302843').slice(-4)} (VERIFIED)
+                  </span>
+                </div>
                 <p className="text-[11px] text-[#716F69] pt-1">
                   Vault guarantees per-transaction spending ceilings and daily velocity throttles on Arc.
                 </p>

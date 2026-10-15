@@ -141,3 +141,49 @@ cast receipt <TX_HASH> --rpc-url https://rpc.mainnet.arc.io | grep -A 10 "logs"
 ```
 
 The event topic `0x...` must match `keccak256("PaymentExecuted(bytes32,address,uint256,uint256)")`.
+
+---
+
+## 10. Verify Arc Testnet Live Deployment
+
+> **Status**: **VERIFIED LIVE ON ARC TESTNET**  
+> **Network**: Arc Testnet (Chain ID `5042002` / `0x4cef52`)  
+> **RPC Endpoint**: `https://rpc.testnet.arc.network`  
+> **Contract Address**: `0x7789bC3d8366782b97496165C24BD5bB09302843`  
+> **Deployment Tx**: `0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70`
+
+Run these read-only verification commands against the live Arc Testnet:
+
+```bash
+# 1. Verify deployed runtime bytecode exists
+cast code 0x7789bC3d8366782b97496165C24BD5bB09302843 \
+  --rpc-url https://rpc.testnet.arc.network
+
+# 2. Verify deployment transaction receipt (status: 1, block: 67246545)
+cast receipt 0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70 \
+  --rpc-url https://rpc.testnet.arc.network
+
+# 3. Verify owner matches authorized MetaMask account
+cast call 0x7789bC3d8366782b97496165C24BD5bB09302843 \
+  "owner()(address)" \
+  --rpc-url https://rpc.testnet.arc.network
+# Expected: 0x2a3613D44799Ce28385058358586E8D311eE6C57
+
+# 4. Verify canonical USDC address
+cast call 0x7789bC3d8366782b97496165C24BD5bB09302843 \
+  "usdc()(address)" \
+  --rpc-url https://rpc.testnet.arc.network
+# Expected: 0x3600000000000000000000000000000000000000
+
+# 5. Verify agent ID
+cast call 0x7789bC3d8366782b97496165C24BD5bB09302843 \
+  "agentId()(string)" \
+  --rpc-url https://rpc.testnet.arc.network
+# Expected: "research-agent"
+
+# 6. Verify policy is safely disabled (enabled: false)
+cast call 0x7789bC3d8366782b97496165C24BD5bB09302843 \
+  "policy()(bool,uint256,uint256,uint256,uint256,uint256,uint256)" \
+  --rpc-url https://rpc.testnet.arc.network
+# Expected first field: false
+```

@@ -142,3 +142,23 @@ forge fmt --check
 > - This contract is an MVP implementation for the **Arc Microgrants program** and has **NOT** undergone a formal security audit.
 > - Do not deploy with real production treasury balances without a full professional audit.
 > - Arc mainnet network parameters (`ARC_RPC_URL`, `ARC_CHAIN_ID`, `ARC_USDC_ADDRESS`) remain configuration placeholders until official network constants are verified.
+
+---
+
+## 9. Arc Testnet Verified Deployment
+
+`AgentVault` has been successfully deployed and verified on **Arc Testnet**:
+
+- **Network**: Arc Testnet (Chain ID `5042002` / `0x4cef52`)
+- **RPC URL**: `https://rpc.testnet.arc.network`
+- **Explorer**: [testnet.arcscan.app](https://testnet.arcscan.app)
+- **Contract Address**: [`0x7789bC3d8366782b97496165C24BD5bB09302843`](https://testnet.arcscan.app/address/0x7789bC3d8366782b97496165C24BD5bB09302843)
+- **Deployment Transaction**: [`0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70`](https://testnet.arcscan.app/tx/0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70)
+- **Block Number**: `67246545`
+- **Contract Owner**: `0x2a3613D44799Ce28385058358586E8D311eE6C57`
+- **USDC Address**: `0x3600000000000000000000000000000000000000`
+- **Agent ID**: `research-agent`
+- **Policy Status**: Disabled (`policy.enabled == false`)
+- **Live Execution**: Disabled (`ENABLE_LIVE_EXECUTION=false`)
+- **Artifact**: `deployments/arc-testnet.json`
+

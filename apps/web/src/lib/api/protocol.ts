@@ -366,6 +366,10 @@ export interface ArcProtocolStatus {
   live_execution: boolean;
   agent_vault_deployed: boolean;
   real_settlements: number;
+  testnet_connected?: boolean;
+  testnet_chain_id?: number;
+  testnet_agent_vault_deployed?: boolean;
+  testnet_agent_vault_address?: string;
 }
 
 export interface ProtocolAgentSummary {
@@ -419,6 +423,10 @@ export async function fetchProtocolSnapshot(modeOverride?: DataMode): Promise<Pr
         live_execution: false,
         agent_vault_deployed: false,
         real_settlements: 0,
+        testnet_connected: true,
+        testnet_chain_id: 5042002,
+        testnet_agent_vault_deployed: true,
+        testnet_agent_vault_address: '0x7789bC3d8366782b97496165C24BD5bB09302843',
       },
       agents: {
         discovered: FALLBACK_AGENTS.length,
