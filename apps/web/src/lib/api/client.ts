@@ -81,9 +81,22 @@ export async function apiRequest<T>(
     'X-Organization-Id': getDefaultOrgId(),
   };
 
-  const apiKey = getApiKey();
-  if (apiKey) {
-    defaultHeaders['Authorization'] = `Bearer ${apiKey}`;
+  // Check for active browser session cookie
+  let sessionToken: string | null = null;
+  if (typeof document !== 'undefined') {
+    const match = document.cookie.match(/(?:^|;\s*)agentpay_session=([^;]+)/);
+    if (match && match[1]) {
+      sessionToken = match[1];
+    }
+  }
+
+  if (sessionToken) {
+    defaultHeaders['Authorization'] = `Bearer ${sessionToken}`;
+  } else {
+    const apiKey = getApiKey();
+    if (apiKey) {
+      defaultHeaders['Authorization'] = `Bearer ${apiKey}`;
+    }
   }
 
   let customHeaders: Record<string, string> = {};
@@ -109,6 +122,7 @@ export async function apiRequest<T>(
   try {
     const res = await fetch(url, {
       ...fetchOptions,
+      credentials: 'include',
       signal: controller.signal,
       headers: finalHeaders,
     });

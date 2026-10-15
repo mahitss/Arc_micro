@@ -20,6 +20,8 @@ export type IntentStatus =
 export interface Agent {
   id: string;
   name: string;
+  description?: string;
+  organization_id?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'PAUSED';
   created_at: string;
   usdc_balance?: string;

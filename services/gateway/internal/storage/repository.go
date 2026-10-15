@@ -135,6 +135,29 @@ type APIKey struct {
 	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
+// User represents an authenticated dashboard user and tenant owner.
+type User struct {
+	ID             string    `json:"id"`
+	OrganizationID string    `json:"organization_id"`
+	Email          string    `json:"email"`
+	PasswordHash   string    `json:"-"`
+	Name           string    `json:"name"`
+	Role           string    `json:"role"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// Session represents an authenticated web user session token.
+type Session struct {
+	ID             string    `json:"id"`
+	UserID         string    `json:"user_id"`
+	OrganizationID string    `json:"organization_id"`
+	TokenHash      string    `json:"token_hash"`
+	ExpiresAt      time.Time `json:"expires_at"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+
 // Repository defines storage operations for the AgentPay domain.
 type Repository interface {
 	// Organization operations
@@ -252,7 +275,17 @@ type Repository interface {
 	GetDispute(ctx context.Context, id string) (*network.DisputeRecord, error)
 	ListDisputes(ctx context.Context, orgID string) ([]*network.DisputeRecord, error)
 	UpdateDisputeState(ctx context.Context, id string, state network.DisputeState, notes string, refund string, resolvedAt *time.Time) error
+
+	// User & Session operations (Priority 2 Product Auth)
+	CreateUser(ctx context.Context, u *User) error
+	GetUserByEmail(ctx context.Context, email string) (*User, error)
+	GetUserByID(ctx context.Context, id string) (*User, error)
+	CreateSession(ctx context.Context, s *Session) error
+	GetSessionByTokenHash(ctx context.Context, tokenHash string) (*Session, error)
+	DeleteSession(ctx context.Context, tokenHash string) error
+	DeleteExpiredSessions(ctx context.Context) error
 }
+
 
 // MemoryRepository provides a thread-safe in-memory implementation of Repository.
 type MemoryRepository struct {
@@ -278,6 +311,9 @@ type MemoryRepository struct {
 	serviceContracts  map[string]*network.AgentServiceContract
 	trustProfiles     map[string]*network.AgentTrustProfile
 	agentDisputes     map[string]*network.DisputeRecord
+	users             map[string]*User
+	usersByEmail      map[string]*User
+	sessions          map[string]*Session
 }
 
 // NewMemoryRepository creates a new in-memory repository instance seeded with defaults.
@@ -305,6 +341,9 @@ func NewMemoryRepository() *MemoryRepository {
 		serviceContracts:  make(map[string]*network.AgentServiceContract),
 		trustProfiles:     make(map[string]*network.AgentTrustProfile),
 		agentDisputes:     make(map[string]*network.DisputeRecord),
+		users:             make(map[string]*User),
+		usersByEmail:      make(map[string]*User),
+		sessions:          make(map[string]*Session),
 	}
 
 	// Seed default demo API key (apk_live_demo1234567890abcdef1234567890abcdef)
@@ -1489,6 +1528,83 @@ func (m *MemoryRepository) UpdateDisputeState(ctx context.Context, id string, st
 	}
 	if resolvedAt != nil {
 		d.ResolvedAt = resolvedAt
+	}
+	return nil
+}
+
+// --- User & Session In-Memory Methods ---
+
+func (m *MemoryRepository) CreateUser(ctx context.Context, u *User) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, exists := m.usersByEmail[strings.ToLower(u.Email)]; exists {
+		return ErrAlreadyExists
+	}
+	uCopy := *u
+	m.users[u.ID] = &uCopy
+	m.usersByEmail[strings.ToLower(u.Email)] = &uCopy
+	return nil
+}
+
+func (m *MemoryRepository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	u, ok := m.usersByEmail[strings.ToLower(email)]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	uCopy := *u
+	return &uCopy, nil
+}
+
+func (m *MemoryRepository) GetUserByID(ctx context.Context, id string) (*User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	u, ok := m.users[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	uCopy := *u
+	return &uCopy, nil
+}
+
+func (m *MemoryRepository) CreateSession(ctx context.Context, s *Session) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	sCopy := *s
+	m.sessions[s.TokenHash] = &sCopy
+	return nil
+}
+
+func (m *MemoryRepository) GetSessionByTokenHash(ctx context.Context, tokenHash string) (*Session, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	s, ok := m.sessions[tokenHash]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	if time.Now().After(s.ExpiresAt) {
+		return nil, ErrNotFound
+	}
+	sCopy := *s
+	return &sCopy, nil
+}
+
+func (m *MemoryRepository) DeleteSession(ctx context.Context, tokenHash string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.sessions, tokenHash)
+	return nil
+}
+
+func (m *MemoryRepository) DeleteExpiredSessions(ctx context.Context) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	now := time.Now()
+	for k, v := range m.sessions {
+		if now.After(v.ExpiresAt) {
+			delete(m.sessions, k)
+		}
 	}
 	return nil
 }
@@ -2959,6 +3075,82 @@ func (p *PostgresRepository) UpdateDisputeState(ctx context.Context, id string, 
 		return ErrNotFound
 	}
 	return nil
+}
+
+// --- User & Session PostgreSQL Methods ---
+
+func (p *PostgresRepository) CreateUser(ctx context.Context, u *User) error {
+	query := `INSERT INTO users (id, organization_id, email, password_hash, name, role, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	_, err := p.db.ExecContext(ctx, query, u.ID, u.OrganizationID, strings.ToLower(u.Email), u.PasswordHash, u.Name, u.Role, u.CreatedAt, u.UpdatedAt)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return ErrAlreadyExists
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *PostgresRepository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	query := `SELECT id, organization_id, email, password_hash, name, role, created_at, updated_at
+	          FROM users WHERE LOWER(email) = LOWER($1)`
+	row := p.db.QueryRowContext(ctx, query, email)
+	var u User
+	if err := row.Scan(&u.ID, &u.OrganizationID, &u.Email, &u.PasswordHash, &u.Name, &u.Role, &u.CreatedAt, &u.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (p *PostgresRepository) GetUserByID(ctx context.Context, id string) (*User, error) {
+	query := `SELECT id, organization_id, email, password_hash, name, role, created_at, updated_at
+	          FROM users WHERE id = $1`
+	row := p.db.QueryRowContext(ctx, query, id)
+	var u User
+	if err := row.Scan(&u.ID, &u.OrganizationID, &u.Email, &u.PasswordHash, &u.Name, &u.Role, &u.CreatedAt, &u.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (p *PostgresRepository) CreateSession(ctx context.Context, s *Session) error {
+	query := `INSERT INTO sessions (id, user_id, organization_id, token_hash, expires_at, created_at)
+	          VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := p.db.ExecContext(ctx, query, s.ID, s.UserID, s.OrganizationID, s.TokenHash, s.ExpiresAt, s.CreatedAt)
+	return err
+}
+
+func (p *PostgresRepository) GetSessionByTokenHash(ctx context.Context, tokenHash string) (*Session, error) {
+	query := `SELECT id, user_id, organization_id, token_hash, expires_at, created_at
+	          FROM sessions WHERE token_hash = $1 AND expires_at > NOW()`
+	row := p.db.QueryRowContext(ctx, query, tokenHash)
+	var s Session
+	if err := row.Scan(&s.ID, &s.UserID, &s.OrganizationID, &s.TokenHash, &s.ExpiresAt, &s.CreatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (p *PostgresRepository) DeleteSession(ctx context.Context, tokenHash string) error {
+	query := `DELETE FROM sessions WHERE token_hash = $1`
+	_, err := p.db.ExecContext(ctx, query, tokenHash)
+	return err
+}
+
+func (p *PostgresRepository) DeleteExpiredSessions(ctx context.Context) error {
+	query := `DELETE FROM sessions WHERE expires_at <= NOW()`
+	_, err := p.db.ExecContext(ctx, query)
+	return err
 }
 
 // ApplyMigrations executes the initial schema migration statements.

@@ -19,6 +19,8 @@ type authContextKey string
 const (
 	OrgIDKey         authContextKey = "auth_org_id"
 	KeyIDKey         authContextKey = "auth_key_id"
+	UserIDKey        authContextKey = "auth_user_id"
+	UserRoleKey      authContextKey = "auth_user_role"
 	ScopesKey        authContextKey = "auth_scopes"
 	AuthenticatedKey authContextKey = "auth_authenticated"
 )
@@ -32,9 +34,25 @@ func GetOrgID(ctx context.Context) string {
 	return ""
 }
 
-// GetKeyID extracts the authenticated API key ID.
+// GetKeyID extracts the authenticated API key or session ID.
 func GetKeyID(ctx context.Context) string {
 	if val, ok := ctx.Value(KeyIDKey).(string); ok {
+		return val
+	}
+	return ""
+}
+
+// GetUserID extracts the authenticated user ID if logged in via session.
+func GetUserID(ctx context.Context) string {
+	if val, ok := ctx.Value(UserIDKey).(string); ok {
+		return val
+	}
+	return ""
+}
+
+// GetUserRole extracts the authenticated user role if logged in via session.
+func GetUserRole(ctx context.Context) string {
+	if val, ok := ctx.Value(UserRoleKey).(string); ok {
 		return val
 	}
 	return ""
@@ -48,7 +66,7 @@ func GetScopes(ctx context.Context) []string {
 	return nil
 }
 
-// IsAuthenticated checks if the request was authenticated with a valid API key.
+// IsAuthenticated checks if the request was authenticated with a valid API key or session.
 func IsAuthenticated(ctx context.Context) bool {
 	if val, ok := ctx.Value(AuthenticatedKey).(bool); ok {
 		return val
@@ -79,16 +97,19 @@ func ResolveTenantOrg(ctx context.Context, requestedOrg string) (string, bool) {
 }
 
 // isPublicEndpoint checks if a request path is an explicitly allowlisted public endpoint.
-// Only /health and /ready are public. /metrics is private and requires authentication.
+// Public routes include health/readiness probes and user registration/login endpoints.
 func isPublicEndpoint(path string) bool {
 	cleaned := strings.TrimRight(strings.ToLower(strings.TrimSpace(path)), "/")
 	if cleaned == "" {
 		cleaned = "/"
 	}
-	return cleaned == "/health" || cleaned == "/ready"
+	return cleaned == "/health" || cleaned == "/ready" ||
+		cleaned == "/v1/auth/signup" || cleaned == "/v1/auth/login" ||
+		cleaned == "/api/auth/signup" || cleaned == "/api/auth/login"
 }
 
-// APIKeyAuth validates API keys presented in Authorization (Bearer ...) or X-API-Key headers.
+// APIKeyAuth validates API keys presented in Authorization (Bearer ...) or X-API-Key headers,
+// as well as user session tokens via Cookie or Bearer auth.
 // Fail-closed: missing, invalid, expired, or revoked keys receive HTTP 401.
 // In production, missing authentication repositories fail closed immediately.
 func APIKeyAuth(repo storage.Repository, cfg ...*config.Config) func(http.Handler) http.Handler {
@@ -107,19 +128,27 @@ func APIKeyAuth(repo storage.Repository, cfg ...*config.Config) func(http.Handle
 				return
 			}
 
-			// 2. Allowlisted public endpoints (/health, /ready) pass through without credentials
+			// 2. Allowlisted public endpoints (/health, /ready, /v1/auth/signup, /v1/auth/login) pass through
 			if isPublicEndpoint(r.URL.Path) {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Extract API key from Authorization: Bearer <key> or X-API-Key: <key>
+			// Extract credential from:
+			// 1. Authorization: Bearer <key_or_session>
+			// 2. X-API-Key: <key>
+			// 3. X-Session-Token: <token>
+			// 4. Cookie: agentpay_session=<token>
 			var apiKeySecret string
 			authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 			if strings.HasPrefix(authHeader, "Bearer ") {
 				apiKeySecret = strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
 			} else if xKey := strings.TrimSpace(r.Header.Get("X-API-Key")); xKey != "" {
 				apiKeySecret = xKey
+			} else if xSess := strings.TrimSpace(r.Header.Get("X-Session-Token")); xSess != "" {
+				apiKeySecret = xSess
+			} else if cookie, err := r.Cookie("agentpay_session"); err == nil && cookie.Value != "" {
+				apiKeySecret = strings.TrimSpace(cookie.Value)
 			}
 
 			// 3. Fail closed if authentication backend is missing/misconfigured in production
@@ -130,18 +159,46 @@ func APIKeyAuth(repo storage.Repository, cfg ...*config.Config) func(http.Handle
 					return
 				}
 				if apiKeySecret == "" {
-					writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "API key required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header.", reqID)
+					writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Credentials required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header.", reqID)
 					return
 				}
 			}
 
-			// 4. Missing API key on protected routes must receive HTTP 401
+			// 4. Missing credential on protected routes must receive HTTP 401
 			if apiKeySecret == "" {
-				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "API key required. Provide via 'Authorization: Bearer <key>' or 'X-API-Key' header.", reqID)
+				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Credentials required. Provide via 'Authorization: Bearer <key>', 'X-API-Key' header, or session cookie.", reqID)
 				return
 			}
 
-			// 5. Bootstrap Admin API Key verification (constant-time comparison)
+			// 5. Session token authentication (Priority 2 Product Auth)
+			if strings.HasPrefix(apiKeySecret, auth.SessionTokenPrefix) {
+				if repo == nil {
+					writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication repository unavailable", reqID)
+					return
+				}
+				tokenHash := auth.HashSecret(apiKeySecret)
+				session, err := repo.GetSessionByTokenHash(r.Context(), tokenHash)
+				if err != nil {
+					writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid or expired session token", reqID)
+					return
+				}
+				user, err := repo.GetUserByID(r.Context(), session.UserID)
+				if err != nil {
+					writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User associated with session not found", reqID)
+					return
+				}
+
+				ctx := context.WithValue(r.Context(), OrgIDKey, session.OrganizationID)
+				ctx = context.WithValue(ctx, KeyIDKey, "sess_"+session.ID)
+				ctx = context.WithValue(ctx, UserIDKey, user.ID)
+				ctx = context.WithValue(ctx, UserRoleKey, user.Role)
+				ctx = context.WithValue(ctx, ScopesKey, []string{domain.ScopeAdmin, "*"})
+				ctx = context.WithValue(ctx, AuthenticatedKey, true)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			// 6. Bootstrap Admin API Key verification (constant-time comparison)
 			if gatewayCfg != nil && strings.TrimSpace(gatewayCfg.BootstrapAPIKey) != "" {
 				if subtle.ConstantTimeCompare([]byte(apiKeySecret), []byte(strings.TrimSpace(gatewayCfg.BootstrapAPIKey))) == 1 {
 					ctx := context.WithValue(r.Context(), OrgIDKey, "org_default")
@@ -153,9 +210,9 @@ func APIKeyAuth(repo storage.Repository, cfg ...*config.Config) func(http.Handle
 				}
 			}
 
-			// 6. Validate key secret format
+			// 7. Validate key secret format
 			if !strings.HasPrefix(apiKeySecret, auth.KeyPrefixLive) && !strings.HasPrefix(apiKeySecret, auth.KeyPrefixDemo) {
-				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid API key format", reqID)
+				writeAuthError(w, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid API key or session format", reqID)
 				return
 			}
 

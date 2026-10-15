@@ -74,6 +74,19 @@ func NewRouter(
 	mux.HandleFunc("POST /api/ai/proposals", aiHandler.HandleCreateProposal)
 	mux.HandleFunc("POST /v1/ai/proposals", aiHandler.HandleCreateProposal)
 
+	// User Authentication & Session Management (Priority 2 Product Auth)
+	if repo != nil {
+		authHandler := handlers.NewAuthHandler(repo)
+		mux.HandleFunc("POST /v1/auth/signup", authHandler.HandleSignup)
+		mux.HandleFunc("POST /api/auth/signup", authHandler.HandleSignup)
+		mux.HandleFunc("POST /v1/auth/login", authHandler.HandleLogin)
+		mux.HandleFunc("POST /api/auth/login", authHandler.HandleLogin)
+		mux.HandleFunc("POST /v1/auth/logout", authHandler.HandleLogout)
+		mux.HandleFunc("POST /api/auth/logout", authHandler.HandleLogout)
+		mux.HandleFunc("GET /v1/auth/me", authHandler.HandleMe)
+		mux.HandleFunc("GET /api/auth/me", authHandler.HandleMe)
+	}
+
 	// 1. Health, Readiness & Metrics
 	mux.HandleFunc("GET /health", health.Handler)
 	var bc blockchain.Client
@@ -209,11 +222,26 @@ func NewRouter(
 	if repo != nil {
 		listHandler := handlers.NewListHandler(repo, reg)
 		mux.HandleFunc("GET /v1/agents", listHandler.HandleListAgents)
+		mux.HandleFunc("POST /v1/agents", listHandler.HandleCreateAgent)
 		mux.HandleFunc("GET /v1/agents/{id}", listHandler.HandleGetAgent)
 		mux.HandleFunc("GET /v1/agent-budgets/{id}", listHandler.HandleGetAgentBudget)
+		mux.HandleFunc("GET /v1/policies/{agent_id}", listHandler.HandleGetPolicy)
+		mux.HandleFunc("POST /v1/policies", listHandler.HandleSavePolicy)
+		mux.HandleFunc("PUT /v1/policies/{agent_id}", listHandler.HandleSavePolicy)
 		mux.HandleFunc("GET /v1/services", listHandler.HandleListServices)
 		mux.HandleFunc("GET /v1/payment-intents", listHandler.HandleListIntents)
 		mux.HandleFunc("GET /v1/transactions", listHandler.HandleListTransactions)
+
+		// Frontend /api/ compatibility aliases
+		mux.HandleFunc("GET /api/agents", listHandler.HandleListAgents)
+		mux.HandleFunc("POST /api/agents", listHandler.HandleCreateAgent)
+		mux.HandleFunc("GET /api/agents/{id}", listHandler.HandleGetAgent)
+		mux.HandleFunc("GET /api/policies/{agent_id}", listHandler.HandleGetPolicy)
+		mux.HandleFunc("POST /api/policies", listHandler.HandleSavePolicy)
+		mux.HandleFunc("PUT /api/policies/{agent_id}", listHandler.HandleSavePolicy)
+		mux.HandleFunc("GET /api/services", listHandler.HandleListServices)
+		mux.HandleFunc("GET /api/payment-intents", listHandler.HandleListIntents)
+		mux.HandleFunc("GET /api/transactions", listHandler.HandleListTransactions)
 
 		// Day 8: Quotes & Simulation Handlers
 		quoteHandler := handlers.NewQuoteHandler(reg)

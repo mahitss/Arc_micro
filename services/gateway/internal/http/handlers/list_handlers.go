@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/http/middleware"
 	"github.com/arc-agentpay/agentpay/services/gateway/internal/intent"
@@ -254,4 +258,265 @@ func (h *ListHandler) HandleListTransactions(w http.ResponseWriter, r *http.Requ
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"transactions": filtered,
 	})
+}
+
+type CreateAgentRequest struct {
+	ID           string `json:"id,omitempty"`
+	Name         string `json:"name"`
+	Description  string `json:"description,omitempty"`
+	VaultAddress string `json:"vault_address,omitempty"`
+	Policy       *struct {
+		PerTransactionLimit   string `json:"per_transaction_limit,omitempty"`
+		DailyLimit            string `json:"daily_limit,omitempty"`
+		MaxTransactionsPerDay int    `json:"max_transactions_per_day,omitempty"`
+		ApprovalThreshold     string `json:"approval_threshold,omitempty"`
+		AllowedAssets         string `json:"allowed_assets,omitempty"`
+	} `json:"policy,omitempty"`
+}
+
+// HandleCreateAgent processes POST /v1/agents with organization tenant isolation.
+func (h *ListHandler) HandleCreateAgent(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed", ctxReqID)
+		return
+	}
+
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
+
+	var req CreateAgentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON payload", ctxReqID)
+		return
+	}
+
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "Agent name is required", ctxReqID)
+		return
+	}
+
+	agentID := strings.TrimSpace(req.ID)
+	if agentID == "" {
+		b := make([]byte, 4)
+		_, _ = rand.Read(b)
+		agentID = fmt.Sprintf("agent_%s", hex.EncodeToString(b))
+	}
+
+	vaultAddr := strings.TrimSpace(req.VaultAddress)
+	if vaultAddr == "" {
+		// Deployed Arc Testnet AgentVault address
+		vaultAddr = "0x7789bC3d8366782b97496165C24BD5bB09302843"
+	}
+
+	now := time.Now().UTC()
+	policyID := fmt.Sprintf("pol_%s", agentID)
+
+	agent := &storage.Agent{
+		ID:             agentID,
+		OrganizationID: targetOrg,
+		Name:           name,
+		Description:    strings.TrimSpace(req.Description),
+		Status:         "ACTIVE",
+		PolicyID:       policyID,
+		VaultAddress:   vaultAddr,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+
+	if err := h.repo.SaveAgent(r.Context(), agent); err != nil {
+		writeError(w, http.StatusInternalServerError, "STORAGE_ERROR", fmt.Sprintf("Failed to save agent: %v", err), ctxReqID)
+		return
+	}
+
+	// Create or initialize policy
+	perTx := "500000" // 0.50 USDC
+	dailyLimit := "5000000" // 5.00 USDC
+	maxTx := 20
+	approvalThresh := "500000"
+	allowedAssets := "USDC"
+
+	if req.Policy != nil {
+		if req.Policy.PerTransactionLimit != "" {
+			perTx = req.Policy.PerTransactionLimit
+		}
+		if req.Policy.DailyLimit != "" {
+			dailyLimit = req.Policy.DailyLimit
+		}
+		if req.Policy.MaxTransactionsPerDay > 0 {
+			maxTx = req.Policy.MaxTransactionsPerDay
+		}
+		if req.Policy.ApprovalThreshold != "" {
+			approvalThresh = req.Policy.ApprovalThreshold
+		}
+		if req.Policy.AllowedAssets != "" {
+			allowedAssets = req.Policy.AllowedAssets
+		}
+	}
+
+	policy := &storage.Policy{
+		ID:                    policyID,
+		OrganizationID:        targetOrg,
+		AgentID:               agentID,
+		Enabled:               true,
+		PerTransactionLimit:   perTx,
+		DailyLimit:            dailyLimit,
+		MaxTransactionsPerDay: maxTx,
+		ApprovalThreshold:     approvalThresh,
+		AllowedAssets:         allowedAssets,
+		CreatedAt:             now,
+		UpdatedAt:             now,
+	}
+	_ = h.repo.SavePolicy(r.Context(), policy)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"agent":  agent,
+		"policy": policy,
+	})
+}
+
+type SavePolicyRequest struct {
+	AgentID               string `json:"agent_id"`
+	Enabled               *bool  `json:"enabled,omitempty"`
+	PerTransactionLimit   string `json:"per_transaction_limit"`
+	DailyLimit            string `json:"daily_limit"`
+	MaxTransactionsPerDay int    `json:"max_transactions_per_day"`
+	ApprovalThreshold     string `json:"approval_threshold"`
+	AllowedAssets         string `json:"allowed_assets,omitempty"`
+	AllowedRecipients     string `json:"allowed_recipients,omitempty"`
+	BlockedRecipients     string `json:"blocked_recipients,omitempty"`
+}
+
+// HandleSavePolicy processes POST/PUT /v1/policies with organization tenant isolation.
+func (h *ListHandler) HandleSavePolicy(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	if r.Method != http.MethodPost && r.Method != http.MethodPut {
+		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed", ctxReqID)
+		return
+	}
+
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
+
+	pathAgentID := r.PathValue("agent_id")
+
+	var req SavePolicyRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON payload", ctxReqID)
+		return
+	}
+
+	agentID := strings.TrimSpace(req.AgentID)
+	if agentID == "" {
+		agentID = pathAgentID
+	}
+	if agentID == "" {
+		writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "agent_id is required", ctxReqID)
+		return
+	}
+
+	// Verify agent exists and belongs to targetOrg
+	ag, err := h.repo.GetAgent(r.Context(), agentID)
+	if err != nil || (ag.OrganizationID != "" && ag.OrganizationID != targetOrg) {
+		writeError(w, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found in organization", ctxReqID)
+		return
+	}
+
+	now := time.Now().UTC()
+	policyID := fmt.Sprintf("pol_%s", agentID)
+
+	enabled := true
+	if req.Enabled != nil {
+		enabled = *req.Enabled
+	}
+
+	perTx := strings.TrimSpace(req.PerTransactionLimit)
+	if perTx == "" {
+		perTx = "500000"
+	}
+	dailyLimit := strings.TrimSpace(req.DailyLimit)
+	if dailyLimit == "" {
+		dailyLimit = "5000000"
+	}
+	maxTx := req.MaxTransactionsPerDay
+	if maxTx <= 0 {
+		maxTx = 20
+	}
+	approvalThresh := strings.TrimSpace(req.ApprovalThreshold)
+	if approvalThresh == "" {
+		approvalThresh = "500000"
+	}
+	allowedAssets := strings.TrimSpace(req.AllowedAssets)
+	if allowedAssets == "" {
+		allowedAssets = "USDC"
+	}
+
+	policy := &storage.Policy{
+		ID:                    policyID,
+		OrganizationID:        targetOrg,
+		AgentID:               agentID,
+		Enabled:               enabled,
+		PerTransactionLimit:   perTx,
+		DailyLimit:            dailyLimit,
+		MaxTransactionsPerDay: maxTx,
+		ApprovalThreshold:     approvalThresh,
+		AllowedAssets:         allowedAssets,
+		AllowedRecipients:     req.AllowedRecipients,
+		BlockedRecipients:     req.BlockedRecipients,
+		CreatedAt:             now,
+		UpdatedAt:             now,
+	}
+
+	if err := h.repo.SavePolicy(r.Context(), policy); err != nil {
+		writeError(w, http.StatusInternalServerError, "STORAGE_ERROR", fmt.Sprintf("Failed to save policy: %v", err), ctxReqID)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(policy)
+}
+
+// HandleGetPolicy processes GET /v1/policies/{agent_id} with organization tenant isolation.
+func (h *ListHandler) HandleGetPolicy(w http.ResponseWriter, r *http.Request) {
+	ctxReqID := middleware.GetRequestID(r.Context())
+	targetOrg, ok := resolveTenantFromRequest(w, r, "", ctxReqID)
+	if !ok {
+		return
+	}
+
+	agentID := strings.TrimSpace(r.PathValue("agent_id"))
+	if agentID == "" {
+		writeError(w, http.StatusBadRequest, "VALIDATION_ERROR", "agent_id path parameter is required", ctxReqID)
+		return
+	}
+
+	policy, err := h.repo.GetPolicyByAgent(r.Context(), targetOrg, agentID)
+	if err != nil {
+		// Return a default active policy if not explicitly stored
+		policy = &storage.Policy{
+			ID:                    fmt.Sprintf("pol_%s", agentID),
+			OrganizationID:        targetOrg,
+			AgentID:               agentID,
+			Enabled:               true,
+			PerTransactionLimit:   "500000",
+			DailyLimit:            "5000000",
+			MaxTransactionsPerDay: 20,
+			ApprovalThreshold:     "500000",
+			AllowedAssets:         "USDC",
+			CreatedAt:             time.Now().UTC(),
+			UpdatedAt:             time.Now().UTC(),
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(policy)
 }

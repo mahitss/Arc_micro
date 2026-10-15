@@ -46,4 +46,10 @@ export async function fetchIntentTrace(id: string): Promise<PaymentTrace> {
   return await apiRequest<PaymentTrace>(`/v1/payment-intents/${encodeURIComponent(id)}/trace`);
 }
 
+export async function fetchApprovals(): Promise<any[]> {
+  const resp = await apiRequest<{ approvals: any[] }>('/v1/approvals');
+  return resp.approvals || [];
+}
+
+
 
