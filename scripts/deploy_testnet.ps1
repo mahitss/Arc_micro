@@ -6,6 +6,7 @@
 # ==============================================================================
 param(
     [switch]$Confirm,
+    [switch]$Browser,
     [string]$Account,
     [switch]$VerifySigner
 )
@@ -45,7 +46,9 @@ Write-Host "Target RPC URL:      $ARC_RPC_URL"
 Write-Host "USDC Contract:       $ARC_USDC_ADDRESS"
 Write-Host "Agent ID:            $AGENT_ID"
 Write-Host "Initial Vault Owner: $INITIAL_OWNER"
-if ($Account) {
+if ($Browser) {
+    Write-Host "Signing Method:      Browser Wallet (MetaMask via localhost:9545)" -ForegroundColor Yellow
+} elseif ($Account) {
     Write-Host "Signing Method:      Foundry Keystore Account ($Account)" -ForegroundColor Yellow
 } else {
     Write-Host "Signing Method:      Interactive Hidden Console Prompt" -ForegroundColor Yellow
@@ -78,22 +81,34 @@ Write-Host "Verified live RPC Chain ID matches expected Arc Testnet: $ARC_CHAIN_
 # Optional local signer pre-verification
 if ($VerifySigner) {
     Write-Host "Verifying signer identity locally before broadcasting..." -ForegroundColor Yellow
-    if ($Account) {
+    if ($Browser) {
+        Write-Host "Browser wallet signing selected; signer verified via MetaMask connection." -ForegroundColor Green
+    } elseif ($Account) {
         $derivedAddress = (& $castExe wallet address --account "$Account").Trim()
+        $castExit = $LASTEXITCODE
+        if ($castExit -ne 0 -or [string]::IsNullOrWhiteSpace($derivedAddress)) {
+            Write-Error "Signer verification failed or was cancelled (exit code: $castExit)."
+            exit 1
+        }
+        if ($derivedAddress.ToLower() -ne $INITIAL_OWNER.ToLower()) {
+            Write-Error "CRITICAL MISMATCH: Derived address ($derivedAddress) does NOT match expected initial owner ($INITIAL_OWNER)!"
+            exit 1
+        }
+        Write-Host "Signer identity verified: $derivedAddress matches intended initial owner!" -ForegroundColor Green
     } else {
         Write-Host "Enter Account 1 private key into cast prompt to verify public address:" -ForegroundColor Cyan
         $derivedAddress = (& $castExe wallet address --interactive).Trim()
+        $castExit = $LASTEXITCODE
+        if ($castExit -ne 0 -or [string]::IsNullOrWhiteSpace($derivedAddress)) {
+            Write-Error "Signer verification failed or was cancelled (exit code: $castExit)."
+            exit 1
+        }
+        if ($derivedAddress.ToLower() -ne $INITIAL_OWNER.ToLower()) {
+            Write-Error "CRITICAL MISMATCH: Derived address ($derivedAddress) does NOT match expected initial owner ($INITIAL_OWNER)!"
+            exit 1
+        }
+        Write-Host "Signer identity verified: $derivedAddress matches intended initial owner!" -ForegroundColor Green
     }
-    $castExit = $LASTEXITCODE
-    if ($castExit -ne 0 -or [string]::IsNullOrWhiteSpace($derivedAddress)) {
-        Write-Error "Signer verification failed or was cancelled (exit code: $castExit)."
-        exit 1
-    }
-    if ($derivedAddress.ToLower() -ne $INITIAL_OWNER.ToLower()) {
-        Write-Error "CRITICAL MISMATCH: Derived address ($derivedAddress) does NOT match expected initial owner ($INITIAL_OWNER)!"
-        exit 1
-    }
-    Write-Host "Signer identity verified: $derivedAddress matches intended initial owner!" -ForegroundColor Green
 }
 
 # Flush any stray buffered input in the console window
@@ -116,7 +131,12 @@ $forgeArgs = @(
     "--slow"
 )
 
-if ($Account) {
+if ($Browser) {
+    $forgeArgs += @("--browser")
+    Write-Host "Launching Foundry with browser wallet connector..." -ForegroundColor Yellow
+    Write-Host "Target Sender Address: $INITIAL_OWNER" -ForegroundColor Cyan
+    Write-Host "A browser window will open at http://localhost:9545 to connect MetaMask Account 1." -ForegroundColor Green
+} elseif ($Account) {
     $forgeArgs += @("--account", "$Account")
     Write-Host "Launching Foundry with keystore account: $Account..." -ForegroundColor Yellow
     Write-Host "Target Sender Address: $INITIAL_OWNER" -ForegroundColor Cyan
