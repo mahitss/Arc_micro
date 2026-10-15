@@ -24,6 +24,8 @@ contracts/broadcast/
 .env
 .env.*
 .env*.local
+*.env
+*.env.*
 *.pem
 *.key
 *.pkcs12
@@ -34,6 +36,11 @@ private_key*
 *mnemonic*
 *wallet*
 *keystore*
+*.credentials
+credentials.json
+service-account*.json
+.secrets/
+secrets/
 
 # IDE & OS
 .DS_Store
