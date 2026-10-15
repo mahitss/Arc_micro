@@ -8,6 +8,7 @@ param(
     [switch]$Confirm,
     [switch]$Browser,
     [string]$Account,
+    [string]$Owner,
     [switch]$VerifySigner
 )
 
@@ -23,19 +24,27 @@ $ARC_RPC_URL = if ($env:ARC_RPC_URL) { $env:ARC_RPC_URL } else { "https://rpc.te
 $ARC_CHAIN_ID = 5042002
 $ARC_USDC_ADDRESS = "0x3600000000000000000000000000000000000000"
 $AGENT_ID = "research-agent"
-$INITIAL_OWNER = if ($env:COLD_MULTISIG_OWNER) { $env:COLD_MULTISIG_OWNER } elseif ($env:INITIAL_OWNER) { $env:INITIAL_OWNER } else { "0x2a3613d44799ce28385058358586e8d311ee6c57" }
+$DEFAULT_TESTNET_OWNER = "0x2a3613d44799ce28385058358586e8d311ee6c57"
+$INITIAL_OWNER = if ($Owner) { 
+    $Owner 
+} elseif ($env:TESTNET_OWNER) { 
+    $env:TESTNET_OWNER 
+} else { 
+    $DEFAULT_TESTNET_OWNER 
+}
 
 # Resolve Foundry binary paths
 $foundryBin = Join-Path $env:USERPROFILE ".foundry\bin"
 $forgeExe = if (Test-Path (Join-Path $foundryBin "forge.exe")) { Join-Path $foundryBin "forge.exe" } else { "forge" }
 $castExe = if (Test-Path (Join-Path $foundryBin "cast.exe")) { Join-Path $foundryBin "cast.exe" } else { "cast" }
 
-# Configure Foundry Environment for child processes
+# Explicitly set environment for child processes (overwriting any stale shell session variables)
 $env:ARC_REQUIRE_MAINNET = "false"
 $env:ARC_CHAIN_ID = "$ARC_CHAIN_ID"
 $env:ARC_USDC_ADDRESS = "$ARC_USDC_ADDRESS"
 $env:AGENT_ID = "$AGENT_ID"
 $env:COLD_MULTISIG_OWNER = "$INITIAL_OWNER"
+$env:INITIAL_OWNER = "$INITIAL_OWNER"
 
 Write-Host "==================================================================" -ForegroundColor Cyan
 Write-Host "          AgentPay: Secure Arc Testnet Deployment                 " -ForegroundColor Cyan
