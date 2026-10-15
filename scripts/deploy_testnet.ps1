@@ -9,7 +9,10 @@ param(
     [switch]$Browser,
     [string]$Account,
     [string]$Owner,
-    [switch]$VerifySigner
+    [switch]$VerifySigner,
+    [switch]$Simulate,
+    [switch]$Resume,
+    [int]$Timeout = 300
 )
 
 $ErrorActionPreference = "Stop"
@@ -55,6 +58,13 @@ Write-Host "Target RPC URL:      $ARC_RPC_URL"
 Write-Host "USDC Contract:       $ARC_USDC_ADDRESS"
 Write-Host "Agent ID:            $AGENT_ID"
 Write-Host "Initial Vault Owner: $INITIAL_OWNER"
+if ($Simulate) {
+    Write-Host "Execution Mode:      SIMULATION ONLY (No transactions broadcast)" -ForegroundColor Green
+} elseif ($Resume) {
+    Write-Host "Execution Mode:      RESUME BROADCAST" -ForegroundColor Yellow
+} else {
+    Write-Host "Execution Mode:      BROADCAST TO NETWORK" -ForegroundColor Yellow
+}
 if ($Browser) {
     Write-Host "Signing Method:      Browser Wallet (MetaMask via localhost:9545)" -ForegroundColor Yellow
 } elseif ($Account) {
@@ -64,7 +74,7 @@ if ($Browser) {
 }
 Write-Host "==================================================================" -ForegroundColor Cyan
 
-if (-not $Confirm) {
+if (-not $Simulate -and -not $Confirm) {
     Write-Host "WARNING: You are about to broadcast to Arc Testnet (Chain ID $ARC_CHAIN_ID)." -ForegroundColor Yellow
     $userInput = Read-Host "To proceed, type 'DEPLOY-ARC-TESTNET' and press Enter"
     if ($userInput -ne "DEPLOY-ARC-TESTNET") {
@@ -136,15 +146,36 @@ $forgeArgs = @(
     "script", "script/DeployAgentVault.s.sol:DeployAgentVault",
     "--rpc-url", "$ARC_RPC_URL",
     "--sender", "$INITIAL_OWNER",
-    "--broadcast",
-    "--slow"
+    "--slow",
+    "--confirmations", "1",
+    "--timeout", "$Timeout"
 )
+
+if ($Simulate) {
+    # Simulation only - no broadcast or resume flag
+} elseif ($Resume) {
+    $forgeArgs += @("--resume")
+} else {
+    $forgeArgs += @("--broadcast")
+}
 
 if ($Browser) {
     $forgeArgs += @("--browser")
     Write-Host "Launching Foundry with browser wallet connector..." -ForegroundColor Yellow
     Write-Host "Target Sender Address: $INITIAL_OWNER" -ForegroundColor Cyan
-    Write-Host "A browser window will open at http://localhost:9545 to connect MetaMask Account 1." -ForegroundColor Green
+    Write-Host "==================================================================" -ForegroundColor Cyan
+    Write-Host "       CRITICAL BROWSER-WALLET SUBMISSION STEPS (READ CAREFULLY)  " -ForegroundColor Yellow
+    Write-Host "==================================================================" -ForegroundColor Cyan
+    Write-Host "1. Ensure MetaMask is unlocked and set to Arc Testnet (Chain ID 5042002)." -ForegroundColor White
+    Write-Host "2. Foundry will open http://localhost:9545 in your browser." -ForegroundColor White
+    Write-Host "3. Click 'Connect Wallet' and approve the MetaMask connection." -ForegroundColor White
+    Write-Host "4. STEP A (CRUCIAL): Click 'Confirm Connection' on the webpage." -ForegroundColor Yellow
+    Write-Host "   -> The transaction will NEVER be fetched until you click 'Confirm Connection'!" -ForegroundColor Magenta
+    Write-Host "5. STEP B (CRUCIAL): When 'Transaction to Sign & Send' appears, click 'Sign & Send'." -ForegroundColor Yellow
+    Write-Host "   -> MetaMask will NEVER prompt you to sign until you click 'Sign & Send' on the webpage!" -ForegroundColor Magenta
+    Write-Host "6. Review the deployment gas and click 'Confirm' inside MetaMask." -ForegroundColor White
+    Write-Host "7. Keep this terminal open; Foundry will poll RPC and confirm receipt." -ForegroundColor White
+    Write-Host "==================================================================" -ForegroundColor Cyan
 } elseif ($Account) {
     $forgeArgs += @("--account", "$Account")
     Write-Host "Launching Foundry with keystore account: $Account..." -ForegroundColor Yellow
@@ -173,6 +204,28 @@ finally {
     Pop-Location
 }
 
-Write-Host "=== Testnet Deployment Completed Successfully ===" -ForegroundColor Green
-Write-Host "Explorer: https://testnet.arcscan.app/"
+# Post-run verification
+$broadcastRecordPath = Join-Path $contractsDir "broadcast\DeployAgentVault.s.sol\5042002\run-latest.json"
+if ($Simulate) {
+    Write-Host "=== Testnet Simulation Completed Successfully ===" -ForegroundColor Green
+    Write-Host "No transactions were broadcast. All assertions, bytecode construction, and chain configs passed."
+} else {
+    if (Test-Path $broadcastRecordPath) {
+        $runData = Get-Content $broadcastRecordPath -Raw | ConvertFrom-Json
+        $firstTx = $runData.transactions[0]
+        $txHash = $firstTx.hash
+        $deployedAddr = $firstTx.contractAddress
+        if ([string]::IsNullOrWhiteSpace($txHash) -or $null -eq $txHash) {
+            Write-Error "CRITICAL: Foundry exited but transaction hash is null! The transaction was not broadcast or signed."
+            exit 1
+        }
+        Write-Host "=== Testnet Deployment Broadcast Confirmed ===" -ForegroundColor Green
+        Write-Host "Transaction Hash:    $txHash" -ForegroundColor Cyan
+        Write-Host "Contract Address:    $deployedAddr" -ForegroundColor Cyan
+        Write-Host "Explorer URL:        https://testnet.arcscan.app/tx/$txHash"
+    } else {
+        Write-Host "=== Testnet Deployment Script Finished ===" -ForegroundColor Green
+    }
+    Write-Host "Explorer: https://testnet.arcscan.app/"
+}
 Write-Host "NOTE: Gateway live execution remains disabled by default (ENABLE_LIVE_EXECUTION=false)."
