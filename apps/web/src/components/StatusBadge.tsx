@@ -38,7 +38,10 @@ export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
     case 'PENDING':
     case 'DEGRADED':
     case 'APPROVAL_REQUIRED':
+    case 'AWAITING_APPROVAL':
+    case 'AWAITING APPROVAL':
     case 'SIMULATION':
+    case 'SIMULATED':
       dotColor = 'bg-[#D6A83A]';
       textColor = 'text-[#F2F0EA]';
       break;

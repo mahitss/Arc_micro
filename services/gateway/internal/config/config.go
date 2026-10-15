@@ -287,6 +287,41 @@ func Load() *Config {
 		expectedExecutor = os.Getenv("EXECUTOR_ADDRESS")
 	}
 
+	testnetArcRPCURL := os.Getenv("TESTNET_ARC_RPC_URL")
+	if testnetArcRPCURL == "" {
+		testnetArcRPCURL = "https://rpc.testnet.arc.network"
+	}
+
+	testnetArcChainID := os.Getenv("TESTNET_ARC_CHAIN_ID")
+	if testnetArcChainID == "" {
+		testnetArcChainID = "5042002"
+	}
+
+	testnetArcUSDCAddress := os.Getenv("TESTNET_ARC_USDC_ADDRESS")
+	if testnetArcUSDCAddress == "" {
+		testnetArcUSDCAddress = "0x3600000000000000000000000000000000000000"
+	}
+
+	testnetArcExplorerURL := os.Getenv("TESTNET_ARC_EXPLORER_URL")
+	if testnetArcExplorerURL == "" {
+		testnetArcExplorerURL = "https://testnet.arcscan.app"
+	}
+
+	testnetAgentVaultAddress := os.Getenv("TESTNET_AGENTVAULT_ADDRESS")
+	if testnetAgentVaultAddress == "" {
+		testnetAgentVaultAddress = "0x7789bC3d8366782b97496165C24BD5bB09302843"
+	}
+
+	testnetDeploymentTx := os.Getenv("TESTNET_DEPLOYMENT_TX")
+	if testnetDeploymentTx == "" {
+		testnetDeploymentTx = "0xcc3485dc1958fde3b7bb75623e01c00e8dc155723d69cb64516fefdde2dccb70"
+	}
+
+	testnetVaultOwner := os.Getenv("TESTNET_AGENTVAULT_OWNER")
+	if testnetVaultOwner == "" {
+		testnetVaultOwner = "0x2a3613D44799Ce28385058358586E8D311eE6C57"
+	}
+
 	return &Config{
 		Port:                   port,
 		PolicyEngineURL:        policyEngineURL,
@@ -317,13 +352,13 @@ func Load() *Config {
 		AIModel:                 aiModel,
 		AIAPIKey:                aiAPIKey,
 		AgentVaultAddress:       os.Getenv("AGENTVAULT_ADDRESS"),
-		TestnetArcRPCURL:         os.Getenv("TESTNET_ARC_RPC_URL"),
-		TestnetArcChainID:        os.Getenv("TESTNET_ARC_CHAIN_ID"),
-		TestnetArcUSDCAddress:    os.Getenv("TESTNET_ARC_USDC_ADDRESS"),
-		TestnetArcExplorerURL:    os.Getenv("TESTNET_ARC_EXPLORER_URL"),
-		TestnetAgentVaultAddress: os.Getenv("TESTNET_AGENTVAULT_ADDRESS"),
-		TestnetDeploymentTx:      os.Getenv("TESTNET_DEPLOYMENT_TX"),
-		TestnetVaultOwner:        os.Getenv("TESTNET_AGENTVAULT_OWNER"),
+		TestnetArcRPCURL:         testnetArcRPCURL,
+		TestnetArcChainID:        testnetArcChainID,
+		TestnetArcUSDCAddress:    testnetArcUSDCAddress,
+		TestnetArcExplorerURL:    testnetArcExplorerURL,
+		TestnetAgentVaultAddress: testnetAgentVaultAddress,
+		TestnetDeploymentTx:      testnetDeploymentTx,
+		TestnetVaultOwner:        testnetVaultOwner,
 		SignerBackend:           os.Getenv("SIGNER_BACKEND"),
 		KMSKeyID:                os.Getenv("KMS_KEY_ID"),
 		KMSRegion:               os.Getenv("KMS_REGION"),
