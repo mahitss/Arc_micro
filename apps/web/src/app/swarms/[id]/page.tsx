@@ -23,6 +23,7 @@ import type {
 import { LiveSwarmDAGVisualizer } from '../../../components/LiveSwarmDAGVisualizer';
 import { DataAuthorityBadge } from '../../../components/DataAuthorityBadge';
 import { getActiveDataMode, setActiveDataMode, DataMode } from '../../../lib/data-authority';
+import { useToast } from '../../../components/ui';
 
 function formatUsdc(amountBaseUnits?: string): string {
   if (!amountBaseUnits) return '0.00 USDC';
@@ -32,6 +33,7 @@ function formatUsdc(amountBaseUnits?: string): string {
 }
 
 export default function SwarmDetailPage() {
+  const toast = useToast();
   const params = useParams();
   const swarmId = params.id as string;
 
@@ -81,8 +83,9 @@ export default function SwarmDetailPage() {
       const updated = await startSwarm(swarmId);
       setSwarm(updated);
       loadSwarmData();
+      toast.success('Swarm Started', `Swarm ${swarmId} has been started.`);
     } catch (err) {
-      alert(`Start failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error('Start Failed', err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -92,18 +95,19 @@ export default function SwarmDetailPage() {
       const updated = await cancelSwarm(swarmId);
       setSwarm(updated);
       loadSwarmData();
+      toast.success('Swarm Cancelled', `Swarm ${swarmId} budget reservations released.`);
     } catch (err) {
-      alert(`Cancel failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error('Cancel Failed', err instanceof Error ? err.message : String(err));
     }
   };
 
   const handleReplan = async () => {
     try {
       const proposal = await replanSwarm(swarmId);
-      alert(`Replan Proposal Generated: ${proposal.strategy} - ${proposal.reason}`);
+      toast.info('Replan Proposal Generated', `${proposal.strategy} - ${proposal.reason}`);
       loadSwarmData();
     } catch (err) {
-      alert(`Replan failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error('Replan Failed', err instanceof Error ? err.message : String(err));
     }
   };
 

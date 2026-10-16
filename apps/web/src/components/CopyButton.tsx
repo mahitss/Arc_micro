@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useToast } from './ui/Toast';
 
 interface CopyButtonProps {
   textToCopy: string;
@@ -9,6 +10,7 @@ interface CopyButtonProps {
 
 export function CopyButton({ textToCopy, label = 'Copy' }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
+  const toast = useToast();
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -16,6 +18,7 @@ export function CopyButton({ textToCopy, label = 'Copy' }: CopyButtonProps) {
     try {
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
+      toast.success(`${label} copied to clipboard`);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback

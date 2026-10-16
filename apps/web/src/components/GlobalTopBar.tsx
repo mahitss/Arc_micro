@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AgentPayCommandPalette } from './ui';
+import { AgentPayCommandPalette, useToast } from './ui';
 import { fetchSystemHealth } from '../lib/api/health';
 import { SystemHealth } from '../lib/api/types';
 import { useAuth } from '../lib/auth/AuthContext';
@@ -11,7 +11,9 @@ import { useAuth } from '../lib/auth/AuthContext';
 export function GlobalTopBar() {
   const pathname = usePathname();
   const { user, organization, isAuthenticated, logout } = useAuth();
+  const { success: toastSuccess } = useToast();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [health, setHealth] = useState<SystemHealth | null>(null);
 
   const isPublicRoute =
@@ -211,20 +213,121 @@ export function GlobalTopBar() {
                   )}
                 </div>
 
-                {/* User / Org Avatar & Logout */}
+                {/* User / Org Avatar & Dropdown Menu */}
                 {user ? (
-                  <div className="flex items-center gap-2 pl-2 border-l border-[#222222]">
-                    <div className="text-right hidden sm:block">
-                      <div className="text-xs font-medium text-[#F2F0EA] leading-none">{user.name}</div>
-                      <div className="text-[10px] text-[#716F69] font-mono leading-tight mt-0.5">{organization?.name || user.role}</div>
-                    </div>
+                  <div className="relative pl-2 border-l border-[#222222]">
                     <button
-                      onClick={() => logout()}
-                      title="Log Out"
-                      className="px-2 py-1 rounded bg-[#161616] hover:bg-[#202020] border border-[#2A2A2A] text-[11px] text-[#A09D95] hover:text-white transition-colors"
+                      onClick={() => setUserMenuOpen((prev) => !prev)}
+                      className="flex items-center gap-2 p-1 rounded-lg hover:bg-[#141414] border border-transparent hover:border-[#2B2B2B] transition-all text-left"
                     >
-                      Logout
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#8F7028] to-[#D6A83A] text-black font-bold text-xs flex items-center justify-center font-mono shrink-0 shadow-sm">
+                        {user.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
+                      </div>
+                      <div className="hidden sm:block text-left pr-1">
+                        <div className="text-xs font-semibold text-[#F2F0EA] leading-none flex items-center gap-1.5">
+                          <span>{user.name}</span>
+                          <span className="text-[10px] text-[#716F69]">▾</span>
+                        </div>
+                        <div className="text-[10px] text-[#B0ADA5] font-mono leading-tight mt-0.5 truncate max-w-[120px]">
+                          {organization?.name || user.role}
+                        </div>
+                      </div>
                     </button>
+
+                    {/* Interactive Dropdown Card */}
+                    {userMenuOpen && (
+                      <div
+                        className="absolute right-0 top-full mt-2 w-72 rounded-xl bg-[#101010]/95 backdrop-blur-xl border border-[#2B2B2B] shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
+                        onMouseLeave={() => setUserMenuOpen(false)}
+                      >
+                        {/* Header Profile */}
+                        <div className="flex items-center gap-3 pb-3 border-b border-[#222222]">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#8F7028] to-[#D6A83A] text-black font-bold text-sm flex items-center justify-center font-mono shrink-0">
+                            {user.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold text-[#F2F0EA] truncate">{user.name}</div>
+                            <div className="text-[11px] text-[#716F69] truncate font-mono">{user.email}</div>
+                            <span className="inline-block mt-1 px-1.5 py-0.5 text-[9px] font-mono font-semibold rounded bg-[#D6A83A]/15 text-[#D6A83A] border border-[#D6A83A]/30 uppercase">
+                              {user.role}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Organization Section */}
+                        <div className="py-2.5 px-2 mt-2 rounded-lg bg-[#141414] border border-[#222222]">
+                          <div className="text-[10px] uppercase font-semibold tracking-wider text-[#716F69] mb-1">
+                            Active Organization
+                          </div>
+                          <div className="text-xs font-medium text-[#F2F0EA] truncate">
+                            {organization?.name || 'Default Organization'}
+                          </div>
+                          <div className="flex items-center justify-between gap-2 mt-1">
+                            <span className="text-[10px] font-mono text-[#716F69] truncate">
+                              ID: {user.organization_id || organization?.id || 'org_default'}
+                            </span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(user.organization_id || organization?.id || 'org_default');
+                                toastSuccess('Organization ID copied to clipboard');
+                              }}
+                              className="text-[10px] font-mono text-[#D6A83A] hover:underline shrink-0"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Menu Navigation Links */}
+                        <div className="py-1.5 space-y-0.5 mt-1">
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-[#B0ADA5] hover:text-[#F2F0EA] hover:bg-[#181818] transition-colors"
+                          >
+                            <span>⎈</span>
+                            <span>Command Dashboard</span>
+                          </Link>
+                          <Link
+                            href="/developers"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-[#B0ADA5] hover:text-[#F2F0EA] hover:bg-[#181818] transition-colors"
+                          >
+                            <span>⚡</span>
+                            <span>Developer API Keys</span>
+                          </Link>
+                          <Link
+                            href="/settings"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-[#B0ADA5] hover:text-[#F2F0EA] hover:bg-[#181818] transition-colors"
+                          >
+                            <span>⚙</span>
+                            <span>Organization Settings</span>
+                          </Link>
+                          <Link
+                            href="/security"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-[#B0ADA5] hover:text-[#F2F0EA] hover:bg-[#181818] transition-colors"
+                          >
+                            <span>🛡</span>
+                            <span>Security & Audit Chain</span>
+                          </Link>
+                        </div>
+
+                        {/* Sign Out Action */}
+                        <div className="pt-2 border-t border-[#222222] mt-1">
+                          <button
+                            onClick={() => {
+                              setUserMenuOpen(false);
+                              logout();
+                            }}
+                            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-[#D85C5C]/10 hover:bg-[#D85C5C]/20 text-[#D85C5C] text-xs font-semibold transition-colors"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-[#181818] border border-[#2B2B2B] flex items-center justify-center font-mono text-[10px] text-[#D6A83A] font-semibold">

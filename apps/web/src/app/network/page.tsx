@@ -17,10 +17,12 @@ import {
 import { NetworkTopologyGraph } from '@/components/NetworkTopologyGraph';
 import { getActiveDataMode, setActiveDataMode, DataMode } from '@/lib/data-authority';
 import { DataAuthorityBadge } from '@/components/DataAuthorityBadge';
+import { useToast } from '@/components/ui';
 
 type ActiveTab = 'directory' | 'contracts' | 'graph' | 'disputes';
 
 export default function OpenAgentNetworkPage() {
+  const toast = useToast();
   const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [activeTab, setActiveTab] = useState<ActiveTab>('directory');
   const [agents, setAgents] = useState<DiscoveredAgent[]>([]);
@@ -92,10 +94,9 @@ export default function OpenAgentNetworkPage() {
           c.contract_id === contractId ? { ...c, state: 'FUNDED', payment_intent_id: res.payment_intent_id } : c
         )
       );
-      setActionSuccessMsg(`[${dataMode}] Contract ${contractId} funded. Payment intent created: ${res.payment_intent_id}`);
-      setTimeout(() => setActionSuccessMsg(null), 5000);
+      toast.success('Contract Funded', `[${dataMode}] Contract ${contractId} funded. Payment intent created: ${res.payment_intent_id}`);
     } catch (err: any) {
-      alert(`Funding failed: ${err.message}`);
+      toast.error('Funding Failed', err.message);
     }
   };
 
@@ -112,11 +113,10 @@ export default function OpenAgentNetworkPage() {
         setContracts((prev) =>
           prev.map((c) => (c.contract_id === contractId ? { ...c, state: 'COMPLETED' } : c))
         );
-        setActionSuccessMsg(`[${dataMode}] Contract ${contractId} deliverable verified (Score: ${rep.score_basis_points / 100}%)!`);
-        setTimeout(() => setActionSuccessMsg(null), 5000);
+        toast.success('Deliverable Verified', `[${dataMode}] Contract ${contractId} deliverable verified (Score: ${rep.score_basis_points / 100}%)!`);
       }
     } catch (err: any) {
-      alert(`Verification failed: ${err.message}`);
+      toast.error('Verification Failed', err.message);
     }
   };
 
@@ -578,7 +578,7 @@ export default function OpenAgentNetworkPage() {
                       <span className="font-bold text-[#F2F0EA]">${(Number(d.refund_amount) / 1e6).toFixed(2)} USDC</span>
                     </div>
                     <button
-                      onClick={() => alert(`[SIMULATION AUDIT] Case ${d.dispute_id} evidence package reviewed by deterministic policy engine. Simulated claim: $${(Number(d.refund_amount)/1e6).toFixed(2)} USDC.`)}
+                      onClick={() => toast.info('Simulation Audit Evidence', `Case ${d.dispute_id} evidence package reviewed by deterministic policy engine. Simulated claim: $${(Number(d.refund_amount)/1e6).toFixed(2)} USDC.`)}
                       className="px-3 py-1.5 rounded-xl bg-[#151515] hover:bg-[#1C1C1C] text-[#E5E2DA] border border-[#2A2A2A] transition-colors cursor-pointer"
                     >
                       Audit Evidence
@@ -709,7 +709,7 @@ export default function OpenAgentNetworkPage() {
                 </button>
                 <button
                   onClick={() => {
-                    alert(`[SIMULATION] Drafted bilateral service contract proposal for ${selectedAgent.identity.display_name}. Zero funds moved.`);
+                    toast.info('Contract Proposed', `Drafted bilateral service contract proposal for ${selectedAgent.identity.display_name}. Zero funds moved.`);
                     setSelectedAgent(null);
                   }}
                   className="px-4 py-2 rounded-xl text-xs font-semibold font-mono bg-[#F2F0EA] hover:bg-white text-[#080808] font-bold cursor-pointer"

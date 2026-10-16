@@ -29,8 +29,11 @@ import { fetchArcStatus, ArcStatusView, FALLBACK_ARC_STATUS } from '../../lib/ap
 import { Agent, PaymentIntent, TransactionRecord, SystemHealth } from '../../lib/api/types';
 import { useAuth } from '../../lib/auth/AuthContext';
 
+import { useToast } from '../../components/ui/Toast';
+
 export default function DashboardPage() {
   const { user, organization, isAuthenticated, loading: authLoading } = useAuth();
+  const toast = useToast();
 
   const [agents, setAgents] = useState<Agent[]>([]);
   const [intents, setIntents] = useState<PaymentIntent[]>([]);
@@ -75,6 +78,7 @@ export default function DashboardPage() {
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
+    toast.success('Copied to clipboard');
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -122,6 +126,7 @@ export default function DashboardPage() {
     setAgentActionError(null);
     if (!newAgentName.trim()) {
       setAgentActionError('Agent name is required');
+      toast.warning('Agent name is required');
       return;
     }
 
@@ -135,10 +140,12 @@ export default function DashboardPage() {
       setCreateAgentOpen(false);
       setNewAgentName('');
       setNewAgentDesc('');
+      toast.success(`Agent "${newAgentName}" registered successfully!`);
       await loadData();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to create agent';
       setAgentActionError(msg);
+      toast.error(msg, 'Agent Creation Failed');
     } finally {
       setCreatingAgent(false);
     }
@@ -191,6 +198,7 @@ export default function DashboardPage() {
       });
 
       setPolicySuccess(true);
+      toast.success('Autonomous spending policy updated successfully!');
       await loadData();
       setTimeout(() => {
         setPolicyModalAgent(null);
@@ -198,6 +206,7 @@ export default function DashboardPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to save policy';
       setAgentActionError(msg);
+      toast.error(msg, 'Policy Update Failed');
     } finally {
       setSavingPolicy(false);
     }
@@ -208,12 +217,15 @@ export default function DashboardPage() {
     try {
       if (agent.status === 'PAUSED') {
         await resumeAgent(agent.id);
+        toast.success(`Agent "${agent.name}" resumed`);
       } else {
         await pauseAgent(agent.id);
+        toast.warning(`Agent "${agent.name}" paused`);
       }
       await loadData();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to update agent status');
+      const msg = err instanceof Error ? err.message : 'Failed to update agent status';
+      toast.error(msg);
     }
   };
 
@@ -222,9 +234,11 @@ export default function DashboardPage() {
     setResolvingApprovalId(approvalId);
     try {
       await approveIntent(approvalId, user?.id || 'operator', 'Approved via Web Dashboard');
+      toast.success('Payment intent approved');
       await loadData();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to approve intent');
+      const msg = err instanceof Error ? err.message : 'Failed to approve intent';
+      toast.error(msg);
     } finally {
       setResolvingApprovalId(null);
     }
@@ -235,9 +249,11 @@ export default function DashboardPage() {
     setResolvingApprovalId(approvalId);
     try {
       await rejectIntent(approvalId, user?.id || 'operator', 'Rejected via Web Dashboard');
+      toast.info('Payment intent rejected');
       await loadData();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to reject intent');
+      const msg = err instanceof Error ? err.message : 'Failed to reject intent';
+      toast.error(msg);
     } finally {
       setResolvingApprovalId(null);
     }

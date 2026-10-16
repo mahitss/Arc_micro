@@ -5,3 +5,4 @@ export * from './AgentPayPanel';
 export * from './AgentPayFeedback';
 export * from './AgentPayInspector';
 export * from './AgentPayCommandPalette';
+export * from './Toast';

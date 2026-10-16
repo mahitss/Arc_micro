@@ -13,14 +13,28 @@ export interface NavItem {
   isMatch: (pathname: string) => boolean;
 }
 
-// 1. PRIMARY Group (Task 36 & Task 38 Harmonized)
+// 1. PRIMARY Group
 export const PRIMARY_ITEMS: NavItem[] = [
+  {
+    id: 'dashboard',
+    label: 'DASHBOARD',
+    href: '/dashboard',
+    icon: '⎈',
+    isMatch: (p) => p === '/dashboard' || p === '/overview',
+  },
   {
     id: 'control',
     label: 'CONTROL',
     href: '/control',
-    icon: '⎈',
+    icon: '🎛',
     isMatch: (p) => p === '/control' || p === '/',
+  },
+  {
+    id: 'agents',
+    label: 'AGENTS',
+    href: '/agents',
+    icon: '🤖',
+    isMatch: (p) => p === '/agents' || p.startsWith('/agents/'),
   },
   {
     id: 'missions',
@@ -28,13 +42,6 @@ export const PRIMARY_ITEMS: NavItem[] = [
     href: '/missions',
     icon: '◈',
     isMatch: (p) => p.startsWith('/missions'),
-  },
-  {
-    id: 'activity',
-    label: 'ACTIVITY',
-    href: '/activity',
-    icon: '☰',
-    isMatch: (p) => p.startsWith('/activity'),
   },
   {
     id: 'marketplace',
@@ -56,6 +63,13 @@ export const PRIMARY_ITEMS: NavItem[] = [
     href: '/network',
     icon: '⛶',
     isMatch: (p) => p.startsWith('/network') || p.startsWith('/agents'),
+  },
+  {
+    id: 'activity',
+    label: 'ACTIVITY',
+    href: '/activity',
+    icon: '☰',
+    isMatch: (p) => p.startsWith('/activity'),
   },
   {
     id: 'security',
@@ -104,6 +118,13 @@ export const OPERATIONS_ITEMS: NavItem[] = [
     isMatch: (p) => p.startsWith('/control/operations'),
   },
   {
+    id: 'approvals',
+    label: 'APPROVALS',
+    href: '/approvals',
+    icon: '✓',
+    isMatch: (p) => p.startsWith('/approvals') || p === '/control/approvals',
+  },
+  {
     id: 'incidents',
     label: 'INCIDENTS',
     href: '/incidents',
@@ -128,6 +149,13 @@ export const FINANCIAL_ITEMS: NavItem[] = [
     icon: '🏦',
     isMatch: (p) => p.startsWith('/treasury'),
   },
+  {
+    id: 'transactions',
+    label: 'TRANSACTIONS',
+    href: '/transactions',
+    icon: '⇄',
+    isMatch: (p) => p.startsWith('/transactions') || p.startsWith('/payment-intents'),
+  },
 ];
 
 // 4. TOOLS Group
@@ -138,6 +166,13 @@ export const TOOLS_ITEMS: NavItem[] = [
     href: '/simulator',
     icon: '⚗',
     isMatch: (p) => p.startsWith('/simulator'),
+  },
+  {
+    id: 'developers',
+    label: 'DEVELOPERS',
+    href: '/developers',
+    icon: '⚡',
+    isMatch: (p) => p.startsWith('/developers'),
   },
   {
     id: 'replay',
@@ -159,6 +194,13 @@ export const TOOLS_ITEMS: NavItem[] = [
     href: '/settings/ai',
     icon: '⚡',
     isMatch: (p) => p.startsWith('/settings/ai'),
+  },
+  {
+    id: 'settings',
+    label: 'ORGANIZATION',
+    href: '/settings',
+    icon: '⚙',
+    isMatch: (p) => p.startsWith('/settings'),
   },
 ];
 

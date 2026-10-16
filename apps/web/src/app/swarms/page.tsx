@@ -12,6 +12,7 @@ import {
 import type { SimulateSwarmResponse, Swarm } from '../../lib/api/types';
 import { DataAuthorityBadge } from '../../components/DataAuthorityBadge';
 import { getActiveDataMode, setActiveDataMode, DataMode } from '../../lib/data-authority';
+import { useToast } from '../../components/ui';
 
 function formatUsdc(amountBaseUnits?: string): string {
   if (!amountBaseUnits) return '0.00 USDC';
@@ -21,6 +22,7 @@ function formatUsdc(amountBaseUnits?: string): string {
 }
 
 export default function SwarmsIndexPage() {
+  const toast = useToast();
   const [dataMode, setDataMode] = useState<DataMode>('LIVE');
   const [swarms, setSwarms] = useState<Swarm[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,8 +83,9 @@ export default function SwarmsIndexPage() {
       setShowCreateModal(false);
       setCreateName('');
       setCreateObjective('');
+      toast.success('Swarm Created', `Swarm "${newSwarm.name}" successfully created.`);
     } catch (err) {
-      alert(`Failed to create swarm: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error('Failed to create swarm', err instanceof Error ? err.message : String(err));
     } finally {
       setCreating(false);
     }
@@ -90,7 +93,7 @@ export default function SwarmsIndexPage() {
 
   const handleSimulate = async () => {
     if (!createObjective) {
-      alert('Please enter an objective to simulate');
+      toast.warning('Objective Required', 'Please enter an objective to simulate.');
       return;
     }
     setSimulating(true);
@@ -101,8 +104,9 @@ export default function SwarmsIndexPage() {
         max_budget: createBudget || '5000000',
       });
       setSimResult(res);
+      toast.success('Simulation Complete', `Estimated budget: ${formatUsdc(res.estimated_cost)}.`);
     } catch (err) {
-      alert(`Simulation failed: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error('Simulation Failed', err instanceof Error ? err.message : String(err));
     } finally {
       setSimulating(false);
     }
@@ -112,8 +116,9 @@ export default function SwarmsIndexPage() {
     try {
       const updated = await startSwarm(swarmId);
       setSwarms((prev) => prev.map((s) => (s.id === swarmId ? updated : s)));
+      toast.success('Swarm Started', `Swarm ${swarmId} has been started.`);
     } catch (err) {
-      alert(`Failed to start swarm: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error('Failed to start swarm', err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -122,8 +127,9 @@ export default function SwarmsIndexPage() {
     try {
       const updated = await cancelSwarm(swarmId);
       setSwarms((prev) => prev.map((s) => (s.id === swarmId ? updated : s)));
+      toast.success('Swarm Cancelled', `Swarm ${swarmId} cancelled and funds released.`);
     } catch (err) {
-      alert(`Failed to cancel swarm: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error('Failed to cancel swarm', err instanceof Error ? err.message : String(err));
     }
   };
 
