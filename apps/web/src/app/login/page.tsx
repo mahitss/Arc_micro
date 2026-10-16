@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../lib/auth/AuthContext';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/dashboard';
   const { login, isAuthenticated } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -15,7 +17,10 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (isAuthenticated) {
-    router.push('/dashboard');
+    const destination = returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')
+      ? returnUrl
+      : '/dashboard';
+    router.push(destination);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,8 +35,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      // Navigation is handled inside login()
+      await login(email, password, returnUrl);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid credentials. Please verify your email and password.';
       setError(msg);
@@ -116,5 +120,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#080808]" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

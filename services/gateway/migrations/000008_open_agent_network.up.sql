@@ -119,7 +119,6 @@ CREATE TABLE IF NOT EXISTS agent_trust_profiles (
 
 CREATE INDEX IF NOT EXISTS idx_agent_trust_org ON agent_trust_profiles(organization_id);
 
--- 6. Agent Disputes
 CREATE TABLE IF NOT EXISTS agent_disputes (
     dispute_id VARCHAR(64) PRIMARY KEY,
     contract_id VARCHAR(64) NOT NULL REFERENCES agent_service_contracts(contract_id),

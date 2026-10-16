@@ -22,6 +22,12 @@ export const DEFAULT_ORG_ID = 'org_default';
 export const DEFAULT_TIMEOUT_MS = 10000;
 
 export function getBaseApiUrl(): string {
+  // In the browser, route through the same-origin Next.js server proxy
+  // to ensure HttpOnly session cookies are transmitted securely and validated.
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+
   if (typeof process !== 'undefined' && process.env) {
     const configured = (
       process.env.NEXT_PUBLIC_API_URL ||
@@ -81,7 +87,7 @@ export async function apiRequest<T>(
     'X-Organization-Id': getDefaultOrgId(),
   };
 
-  // Check for active browser session cookie
+  // Check for active browser session cookie (if accessible)
   let sessionToken: string | null = null;
   if (typeof document !== 'undefined') {
     const match = document.cookie.match(/(?:^|;\s*)agentpay_session=([^;]+)/);
@@ -92,12 +98,15 @@ export async function apiRequest<T>(
 
   if (sessionToken) {
     defaultHeaders['Authorization'] = `Bearer ${sessionToken}`;
-  } else {
+  } else if (typeof window === 'undefined') {
+    // On the server side only, allow explicit API key fallback
     const apiKey = getApiKey();
     if (apiKey) {
       defaultHeaders['Authorization'] = `Bearer ${apiKey}`;
     }
   }
+  // NOTE: In the browser, we intentionally do NOT attach DEFAULT_DEMO_API_KEY.
+  // Unauthenticated user requests must fail closed with 401 rather than silently falling back to org_default.
 
   let customHeaders: Record<string, string> = {};
   if (fetchOptions.headers) {
@@ -167,7 +176,7 @@ export async function apiRequest<T>(
 
     const rawMessage = err instanceof Error ? err.message : 'Network request failed';
     const message = rawMessage === 'Failed to fetch'
-      ? `Unable to connect to AgentPay Gateway at ${baseUrl}. Ensure backend service is reachable.`
+      ? `Unable to connect to AgentPay Gateway at ${baseUrl || 'local proxy'}. Ensure backend service is reachable.`
       : rawMessage;
     throw new ApiError(503, 'NETWORK_UNAVAILABLE', message);
   } finally {

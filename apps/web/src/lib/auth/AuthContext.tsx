@@ -23,7 +23,7 @@ interface AuthContextType {
   organization: Organization | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, returnUrl?: string) => Promise<void>;
   signup: (email: string, password: string, name?: string, orgName?: string) => Promise<{ api_key?: { secret: string; name: string } }>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refresh();
   }, [refresh]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, returnUrl?: string) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -79,7 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(data.user);
     setOrganization(data.organization || null);
-    router.push('/dashboard');
+    const destination = returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')
+      ? returnUrl
+      : '/dashboard';
+    router.push(destination);
   };
 
   const signup = async (email: string, password: string, name?: string, orgName?: string) => {

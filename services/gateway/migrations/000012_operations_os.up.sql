@@ -150,9 +150,9 @@ CREATE INDEX IF NOT EXISTS idx_ops_incidents_correlation ON operations_incidents
 CREATE TABLE IF NOT EXISTS operations_circuit_breakers (
     breaker_id VARCHAR(64) PRIMARY KEY,
     tenant_id VARCHAR(64) NOT NULL,
-    target_type VARCHAR(32) NOT NULL, -- PROVIDER, AGENT, SERVICE
+    target_type VARCHAR(32) NOT NULL, 
     target_id VARCHAR(64) NOT NULL,
-    state VARCHAR(32) NOT NULL DEFAULT 'CLOSED', -- CLOSED, OPEN, HALF_OPEN
+    state VARCHAR(32) NOT NULL DEFAULT 'CLOSED', 
     failure_count INT NOT NULL DEFAULT 0,
     success_count INT NOT NULL DEFAULT 0,
     threshold INT NOT NULL DEFAULT 5,
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS operations_circuit_breakers (
 
 CREATE INDEX IF NOT EXISTS idx_ops_breakers_state ON operations_circuit_breakers (tenant_id, state);
 
--- 9. Causal Links ("Why Did This Happen?" Engine)
+
 CREATE TABLE IF NOT EXISTS operations_causal_links (
     link_id VARCHAR(64) PRIMARY KEY,
     tenant_id VARCHAR(64) NOT NULL,
